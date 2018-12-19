@@ -17,7 +17,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
-namespace genesis
+namespace Genesis
 {
 	typedef glm::i32vec2 vector2I;
 	typedef glm::i32vec3 vector3I;
