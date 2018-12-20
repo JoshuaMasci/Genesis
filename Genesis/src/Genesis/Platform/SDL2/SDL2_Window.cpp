@@ -12,7 +12,7 @@ SDL2_Window::SDL2_Window(vector2I size, string title)
 SDL2_Window::~SDL2_Window()
 {
 	SDL_DestroyWindow(this->window);
-	this->window == nullptr;
+	this->window = nullptr;
 }
 
 vector2I SDL2_Window::getWindowSize()
