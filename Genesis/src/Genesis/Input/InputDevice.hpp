@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Genesis/Genesis.hpp"
 #include "Genesis/Core/Types.hpp"
 
 namespace Genesis
