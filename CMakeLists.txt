@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8.0)
 
-option (BUILD_SANDBOX "Creates the Sandbox app" OFF) 
+option (BUILD_SANDBOX "Creates the Sandbox app" ON) 
 
 add_subdirectory(Genesis)
 

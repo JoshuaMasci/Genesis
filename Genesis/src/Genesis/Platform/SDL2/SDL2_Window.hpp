@@ -1,11 +1,14 @@
 #pragma once
 
+#include "Genesis/Core/DLL.hpp"
 #include "Genesis/Platform/Window.hpp"
-#include "Genesis/Platform/SDL2/SDL2_Include.hpp"
+
+//Prototype struct
+struct SDL_Window;
 
 namespace Genesis
 {
-	class SDL2_Window: public Window
+	class GENESIS_DLL SDL2_Window: public Window
 	{
 	public:
 		SDL2_Window(vector2I size, string title);

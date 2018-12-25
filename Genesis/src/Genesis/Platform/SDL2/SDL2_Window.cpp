@@ -1,4 +1,5 @@
 #include "SDL2_Window.hpp"
+#include "Genesis/Platform/SDL2/SDL2_Include.hpp"
 
 using namespace Genesis;
 
