@@ -2,4 +2,4 @@
 
 #include <Genesis/Core/DLL.hpp>
 
-#include <Genesis/GenesisApplication.hpp>
+#include <Genesis/Application.hpp>

@@ -6,6 +6,7 @@
 #include <string>
 
 #include <vector>
+#include <map>
 #include <unordered_map>
 
 namespace Genesis
@@ -15,6 +16,7 @@ namespace Genesis
 
 	//gives the ability to replace these later.
 	using std::vector;
+	using std::map;
 	using std::unordered_map;
 };
 
