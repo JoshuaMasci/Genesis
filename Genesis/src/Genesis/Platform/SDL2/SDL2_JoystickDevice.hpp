@@ -2,14 +2,13 @@
 
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Input/InputDevice.hpp"
-#include "Genesis/Platform/SDL2/SDL2_Include.hpp"
 
 namespace Genesis
 {
 	class SDL2_JoystickDevice : public InputDevice
 	{
 	public:
-		SDL2_JoystickDevice(string joystick_name, SDL_Joystick* joystick);
+		SDL2_JoystickDevice(string joystick_name, int32_t joystick_id);
 		virtual ~SDL2_JoystickDevice();
 
 		// Inherited via InputDevice
@@ -22,21 +21,20 @@ namespace Genesis
 	private:
 		struct JoystickAxisValue
 		{
-			Uint32 timestamp = 0;
-
+			uint32_t timestamp = 0;
 			int16_t current_value = 0;
 		};
 
 		struct JoystickButtonValue
 		{
-			Uint32 timestamp = 0;
+			uint32_t timestamp = 0;
+			uint32_t time_down = 0;
 
-			Uint32 time_down = 0;
 			uint8_t current_value = 0;
 			uint8_t prev_value = 0;
 		};
 
-		SDL_Joystick* joystick = nullptr;
+		int32_t joystick_id;
 
 		JoystickAxisValue device_axis_values[32];
 		JoystickButtonValue device_button_values[32];

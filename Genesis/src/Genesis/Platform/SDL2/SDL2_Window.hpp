@@ -20,5 +20,9 @@ namespace Genesis
 		virtual void setWindowTitle(string title);
 	private:
 		SDL_Window* window;
+
+		// Inherited via Window
+		virtual void setVsync(VSYNC setting) override;
+		virtual VSYNC getVsync() override;
 	};
 }

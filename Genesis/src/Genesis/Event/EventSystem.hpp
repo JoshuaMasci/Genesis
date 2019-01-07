@@ -3,9 +3,10 @@
 #include "Genesis/Core/DLL.hpp"
 #include "Genesis/Core/Types.hpp"
 
-
 #include <memory>
 #include <functional>
+
+#define BindFunc(CLASS, EVENT, FUNC) std::bind((void(CLASS::*)(EVENT*))&CLASS::FUNC, &test, std::placeholders::_1)
 
 #define EVENT_CALLBACK_MAP map<size_t, void*>
 

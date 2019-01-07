@@ -1,15 +1,19 @@
 #pragma once
 
+#include "Genesis/Core/DLL.hpp"
 #include "Genesis/Core/Types.hpp"
-#include "Genesis/Platform/SDL2/SDL2_Include.hpp"
+#include "Genesis/Input/InputDevice.hpp"
 
 namespace Genesis
 {
-	class InputManager
+	class GENESIS_DLL InputManager
 	{
 	public:
-		InputManager(string config_file_path) {};
+		InputManager(string config_folder_path) {};
 		~InputManager() {};
+
+		void addInputDevice(InputDevice* device) {};
+		void removeInputDevice(InputDevice* device) {};
 
 	private:
 	};

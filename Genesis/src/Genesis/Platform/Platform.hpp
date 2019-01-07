@@ -2,18 +2,22 @@
 
 #include "Genesis/Core/DLL.hpp"
 #include "Genesis/Core/Types.hpp"
-Window* createWindow(void* window_settings);
+#include "Genesis/Platform/Window.hpp"
 
 namespace Genesis
 {
+	//Prototype
+	class Application;
+
 	//Abstract platform class
 	class GENESIS_DLL Platform
 	{
 	public:
+		Platform(Application* app): application(app) {};
+
 		virtual void onUpdate(double delta_time) = 0;
-		
-		//Create a window to be passed off to the application
-		//Platforms can choose to save a copy of the window to send events to
-		Window* createWindow(void* window_settings);
+
+	protected:
+		Application* const application;
 	};
 };
