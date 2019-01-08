@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/DLL.hpp"
 #include "Genesis/Core/Types.hpp"
 
 namespace Genesis
@@ -13,7 +12,7 @@ namespace Genesis
 	};
 
 	//Abstract window class
-	class GENESIS_DLL Window
+	class Window
 	{
 	public:
 		Window(vector2I size, string title) {};

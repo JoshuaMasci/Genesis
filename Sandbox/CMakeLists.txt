@@ -10,9 +10,11 @@ source_group("Sandbox" FILES ${SANDBOX_SOURCES})
 source_group("Sandbox_Headers" FILES ${SANDBOX_HEADERS})
 
 include_directories(${Genesis_SOURCE_DIR}/src)
-
-#GLM is the only other lib needed
 include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
+
+link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.4/lib/x64/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/build/lib/Debug/)
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})
 set_target_properties(Sandbox PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${Sandbox_SOURCE_DIR}")

@@ -5,7 +5,7 @@
 
 namespace Genesis
 {
-	class GENESIS_DLL SDL2_Platform : public Genesis::Platform
+	class  SDL2_Platform : public Genesis::Platform
 	{
 	public:
 		SDL2_Platform(Application* app);
@@ -16,6 +16,6 @@ namespace Genesis
 	private:
 
 		//Keep track of joystick devices so they can be deleted
-		map<int32_t, SDL2_JoystickDevice*>* joystick_devices;
+		map<int32_t, SDL2_JoystickDevice*> joystick_devices;
 	};
 }

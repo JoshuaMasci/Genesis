@@ -7,8 +7,6 @@
 Genesis::SDL2_Platform::SDL2_Platform(Application* app)
 	:Genesis::Platform(app)
 {
-	this->joystick_devices = new map<int32_t, SDL2_JoystickDevice*>();
-
 	SDL_Init(SDL_INIT_EVENTS | SDL_INIT_JOYSTICK);
 	SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 	//Create Keyboard Device
@@ -20,8 +18,12 @@ Genesis::SDL2_Platform::SDL2_Platform(Application* app)
 Genesis::SDL2_Platform::~SDL2_Platform()
 {
 	//Delete Input Devices
-
-	delete this->joystick_devices;
+	for (auto device : this->joystick_devices)
+	{
+		this->application->input_manager.removeInputDevice(device.second);
+		delete device.second;
+		SDL_JoystickClose(SDL_JoystickFromInstanceID(device.first));
+	}
 }
 
 void Genesis::SDL2_Platform::onUpdate(double delta_time)
@@ -41,7 +43,7 @@ void Genesis::SDL2_Platform::onUpdate(double delta_time)
 			int32_t id = event.jdevice.which;
 			SDL_Joystick* joystick = SDL_JoystickOpen(id);
 			SDL2_JoystickDevice* device = new SDL2_JoystickDevice(SDL_JoystickName(joystick), id);
-			(*this->joystick_devices)[id] = device;
+			this->joystick_devices[id] = device;
 
 			//TODO load settings
 
@@ -51,10 +53,10 @@ void Genesis::SDL2_Platform::onUpdate(double delta_time)
 		{
 			//Destroy Joystick Device
 			int id = event.jdevice.which;
-			SDL2_JoystickDevice* device = (*this->joystick_devices)[id];
+			SDL2_JoystickDevice* device = this->joystick_devices[id];
 
 			this->application->input_manager.removeInputDevice(device);
-			this->joystick_devices->erase(id);
+			this->joystick_devices.erase(id);
 
 			delete device;
 			SDL_JoystickClose(SDL_JoystickFromInstanceID(id));

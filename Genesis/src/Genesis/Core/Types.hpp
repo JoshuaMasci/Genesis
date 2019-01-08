@@ -1,6 +1,6 @@
 #pragma once
 
-//Vector
+//Vector Types
 #include "Genesis/Core/VectorTypes.hpp"
 
 #include <string>

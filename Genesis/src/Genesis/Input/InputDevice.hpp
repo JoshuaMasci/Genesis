@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/DLL.hpp"
 #include "Genesis/Core/Types.hpp"
 
 namespace Genesis
@@ -11,11 +10,11 @@ namespace Genesis
 		int timestamp;
 	};
 	
-	class GENESIS_DLL InputDevice
+	class InputDevice
 	{
 	public:
-		InputDevice(string name) {};
-		InputDevice(string name, void* settings) {}
+		InputDevice(string name):name(name) {};
+		InputDevice(string name, void* settings):name(name) {}
 		
 		virtual bool hasAxis(string axis_name) = 0;
 		virtual double getAxis(string axis_name) = 0;
@@ -26,5 +25,6 @@ namespace Genesis
 		string getName() { return ""; };
 
 	private:
+		string name;
 	};
 };

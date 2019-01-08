@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/DLL.hpp"
-
 #include "Genesis/Input/InputManager.hpp"
 #include "Genesis/Event/EventSystem.hpp"
 
@@ -10,7 +8,7 @@
 
 namespace Genesis
 {
-	class GENESIS_DLL Application
+	class Application
 	{
 	public:
 		Application();
