@@ -33,3 +33,6 @@ target_link_libraries (Genesis PRIVATE glew32)
 include_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/src)
 target_link_libraries (Genesis PRIVATE reactphysics3d)
 target_compile_definitions(Genesis PUBLIC IS_DOUBLE_PRECISION_ENABLED)
+
+#spdlog
+include_directories(${CMAKE_SOURCE_DIR}/lib/spdlog-1.2.1/include)
