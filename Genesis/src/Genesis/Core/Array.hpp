@@ -10,14 +10,15 @@ namespace Container
 		Array(size_t size)
 		{
 			this->array_size = size;
-			this->data = new T[this->array_size];
+			this->array_data = new T[this->array_size];
 		};
 
 		~Array()
 		{
-			if (this->data != nullptr)
+			if (this->array_data != nullptr)
 			{
-				delete this->data;
+				delete this->array_data;
+				this->array_data = nullptr;
 			}
 		};
 
@@ -27,15 +28,32 @@ namespace Container
 		{
 			if (index >= this->array_size)
 			{
-				return nullptr; //TODO crash
+				throw std::out_of_range("Genesis Array");
+			}
+			return this->array_data[index];
+		};
+
+		Array<T> &operator=(const Array<T> &right)
+		{
+			if (&right != this)
+			{
+				delete this->array_data;
+
+				this->array_size = right.array_size;
+				this->array_data = new T[this->array_size];
+
+				for (int i = 0; i < this->array_size; i++)
+				{
+					this->array_data[i] = right.array_data[i];
+				}
 			}
 
-			return this->data[index];
-		}
+			return *this;
+		};
 
 	private:
 		size_t array_size = 0;
-		T* data = nullptr;
+		T* array_data = nullptr;
 	};
 };
 

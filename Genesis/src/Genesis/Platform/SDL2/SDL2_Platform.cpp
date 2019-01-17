@@ -42,24 +42,42 @@ void Genesis::SDL2_Platform::onUpdate(double delta_time)
 			//Create new Joystick Device
 			int32_t id = event.jdevice.which;
 			SDL_Joystick* joystick = SDL_JoystickOpen(id);
-			SDL2_JoystickDevice* device = new SDL2_JoystickDevice(SDL_JoystickName(joystick), id);
+			InputDevice* device = new InputDevice(SDL_JoystickName(joystick), SDL_JoystickNumButtons(joystick), SDL_JoystickNumAxes(joystick));
 			this->joystick_devices[id] = device;
 
-			//TODO load settings
+			//Settings
 
 			this->application->input_manager.addInputDevice(device);
 		}
 		else if (event.type == SDL_JOYDEVICEREMOVED)
 		{
 			//Destroy Joystick Device
-			int id = event.jdevice.which;
-			SDL2_JoystickDevice* device = this->joystick_devices[id];
+			int32_t id = event.jdevice.which;
+			InputDevice* device = this->joystick_devices[id];
 
 			this->application->input_manager.removeInputDevice(device);
 			this->joystick_devices.erase(id);
 
 			delete device;
 			SDL_JoystickClose(SDL_JoystickFromInstanceID(id));
+		}
+		else if (event.type == SDL_JOYBUTTONDOWN)
+		{
+			int32_t id = event.jbutton.which;
+			InputDevice* device = this->joystick_devices[id];
+			device->updateButton(event.jbutton.button, true, event.jbutton.timestamp);
+		}
+		else if (event.type == SDL_JOYBUTTONUP)
+		{
+			int32_t id = event.jbutton.which;
+			InputDevice* device = this->joystick_devices[id];
+			device->updateButton(event.jbutton.button, false, event.jbutton.timestamp);
+		}
+		else if (event.type == SDL_JOYAXISMOTION)
+		{
+			int32_t id = event.jaxis.which;
+			InputDevice* device = this->joystick_devices[id];
+			device->updateAxis(event.jaxis.axis, ((double)event.jaxis.value) / 32767.0, event.jaxis.timestamp);
 		}
 	}
 }

@@ -2,6 +2,8 @@
 
 #include "Genesis/Core/Types.hpp"
 
+#define INVALID_INDEX 255
+
 namespace Genesis
 {
 	typedef uint32_t Timestamp;
@@ -31,11 +33,24 @@ namespace Genesis
 
 	struct AxisSettings
 	{
+		AxisSettings(uint8_t axis_index, double deadzone = 0.0, bool inverted = false, AxisRange range = AxisRange::FULL, double sensitivity = 1.0, ButtonIndex pos = INVALID_INDEX, ButtonIndex neg = INVALID_INDEX)
+		{
+			this->axis_index = axis_index;
+			this->deadzone = deadzone;
+			this->inverted = inverted;
+			this->range = range;
+			this->sensitivity = sensitivity;
+			this->positive_button = pos;
+			this->negitive_button = neg;
+		};
+
 		uint8_t axis_index;
-		double sensitivity = 1.0;
 		double deadzone = 0.0;
 		bool inverted = false;
 		AxisRange range = AxisRange::FULL;
+		double sensitivity = 1.0;
+		ButtonIndex positive_button = INVALID_INDEX;
+		ButtonIndex negitive_button = INVALID_INDEX;
 	};
 	
 	class InputDevice
@@ -44,6 +59,9 @@ namespace Genesis
 		InputDevice(string name, uint8_t number_of_button, uint8_t number_of_axis);
 		
 		string getName() { return this->name; };
+
+		void addButton(string name, ButtonIndex index);
+		void addAxis(string name, AxisSettings settings);
 
 		//Has a binding of that name
 		bool hasButton(string name);
@@ -54,6 +72,11 @@ namespace Genesis
 
 		bool hasAxis(string name);
 		AxisValue getAxis(string name);
+
+		void updateValues();
+
+		void updateButton(int32_t index, bool state, Timestamp time);
+		void updateAxis(int32_t index, double value, Timestamp time);
 
 	private:
 		string name;

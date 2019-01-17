@@ -21,6 +21,8 @@ Genesis::Application::~Application()
 
 void Genesis::Application::run_tick(double delta_time)
 {
+	this->input_manager.update();
+
 	if (this->platform != nullptr)
 	{
 		this->platform->onUpdate(delta_time);

@@ -2,8 +2,19 @@
 
 Genesis::InputDevice::InputDevice(string name, uint8_t number_of_button, uint8_t number_of_axis)
 {
+	this->name = name;
 	this->button_values = Genesis::Array<ButtonValue>(number_of_button);
 	this->axis_values = Genesis::Array<AxisValue>(number_of_axis);
+}
+
+void Genesis::InputDevice::addButton(string name, ButtonIndex index)
+{
+	this->button_bindings[name].push_back(index);
+}
+
+void Genesis::InputDevice::addAxis(string name, AxisSettings settings)
+{
+	this->axis_bindings[name].push_back(settings);
 }
 
 bool Genesis::InputDevice::hasButton(string name)
@@ -99,11 +110,34 @@ Genesis::AxisValue Genesis::InputDevice::getAxis(string name)
 			axis_value /= range;
 
 			axis_value *= sign;
-
-			return AxisValue(timestamp, axis_value * axis.sensitivity);
+		}
+		else
+		{
+			axis_value = 0.0;
 		}
 
+		return AxisValue(axis_value * axis.sensitivity, timestamp);
 	}
 
 	return AxisValue();
+}
+
+void Genesis::InputDevice::updateValues()
+{
+	for (int i = 0; i < this->button_values.size(); i++)
+	{
+		this->button_values[i].prev_value = this->button_values[i].current_value;
+	}
+}
+
+void Genesis::InputDevice::updateButton(int32_t index, bool state, Timestamp time)
+{
+	this->button_values[index].current_value = state;
+	this->button_values[index].timestamp = time;
+}
+
+void Genesis::InputDevice::updateAxis(int32_t index, double value, Timestamp time)
+{
+	this->axis_values[index].value = value;
+	this->axis_values[index].timestamp = time;
 }

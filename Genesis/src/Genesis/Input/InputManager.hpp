@@ -8,12 +8,19 @@ namespace Genesis
 	class InputManager
 	{
 	public:
-		InputManager(string config_folder_path) {};
-		~InputManager() {};
+		InputManager(string config_folder_path);
+		~InputManager();
 
-		void addInputDevice(InputDevice* device) {};
-		void removeInputDevice(InputDevice* device) {};
+		bool getButtonDown(string name);
+		bool getButtonPressed(string name);
+		double getAxis(string name);
+
+		void update();
+
+		void addInputDevice(InputDevice* device);
+		void removeInputDevice(InputDevice* device);
 
 	private:
+		set<InputDevice*> devices;
 	};
 };
