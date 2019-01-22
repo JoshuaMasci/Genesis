@@ -17,11 +17,12 @@ namespace Genesis
 		virtual void setWindowSize(vector2I size);
 
 		virtual void setWindowTitle(string title);
-	private:
-		SDL_Window* window;
 
 		//Going to move later
 		virtual void setVsync(VSYNC setting) override;
 		virtual VSYNC getVsync() override;
+
+	private:
+		SDL_Window* window;
 	};
 }

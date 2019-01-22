@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Genesis/Job/JobSystem.hpp"
 #include "Genesis/Input/InputManager.hpp"
 #include "Genesis/Event/EventSystem.hpp"
 
@@ -19,6 +20,7 @@ namespace Genesis
 		void close();
 		bool isRunning();
 
+		JobSystem job_system;
 		InputManager input_manager;
 		EventSystem event_system;
 

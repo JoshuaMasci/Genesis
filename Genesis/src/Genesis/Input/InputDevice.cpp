@@ -67,6 +67,41 @@ bool Genesis::InputDevice::hasAxis(string name)
 	return this->axis_bindings.find(name) != this->axis_bindings.end();
 }
 
+double applyAxisSettings(double value, Genesis::AxisSettings settings)
+{
+	if (settings.inverted)
+	{
+		value *= -1;
+	}
+
+	if (settings.range == Genesis::AxisRange::FORWARD)
+	{
+		value = (value / 2.0) + 0.5;
+	}
+	else if (settings.range == Genesis::AxisRange::BACKWARD)
+	{
+		value = (value / 2.0) - 0.5;
+	}
+
+	//apply deadzone
+	if (fabs(value) > settings.deadzone)
+	{
+		double range = 1.0 - settings.deadzone;
+		double sign = value / fabs(value);
+		value = fabs(value) - settings.deadzone;
+		value /= range;
+
+		value *= sign;
+		value *= settings.sensitivity;
+	}
+	else
+	{
+		value = 0.0;
+	}
+
+	return value;
+}
+
 Genesis::AxisValue Genesis::InputDevice::getAxis(string name)
 {
 	if (this->hasAxis(name))
@@ -85,38 +120,22 @@ Genesis::AxisValue Genesis::InputDevice::getAxis(string name)
 			}
 		}
 
-		double axis_value = this->axis_values[axis.axis_index].value;
+		AxisValue axis_value = this->axis_values[axis.axis_index];
+		axis_value.value = applyAxisSettings(axis_value.value, axis);
 
-		if (axis.inverted)
+		if (axis.positive_button != INVALID_INDEX && this->button_values[axis.positive_button].current_value && this->button_values[axis.positive_button].timestamp > axis_value.timestamp)
 		{
-			axis_value *= -1;
+			axis_value.value = 1.0;
+			axis_value.timestamp = this->button_values[axis.positive_button].timestamp;
 		}
 
-		if (axis.range == AxisRange::FORWARD)
+		if (axis.negitive_button != INVALID_INDEX && this->button_values[axis.negitive_button].current_value && this->button_values[axis.negitive_button].timestamp > axis_value.timestamp)
 		{
-			axis_value = (axis_value / 2.0) + 0.5;
-		}
-		else if (axis.range == AxisRange::BACKWARD)
-		{
-			axis_value = (axis_value / 2.0) - 0.5;
+			axis_value.value = -1.0;
+			axis_value.timestamp = this->button_values[axis.negitive_button].timestamp;
 		}
 
-		//apply deadzone
-		if (fabs(axis_value) > axis.deadzone)
-		{
-			double range = 1.0 - axis.deadzone;
-			double sign = axis_value / fabs(axis_value);
-			axis_value = fabs(axis_value) - axis.deadzone;
-			axis_value /= range;
-
-			axis_value *= sign;
-		}
-		else
-		{
-			axis_value = 0.0;
-		}
-
-		return AxisValue(axis_value * axis.sensitivity, timestamp);
+		return axis_value;
 	}
 
 	return AxisValue();
