@@ -22,10 +22,14 @@ namespace Genesis
 		void setTransform(const Transform& trans);
 
 		//Utils
-		Transform transformBy(const Transform&  transform1) const;
+		Transform transformBy(const Transform& transform1) const;
 
 	private:
+		void updateModelMatrix();
+
 		vector3D position;
 		quaternionD orientation;
+		
+		matrix4F model_matrix;
 	};
 };

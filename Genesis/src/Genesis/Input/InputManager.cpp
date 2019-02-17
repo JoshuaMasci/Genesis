@@ -1,14 +1,16 @@
 #include "InputManager.hpp"
 
-Genesis::InputManager::InputManager(string config_folder_path)
+using namespace Genesis;
+
+InputManager::InputManager(string config_folder_path)
 {
 }
 
-Genesis::InputManager::~InputManager()
+InputManager::~InputManager()
 {
 }
 
-bool Genesis::InputManager::getButtonDown(string name)
+bool InputManager::getButtonDown(string name)
 {
 	for (auto device : this->devices)
 	{
@@ -21,7 +23,7 @@ bool Genesis::InputManager::getButtonDown(string name)
 	return false;
 }
 
-bool Genesis::InputManager::getButtonPressed(string name)
+bool InputManager::getButtonPressed(string name)
 {
 	for (auto device : this->devices)
 	{
@@ -34,7 +36,7 @@ bool Genesis::InputManager::getButtonPressed(string name)
 	return false;
 }
 
-double Genesis::InputManager::getAxis(string name)
+double InputManager::getAxis(string name)
 {
 	AxisValue value;
 
@@ -50,7 +52,7 @@ double Genesis::InputManager::getAxis(string name)
 	return value.value;
 }
 
-void Genesis::InputManager::update()
+void InputManager::update()
 {
 	for (auto device : this->devices)
 	{
@@ -58,12 +60,12 @@ void Genesis::InputManager::update()
 	}
 }
 
-void Genesis::InputManager::addInputDevice(InputDevice* device)
+void InputManager::addInputDevice(InputDevice* device)
 {
 	this->devices.emplace(device);
 }
 
-void Genesis::InputManager::removeInputDevice(InputDevice* device)
+void InputManager::removeInputDevice(InputDevice* device)
 {
 	this->devices.erase(device);
 }

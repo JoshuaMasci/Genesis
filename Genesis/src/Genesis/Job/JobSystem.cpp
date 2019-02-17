@@ -2,18 +2,15 @@
 
 void workerthread(unsigned int thread_id, Genesis::JobSystem* job_system)
 {
+	printf("Thread %d Start\n", thread_id);
+
 	while (job_system->shouldThreadsRun())
 	{
-		Genesis::Job* job = job_system->getJob();
+		Genesis::Job* job = job_system->job_queue.pop();
 		if (job != nullptr)
 		{
 			job->run();
-			job->finish();
-			delete job;
-		}
-		else
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(job_system->getThreadWaitTimeMilliseconds()));
+			job->finish(); //Returns the value to indicate the job is done
 		}
 	}
 
@@ -35,6 +32,12 @@ Genesis::JobSystem::JobSystem()
 Genesis::JobSystem::~JobSystem()
 {
 	should_threads_run = false;
+
+	for (int i = 0; i < this->threads.size(); i++)
+	{
+		this->job_queue.push(nullptr);//Push empty jobs to trigger exiting
+	}
+
 	for (int i = 0; i < this->threads.size(); i++)
 	{
 		this->threads[i].join();
@@ -43,10 +46,35 @@ Genesis::JobSystem::~JobSystem()
 
 void Genesis::JobSystem::addJob(Job* job)
 {
-	this->job_queue.push(job);
+	if (job != nullptr)
+	{
+		this->job_queue.push(job);
+	}
 }
 
-Genesis::Job* Genesis::JobSystem::getJob()
+void Genesis::JobSystem::addJobAndWait(Job* job)
 {
-	return this->job_queue.pop();
+	this->addJob(job);
+	job->waitTillFinished();
+}
+
+void Genesis::JobSystem::addJobs(vector<Job*> jobs)
+{
+	for (Job* job : jobs)
+	{
+		this->addJob(job);
+	}
+}
+
+void Genesis::JobSystem::addJobsAndWait(vector<Job*> jobs)
+{
+	for (Job* job : jobs)
+	{
+		this->addJob(job);
+	}
+
+	for (Job* job : jobs)
+	{
+		job->waitTillFinished();
+	}
 }

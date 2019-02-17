@@ -24,6 +24,8 @@ Genesis::SDL2_Platform::~SDL2_Platform()
 		delete device.second;
 		SDL_JoystickClose(SDL_JoystickFromInstanceID(device.first));
 	}
+
+	SDL_Quit();
 }
 
 void Genesis::SDL2_Platform::onUpdate(double delta_time)

@@ -22,7 +22,6 @@ namespace Genesis
 
 		virtual void setWindowTitle(string title) = 0;
 
-		virtual void setVsync(VSYNC setting) = 0;
-		virtual VSYNC getVsync() = 0;
+		virtual void updateBuffer() = 0;
 	};
 };

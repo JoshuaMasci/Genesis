@@ -21,7 +21,10 @@ namespace Genesis
 		T pop()
 		{
 			std::unique_lock<std::mutex>lock(this->m_mutex);
-			this->m_cond.wait(lock, [&] { return !m_queue.empty(); });
+			this->m_cond.wait(lock, [&] 
+			{
+				return !m_queue.empty();
+			});
 			T element = this->m_queue.front();
 			this->m_queue.pop();
 			return element;

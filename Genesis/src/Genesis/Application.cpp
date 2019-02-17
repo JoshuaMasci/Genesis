@@ -1,25 +1,32 @@
 #include "Application.hpp"
 
-Genesis::Application::Application()
+using namespace Genesis;
+
+Application::Application()
 	:input_manager("config/input")
 {
 
 }
 
-Genesis::Application::~Application() 
+Application::~Application() 
 {
-	if (this->platform != nullptr)
+	if (this->world != nullptr)
 	{
-		delete this->platform;
+		delete this->world;
 	}
 
 	if (this->window != nullptr)
 	{
 		delete this->window;
 	}
+
+	if (this->platform != nullptr)
+	{
+		delete this->platform;
+	}
 }
 
-void Genesis::Application::run_tick(double delta_time)
+void Application::runFrame(double delta_time)
 {
 	this->input_manager.update();
 
@@ -27,15 +34,33 @@ void Genesis::Application::run_tick(double delta_time)
 	{
 		this->platform->onUpdate(delta_time);
 	}
+
+	if (this->world != nullptr)
+	{
+		this->world->updatePreFrame(delta_time);
+
+		//TODO Physics
+
+
+
+		this->world->updatePostFrame(delta_time);
+	}
+
+	//TODO: RENDER HERE
+
+	if (this->window != nullptr)
+	{
+		this->window->updateBuffer();
+	}
 }
 
-void Genesis::Application::close()
+void Application::close()
 {
 	this->is_running = false;
 	//TODO emit event
 }
 
-bool Genesis::Application::isRunning()
+bool Application::isRunning()
 { 
 	return this->is_running; 
 }

@@ -33,12 +33,7 @@ void SDL2_Window::setWindowTitle(string title)
 	SDL_SetWindowTitle(window, title.c_str());
 }
 
-void Genesis::SDL2_Window::setVsync(VSYNC setting)
+void SDL2_Window::updateBuffer()
 {
-	SDL_GL_SetSwapInterval(setting);//Might work for OPENGL only
-}
-
-VSYNC Genesis::SDL2_Window::getVsync()
-{
-	return (VSYNC)SDL_GL_GetSwapInterval();
+	SDL_GL_SwapWindow(this->window);
 }
