@@ -23,4 +23,24 @@ namespace Genesis
 	private:
 		set<InputDevice*> devices;
 	};
+
+	namespace Mouse
+	{
+		enum class  MouseButtons
+		{
+			Left,
+			Middle,
+			Right,
+			Extra1,
+			Extra2,
+			ForwardScroll,
+			BackwardScroll
+		};
+
+		enum class MouseAxes
+		{
+			X,
+			Y
+		};
+	};
 };

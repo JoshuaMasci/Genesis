@@ -1,28 +1,30 @@
 #include "InputDevice.hpp"
 
-Genesis::InputDevice::InputDevice(string name, uint8_t number_of_button, uint8_t number_of_axis)
+using namespace Genesis;
+
+InputDevice::InputDevice(string name, uint16_t number_of_buttons, uint16_t number_of_axes)
 {
 	this->name = name;
-	this->button_values = Genesis::Array<ButtonValue>(number_of_button);
-	this->axis_values = Genesis::Array<AxisValue>(number_of_axis);
+	this->button_values = Array<ButtonValue>(number_of_buttons);
+	this->axis_values = Array<AxisValue>(number_of_axes);
 }
 
-void Genesis::InputDevice::addButton(string name, ButtonIndex index)
+void InputDevice::addButton(string name, ButtonIndex index)
 {
 	this->button_bindings[name].push_back(index);
 }
 
-void Genesis::InputDevice::addAxis(string name, AxisSettings settings)
+void InputDevice::addAxis(string name, AxisSettings settings)
 {
 	this->axis_bindings[name].push_back(settings);
 }
 
-bool Genesis::InputDevice::hasButton(string name)
+bool InputDevice::hasButton(string name)
 {
 	return this->button_bindings.find(name) != this->button_bindings.end();
 }
 
-bool Genesis::InputDevice::getButtonDown(string name)
+bool InputDevice::getButtonDown(string name)
 {
 	if (this->hasButton(name))
 	{
@@ -42,7 +44,7 @@ bool Genesis::InputDevice::getButtonDown(string name)
 	return false;
 }
 
-bool Genesis::InputDevice::getButtonPressed(string name)
+bool InputDevice::getButtonPressed(string name)
 {
 	if (this->hasButton(name))
 	{
@@ -62,23 +64,23 @@ bool Genesis::InputDevice::getButtonPressed(string name)
 	return false;
 }
 
-bool Genesis::InputDevice::hasAxis(string name)
+bool InputDevice::hasAxis(string name)
 {
 	return this->axis_bindings.find(name) != this->axis_bindings.end();
 }
 
-double applyAxisSettings(double value, Genesis::AxisSettings settings)
+double applyAxisSettings(double value, AxisSettings settings)
 {
 	if (settings.inverted)
 	{
 		value *= -1;
 	}
 
-	if (settings.range == Genesis::AxisRange::FORWARD)
+	if (settings.range == AxisRange::FORWARD)
 	{
 		value = (value / 2.0) + 0.5;
 	}
-	else if (settings.range == Genesis::AxisRange::BACKWARD)
+	else if (settings.range == AxisRange::BACKWARD)
 	{
 		value = (value / 2.0) - 0.5;
 	}
@@ -102,7 +104,7 @@ double applyAxisSettings(double value, Genesis::AxisSettings settings)
 	return value;
 }
 
-Genesis::AxisValue Genesis::InputDevice::getAxis(string name)
+AxisValue InputDevice::getAxis(string name)
 {
 	if (this->hasAxis(name))
 	{
@@ -141,7 +143,7 @@ Genesis::AxisValue Genesis::InputDevice::getAxis(string name)
 	return AxisValue();
 }
 
-void Genesis::InputDevice::updateValues()
+void InputDevice::updateValues()
 {
 	for (int i = 0; i < this->button_values.size(); i++)
 	{
@@ -149,14 +151,24 @@ void Genesis::InputDevice::updateValues()
 	}
 }
 
-void Genesis::InputDevice::updateButton(int32_t index, bool state, Timestamp time)
+void InputDevice::updateButton(uint16_t index, bool state, Timestamp time)
 {
 	this->button_values[index].current_value = state;
 	this->button_values[index].timestamp = time;
 }
 
-void Genesis::InputDevice::updateAxis(int32_t index, double value, Timestamp time)
+void InputDevice::updateAxis(uint16_t index, double value, Timestamp time)
 {
 	this->axis_values[index].value = value;
 	this->axis_values[index].timestamp = time;
+}
+
+string Genesis::InputDevice::getButtonName(uint16_t index)
+{
+	return "Button " + std::to_string(index);
+}
+
+string Genesis::InputDevice::getAxisName(uint16_t index)
+{
+	return "Axis " + std::to_string(index);
 }

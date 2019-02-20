@@ -8,7 +8,7 @@ namespace Genesis
 {
 	typedef uint32_t Timestamp;
 
-	typedef uint8_t ButtonIndex;//May do settings later
+	typedef uint16_t ButtonIndex;//May do settings later
 
 	struct ButtonValue
 	{
@@ -17,7 +17,7 @@ namespace Genesis
 		Timestamp timestamp = 0;
 	};
 
-	enum AxisRange
+	enum class AxisRange
 	{
 		FULL,
 		FORWARD,
@@ -33,7 +33,7 @@ namespace Genesis
 
 	struct AxisSettings
 	{
-		AxisSettings(uint8_t axis_index, double deadzone = 0.0, bool inverted = false, AxisRange range = AxisRange::FULL, double sensitivity = 1.0, ButtonIndex pos = INVALID_INDEX, ButtonIndex neg = INVALID_INDEX)
+		AxisSettings(uint16_t axis_index, double deadzone = 0.0, bool inverted = false, AxisRange range = AxisRange::FULL, double sensitivity = 1.0, ButtonIndex pos = INVALID_INDEX, ButtonIndex neg = INVALID_INDEX)
 		{
 			this->axis_index = axis_index;
 			this->deadzone = deadzone;
@@ -44,7 +44,7 @@ namespace Genesis
 			this->negitive_button = neg;
 		};
 
-		uint8_t axis_index;
+		uint16_t axis_index;
 		double deadzone = 0.0;
 		bool inverted = false;
 		AxisRange range = AxisRange::FULL;
@@ -56,7 +56,7 @@ namespace Genesis
 	class InputDevice
 	{
 	public:
-		InputDevice(string name, uint8_t number_of_button, uint8_t number_of_axis);
+		InputDevice(string name, uint16_t number_of_buttons, uint16_t number_of_axes);
 		
 		string getName() { return this->name; };
 
@@ -75,9 +75,11 @@ namespace Genesis
 
 		void updateValues();
 
-		void updateButton(int32_t index, bool state, Timestamp time);
-		void updateAxis(int32_t index, double value, Timestamp time);
+		void updateButton(uint16_t index, bool state, Timestamp time);
+		void updateAxis(uint16_t index, double value, Timestamp time);
 
+		virtual string getButtonName(uint16_t index);
+		virtual string getAxisName(uint16_t index);
 	private:
 		string name;
 

@@ -1,11 +1,11 @@
 #pragma once
 
 #include "Genesis/Platform/Platform.hpp"
-#include "Genesis/Input/InputDevice.hpp"
+#include "Genesis/Input/JoystickDevice.hpp"
 
 namespace Genesis
 {
-	class  SDL2_Platform : public Genesis::Platform
+	class  SDL2_Platform : public Platform
 	{
 	public:
 		SDL2_Platform(Application* app);
@@ -14,7 +14,11 @@ namespace Genesis
 		virtual void onUpdate(double delta_time) override;
 		
 	private:
+
+		InputDevice* keyboard_device = nullptr;
+		InputDevice* mouse_device = nullptr;
+
 		//Keep track of joystick devices so they can be deleted
-		map<int32_t, InputDevice*> joystick_devices;
+		map<int32_t, JoystickDevice*> joystick_devices;
 	};
 }

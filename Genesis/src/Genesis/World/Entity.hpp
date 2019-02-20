@@ -16,7 +16,7 @@ namespace Genesis
 	typedef uint32_t EntityId;
 	const EntityId INVALID_ID = 0;
 
-	enum EntityType
+	enum class EntityType
 	{
 		GAMEOBJECT, //The root of an entity, holds the rigidbody
 		CHILD, //Child of an entity

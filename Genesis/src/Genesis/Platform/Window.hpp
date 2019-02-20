@@ -4,7 +4,7 @@
 
 namespace Genesis
 {
-	enum VSYNC
+	enum class VSYNC
 	{
 		ADAPTIVE = -1,
 		OFF = 0,
