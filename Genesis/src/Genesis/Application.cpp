@@ -41,12 +41,8 @@ void Application::runFrame(double delta_time)
 
 		//TODO Physics
 
-
-
 		this->world->updatePostFrame(delta_time);
 	}
-
-	//TODO: RENDER HERE
 
 	if (this->window != nullptr)
 	{

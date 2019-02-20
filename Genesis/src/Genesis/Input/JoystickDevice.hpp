@@ -44,7 +44,7 @@ namespace Genesis
 
 		virtual string getButtonName(uint16_t index) override;
 
-	private:
+	protected:
 		uint16_t number_of_buttons;
 	};
 };

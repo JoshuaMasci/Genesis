@@ -7,7 +7,7 @@ SDL2_Window::SDL2_Window(vector2I size, string title)
 	:Window(size, title)
 {
 	SDL_Init(SDL_INIT_VIDEO);
-	this->window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.x, size.y, SDL_WINDOW_RESIZABLE);
+	this->window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.x, size.y, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
 }
 
 SDL2_Window::~SDL2_Window()

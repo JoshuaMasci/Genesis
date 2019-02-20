@@ -1,7 +1,10 @@
 #pragma once
 
 #include "Genesis/Platform/Platform.hpp"
+
+#include "Genesis/Input/MouseDevice.hpp"
 #include "Genesis/Input/JoystickDevice.hpp"
+
 
 namespace Genesis
 {
@@ -16,7 +19,7 @@ namespace Genesis
 	private:
 
 		InputDevice* keyboard_device = nullptr;
-		InputDevice* mouse_device = nullptr;
+		MouseDevice* mouse_device = nullptr;
 
 		//Keep track of joystick devices so they can be deleted
 		map<int32_t, JoystickDevice*> joystick_devices;

@@ -143,14 +143,6 @@ AxisValue InputDevice::getAxis(string name)
 	return AxisValue();
 }
 
-void InputDevice::updateValues()
-{
-	for (int i = 0; i < this->button_values.size(); i++)
-	{
-		this->button_values[i].prev_value = this->button_values[i].current_value;
-	}
-}
-
 void InputDevice::updateButton(uint16_t index, bool state, Timestamp time)
 {
 	this->button_values[index].current_value = state;
@@ -161,6 +153,14 @@ void InputDevice::updateAxis(uint16_t index, double value, Timestamp time)
 {
 	this->axis_values[index].value = value;
 	this->axis_values[index].timestamp = time;
+}
+
+void InputDevice::updateValues()
+{
+	for (int i = 0; i < this->button_values.size(); i++)
+	{
+		this->button_values[i].prev_value = this->button_values[i].current_value;
+	}
 }
 
 string Genesis::InputDevice::getButtonName(uint16_t index)

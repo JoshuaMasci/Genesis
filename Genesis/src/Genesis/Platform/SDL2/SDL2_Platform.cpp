@@ -14,7 +14,7 @@ SDL2_Platform::SDL2_Platform(Application* app)
 	//Create Keyboard Device
 	
 	//Create Mouse Device
-	this->mouse_device = new InputDevice("MouseDevice", 7, 2);
+	this->mouse_device = new MouseDevice("SDL2 Mouse");
 	this->application->input_manager.addInputDevice(this->mouse_device);
 }
 
@@ -43,22 +43,22 @@ SDL2_Platform::~SDL2_Platform()
 	SDL_Quit();
 }
 
-uint16_t getGenesisMouseButton(Uint8 button)
+MouseButton getGenesisMouseButton(Uint8 button)
 {
 	switch (button)
 	{
 	case SDL_BUTTON_LEFT:
-		return (uint16_t)Mouse::MouseButtons::Left;
+		return MouseButton::Left;
 	case SDL_BUTTON_MIDDLE:
-		return (uint16_t)Mouse::MouseButtons::Middle;
+		return MouseButton::Middle;
 	case SDL_BUTTON_RIGHT:
-		return (uint16_t)Mouse::MouseButtons::Right;
+		return MouseButton::Right;
 	case SDL_BUTTON_X1:
-		return (uint16_t)Mouse::MouseButtons::Extra1;
+		return MouseButton::Extra1;
 	case SDL_BUTTON_X2:
-		return (uint16_t)Mouse::MouseButtons::Extra2;
+		return MouseButton::Extra2;
 	default:
-		return 65535;//Return the largest possible value, should error out somewhere
+		return (MouseButton)65535;//Return the largest possible value, should error out somewhere
 	}
 }
 
@@ -89,10 +89,6 @@ HatState getGenesisHatState(uint8_t state)
 
 void SDL2_Platform::onUpdate(double delta_time)
 {
-	//Clear Scroll Wheel
-	this->mouse_device->updateButton((int32_t)Mouse::MouseButtons::ForwardScroll, false, SDL_GetTicks());
-	this->mouse_device->updateButton((int32_t)Mouse::MouseButtons::BackwardScroll, false, SDL_GetTicks());
-
 	//Event Loop
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -154,27 +150,31 @@ void SDL2_Platform::onUpdate(double delta_time)
 		//MOUSE
 		else if(event.type == SDL_MOUSEBUTTONDOWN)
 		{
-			this->mouse_device->updateButton(getGenesisMouseButton(event.button.button), true, event.button.timestamp);
+			this->mouse_device->updateMouseButton(getGenesisMouseButton(event.button.button), true, event.button.timestamp);
 		}
 		else if (event.type == SDL_MOUSEBUTTONUP)
 		{
-			this->mouse_device->updateButton(getGenesisMouseButton(event.button.button), false, event.button.timestamp);
+			this->mouse_device->updateMouseButton(getGenesisMouseButton(event.button.button), false, event.button.timestamp);
 		}
 		else if (event.type == SDL_MOUSEWHEEL)
 		{
 			if (event.wheel.y > 0) // scroll up
 			{
-				this->mouse_device->updateButton((uint16_t)Mouse::MouseButtons::ForwardScroll, true, event.button.timestamp);
+				this->mouse_device->updateMouseButton(MouseButton::ForwardScroll, true, event.button.timestamp);
 			}
 			else if (event.wheel.y < 0) // scroll down
 			{
-				this->mouse_device->updateButton((uint16_t)Mouse::MouseButtons::BackwardScroll, true, event.button.timestamp);
+				this->mouse_device->updateMouseButton(MouseButton::BackwardScroll, true, event.button.timestamp);
 			}
 		}
 		else if (event.type == SDL_MOUSEMOTION)
 		{
 			//Only works when mouse is captued and is not in menu mode
-
+			if (true)
+			{
+				this->mouse_device->updateMouseAxis(MouseAxis::X, event.motion.xrel, event.motion.timestamp);
+				this->mouse_device->updateMouseAxis(MouseAxis::Y, event.motion.yrel, event.motion.timestamp);
+			}
 		}
 	}
 }

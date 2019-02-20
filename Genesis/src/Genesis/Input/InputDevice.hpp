@@ -73,14 +73,14 @@ namespace Genesis
 		bool hasAxis(string name);
 		AxisValue getAxis(string name);
 
-		void updateValues();
-
 		void updateButton(uint16_t index, bool state, Timestamp time);
 		void updateAxis(uint16_t index, double value, Timestamp time);
 
+		virtual void updateValues();
+
 		virtual string getButtonName(uint16_t index);
 		virtual string getAxisName(uint16_t index);
-	private:
+	protected:
 		string name;
 
 		Array<ButtonValue> button_values;
