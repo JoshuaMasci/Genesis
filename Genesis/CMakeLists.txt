@@ -9,7 +9,7 @@ source_group("Genesis_Headers" FILES ${GENESIS_HEADERS})
 
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.4/lib/x64/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/build/lib/Debug/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/bullet3-2.86.1/build/lib/Debug/)
 
 #Create Libary
 add_library(Genesis STATIC ${GENESIS_SOURCES} ${GENESIS_HEADERS})
@@ -29,10 +29,12 @@ target_link_libraries (Genesis PRIVATE SDL2)
 include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
 target_link_libraries (Genesis PRIVATE glew32)
 
-#REACT_PHYSICS_3D
-include_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/src)
-target_link_libraries (Genesis PRIVATE reactphysics3d)
-target_compile_definitions(Genesis PUBLIC IS_DOUBLE_PRECISION_ENABLED)
+#Bullet
+include_directories(${CMAKE_SOURCE_DIR}/lib/bullet3-2.86.1/src/)
+target_link_libraries  (Genesis PRIVATE BulletCollision_Debug)
+target_link_libraries  (Genesis PRIVATE BulletDynamics_Debug)
+target_link_libraries  (Genesis PRIVATE LinearMath_Debug)
+target_compile_definitions(Genesis PUBLIC BT_USE_DOUBLE_PRECISION)
 
 #spdlog
 include_directories(${CMAKE_SOURCE_DIR}/lib/spdlog-1.2.1/include)

@@ -11,12 +11,12 @@ InputDevice::InputDevice(string name, uint16_t number_of_buttons, uint16_t numbe
 
 void InputDevice::addButton(string name, ButtonIndex index)
 {
-	this->button_bindings[name].push_back(index);
+	this->button_bindings[name] = index;
 }
 
 void InputDevice::addAxis(string name, AxisSettings settings)
 {
-	this->axis_bindings[name].push_back(settings);
+	this->axis_bindings[name] = settings;
 }
 
 bool InputDevice::hasButton(string name)
@@ -28,16 +28,11 @@ bool InputDevice::getButtonDown(string name)
 {
 	if (this->hasButton(name))
 	{
-		for (ButtonIndex index : this->button_bindings[name])
+		ButtonIndex index = this->button_bindings[name];
+		ButtonValue button = this->button_values[index];
+		if (button.current_value == true)
 		{
-			if (index < this->button_values.size())
-			{
-				ButtonValue button = this->button_values[index];
-				if (button.current_value == true)
-				{
-					return true;
-				}
-			}
+			return true;
 		}
 	}
 
@@ -48,16 +43,11 @@ bool InputDevice::getButtonPressed(string name)
 {
 	if (this->hasButton(name))
 	{
-		for (ButtonIndex index : this->button_bindings[name])
+		ButtonIndex index = this->button_bindings[name];
+		ButtonValue button = this->button_values[index];
+		if (button.current_value == true && button.prev_value == false)
 		{
-			if (index < this->button_values.size())
-			{
-				ButtonValue button = this->button_values[index];
-				if (button.current_value == true && button.prev_value == false)
-				{
-					return true;
-				}
-			}
+			return true;
 		}
 	}
 
@@ -109,17 +99,11 @@ AxisValue InputDevice::getAxis(string name)
 	if (this->hasAxis(name))
 	{
 		//Get most recent values
-		AxisSettings axis = this->axis_bindings[name][0];
-		Timestamp timestamp = this->axis_values[axis.axis_index].timestamp;
+		AxisSettings axis = this->axis_bindings[name];
 
-		for (size_t i = 0; i < this->axis_bindings[name].size(); i++)
+		if (axis.axis_index == INVALID_INDEX)
 		{
-			AxisSettings temp = this->axis_bindings[name][i];
-			if (this->axis_values[temp.axis_index].timestamp > timestamp)
-			{
-				axis = temp;
-				timestamp = this->axis_values[temp.axis_index].timestamp;
-			}
+			return AxisValue();
 		}
 
 		AxisValue axis_value = this->axis_values[axis.axis_index];

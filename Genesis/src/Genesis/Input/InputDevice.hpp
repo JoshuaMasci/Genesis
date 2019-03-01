@@ -2,7 +2,7 @@
 
 #include "Genesis/Core/Types.hpp"
 
-#define INVALID_INDEX 255
+#define INVALID_INDEX 65535
 
 namespace Genesis
 {
@@ -33,7 +33,7 @@ namespace Genesis
 
 	struct AxisSettings
 	{
-		AxisSettings(uint16_t axis_index, double deadzone = 0.0, bool inverted = false, AxisRange range = AxisRange::FULL, double sensitivity = 1.0, ButtonIndex pos = INVALID_INDEX, ButtonIndex neg = INVALID_INDEX)
+		AxisSettings(uint16_t axis_index = INVALID_INDEX, double deadzone = 0.0, bool inverted = false, AxisRange range = AxisRange::FULL, double sensitivity = 1.0, ButtonIndex pos = INVALID_INDEX, ButtonIndex neg = INVALID_INDEX)
 		{
 			this->axis_index = axis_index;
 			this->deadzone = deadzone;
@@ -86,7 +86,7 @@ namespace Genesis
 		Array<ButtonValue> button_values;
 		Array<AxisValue> axis_values;
 
-		map<string, vector<ButtonIndex>> button_bindings;
-		map<string, vector<AxisSettings>> axis_bindings;
+		map<string, ButtonIndex> button_bindings;
+		map<string, AxisSettings> axis_bindings;
 	};
 };

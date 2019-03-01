@@ -11,6 +11,7 @@ SDL2_Platform::SDL2_Platform(Application* app)
 {
 	SDL_Init(SDL_INIT_EVENTS | SDL_INIT_JOYSTICK);
 	SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+
 	//Create Keyboard Device
 	
 	//Create Mouse Device

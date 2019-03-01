@@ -27,7 +27,6 @@ namespace Genesis
 		EntityManager entity_manager;
 		World* world = nullptr;
 
-
 		//Engine Systems
 		JobSystem job_system;
 		InputManager input_manager;

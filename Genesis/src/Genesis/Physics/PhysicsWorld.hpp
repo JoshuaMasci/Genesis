@@ -1,34 +1,21 @@
 #pragma once
 
-#include "Genesis/Physics/ReactPhysics3D_Include.hpp"
+#include "Genesis/Physics/Bullet_Include.hpp"
 
 namespace Genesis
 {
-	class SingleRayCallback : public reactphysics3d::RaycastCallback
+	//Prototypes
+	class Entity;
+	class RigidBody;
+
+	struct SingleRayTestResult
 	{
-	public:
-		bool has_hit = false;
+		bool hasHit = false;
 
-		reactphysics3d::decimal smallest_hit_fraction = 1.1;
-		reactphysics3d::CollisionBody* hit_body = nullptr;
-		reactphysics3d::ProxyShape* hit_shape = nullptr;
-		reactphysics3d::Vector3 world_point;
-		reactphysics3d::Vector3 world_normal;
+		Entity* entity = nullptr;
 
-		reactphysics3d::decimal notifyRaycastHit(const  reactphysics3d::RaycastInfo& raycastInfo)
-		{
-			if (raycastInfo.hitFraction < this->smallest_hit_fraction)
-			{
-				this->has_hit = true;
-				this->hit_body = raycastInfo.body;
-				this->hit_shape = raycastInfo.proxyShape;
-				this->world_point = raycastInfo.worldPoint;
-				this->world_normal = raycastInfo.worldNormal;
-				this->smallest_hit_fraction = raycastInfo.hitFraction;
-			}
-
-			return 1.0;
-		};
+		vector3D hitPosition;
+		vector3D hitNormal;
 	};
 
 	class PhysicsWorld
@@ -38,9 +25,22 @@ namespace Genesis
 		PhysicsWorld();
 		virtual ~PhysicsWorld();
 
-		void update(double delta_time);
+		virtual void update(double delta_time);
+
+		void addRigidBody(RigidBody* rigidBody);
+		void removeRigidBody(RigidBody* rigidBody);
+
+		SingleRayTestResult singleRayTest(vector3D startPos, vector3D endPos);
+		SingleRayTestResult singleRayTestNotMe(vector3D startPos, vector3D endPos, Entity* me);
+		btDiscreteDynamicsWorld* dynamicsWorld = nullptr;
 
 	protected:
-		reactphysics3d::DynamicsWorld* dynamics_world = nullptr;
+		//TODO: Remove this list
+		set<RigidBody*> rigid_bodies;
+
+		btBroadphaseInterface* broadphase = nullptr;
+		btDefaultCollisionConfiguration* collisionConfiguration = nullptr;
+		btCollisionDispatcher* dispatcher = nullptr;
+		btSequentialImpulseConstraintSolver* solver = nullptr;
 	};
-};
+}
