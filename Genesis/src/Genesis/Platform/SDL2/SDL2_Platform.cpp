@@ -13,7 +13,9 @@ SDL2_Platform::SDL2_Platform(Application* app)
 	SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
 	//Create Keyboard Device
-	
+	this->keyboard_device = new KeyboardDevice("SDL2 Keyboard");
+	this->application->input_manager.addInputDevice(this->keyboard_device);
+
 	//Create Mouse Device
 	this->mouse_device = new MouseDevice("SDL2 Mouse");
 	this->application->input_manager.addInputDevice(this->mouse_device);
@@ -275,41 +277,61 @@ void SDL2_Platform::onUpdate(double delta_time)
 		//Keyboard
 		else if (event.type == SDL_KEYDOWN)
 		{
-			this->keyboard_device->updateKeyboardButton(getGenesisKeyboardButton(event.key.keysym.scancode), true, event.key.timestamp);
+			if (this->keyboard_device != nullptr)
+			{
+				this->keyboard_device->updateKeyboardButton(getGenesisKeyboardButton(event.key.keysym.scancode), true, event.key.timestamp);
+			}
 		}
 		else if (event.type == SDL_KEYUP)
 		{
-			this->keyboard_device->updateKeyboardButton(getGenesisKeyboardButton(event.key.keysym.scancode), false , event.key.timestamp);
+			if (this->keyboard_device != nullptr)
+			{
+				this->keyboard_device->updateKeyboardButton(getGenesisKeyboardButton(event.key.keysym.scancode), false, event.key.timestamp);
+			}
 		}
+
 		//MOUSE
 		else if (event.type == SDL_MOUSEBUTTONDOWN)
 		{
-			this->mouse_device->updateMouseButton(getGenesisMouseButton(event.button.button), true, event.button.timestamp);
+			if (this->mouse_device != nullptr)
+			{
+				this->mouse_device->updateMouseButton(getGenesisMouseButton(event.button.button), true, event.button.timestamp);
+			}
 		}
 		else if (event.type == SDL_MOUSEBUTTONUP)
 		{
-			this->mouse_device->updateMouseButton(getGenesisMouseButton(event.button.button), false, event.button.timestamp);
+			if (this->mouse_device != nullptr)
+			{
+				this->mouse_device->updateMouseButton(getGenesisMouseButton(event.button.button), false, event.button.timestamp);
+			}
 		}
 		else if (event.type == SDL_MOUSEWHEEL)
 		{
-			if (event.wheel.y > 0) // scroll up
+			if (this->mouse_device != nullptr)
 			{
-				this->mouse_device->updateMouseButton(MouseButton::ForwardScroll, true, event.button.timestamp);
-			}
-			else if (event.wheel.y < 0) // scroll down
-			{
-				this->mouse_device->updateMouseButton(MouseButton::BackwardScroll, true, event.button.timestamp);
+				if (event.wheel.y > 0) // scroll up
+				{
+					this->mouse_device->updateMouseButton(MouseButton::ForwardScroll, true, event.button.timestamp);
+				}
+				else if (event.wheel.y < 0) // scroll down
+				{
+					this->mouse_device->updateMouseButton(MouseButton::BackwardScroll, true, event.button.timestamp);
+				}
 			}
 		}
 		else if (event.type == SDL_MOUSEMOTION)
 		{
-			//Only works when mouse is captued and is not in menu mode
-			if (true)
+			if (this->mouse_device != nullptr)
 			{
-				this->mouse_device->updateMouseAxis(MouseAxis::X, event.motion.xrel, event.motion.timestamp);
-				this->mouse_device->updateMouseAxis(MouseAxis::Y, event.motion.yrel, event.motion.timestamp);
+				//Only works when mouse is captued and is not in menu mode
+				if (true)
+				{
+					this->mouse_device->updateMouseAxis(MouseAxis::X, event.motion.xrel, event.motion.timestamp);
+					this->mouse_device->updateMouseAxis(MouseAxis::Y, event.motion.yrel, event.motion.timestamp);
+				}
 			}
 		}
+
 		//Joystick
 		else if (event.type == SDL_JOYDEVICEADDED)
 		{

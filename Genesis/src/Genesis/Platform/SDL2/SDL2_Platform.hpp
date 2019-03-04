@@ -19,7 +19,7 @@ namespace Genesis
 		
 	private:
 
-		KeyboardDevice * keyboard_device = nullptr;
+		KeyboardDevice* keyboard_device = nullptr;
 		MouseDevice* mouse_device = nullptr;
 
 		//Keep track of joystick devices so they can be deleted
