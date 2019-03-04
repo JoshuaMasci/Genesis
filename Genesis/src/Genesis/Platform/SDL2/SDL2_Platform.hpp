@@ -2,6 +2,7 @@
 
 #include "Genesis/Platform/Platform.hpp"
 
+#include "Genesis/Input/KeyboardDevice.hpp"
 #include "Genesis/Input/MouseDevice.hpp"
 #include "Genesis/Input/JoystickDevice.hpp"
 
@@ -18,7 +19,7 @@ namespace Genesis
 		
 	private:
 
-		InputDevice* keyboard_device = nullptr;
+		KeyboardDevice * keyboard_device = nullptr;
 		MouseDevice* mouse_device = nullptr;
 
 		//Keep track of joystick devices so they can be deleted

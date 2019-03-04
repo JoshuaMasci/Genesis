@@ -3,12 +3,21 @@
 using namespace Genesis;
 
 KeyboardDevice::KeyboardDevice(string name)
-	:InputDevice(name, 0, 0)
+	:InputDevice(name, (uint16_t)KeyboardButton::SIZE, 0)
 {
 }
 
 KeyboardDevice::~KeyboardDevice()
 {
+}
+
+//A wrapper for updateButton
+void Genesis::KeyboardDevice::updateKeyboardButton(KeyboardButton button, bool state, Timestamp time)
+{
+	if (button != KeyboardButton::SIZE)
+	{
+		this->updateButton((int32_t)button, state, time);
+	}
 }
 
 void KeyboardDevice::updateValues()
