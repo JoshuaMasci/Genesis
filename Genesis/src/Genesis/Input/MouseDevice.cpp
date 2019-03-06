@@ -3,7 +3,7 @@
 using namespace Genesis;
 
 MouseDevice::MouseDevice(string name)
-	:InputDevice(name, 7, 2)
+	:ArrayInputDevice(name, 7, 2)
 {
 
 }
@@ -28,7 +28,7 @@ void MouseDevice::updateMouseAxis(MouseAxis axis, int32_t movement_in_pixels, Ti
 
 void MouseDevice::updateValues()
 {
-	InputDevice::updateValues();//Call super
+	ArrayInputDevice::updateValues();//Call super
 
 	//Always clear the scroll wheel
 	this->updateButton((int16_t)MouseButton::ForwardScroll, false, 0);//Update time doesnt matter

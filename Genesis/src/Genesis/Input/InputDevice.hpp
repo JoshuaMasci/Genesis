@@ -2,26 +2,15 @@
 
 #include "Genesis/Core/Types.hpp"
 
-#define INVALID_INDEX 65535
-
 namespace Genesis
 {
 	typedef uint32_t Timestamp;
-
-	typedef uint16_t ButtonIndex;//May do settings later
 
 	struct ButtonValue
 	{
 		bool current_value = 0;
 		bool prev_value = 0;
 		Timestamp timestamp = 0;
-	};
-
-	enum class AxisRange
-	{
-		FULL,
-		FORWARD,
-		BACKWARD
 	};
 
 	struct AxisValue
@@ -31,62 +20,29 @@ namespace Genesis
 		Timestamp timestamp;
 	};
 
-	struct AxisSettings
-	{
-		AxisSettings(uint16_t axis_index = INVALID_INDEX, double deadzone = 0.0, bool inverted = false, AxisRange range = AxisRange::FULL, double sensitivity = 1.0, ButtonIndex pos = INVALID_INDEX, ButtonIndex neg = INVALID_INDEX)
-		{
-			this->axis_index = axis_index;
-			this->deadzone = deadzone;
-			this->inverted = inverted;
-			this->range = range;
-			this->sensitivity = sensitivity;
-			this->positive_button = pos;
-			this->negitive_button = neg;
-		};
-
-		uint16_t axis_index;
-		double deadzone = 0.0;
-		bool inverted = false;
-		AxisRange range = AxisRange::FULL;
-		double sensitivity = 1.0;
-		ButtonIndex positive_button = INVALID_INDEX;
-		ButtonIndex negitive_button = INVALID_INDEX;
-	};
-	
+	//The abstract interface for an input device
 	class InputDevice
 	{
 	public:
-		InputDevice(string name, uint16_t number_of_buttons, uint16_t number_of_axes);
-		
+		InputDevice(string device_name)
+			:name(device_name) {};
+
 		string getName() { return this->name; };
 
-		void addButton(string name, ButtonIndex index);
-		void addAxis(string name, AxisSettings settings);
-
 		//Has a binding of that name
-		bool hasButton(string name);
+		virtual bool hasButton(string button_name) = 0;
+		virtual ButtonValue getButton(string button_name) = 0;
 		//Returns if the button is currently being pressed
-		bool getButtonDown(string name);
+		virtual bool getButtonDown(string button_name) = 0;
 		//Returns true only once when the button is first pressed
-		bool getButtonPressed(string name);
+		virtual bool getButtonPressed(string button_name) = 0;
 
-		bool hasAxis(string name);
-		AxisValue getAxis(string name);
+		virtual bool hasAxis(string axis_name) = 0;
+		virtual AxisValue getAxis(string axis_name) = 0;
 
-		void updateButton(uint16_t index, bool state, Timestamp time);
-		void updateAxis(uint16_t index, double value, Timestamp time);
+		virtual void updateValues() = 0;
 
-		virtual void updateValues();
-
-		virtual string getButtonName(uint16_t index);
-		virtual string getAxisName(uint16_t index);
 	protected:
 		string name;
-
-		Array<ButtonValue> button_values;
-		Array<AxisValue> axis_values;
-
-		map<string, ButtonIndex> button_bindings;
-		map<string, AxisSettings> axis_bindings;
 	};
-};
+}

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Input/InputDevice.hpp"
+#include "Genesis/Input/ArrayInputDevice.hpp"
 
 namespace Genesis
 {
@@ -33,7 +33,7 @@ namespace Genesis
 		LeftDown,
 	};
 
-	class JoystickDevice: public InputDevice
+	class JoystickDevice: public ArrayInputDevice
 	{
 	public:
 		JoystickDevice(string name, uint16_t number_of_buttons, uint16_t number_of_hats, uint16_t number_of_axes);

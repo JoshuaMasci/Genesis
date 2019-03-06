@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Input/InputDevice.hpp"
+#include "Genesis/Input/ArrayInputDevice.hpp"
 
 namespace Genesis
 {
@@ -234,7 +234,7 @@ namespace Genesis
 	};
 
 
-	class KeyboardDevice : public InputDevice
+	class KeyboardDevice : public ArrayInputDevice
 	{
 	public:
 		KeyboardDevice(string name);

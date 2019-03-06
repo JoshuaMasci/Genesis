@@ -3,7 +3,7 @@
 using namespace Genesis;
 
 JoystickDevice::JoystickDevice(string name, uint16_t number_of_buttons, uint16_t number_of_hats, uint16_t number_of_axes)
-	:InputDevice(name, number_of_buttons + (number_of_hats * 4), number_of_axes)
+	:ArrayInputDevice(name, number_of_buttons + (number_of_hats * 4), number_of_axes)
 {
 	this->number_of_buttons = number_of_buttons;
 }
@@ -74,5 +74,5 @@ string JoystickDevice::getButtonName(uint16_t index)
 		return "Hat" + std::to_string(hat_index) + HatDirectionName[hat_direction];
 	}
 
-	return InputDevice::getButtonName(index);
+	return ArrayInputDevice::getButtonName(index);
 }

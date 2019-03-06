@@ -3,7 +3,7 @@
 using namespace Genesis;
 
 KeyboardDevice::KeyboardDevice(string name)
-	:InputDevice(name, (uint16_t)KeyboardButton::SIZE, 0)
+	:ArrayInputDevice(name, (uint16_t)KeyboardButton::SIZE, 0)
 {
 }
 
