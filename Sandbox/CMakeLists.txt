@@ -11,7 +11,7 @@ include_directories(${Genesis_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/spdlog-1.2.1/include)
 
-link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.4/lib/x64/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/bullet3-2.86.1/build/lib/Debug/)
 

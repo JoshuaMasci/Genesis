@@ -7,7 +7,7 @@ file(GLOB_RECURSE GENESIS_HEADERS "src/Genesis/*.hpp")
 source_group("Genesis" FILES ${GENESIS_SOURCES})
 source_group("Genesis_Headers" FILES ${GENESIS_HEADERS})
 
-link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.4/lib/x64/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/bullet3-2.86.1/build/lib/Debug/)
 
@@ -22,7 +22,7 @@ target_link_libraries (Genesis PRIVATE opengl32)
 target_link_libraries (Genesis PRIVATE glu32)
 
 #SDL2
-include_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.4/include/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/include/)
 target_link_libraries (Genesis PRIVATE SDL2)
 
 #Glew
