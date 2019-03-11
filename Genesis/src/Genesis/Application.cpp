@@ -5,7 +5,7 @@ using namespace Genesis;
 Application::Application()
 	:input_manager("config/input")
 {
-
+	this->entity_registry.create();
 }
 
 Application::~Application() 

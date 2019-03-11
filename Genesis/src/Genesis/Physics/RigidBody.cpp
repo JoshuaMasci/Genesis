@@ -1,6 +1,5 @@
 #include "RigidBody.hpp"
 
-#include "Genesis/World/Entity.hpp"
 #include "Genesis/Physics/PhysicsWorld.hpp"
 
 using namespace Genesis;

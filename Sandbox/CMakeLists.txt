@@ -9,7 +9,7 @@ source_group("Sandbox_Headers" FILES ${SANDBOX_HEADERS})
 
 include_directories(${Genesis_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/entt-cpp14/src/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/entt-master/src/)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
