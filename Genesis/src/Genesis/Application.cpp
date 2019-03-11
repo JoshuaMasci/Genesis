@@ -10,11 +10,6 @@ Application::Application()
 
 Application::~Application() 
 {
-	if (this->world != nullptr)
-	{
-		delete this->world;
-	}
-
 	if (this->window != nullptr)
 	{
 		delete this->window;
@@ -33,15 +28,6 @@ void Application::runFrame(double delta_time)
 	if (this->platform != nullptr)
 	{
 		this->platform->onUpdate(delta_time);
-	}
-
-	if (this->world != nullptr)
-	{
-		this->world->updatePreFrame(delta_time);
-
-		//TODO Physics
-
-		this->world->updatePostFrame(delta_time);
 	}
 
 	if (this->window != nullptr)

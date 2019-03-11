@@ -7,8 +7,7 @@
 #include "Genesis/Platform/Platform.hpp"
 #include "Genesis/Platform/Window.hpp"
 
-#include "Genesis/World/World.hpp"
-#include "Genesis/World/EntityManager.hpp"
+#include <entt/entity/registry.hpp>
 
 namespace Genesis
 {
@@ -23,17 +22,16 @@ namespace Genesis
 		void close();
 		bool isRunning();
 
-		//World
-		EntityManager entity_manager;
-		World* world = nullptr;
-
 		//Engine Systems
 		JobSystem job_system;
 		InputManager input_manager;
-		EventSystem event_system;
+		//EventSystem event_system;
 
 		Platform* platform = nullptr;
 		Window* window = nullptr;
+
+		//EnTT
+		entt::Registry<uint64_t> entity_registry;
 
 	protected:
 		bool is_running = true;

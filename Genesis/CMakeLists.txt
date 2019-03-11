@@ -36,5 +36,5 @@ target_link_libraries  (Genesis PRIVATE debug BulletDynamics_Debug optimized Bul
 target_link_libraries  (Genesis PRIVATE debug LinearMath_Debug optimized LinearMath)
 target_compile_definitions(Genesis PUBLIC BT_USE_DOUBLE_PRECISION)
 
-#spdlog
-include_directories(${CMAKE_SOURCE_DIR}/lib/spdlog-1.2.1/include)
+#ENTT
+include_directories(${CMAKE_SOURCE_DIR}/lib/entt-cpp14/src/)
