@@ -6,6 +6,9 @@ class SandboxApplication : public Genesis::Application
 {
 public:
 	SandboxApplication();
+
+private:
+
 };
 
 
