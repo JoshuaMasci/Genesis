@@ -20,7 +20,7 @@ target_link_libraries (Genesis PRIVATE glu32)
 #SDL2
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/include/)
-target_link_libraries (Genesis PRIVATE SDL2)
+target_link_libraries(Genesis PRIVATE SDL2)
 
 #Glew
 link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
@@ -29,12 +29,16 @@ target_link_libraries (Genesis PRIVATE glew32)
 
 #Bullet
 link_directories(${CMAKE_SOURCE_DIR}/lib/bullet3-2.86.1/build/lib/)
-
 include_directories(${CMAKE_SOURCE_DIR}/lib/bullet3-2.86.1/src/)
-target_link_libraries  (Genesis PRIVATE debug BulletCollision_Debug optimized BulletCollision)
-target_link_libraries  (Genesis PRIVATE debug BulletDynamics_Debug optimized BulletDynamics)
-target_link_libraries  (Genesis PRIVATE debug LinearMath_Debug optimized LinearMath)
+target_link_libraries(Genesis PRIVATE debug BulletCollision_Debug optimized BulletCollision)
+target_link_libraries(Genesis PRIVATE debug BulletDynamics_Debug optimized BulletDynamics)
+target_link_libraries(Genesis PRIVATE debug LinearMath_Debug optimized LinearMath)
 target_compile_definitions(Genesis PUBLIC BT_USE_DOUBLE_PRECISION)
 
 #ENTT
 include_directories(${CMAKE_SOURCE_DIR}/lib/entt-master/src/)
+
+#Vulkan
+include_directories(C:/VulkanSDK/1.1.101.0/Include/)
+link_directories(C:/VulkanSDK/1.1.101.0/Lib)
+target_link_libraries(Genesis PRIVATE vulkan-1)

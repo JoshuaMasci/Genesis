@@ -19,6 +19,7 @@
 
 namespace Genesis
 {
+	typedef glm::u32vec2 vector2U;
 	typedef glm::i32vec2 vector2I;
 	typedef glm::i32vec3 vector3I;
 
