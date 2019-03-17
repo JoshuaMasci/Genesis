@@ -36,11 +36,22 @@ void VulkanGraphics::initVulkan()
 	this->swapChain = new VulkanSwapChain(this->device, this->surface, this->window);
 
 	this->imageViews = new VulkanImageViews(this->device, this->swapChain);
+
+	//I have a feeling that the lifetime of this object should actually be pretty short
+	this->shader = new VulkanShader(this->device, "shader/vulkan/vert.spv", "shader/vulkan/frag.spv");
+
+	this->pipeline = new VulkanPipelineLayout(this->device, this->swapChain);
+	this->renderPass = new VulkanRenderPass(this->device, this->swapChain);
 }
 
 
 void VulkanGraphics::destroyVulkan()
 {
+	delete this->pipeline;
+	delete this->renderPass;
+
+	delete this->shader;
+
 	delete this->imageViews;
 	delete this->swapChain;
 	delete this->device;

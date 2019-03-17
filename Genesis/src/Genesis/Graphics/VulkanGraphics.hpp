@@ -11,7 +11,9 @@
 #include "Genesis/Graphics/VulkanDevice.hpp"
 #include "Genesis/Graphics/VulkanSwapChain.hpp"
 #include "Genesis/Graphics/VulkanImageViews.hpp"
-
+#include "Genesis/Graphics/VulkanShader.hpp"
+#include "Genesis/Graphics/VulkanPipeline.hpp"
+#include "Genesis/Graphics/VulkanRenderPass.hpp"
 
 namespace Genesis
 {
@@ -34,6 +36,9 @@ namespace Genesis
 		VulkanDevice* device = nullptr;
 		VulkanSwapChain* swapChain = nullptr;
 		VulkanImageViews* imageViews = nullptr;
+		VulkanShader* shader = nullptr;
+		VulkanPipelineLayout* pipeline = nullptr;
+		VulkanRenderPass* renderPass = nullptr;
 
 		bool debug_validation_layers = true;
 

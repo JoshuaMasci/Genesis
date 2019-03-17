@@ -19,6 +19,8 @@ namespace Genesis
 		vector<VkImage> getSwapChainImages();
 		VkFormat getSwapChainImageFormat();
 
+		VkExtent2D getSwapChainExtent();
+
 	private:
 		VulkanDevice* device = nullptr;
 

@@ -142,3 +142,8 @@ VkFormat VulkanSwapChain::getSwapChainImageFormat()
 {
 	return this->swapChainImageFormat;
 }
+
+VkExtent2D VulkanSwapChain::getSwapChainExtent()
+{
+	return this->swapChainExtent;
+}
