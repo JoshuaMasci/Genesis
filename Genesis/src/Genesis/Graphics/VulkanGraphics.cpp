@@ -3,6 +3,8 @@
 #include "Genesis/Platform/Window.hpp"
 #include "Genesis/Graphics/VulkanPhysicalDevicePicker.hpp"
 
+#include <limits>
+
 using namespace Genesis;
 
 VulkanGraphics::VulkanGraphics(Window* window)
@@ -14,6 +16,47 @@ VulkanGraphics::VulkanGraphics(Window* window)
 VulkanGraphics::~VulkanGraphics()
 {
 	this->destroyVulkan();
+}
+
+void VulkanGraphics::render()
+{
+	uint32_t imageIndex;
+	vkAcquireNextImageKHR(this->device->getDevice(), this->swapChain->getSwapChain(), INT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+	VkSemaphore waitSemaphores[] = { imageAvailableSemaphore };
+	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = waitSemaphores;
+	submitInfo.pWaitDstStageMask = waitStages;
+
+	vector<VkCommandBuffer> commandBuffers = this->commandBuffers->getCommandBuffers();
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
+
+	VkSemaphore signalSemaphores[] = { renderFinishedSemaphore };
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = signalSemaphores;
+
+	if (vkQueueSubmit(this->device->getGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) 
+	{
+		throw std::runtime_error("failed to submit draw command buffer!");
+	}
+
+	VkPresentInfoKHR presentInfo = {};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = signalSemaphores;
+	VkSwapchainKHR swapChains[] = { this->swapChain->getSwapChain() };
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = swapChains;
+	presentInfo.pImageIndices = &imageIndex;
+	presentInfo.pResults = nullptr; // Optional
+
+	vkQueuePresentKHR(this->device->getPresentQueue(), &presentInfo);
 }
 
 void VulkanGraphics::initVulkan()
@@ -35,24 +78,33 @@ void VulkanGraphics::initVulkan()
 
 	this->swapChain = new VulkanSwapChain(this->device, this->surface, this->window);
 
-	this->imageViews = new VulkanImageViews(this->device, this->swapChain);
+	this->pipeline = new VulkanPipeline(this->device, this->swapChain);
 
-	//I have a feeling that the lifetime of this object should actually be pretty short
-	this->shader = new VulkanShader(this->device, "shader/vulkan/vert.spv", "shader/vulkan/frag.spv");
+	this->framebuffers = new VulkanSwapChainFramebuffer(this->device, this->swapChain, this->pipeline->getRenderPass());
 
-	this->pipeline = new VulkanPipelineLayout(this->device, this->swapChain);
-	this->renderPass = new VulkanRenderPass(this->device, this->swapChain);
+	this->commandBuffers = new VulkanCommandBuffers(this->device, this->framebuffers, this->swapChain, this->pipeline);
+
+	VkSemaphoreCreateInfo semaphoreInfo = {};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	if (vkCreateSemaphore(this->device->getDevice(), &semaphoreInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS ||
+		vkCreateSemaphore(this->device->getDevice(), &semaphoreInfo, nullptr, &renderFinishedSemaphore) != VK_SUCCESS) 
+	{
+
+		throw std::runtime_error("failed to create semaphores!");
+	}
 }
-
 
 void VulkanGraphics::destroyVulkan()
 {
+	vkDestroySemaphore(this->device->getDevice(), renderFinishedSemaphore, nullptr);
+	vkDestroySemaphore(this->device->getDevice(), imageAvailableSemaphore, nullptr);
+
+	delete this->commandBuffers;
+
+	delete this->framebuffers;
+
 	delete this->pipeline;
-	delete this->renderPass;
 
-	delete this->shader;
-
-	delete this->imageViews;
 	delete this->swapChain;
 	delete this->device;
 

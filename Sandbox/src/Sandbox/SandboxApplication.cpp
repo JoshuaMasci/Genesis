@@ -16,3 +16,10 @@ SandboxApplication::~SandboxApplication()
 {
 	delete this->graphics;
 }
+
+void SandboxApplication::runFrame(double delta_time)
+{
+	Genesis::Application::runFrame(delta_time);
+
+	this->graphics->render();
+}

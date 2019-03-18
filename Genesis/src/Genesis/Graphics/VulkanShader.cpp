@@ -70,3 +70,8 @@ VulkanShader::~VulkanShader()
 	vkDestroyShaderModule(this->device->getDevice(), this->fragShaderModule, nullptr);
 	vkDestroyShaderModule(this->device->getDevice(), this->vertShaderModule, nullptr);
 }
+
+vector<VkPipelineShaderStageCreateInfo> Genesis::VulkanShader::getShaderStages()
+{
+	return this->shaderStages;
+}

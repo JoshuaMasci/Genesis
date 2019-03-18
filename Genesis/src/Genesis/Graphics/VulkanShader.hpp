@@ -10,6 +10,8 @@ namespace Genesis
 		VulkanShader(VulkanDevice* device, string vertex_name, string fragment_name);
 		~VulkanShader();
 
+		vector<VkPipelineShaderStageCreateInfo> getShaderStages();
+
 	private:
 		VulkanDevice* device = nullptr;
 

@@ -14,6 +14,9 @@ namespace Genesis
 		VkPhysicalDevice getPhysicalDevice();
 		VkDevice getDevice();
 
+		VkQueue getGraphicsQueue();
+		VkQueue getPresentQueue();
+
 	private:
 		VkPhysicalDevice physical_device;
 		VkDevice device;

@@ -12,6 +12,8 @@ namespace Genesis
 		VulkanRenderPass(VulkanDevice* device, VulkanSwapChain* swapChain);
 		~VulkanRenderPass();
 
+		VkRenderPass getRenderPass();
+
 	private:
 		VulkanDevice* device = nullptr;
 

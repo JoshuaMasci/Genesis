@@ -1,12 +1,15 @@
-#include "VulkanPipelineLayout.hpp"
+#include "VulkanPipeline.hpp"
 
 using namespace Genesis;
 
-VulkanPipelineLayout::VulkanPipelineLayout(VulkanDevice* device, VulkanSwapChain* swapChain)
+VulkanPipeline::VulkanPipeline(VulkanDevice* device, VulkanSwapChain* swapChain)
 {
 	this->device = device;
 
 	VkExtent2D swapChainExtent = swapChain->getSwapChainExtent();
+
+	//I have a feeling that the lifetime of this object should actually be pretty short
+	VulkanShader shader = VulkanShader(this->device, "shader/vulkan/vert.spv", "shader/vulkan/frag.spv");
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -72,13 +75,50 @@ VulkanPipelineLayout::VulkanPipelineLayout(VulkanDevice* device, VulkanSwapChain
 	pipelineLayoutInfo.setLayoutCount = 0;
 	pipelineLayoutInfo.pushConstantRangeCount = 0;
 
-	if (vkCreatePipelineLayout(device->getDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) 
+	if (vkCreatePipelineLayout(this->device->getDevice(), &pipelineLayoutInfo, nullptr, &this->pipelineLayout) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create pipeline layout!");
 	}
+
+
+	this->renderPass = new VulkanRenderPass(device, swapChain);
+	vector<VkPipelineShaderStageCreateInfo> shaderStages = shader.getShaderStages();
+
+	VkGraphicsPipelineCreateInfo pipelineInfo = {};
+	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
+	pipelineInfo.pStages = shaderStages.data();
+	pipelineInfo.pVertexInputState = &vertexInputInfo;
+	pipelineInfo.pInputAssemblyState = &inputAssembly;
+	pipelineInfo.pViewportState = &viewportState;
+	pipelineInfo.pRasterizationState = &rasterizer;
+	pipelineInfo.pMultisampleState = &multisampling;
+	pipelineInfo.pColorBlendState = &colorBlending;
+	pipelineInfo.layout = pipelineLayout;
+	pipelineInfo.renderPass = renderPass->getRenderPass();
+	pipelineInfo.subpass = 0;
+	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+
+	if (vkCreateGraphicsPipelines(this->device->getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &this->pipeline) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create graphics pipeline!");
+	}
 }
 
-VulkanPipelineLayout::~VulkanPipelineLayout()
+VulkanPipeline::~VulkanPipeline()
 {
-	vkDestroyPipelineLayout(this->device->getDevice(), pipelineLayout, nullptr);
+	vkDestroyPipeline(this->device->getDevice(), this->pipeline, nullptr);
+	vkDestroyPipelineLayout(this->device->getDevice(), this->pipelineLayout, nullptr);
+
+	delete this->renderPass;
+}
+
+VkPipeline Genesis::VulkanPipeline::getPipeline()
+{
+	return this->pipeline;
+}
+
+VulkanRenderPass* VulkanPipeline::getRenderPass()
+{
+	return this->renderPass;
 }

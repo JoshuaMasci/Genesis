@@ -10,6 +10,7 @@ public:
 	SandboxApplication();
 	virtual ~SandboxApplication();
 
+	virtual void runFrame(double delta_time);
 protected:
 	Genesis::VulkanGraphics* graphics;
 };

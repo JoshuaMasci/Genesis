@@ -12,7 +12,6 @@ VulkanDevice::VulkanDevice(VulkanConfig& config, VulkanSurface* surface, VkPhysi
 	vkGetPhysicalDeviceProperties(this->physical_device, &deviceProperties);
 	printf("Device Name: %s\n", deviceProperties.deviceName);
 
-
 	VulkanQueueFamilyIndices indices = VulkanQueueFamilyIndices::findQueueFamilies(this->physical_device, surface);
 
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -85,4 +84,14 @@ VkPhysicalDevice VulkanDevice::getPhysicalDevice()
 VkDevice VulkanDevice::getDevice()
 {
 	return this->device;
+}
+
+VkQueue VulkanDevice::getGraphicsQueue()
+{
+	return this->graphicsQueue;
+}
+
+VkQueue VulkanDevice::getPresentQueue()
+{
+	return this->presentQueue;
 }

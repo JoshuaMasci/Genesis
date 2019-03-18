@@ -16,10 +16,11 @@ namespace Genesis
 
 		VkSwapchainKHR getSwapChain();
 
-		vector<VkImage> getSwapChainImages();
 		VkFormat getSwapChainImageFormat();
-
 		VkExtent2D getSwapChainExtent();
+
+		vector<VkImage> getSwapChainImages();
+		vector<VkImageView> getSwapChainImageViews();
 
 	private:
 		VulkanDevice* device = nullptr;
@@ -30,5 +31,6 @@ namespace Genesis
 		VkExtent2D swapChainExtent;
 
 		vector<VkImage> swapChainImages;
+		vector<VkImageView> swapChainImageViews;
 	};
 }

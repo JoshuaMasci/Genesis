@@ -22,12 +22,15 @@ VulkanQueueFamilyIndices VulkanQueueFamilyIndices::findQueueFamilies(VkPhysicalD
 			indices.graphicsFamily = i;
 		}
 
-		VkBool32 presentSupport = false;
-		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface->getSurface(), &presentSupport);
-
-		if (queueFamily.queueCount > 0 && presentSupport)
+		if (surface != nullptr)
 		{
-			indices.presentFamily = i;
+			VkBool32 presentSupport = false;
+			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface->getSurface(), &presentSupport);
+
+			if (queueFamily.queueCount > 0 && presentSupport)
+			{
+				indices.presentFamily = i;
+			}
 		}
 
 		if (indices.isComplete())

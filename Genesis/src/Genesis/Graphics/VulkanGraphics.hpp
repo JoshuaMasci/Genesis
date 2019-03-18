@@ -10,10 +10,10 @@
 #include "Genesis/Graphics/VulkanDebugMessenger.hpp"
 #include "Genesis/Graphics/VulkanDevice.hpp"
 #include "Genesis/Graphics/VulkanSwapChain.hpp"
-#include "Genesis/Graphics/VulkanImageViews.hpp"
 #include "Genesis/Graphics/VulkanShader.hpp"
 #include "Genesis/Graphics/VulkanPipeline.hpp"
-#include "Genesis/Graphics/VulkanRenderPass.hpp"
+#include "Genesis/Graphics/VulkanSwapChainFramebuffer.hpp"
+#include "Genesis/Graphics/VulkanCommandBuffers.hpp"
 
 namespace Genesis
 {
@@ -26,6 +26,8 @@ namespace Genesis
 		VulkanGraphics(Window* window);
 		~VulkanGraphics();
 
+		void render();
+
 	private:
 		Window* const window;
 
@@ -35,10 +37,12 @@ namespace Genesis
 		VulkanDebugMessenger* debugMessenger = nullptr;
 		VulkanDevice* device = nullptr;
 		VulkanSwapChain* swapChain = nullptr;
-		VulkanImageViews* imageViews = nullptr;
-		VulkanShader* shader = nullptr;
-		VulkanPipelineLayout* pipeline = nullptr;
-		VulkanRenderPass* renderPass = nullptr;
+		VulkanPipeline* pipeline = nullptr;
+		VulkanSwapChainFramebuffer* framebuffers = nullptr;
+		VulkanCommandBuffers* commandBuffers = nullptr;
+
+		VkSemaphore imageAvailableSemaphore;
+		VkSemaphore renderFinishedSemaphore;
 
 		bool debug_validation_layers = true;
 

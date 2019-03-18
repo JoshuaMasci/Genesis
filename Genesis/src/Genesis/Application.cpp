@@ -29,11 +29,6 @@ void Application::runFrame(double delta_time)
 	{
 		this->platform->onUpdate(delta_time);
 	}
-
-	if (this->window != nullptr)
-	{
-		this->window->updateBuffer();
-	}
 }
 
 void Application::close()
