@@ -3,6 +3,7 @@
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Platform/Window.hpp"
 
+#define NOMINMAX
 #define VK_USE_PLATFORM_WIN32_KHR
 #include <vulkan/vulkan.h>
 
@@ -82,6 +83,10 @@ namespace Genesis
 		//Device
 		void create_device_and_queues(VkPhysicalDevice physical_device);
 		void delete_device_and_queues();
+
+		//Swapchain
+		void create_swapchain();
+		void delete_swapchain();
 
 		//Extensions and Layers
 		vector<const char*> getExtensions();
