@@ -1,17 +1,17 @@
 #include "VulkanQueueFamilyIndices.hpp"
 
-#include "Genesis/Graphics/VulkanSurface.hpp"
+#include "vulkan/vulkan.h"
 
 using namespace Genesis;
 
-VulkanQueueFamilyIndices VulkanQueueFamilyIndices::findQueueFamilies(VkPhysicalDevice device, VulkanSurface* surface)
+VulkanQueueFamilyIndices VulkanQueueFamilyIndices::findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
 	VulkanQueueFamilyIndices indices;
 
 	uint32_t queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
-	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
 	int i = 0;
@@ -25,7 +25,7 @@ VulkanQueueFamilyIndices VulkanQueueFamilyIndices::findQueueFamilies(VkPhysicalD
 		if (surface != nullptr)
 		{
 			VkBool32 presentSupport = false;
-			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface->getSurface(), &presentSupport);
+			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
 
 			if (queueFamily.queueCount > 0 && presentSupport)
 			{

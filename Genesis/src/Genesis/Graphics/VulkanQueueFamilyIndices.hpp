@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Genesis/Core/Types.hpp"
+
 #include "vulkan/vulkan.h"
 #include <optional>
 
@@ -17,7 +19,7 @@ namespace Genesis
 			return graphicsFamily.has_value() && presentFamily.has_value();
 		}
 
-		static VulkanQueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VulkanSurface* surface);
+		static VulkanQueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
 	};
 
 }

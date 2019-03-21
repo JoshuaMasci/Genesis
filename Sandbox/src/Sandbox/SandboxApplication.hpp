@@ -2,7 +2,7 @@
 
 #include <Genesis/Genesis.hpp>
 
-#include <Genesis/Graphics/VulkanGraphics.hpp>
+#include <Genesis/Graphics/VulkanRenderer.hpp>
 
 class SandboxApplication : public Genesis::Application
 {
@@ -12,7 +12,7 @@ public:
 
 	virtual void runFrame(double delta_time);
 protected:
-	Genesis::VulkanGraphics* graphics;
+	Genesis::VulkanRenderer* renderer = nullptr;
 };
 
 
