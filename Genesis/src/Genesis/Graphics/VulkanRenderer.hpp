@@ -116,6 +116,8 @@ namespace Genesis
 		//More Temp Stuff
 		VkBuffer vertex_buffer;
 		VmaAllocation vertex_buffer_memory;
+		VkBuffer index_buffer;
+		VmaAllocation index_buffer_memory;
 		void create_cube_buffer();
 		void delete_cube_buffer();
 
