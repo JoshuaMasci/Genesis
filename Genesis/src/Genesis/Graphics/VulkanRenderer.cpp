@@ -197,7 +197,7 @@ void Genesis::VulkanRenderer::create_pipeline()
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizer.cullMode = VK_CULL_MODE_NONE;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -399,9 +399,9 @@ void Genesis::VulkanRenderer::create_cube_buffer()
 {
 	std::vector<Vertex> vertices =
 	{
-	{{0.0f, -0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}},
-	{{0.5f, 0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-	{ {-0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, { 0.0f, 0.0f }}
+	{{0.0f, -0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}},
+	{{0.5f, 0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}, {1.0f, 1.0f}},
+	{{-0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, { 1.0f, 1.0f }}
 	};
 
 	VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
@@ -410,7 +410,7 @@ void Genesis::VulkanRenderer::create_cube_buffer()
 	//FILL THE BUFFER!!!!!
 	void* data;
 	vmaMapMemory(this->context.allocator, this->vertex_buffer_memory, &data);
-	memcpy(data, &vertices, bufferSize);
+	memcpy(data, vertices.data(), bufferSize);
 	vmaUnmapMemory(this->context.allocator, this->vertex_buffer_memory);
 }
 
