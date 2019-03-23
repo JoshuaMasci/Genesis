@@ -20,4 +20,5 @@ SandboxApplication::~SandboxApplication()
 void SandboxApplication::runFrame(double delta_time)
 {
 	Genesis::Application::runFrame(delta_time);
+	this->renderer->render(delta_time);
 }

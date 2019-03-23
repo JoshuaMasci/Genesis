@@ -36,6 +36,9 @@ int main(int argc, char** argv)
 
 	delete sandbox;
 
+	//Wait till enter
+	getchar();
+
 	return 0;
 	//OMEGA
 }

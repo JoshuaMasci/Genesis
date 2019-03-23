@@ -9,8 +9,16 @@ namespace Container
 		Array(){};//Empty Array
 		Array(size_t size)
 		{
-			this->array_size = size;
-			this->array_data = new T[this->array_size];
+			if (size > 0)
+			{
+				this->array_size = size;
+				this->array_data = new T[this->array_size];
+			}
+			else
+			{
+				this->array_size = 0;
+				this->array_data = nullptr;
+			}
 		};
 
 		~Array()
@@ -23,6 +31,8 @@ namespace Container
 		};
 
 		size_t size() { return this->array_size; };
+
+		T* data() { return array_data; };
 
 		T& operator[](size_t index)
 		{

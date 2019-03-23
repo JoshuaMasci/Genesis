@@ -16,6 +16,7 @@ namespace Genesis
 	{
 	public:
 		Window(vector2U size, string title) {};
+		virtual ~Window() {};
 
 		virtual vector2U getWindowSize() = 0;
 		virtual void setWindowSize(vector2U size) = 0;
