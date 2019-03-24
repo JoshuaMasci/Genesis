@@ -99,6 +99,23 @@ void VulkanRenderer::render(double delta_time)
 	if (result == VK_ERROR_OUT_OF_DATE_KHR) 
 	{
 		//throw std::runtime_error("Need to rebuild swapchain!!!");
+		vkDeviceWaitIdle(this->context.device);
+
+		this->delete_command_buffers();
+		this->delete_descriptor_set();
+		this->delete_pipeline();
+		this->delete_swapchain_framebuffers();
+		this->delete_screen_render_pass();
+		this->delete_swapchain();
+
+		this->create_swapchain();
+		this->create_screen_render_pass();
+		this->create_swapchain_framebuffers();
+		this->create_pipeline();
+		this->create_descriptor_set();
+		this->create_command_buffers();
+
+		return;
 	}
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) 
 	{
@@ -114,7 +131,7 @@ void VulkanRenderer::render(double delta_time)
 	angle += (turn_rate * (float)delta_time);
 
 	matrix4F model = glm::toMat4(quat);
-	matrix4F view = glm::lookAt(vector3F(0.0f, -1.0f, -2.0f), vector3F(0.0f), vector3F(0.0f, 1.0f, 0.0f));
+	matrix4F view = glm::lookAt(vector3F(0.0f, 0.0f, -2.0f), vector3F(0.0f), vector3F(0.0f, 1.0f, 0.0f));
 	matrix4F proj = glm::infinitePerspective(fov, aspect, 0.1f);
 	proj[1][1] *= -1; //Need to apply this because vulkan flips the y-axis and I don't like that
 
@@ -497,7 +514,6 @@ void Genesis::VulkanRenderer::buildCommandBuffer(uint32_t index)
 	vkCmdBindVertexBuffers(this->context.command_buffers[index], 0, 1, vertexBuffers, offsets);
 	vkCmdBindIndexBuffer(this->context.command_buffers[index], this->index_buffer, 0, VK_INDEX_TYPE_UINT16);
 
-	//vkCmdDraw(this->context.command_buffers[index], 3, 1, 0, 0);
 	vkCmdDrawIndexed(this->context.command_buffers[index], TEMP_SIZE, 1, 0, 0, 0);
 
 	vkCmdEndRenderPass(this->context.command_buffers[index]);
