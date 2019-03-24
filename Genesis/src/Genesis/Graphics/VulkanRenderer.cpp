@@ -108,9 +108,15 @@ void VulkanRenderer::render(double delta_time)
 	float fov = 1.0f / tan(glm::radians(75.0f) / 2.0f);
 	float aspect = (float)this->context.swapchain_properties.swapchain_extent.width / (float)this->context.swapchain_properties.swapchain_extent.height;
 
-	matrix4F model = matrix4F(1.0f);
-	matrix4F view = glm::lookAt(vector3F(0.0, 0.0, -1.0), vector3F(0.0f), vector3F(0.0, 1.0, 0.0));
+	const float turn_rate = (float)PI / 2.0f;
+	static float angle = 0.0f;
+	quaternionF quat = glm::angleAxis(angle, vector3F(0.0f, 1.0f, 0.0f));
+	angle += (turn_rate * (float)delta_time);
+
+	matrix4F model = glm::toMat4(quat);
+	matrix4F view = glm::lookAt(vector3F(0.0f, -1.0f, -2.0f), vector3F(0.0f), vector3F(0.0f, 1.0f, 0.0f));
 	matrix4F proj = glm::infinitePerspective(fov, aspect, 0.1f);
+	proj[1][1] *= -1; //Need to apply this because vulkan flips the y-axis and I don't like that
 
 	matrix4F matrix = proj * view * model;
 
@@ -204,7 +210,7 @@ void Genesis::VulkanRenderer::create_pipeline()
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_NONE;
+	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -402,15 +408,33 @@ void Genesis::VulkanRenderer::delete_descriptor_set()
 	vkDestroyDescriptorPool(this->context.device, this->descriptor_pool, nullptr);
 }
 
+uint32_t TEMP_SIZE;
+
 void Genesis::VulkanRenderer::create_cube_buffer()
 {
 	std::vector<Vertex> vertices =
 	{
-	{{-0.5f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-	{{0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-	{{0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-	{{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}}
+	{{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+	{{0.5f, -0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+	{{0.5f, 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+	{{-0.5f, 0.5f, -0.5f}, {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f}},
+	{{-0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+	{{0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
+	{{0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+	{{-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}}
 	};
+
+	std::vector<uint16_t> indices =
+	{
+	5, 6, 4, 4, 6, 7, //front
+	1, 0, 2, 2, 0, 3, //back
+	1, 2, 5, 5, 2, 6, //left
+	0, 4, 3, 3, 4, 7, //right
+	2, 3, 6, 6, 3, 7, //top
+	0, 1, 4, 4, 1, 5 //bottom
+	};
+
+	TEMP_SIZE = (uint32_t)indices.size();
 
 	VkDeviceSize bufferSize = sizeof(Vertex) * vertices.size();
 	createBuffer(this->context.allocator, bufferSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY, this->vertex_buffer, this->vertex_buffer_memory);
@@ -420,11 +444,6 @@ void Genesis::VulkanRenderer::create_cube_buffer()
 	vmaMapMemory(this->context.allocator, this->vertex_buffer_memory, &data);
 	memcpy(data, vertices.data(), bufferSize);
 	vmaUnmapMemory(this->context.allocator, this->vertex_buffer_memory);
-
-	std::vector<uint16_t> indices = 
-	{
-	0, 1, 2, 2, 3, 0
-	};
 
 	bufferSize = sizeof(uint16_t) * indices.size();
 	createBuffer(this->context.allocator, bufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_ONLY, this->index_buffer, this->index_buffer_memory);
@@ -479,7 +498,7 @@ void Genesis::VulkanRenderer::buildCommandBuffer(uint32_t index)
 	vkCmdBindIndexBuffer(this->context.command_buffers[index], this->index_buffer, 0, VK_INDEX_TYPE_UINT16);
 
 	//vkCmdDraw(this->context.command_buffers[index], 3, 1, 0, 0);
-	vkCmdDrawIndexed(this->context.command_buffers[index], 6, 1, 0, 0, 0);
+	vkCmdDrawIndexed(this->context.command_buffers[index], TEMP_SIZE, 1, 0, 0, 0);
 
 	vkCmdEndRenderPass(this->context.command_buffers[index]);
 
