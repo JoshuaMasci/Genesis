@@ -89,6 +89,26 @@ VulkanRenderer::~VulkanRenderer()
 
 void VulkanRenderer::render(double delta_time)
 {
+	//Keeps the system from crashing when the screen is too small to use
+	if (this->context.swapchain_invalid == true)
+	{
+		VkSurfaceCapabilitiesKHR capabilities;
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this->context.device_properties.physical_device, this->context.surface, &capabilities);
+
+		if (capabilities.maxImageExtent.width <= 1, capabilities.maxImageExtent.height <= 1)
+		{
+			this->context.swapchain_invalid = true;
+			return;
+		}
+
+		this->create_swapchain();
+		this->create_screen_render_pass();
+		this->create_swapchain_framebuffers();
+		this->create_pipeline();
+		this->create_descriptor_set();
+		this->create_command_buffers();
+	}
+
 	static uint32_t current_frame = 0;
 
 	vkWaitForFences(this->context.device, 1, &this->context.in_flight_fences[current_frame], VK_TRUE, std::numeric_limits<uint64_t>::max());
@@ -108,13 +128,7 @@ void VulkanRenderer::render(double delta_time)
 		this->delete_screen_render_pass();
 		this->delete_swapchain();
 
-		this->create_swapchain();
-		this->create_screen_render_pass();
-		this->create_swapchain_framebuffers();
-		this->create_pipeline();
-		this->create_descriptor_set();
-		this->create_command_buffers();
-
+		this->context.swapchain_invalid = true;
 		return;
 	}
 	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) 
@@ -625,7 +639,7 @@ void VulkanRenderer::create_surface()
 	{
 		throw std::runtime_error("failed to attach to surface");
 	}
-#endif // DEBUG
+#endif
 }
 
 void VulkanRenderer::delete_surface()
@@ -935,6 +949,9 @@ void VulkanRenderer::create_swapchain()
 	VkFormat depthFormat = findDepthFormat(this->context.device_properties.physical_device);
 	createImage(this->context.allocator, this->context.swapchain_properties.swapchain_extent, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VMA_MEMORY_USAGE_GPU_ONLY, this->context.swapchain_images.depth_image, this->context.swapchain_images.depth_image_memory);
 	this->context.swapchain_images.depth_imageview = createImageView(this->context.device, this->context.swapchain_images.depth_image, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+
+	//Validate Swapchain
+	this->context.swapchain_invalid = false;
 }
 
 void VulkanRenderer::delete_swapchain()

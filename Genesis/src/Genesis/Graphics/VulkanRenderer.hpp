@@ -62,6 +62,7 @@ namespace Genesis
 		VmaAllocator allocator;
 
 		//Swapchain
+		bool swapchain_invalid = true;
 		VkSwapchainKHR swapchain;
 		uint32_t swapchain_image_count;
 		SwapchainProperties swapchain_properties;
