@@ -19,6 +19,11 @@ Application::~Application()
 	{
 		delete this->platform;
 	}
+
+	if (this->scene != nullptr)
+	{
+		delete this->scene;
+	}
 }
 
 void Application::runFrame(double delta_time)
@@ -28,6 +33,11 @@ void Application::runFrame(double delta_time)
 	if (this->platform != nullptr)
 	{
 		this->platform->onUpdate(delta_time);
+	}
+
+	if (this->scene != nullptr)
+	{
+		this->scene->runFrame(delta_time);
 	}
 }
 

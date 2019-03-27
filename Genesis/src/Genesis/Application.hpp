@@ -6,43 +6,10 @@
 #include "Genesis/Platform/Platform.hpp"
 #include "Genesis/Platform/Window.hpp"
 
-#include <entt/entity/registry.hpp>
+#include "Genesis/GameScene.hpp"
 
 namespace Genesis
 {
-	struct Test
-	{
-		uint16_t num = 0;
-	};
-
-	class TestJob : public Job
-	{
-	public:
-		TestJob(entt::view<unsigned int, Test>* view, entt::registry<>* registry, size_t start, size_t end)
-		{
-			this->view = view;
-			this->entity_registry = registry;
-			this->start = start;
-			this->end = end;
-		};
-
-		virtual void run() override
-		{
-			for (size_t i = this->start; i < this->end; i++)
-			{
-				uint32_t value = (*view)[i];
-				Test& test = this->entity_registry->get<Test>(value);
-				test.num++;
-			}
-		};
-
-	private:
-		entt::view<unsigned int, Test>* view;
-		entt::registry<>* entity_registry;
-		size_t start;
-		size_t end;
-	};
-
 	class Application
 	{
 	public:
@@ -61,8 +28,7 @@ namespace Genesis
 		Platform* platform = nullptr;
 		Window* window = nullptr;
 
-		//EnTT
-		entt::registry<> entity_registry;
+		GameScene* scene = nullptr;
 
 	protected:
 		bool is_running = true;

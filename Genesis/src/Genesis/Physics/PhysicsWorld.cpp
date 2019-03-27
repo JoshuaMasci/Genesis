@@ -35,6 +35,8 @@ void PhysicsWorld::update(double delta_time)
 {
 	//Run Physics Simulation
 	this->dynamicsWorld->stepSimulation(delta_time, 8, 1.0 / 240.0);
+
+	//TODO update forces on each rigid body every tick
 }
 
 void PhysicsWorld::addRigidBody(RigidBody* rigidBody)

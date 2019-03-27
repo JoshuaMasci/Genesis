@@ -18,18 +18,18 @@ target_link_libraries (Genesis PRIVATE opengl32)
 target_link_libraries (Genesis PRIVATE glu32)
 
 #SDL2
-link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/include/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 target_link_libraries(Genesis PRIVATE SDL2)
 
 #Glew
-link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
 target_link_libraries (Genesis PRIVATE glew32)
 
 #Bullet
-link_directories(${CMAKE_SOURCE_DIR}/lib/bullet3-2.86.1/build/lib/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/bullet3-2.86.1/src/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/bullet3-2.86.1/build/lib/)
 target_link_libraries(Genesis PRIVATE debug BulletCollision_Debug optimized BulletCollision)
 target_link_libraries(Genesis PRIVATE debug BulletDynamics_Debug optimized BulletDynamics)
 target_link_libraries(Genesis PRIVATE debug LinearMath_Debug optimized LinearMath)
