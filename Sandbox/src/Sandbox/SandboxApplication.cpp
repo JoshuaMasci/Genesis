@@ -8,17 +8,14 @@ SandboxApplication::SandboxApplication()
 {
 	this->platform = new Genesis::SDL2_Platform(this);
 	this->window = new Genesis::SDL2_Window(Genesis::vector2U(2560, 1440), "Sandbox Vulkan");
-
-	this->renderer = new Genesis::VulkanRenderer(this->window, "Sandbox");
 }
 
 SandboxApplication::~SandboxApplication()
 {
-	delete this->renderer;
 }
 
 void SandboxApplication::runFrame(double delta_time)
 {
 	Genesis::Application::runFrame(delta_time);
-	this->renderer->render(delta_time);
+
 }
