@@ -4,10 +4,10 @@
 
 using namespace Genesis;
 
-#include "Genesis/Graphics/VulkanPhysicalDevicePicker.hpp"
-#include "Genesis/Graphics/VulkanQueueFamilyIndices.hpp"
-#include "Genesis/Graphics/VulkanSwapChainSupportDetails.hpp"
-#include "Genesis/Graphics/VulkanShader.hpp"
+#include "Genesis/Graphics/Vulkan/VulkanPhysicalDevicePicker.hpp"
+#include "Genesis/Graphics/Vulkan/VulkanQueueFamilyIndices.hpp"
+#include "Genesis/Graphics/Vulkan/VulkanSwapChainSupportDetails.hpp"
+#include "Genesis/Graphics/Vulkan/VulkanShader.hpp"
 
 #include <algorithm>
 

@@ -1,7 +1,7 @@
 #include "VulkanPhysicalDevicePicker.hpp"
 
-#include "Genesis/Graphics/VulkanQueueFamilyIndices.hpp"
-//#include "Genesis/Graphics/VulkanSwapChainSupportDetails.hpp"
+#include "Genesis/Graphics/Vulkan/VulkanQueueFamilyIndices.hpp"
+//#include "Genesis/Graphics/Vulkan/VulkanSwapChainSupportDetails.hpp"
 
 using namespace Genesis;
 

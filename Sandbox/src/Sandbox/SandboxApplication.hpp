@@ -2,7 +2,7 @@
 
 #include <Genesis/Genesis.hpp>
 
-#include <Genesis/Graphics/VulkanRenderer.hpp>
+#include <Genesis/Graphics/Vulkan/VulkanRenderer.hpp>
 
 class SandboxApplication : public Genesis::Application
 {

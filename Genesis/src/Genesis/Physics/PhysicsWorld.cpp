@@ -39,15 +39,15 @@ void PhysicsWorld::update(double delta_time)
 
 void PhysicsWorld::addRigidBody(RigidBody* rigidBody)
 {
-	/*this->dynamicsWorld->addRigidBody(rigidBody->getRigidBody());
-	rigidBody->setPhysicsWorld(this);*/
+	this->dynamicsWorld->addRigidBody(rigidBody->getRigidBody());
+	rigidBody->setPhysicsWorld(this);
 	this->rigid_bodies.insert(rigidBody);
 }
 
 void PhysicsWorld::removeRigidBody(RigidBody* rigidBody)
 {
-	/*this->dynamicsWorld->removeRigidBody(rigidBody->getRigidBody());
-	rigidBody->setPhysicsWorld(nullptr);*/
+	this->dynamicsWorld->removeRigidBody(rigidBody->getRigidBody());
+	rigidBody->setPhysicsWorld(nullptr);
 	this->rigid_bodies.erase(rigidBody);
 }
 
