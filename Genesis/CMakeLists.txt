@@ -37,11 +37,3 @@ target_compile_definitions(Genesis PUBLIC BT_USE_DOUBLE_PRECISION)
 
 #ENTT
 include_directories(${CMAKE_SOURCE_DIR}/lib/entt-master/src/)
-
-#Vulkan
-include_directories(C:/VulkanSDK/1.1.101.0/Include/)
-link_directories(C:/VulkanSDK/1.1.101.0/Lib)
-target_link_libraries(Genesis PRIVATE vulkan-1)
-
-#VMA
-include_directories(${CMAKE_SOURCE_DIR}/lib/VulkanMemoryAllocator/src/)
