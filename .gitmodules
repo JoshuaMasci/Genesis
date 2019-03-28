@@ -4,6 +4,7 @@
 [submodule "lib/bullet_physics"]
 	path = lib/bullet_physics
 	url = https://github.com/Iamshortman/bullet3.git
+	ignore = untracked
 [submodule "lib/glm"]
 	path = lib/glm
 	url = https://github.com/g-truc/glm.git
