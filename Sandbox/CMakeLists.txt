@@ -9,12 +9,11 @@ source_group("Sandbox_Headers" FILES ${SANDBOX_HEADERS})
 
 include_directories(${Genesis_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/entt-master/src/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/bullet3-2.86.1/src/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/entt/src/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/src/)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/bullet3-2.86.1/build/lib/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/lib/)
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})
 set_target_properties(Sandbox PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${Sandbox_SOURCE_DIR}")

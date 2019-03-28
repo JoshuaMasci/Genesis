@@ -21,7 +21,7 @@ namespace Genesis
 		Application* application;
 
 		//EnTT
-		entt::registry<> entity_registry;
+		entt::basic_registry<uint32_t> entity_registry;
 
 		//Physics
 		map<uint16_t, PhysicsWorld*> physics_worlds;
