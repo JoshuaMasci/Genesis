@@ -5,13 +5,12 @@
 namespace Genesis
 {
 	//Prototype Class
-	class Entity;
 	class PhysicsWorld;
 
 	class RigidBody
 	{
 	public:
-		RigidBody(Entity* entity);
+		RigidBody();
 		virtual ~RigidBody();
 
 		void setMass(double mass);
@@ -55,8 +54,6 @@ namespace Genesis
 		double mass = 1.0;
 
 		btRigidBody* rigidBody = nullptr;
-
-		Entity* parent = nullptr;
 
 		PhysicsWorld* physics_world = nullptr;
 	};

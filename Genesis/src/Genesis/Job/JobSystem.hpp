@@ -2,8 +2,8 @@
 
 #include "Genesis/Job/Job.hpp"
 #include "Genesis/Core/Types.hpp"
-#include "Genesis/Job/JobQueue.hpp"
 
+#include <concurrentqueue.h>
 #include <thread>
 #include <memory>
 
@@ -24,7 +24,7 @@ namespace Genesis
 		inline bool shouldThreadsRun() { return this->should_threads_run; };
 		inline uint8_t getThreadWaitTimeMilliseconds() { return this->thread_wait_time_milli; };
 
-		JobQueue<Job*> job_queue;
+		moodycamel::ConcurrentQueue<Job*> job_queue;
 
 	protected:
 		vector<std::thread> threads;

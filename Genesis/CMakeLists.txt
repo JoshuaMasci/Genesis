@@ -28,3 +28,7 @@ target_compile_definitions(Genesis PUBLIC BT_USE_DOUBLE_PRECISION)
 
 #ENTT
 include_directories(${CMAKE_SOURCE_DIR}/lib/entt/src/)
+
+#Concurrent Queue
+include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
+

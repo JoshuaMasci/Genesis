@@ -23,7 +23,6 @@ void Transform::setPosition(const vector3D& vec)
 void Transform::setOrientation(const quaternionD& quat) 
 { 
 	this->orientation = quat;
-	this->updateModelMatrix();
 }
 
 void Transform::setTransform(const Transform& trans) { this->setPosition(trans.getPosition()); this->setOrientation(trans.getOrientation()); }
@@ -36,7 +35,7 @@ Transform Transform::transformBy(const Transform& transform1) const
 	return result;
 }
 
-void Genesis::Transform::updateModelMatrix()
+ /*void Genesis::Transform::updateModelMatrix()
 {
 	this->model_matrix = glm::toMat4((quaternionF)this->orientation);//Scale does not exist right now
-}
+}*/

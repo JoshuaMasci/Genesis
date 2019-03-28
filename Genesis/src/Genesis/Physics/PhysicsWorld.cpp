@@ -10,45 +10,45 @@ PhysicsWorld::PhysicsWorld()
 	broadphase = new btDbvtBroadphase();
 
 	// Set up the collision configuration and dispatcher
-	collisionConfiguration = new btDefaultCollisionConfiguration();
-	dispatcher = new btCollisionDispatcher(collisionConfiguration);
+	collision_configuration = new btDefaultCollisionConfiguration();
+	dispatcher = new btCollisionDispatcher(collision_configuration);
 
 	// The actual physics solver
 	solver = new btSequentialImpulseConstraintSolver();
 
 	// The world
-	dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-	dynamicsWorld->setGravity(btVector3(0.0, 0.0, 0.0));
+	dynamics_world = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collision_configuration);
+	dynamics_world->setGravity(btVector3(0.0, 0.0, 0.0));
 }
 
 PhysicsWorld::~PhysicsWorld()
 {
 	// Clean up after ourselves like good little programmers
-	delete dynamicsWorld;
+	delete dynamics_world;
 	delete solver;
 	delete dispatcher;
-	delete collisionConfiguration;
+	delete collision_configuration;
 	delete broadphase;
 }
 
 void PhysicsWorld::update(double delta_time)
 {
 	//Run Physics Simulation
-	this->dynamicsWorld->stepSimulation(delta_time, 8, 1.0 / 240.0);
+	this->dynamics_world->stepSimulation(delta_time, 8, 1.0 / 240.0);
 
 	//TODO update forces on each rigid body every tick
 }
 
 void PhysicsWorld::addRigidBody(RigidBody* rigidBody)
 {
-	this->dynamicsWorld->addRigidBody(rigidBody->getRigidBody());
+	this->dynamics_world->addRigidBody(rigidBody->getRigidBody());
 	rigidBody->setPhysicsWorld(this);
 	this->rigid_bodies.insert(rigidBody);
 }
 
 void PhysicsWorld::removeRigidBody(RigidBody* rigidBody)
 {
-	this->dynamicsWorld->removeRigidBody(rigidBody->getRigidBody());
+	this->dynamics_world->removeRigidBody(rigidBody->getRigidBody());
 	rigidBody->setPhysicsWorld(nullptr);
 	this->rigid_bodies.erase(rigidBody);
 }
@@ -61,7 +61,7 @@ SingleRayTestResult PhysicsWorld::singleRayTest(vector3D startPos, vector3D endP
 	MyClosestRayResultCallback rayCallback(start, end);
 
 	// Perform raycast
-	dynamicsWorld->rayTest(start, end, rayCallback);
+	dynamics_world->rayTest(start, end, rayCallback);
 
 	SingleRayTestResult result;
 
@@ -72,8 +72,6 @@ SingleRayTestResult PhysicsWorld::singleRayTest(vector3D startPos, vector3D endP
 
 		result.hitPosition = toVec3(rayCallback.m_hitPointWorld);
 		result.hitNormal = toVec3(rayCallback.m_hitNormalWorld);
-
-		result.entity = (Entity*)hitBody->getUserPointer();
 
 		if (rayCallback.m_bodyId != -1)
 		{
@@ -87,63 +85,9 @@ SingleRayTestResult PhysicsWorld::singleRayTest(vector3D startPos, vector3D endP
 				{
 					child = shape->getChildShape(rayCallback.m_bodyId);
 				}
-
 			}
 		}
 	}
 
 	return result;
-}
-
-SingleRayTestResult PhysicsWorld::singleRayTestNotMe(vector3D startPos, vector3D endPos, Entity* me)
-{
-	/*btVector3 start = toBtVec3(startPos);
-	btVector3 end = toBtVec3(endPos);
-
-	btCollisionWorld::AllHitsRayResultCallback rayCallback(start, end);
-
-	// Perform raycast
-	dynamicsWorld->rayTest(start, end, rayCallback);
-
-	SingleRayTestResult result;
-
-	if (rayCallback.hasHit())
-	{
-		int closestHitIndex = -1;
-
-		for (int i = 0; i < rayCallback.m_collisionObjects.size(); i++)
-		{
-			if (rayCallback.m_collisionObjects[i]->getUserPointer() != me)
-			{
-				if (closestHitIndex != -1)
-				{
-					btVector3 distance1 = rayCallback.m_hitPointWorld[i] - start;
-					btVector3 distance2 = rayCallback.m_hitPointWorld[closestHitIndex] - start;
-					if (distance1.length() < distance2.length())
-					{
-						closestHitIndex = i;
-					}
-				}
-				else
-				{
-					closestHitIndex = i;
-				}
-			}
-
-		}
-
-		if (closestHitIndex != -1)
-		{
-			result.hasHit = true;
-			const btRigidBody* hitBody = btRigidBody::upcast(rayCallback.m_collisionObjects[closestHitIndex]);
-
-			result.hitPosition = toVec3(rayCallback.m_hitPointWorld[closestHitIndex]);
-			result.hitNormal = toVec3(rayCallback.m_hitNormalWorld[closestHitIndex]);
-			result.entity = (Entity*)hitBody->getUserPointer();
-		}
-
-	}
-
-	return result;*/
-	return SingleRayTestResult();
 }

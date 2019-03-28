@@ -4,9 +4,9 @@
 
 using namespace Genesis;
 
-RigidBody::RigidBody(Entity* entity)
+RigidBody::RigidBody()
 {
-	this->parent = entity;
+
 }
 
 RigidBody::~RigidBody()

@@ -1,7 +1,6 @@
 #pragma once
 
-#include <entt/entity/registry.hpp>
-
+#include "Genesis/Entity.hpp"
 #include "Genesis/Physics/PhysicsWorld.hpp"
 
 namespace Genesis
@@ -21,10 +20,14 @@ namespace Genesis
 		Application* application;
 
 		//EnTT
-		entt::basic_registry<uint32_t> entity_registry;
+		EntityRegistry entity_registry;
 
 		//Physics
 		map<uint16_t, PhysicsWorld*> physics_worlds;
+		
+		//Temp stuff
+		PhysicsWorld* world;
+		EntityId temp;
 
 		//Game Systems
 			//Pre-Frame Update

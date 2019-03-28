@@ -11,6 +11,7 @@ include_directories(${Genesis_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/entt/src/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/src/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/lib/)

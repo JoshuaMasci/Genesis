@@ -4,17 +4,27 @@
 
 #include "Genesis/Physics/PhysicsUpdateJob.hpp"
 
+#include "Genesis/Core/Transform.hpp"
+
 using namespace Genesis;
 
 GameScene::GameScene(Application* app)
 {
 	this->application = app;
 
+	this->world = new PhysicsWorld();
+
+	this->temp = this->entity_registry.create();
+	this->entity_registry.assign<Transform>(this->temp);
 }
 
 GameScene::~GameScene()
 {
-
+	delete this->world;
+	for (auto world : this->physics_worlds)
+	{
+		delete world.second;
+	}
 }
 
 void GameScene::runFrame(double delta_time)

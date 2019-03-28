@@ -25,11 +25,11 @@ namespace Genesis
 		Transform transformBy(const Transform& transform1) const;
 
 	private:
-		void updateModelMatrix();
+		//void updateModelMatrix();
 
 		vector3D position;
 		quaternionD orientation;
 		
-		matrix4F model_matrix;
+		//matrix4F model_matrix;
 	};
 };
