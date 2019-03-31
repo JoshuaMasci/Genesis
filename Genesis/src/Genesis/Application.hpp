@@ -16,6 +16,7 @@ namespace Genesis
 		Application();
 		virtual ~Application();
 
+		virtual void runSimulation(double delta_time);
 		virtual void runFrame(double delta_time);
 
 		void close();

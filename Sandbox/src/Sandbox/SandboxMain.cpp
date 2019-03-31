@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 		auto delta = std::chrono::duration_cast<std::chrono::duration<double>>(time_current - time_last);
 		double delta_time = delta.count();
 
-		sandbox->runFrame(delta_time);
+		sandbox->runSimulation(delta_time);
 
 		time_last = time_current;
 

@@ -6,136 +6,87 @@ using namespace Genesis;
 
 RigidBody::RigidBody()
 {
-
+	this->empty_shape = new btEmptyShape();
+	
+	btDefaultMotionState* motion_state = new btDefaultMotionState();
+	btRigidBody::btRigidBodyConstructionInfo boxRigidBodyCI(1.0, motion_state, this->empty_shape, btVector3(1.0, 1.0, 1.0));
+	this->rigid_body = new btRigidBody(boxRigidBodyCI);
 }
 
 RigidBody::~RigidBody()
 {
-	if (this->rigidBody != nullptr)
+	if (this->physics_world != nullptr)
 	{
-		delete this->rigidBody;
+		this->physics_world->removeRigidBody(this);
 	}
-}
 
-void RigidBody::setMass(double mass)
-{
-	this->rigidBody->setMassProps(mass, this->rigidBody->getLocalInertia());
-	this->mass = mass;
-}
+	if (this->rigid_body != nullptr)
+	{
+		delete this->rigid_body;
+	}
 
-double RigidBody::getMass()
-{
-	return this->mass;
-}
-
-void RigidBody::setInertiaTensor(vector3D inertia)
-{
-	this->rigidBody->setMassProps(getMass(), toBtVec3(inertia));
-
-}
-
-vector3D RigidBody::getInertiaTensor()
-{
-	return toVec3(this->rigidBody->getLocalInertia());
-}
-
-void RigidBody::Activate(bool activate)
-{
-	this->rigidBody->activate(activate);
+	delete this->empty_shape;
 }
 
 Transform RigidBody::getWorldTransform()
 {
-	return toTransform(this->rigidBody->getWorldTransform());
+	return toTransform(this->rigid_body->getWorldTransform());
 }
 
-void RigidBody::setWorldTransform(Transform transform)
+void RigidBody::setWorldTransform(const Transform& transform)
 {
-	this->rigidBody->setCenterOfMassTransform(toBtTransform(transform));
-}
-
-vector3D RigidBody::getLinearVelocity() const
-{
-	return toVec3(this->rigidBody->getLinearVelocity());
-}
-
-void RigidBody::setLinearVelocity(vector3D velocity)
-{
-	this->rigidBody->setLinearVelocity(toBtVec3(velocity));
-}
-
-vector3D RigidBody::getAngularVelocity() const
-{
-	return toVec3(this->rigidBody->getAngularVelocity());
-}
-
-void RigidBody::setAngularVelocity(vector3D velocity)
-{
-	this->rigidBody->setAngularVelocity(toBtVec3(velocity));
-}
-
-void RigidBody::applyForce(vector3D &force, vector3D &localPos)
-{
-	this->rigidBody->activate(true);
-	this->rigidBody->applyForce(toBtVec3(force), toBtVec3(localPos));
-}
-
-void RigidBody::applyImpulse(vector3D &impulse, vector3D &localPos)
-{
-	this->rigidBody->activate(true);
-	this->rigidBody->applyImpulse(toBtVec3(impulse), toBtVec3(localPos));
-}
-
-void RigidBody::applyCentralForce(vector3D &force)
-{
-	this->rigidBody->activate(true);
-	this->rigidBody->applyCentralForce(toBtVec3(force));
-}
-
-void RigidBody::applyCentralImpulse(vector3D &impulse)
-{
-	this->rigidBody->activate(true);
-	this->rigidBody->applyCentralImpulse(toBtVec3(impulse));
-}
-
-void RigidBody::applyTorque(vector3D &torque)
-{
-	this->rigidBody->activate(true);
-	this->rigidBody->applyTorque(toBtVec3(torque));
-}
-
-void RigidBody::applyTorqueImpulse(vector3D &torque)
-{
-	this->rigidBody->activate(true);
-	this->rigidBody->applyTorqueImpulse(toBtVec3(torque));
-}
-
-void RigidBody::setDampening(double linear, double angular)
-{
-	rigidBody->setDamping(linear, angular);
-}
-
-bool RigidBody::isInWorld()
-{
-	if (this->physics_world != nullptr)
-	{
-		return true;
-	}
-
-	return false;
+	this->rigid_body->setCenterOfMassTransform(toBtTransform(transform));
 }
 
 void RigidBody::setCollisionShape(btCollisionShape* shape)
 {
-	if (this->physics_world != nullptr)
+	PhysicsWorld* world = this->physics_world;
+
+	if (world != nullptr)
 	{
-		PhysicsWorld* world = this->physics_world;
 		this->physics_world->removeRigidBody(this);
-		this->rigidBody->setCollisionShape(shape);
-		world->addRigidBody(this);
+	}
+
+	if (shape != nullptr)
+	{
+		this->rigid_body->setCollisionShape(shape);
 	}
 	else
 	{
-		this->rigidBody->setCollisionShape(shape);
+		this->rigid_body->setCollisionShape(this->empty_shape);
+	}
+
+	if (world != nullptr)
+	{
+		world->addRigidBody(this);
 	}
 }
+
+void RigidBody::addToWorld(PhysicsWorld* world)
+{
+	if (this->physics_world != nullptr)
+	{
+		//TODO better errors
+		printf("Error: already in a physics world\n");
+		exit(1);
+	}
+
+	world->addRigidBody(this);
+	this->physics_world = world;
+}
+
+void RigidBody::removeFromWorld()
+{
+	if (this->physics_world != nullptr)
+	{
+		this->physics_world->removeRigidBody(this);
+		this->physics_world = nullptr;
+	}
+	else
+	{
+		//TODO better errors
+		printf("Error: not in a physics world\n");
+		exit(1);
+	}
+}
+

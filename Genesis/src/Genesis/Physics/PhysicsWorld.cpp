@@ -31,7 +31,7 @@ PhysicsWorld::~PhysicsWorld()
 	delete broadphase;
 }
 
-void PhysicsWorld::update(double delta_time)
+void PhysicsWorld::runSimulation(double delta_time)
 {
 	//Run Physics Simulation
 	this->dynamics_world->stepSimulation(delta_time, 8, 1.0 / 240.0);
@@ -42,14 +42,12 @@ void PhysicsWorld::update(double delta_time)
 void PhysicsWorld::addRigidBody(RigidBody* rigidBody)
 {
 	this->dynamics_world->addRigidBody(rigidBody->getRigidBody());
-	rigidBody->setPhysicsWorld(this);
 	this->rigid_bodies.insert(rigidBody);
 }
 
 void PhysicsWorld::removeRigidBody(RigidBody* rigidBody)
 {
 	this->dynamics_world->removeRigidBody(rigidBody->getRigidBody());
-	rigidBody->setPhysicsWorld(nullptr);
 	this->rigid_bodies.erase(rigidBody);
 }
 

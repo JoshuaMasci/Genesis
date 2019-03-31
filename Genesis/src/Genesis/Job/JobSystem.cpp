@@ -82,3 +82,16 @@ void JobSystem::addJobsAndWait(vector<Job*> jobs)
 		job->waitTillFinished();
 	}
 }
+
+void JobSystem::addJobsAndWait(Array<Job>& jobs)
+{
+	for (size_t i = 0; i < jobs.size(); i++)
+	{
+		this->job_queue.enqueue(&jobs[i]);
+	}
+
+	for (size_t i = 0; i < jobs.size(); i++)
+	{
+		jobs[i].waitTillFinished();
+	}
+}

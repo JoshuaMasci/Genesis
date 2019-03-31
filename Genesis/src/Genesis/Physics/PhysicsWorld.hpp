@@ -22,7 +22,7 @@ namespace Genesis
 		PhysicsWorld();
 		virtual ~PhysicsWorld();
 
-		virtual void update(double delta_time);
+		virtual void runSimulation(double delta_time);
 
 		void addRigidBody(RigidBody* rigidBody);
 		void removeRigidBody(RigidBody* rigidBody);

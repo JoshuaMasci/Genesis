@@ -1,39 +1,39 @@
 #pragma once
 
 #include "Genesis/Entity.hpp"
-#include "Genesis/Physics/PhysicsWorld.hpp"
+
+#include "Genesis/Physics/PhysicsSystem.hpp"
 
 namespace Genesis
 {
 	//Prototype
 	class Application;
 
+	//TODO switch this class to a "World class"
 	class GameScene
 	{
 	public:
 		GameScene(Application* app);
 		~GameScene();
 
-		virtual void runFrame(double delta_time);
+		virtual void runSimulation(double delta_time);
 
 	protected:
 		Application* application;
 
 		//EnTT
 		EntityRegistry entity_registry;
-
-		//Physics
-		map<uint16_t, PhysicsWorld*> physics_worlds;
 		
+		//Physics
+		PhysicsSystem physics_system;
+
 		//Temp stuff
-		PhysicsWorld* world;
 		EntityId temp;
 
 		//Game Systems
 			//Pre-Frame Update
-			//Per Physics tick Update
-			//Frame Update
+			//Simulation Update
+			//Pre-Frame Update
 			//Render
-			//Post-Frame Update
 	};
 }

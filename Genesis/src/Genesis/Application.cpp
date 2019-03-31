@@ -26,7 +26,7 @@ Application::~Application()
 	}
 }
 
-void Application::runFrame(double delta_time)
+void Application::runSimulation(double delta_time)
 {
 	this->input_manager.update();
 
@@ -37,8 +37,13 @@ void Application::runFrame(double delta_time)
 
 	if (this->scene != nullptr)
 	{
-		this->scene->runFrame(delta_time);
+		this->scene->runSimulation(delta_time);
 	}
+}
+
+void Application::runFrame(double delta_time)
+{
+
 }
 
 void Application::close()

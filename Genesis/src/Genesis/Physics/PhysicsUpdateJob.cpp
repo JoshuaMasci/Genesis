@@ -17,6 +17,6 @@ void Genesis::PhysicsUpdateJob::run()
 {
 	if (this->physics_world != nullptr)
 	{
-		this->physics_world->update(this->delta_time);
+		this->physics_world->runSimulation(this->delta_time);
 	}
 }
