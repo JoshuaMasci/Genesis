@@ -17,11 +17,6 @@ namespace Genesis
 	class CollisionShape
 	{
 	public:
-		CollisionShape(CollisionShapeType type, vector3D vec);
-		CollisionShape(CollisionShapeType type, vector2D vec);
-		CollisionShape(CollisionShapeType type, string string);
-
-		~CollisionShape();
 
 		btCollisionShape* getShape();
 

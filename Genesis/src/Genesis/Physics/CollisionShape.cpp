@@ -2,42 +2,6 @@
 
 using namespace Genesis;
 
-CollisionShape::CollisionShape(CollisionShapeType type, vector3D vec)
-{
-	if (type == CollisionShapeType::Box)
-	{
-		this->setBox(vec);
-	}
-}
-
-CollisionShape::CollisionShape(CollisionShapeType type, vector2D vec)
-{
-	if (type == CollisionShapeType::Capsule)
-	{
-		this->setCapsule(vec.x, vec.y);
-	}
-}
-
-CollisionShape::CollisionShape(CollisionShapeType type, string string)
-{
-	if (type == CollisionShapeType::ConvexMesh)
-	{
-		this->setConvexMesh(string);
-	}
-	else if (type == CollisionShapeType::ConcaveMesh)
-	{
-		this->setConcaveMesh(string);
-	}
-}
-
-CollisionShape::~CollisionShape()
-{
-	if (this->shape != nullptr)
-	{
-		delete this->shape;
-	}
-}
-
 void CollisionShape::setBox(vector3D half_length)
 {
 	if (this->shape != nullptr)

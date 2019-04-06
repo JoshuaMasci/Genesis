@@ -16,6 +16,10 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/lib/)
 
+#OPENGL
+include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
+
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})
 set_target_properties(Sandbox PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${Sandbox_SOURCE_DIR}")
 

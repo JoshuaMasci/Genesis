@@ -25,6 +25,6 @@ void GameScene::runSimulation(double delta_time)
 {
 	this->physics_system.runSimulation(this->entity_registry, this->application->job_system, delta_time);
 
-	WorldTransform& transform = this->entity_registry.get<WorldTransform>(this->temp);
-	printf("Y pos: %lf\n", transform.current_transform.getPosition().y);
+	//WorldTransform& transform = this->entity_registry.get<WorldTransform>(this->temp);
+	//printf("Y pos: %lf\n", transform.current_transform.getPosition().y);
 }
