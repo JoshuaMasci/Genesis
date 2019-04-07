@@ -11,3 +11,6 @@
 [submodule "lib\\concurrent_queue"]
 	path = lib\\concurrent_queue
 	url = https://github.com/cameron314/concurrentqueue.git
+[submodule "lib\\stb"]
+	path = lib\\stb
+	url = https://github.com/nothings/stb.git

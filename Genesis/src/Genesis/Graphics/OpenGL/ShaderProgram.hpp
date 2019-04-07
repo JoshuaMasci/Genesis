@@ -1,5 +1,4 @@
-#ifndef SHADERPROGRAM_HPP
-#define SHADERPROGRAM_HPP
+#pragma once
 
 #include "Genesis/Graphics/OpenGL/OpenGL_Include.hpp"
 #include "Genesis/Core/VectorTypes.hpp"
@@ -38,4 +37,3 @@ namespace Genesis
 		string loadShaderFile(string location);
 	};
 }
-#endif //SHADERPROGRAM_HPP

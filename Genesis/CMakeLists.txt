@@ -58,3 +58,6 @@ link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
 target_link_libraries (Genesis PRIVATE glew32)
 target_link_libraries (Genesis PRIVATE opengl32)
 target_link_libraries (Genesis PRIVATE glu32)
+
+#STB
+include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
