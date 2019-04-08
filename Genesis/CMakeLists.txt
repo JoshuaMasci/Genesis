@@ -60,3 +60,6 @@ target_link_libraries (Genesis PRIVATE glu32)
 
 #STB
 include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
+
+#TINYOBJ
+include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)

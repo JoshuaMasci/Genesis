@@ -8,9 +8,12 @@
 [submodule "lib/glm"]
 	path = lib/glm
 	url = https://github.com/g-truc/glm.git
-[submodule "lib\\concurrent_queue"]
-	path = lib\\concurrent_queue
+[submodule "lib/concurrent_queue"]
+	path = lib/concurrent_queue
 	url = https://github.com/cameron314/concurrentqueue.git
-[submodule "lib\\stb"]
-	path = lib\\stb
+[submodule "lib/stb"]
+	path = lib/stb
 	url = https://github.com/nothings/stb.git
+[submodule "lib/tinyobj"]
+	path = lib/tinyobj
+	url = https://github.com/syoyo/tinyobjloader.git

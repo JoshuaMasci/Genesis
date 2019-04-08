@@ -13,6 +13,7 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/entt/src/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/src/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/lib/)
