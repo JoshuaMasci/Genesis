@@ -3,7 +3,6 @@ project(Genesis)
 
 include_directories(src)
 
-
 file(GLOB GENESIS_MAIN "src/Genesis/*.*")
 source_group("Main" FILES ${GENESIS_MAIN})
 

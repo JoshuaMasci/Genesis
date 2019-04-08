@@ -41,9 +41,9 @@ void Application::runSimulation(double delta_time)
 	}
 }
 
-void Application::runFrame(double delta_time)
+void Application::drawFrame(double delta_time)
 {
-
+	this->scene->drawFrame(delta_time);
 }
 
 void Application::close()

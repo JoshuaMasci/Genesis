@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Genesis/Core/Types.hpp"
-#include "Genesis/Graphics/OpenGL/OpenGL_Include.hpp"
+#include "Genesis/Graphics/OpenGL/OpenGL.hpp"
 #include "Genesis/Graphics/OpenGL/ShaderProgram.hpp"
 
 namespace Genesis

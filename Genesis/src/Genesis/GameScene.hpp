@@ -3,6 +3,7 @@
 #include "Genesis/Entity.hpp"
 
 #include "Genesis/Physics/PhysicsSystem.hpp"
+#include "Genesis/Graphics/OpenGL/RenderSystem.hpp"
 
 namespace Genesis
 {
@@ -18,6 +19,8 @@ namespace Genesis
 
 		virtual void runSimulation(double delta_time);
 
+		virtual void drawFrame(double delta_time);
+
 	protected:
 		Application* application;
 
@@ -29,6 +32,8 @@ namespace Genesis
 
 		//Temp stuff
 		EntityId temp;
+
+		RenderSystem* render_system;
 
 		//Game Systems
 			//Pre-Frame Update

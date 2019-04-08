@@ -1,8 +1,6 @@
 #pragma once
 
 #include "Genesis/Core/Types.hpp"
-#include "Genesis/Graphics/OpenGL/OpenGL_Include.hpp"
-#include "Genesis/Graphics/OpenGL/TexturedMesh.hpp"
 
 #include "Genesis/Entity.hpp"
 #include "Genesis/Job/JobSystem.hpp"
@@ -10,10 +8,14 @@
 
 namespace Genesis
 {
+	//Prototypes
+	class TexturedMesh;
+
 	struct TexturedModel
 	{
 		uint16_t mesh;
 		uint16_t texture;
+		uint16_t shader;
 	};
 
 	class RenderSystem
@@ -26,8 +28,9 @@ namespace Genesis
 
 	private:
 		Window* window;
+		void* context;
 
-		vector<TexturedMesh> meshes;
-		vector<GLuint> textures;
+		vector<TexturedMesh*> meshes;
+		vector<uint32_t> textures;
 	};
 }

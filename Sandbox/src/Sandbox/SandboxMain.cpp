@@ -21,6 +21,7 @@ int main(int argc, char** argv)
 		double delta_time = delta.count();
 
 		sandbox->runSimulation(delta_time);
+		sandbox->drawFrame(delta_time);
 
 		time_last = time_current;
 

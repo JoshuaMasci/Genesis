@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Graphics/OpenGL/OpenGL_Include.hpp"
+#include "Genesis/Graphics/OpenGL/OpenGL.hpp"
 #include "Genesis/Core/VectorTypes.hpp"
 
 #include <vector>

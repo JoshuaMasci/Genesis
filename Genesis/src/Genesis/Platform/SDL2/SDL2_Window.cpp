@@ -5,11 +5,19 @@
 
 using namespace Genesis;
 
-SDL2_Window::SDL2_Window(vector2U size, string title)
+SDL2_Window::SDL2_Window(vector2U size, string title, GraphicsAPI api)
 	:Window(size, title)
 {
 	SDL_Init(SDL_INIT_VIDEO);
-	this->window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.x, size.y, SDL_WINDOW_RESIZABLE);
+
+	uint32_t flags = SDL_WINDOW_RESIZABLE;
+	
+	if (api == GraphicsAPI::OpenGL)
+	{
+		flags |= SDL_WINDOW_OPENGL;
+	}
+
+	this->window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.x, size.y, flags);
 }
 
 SDL2_Window::~SDL2_Window()
@@ -35,11 +43,6 @@ void SDL2_Window::setWindowTitle(string title)
 	SDL_SetWindowTitle(window, title.c_str());
 }
 
-void SDL2_Window::updateBuffer()
-{
-	SDL_GL_SwapWindow(this->window);
-}
-
 void* SDL2_Window::getNativeWindowHandle()
 {
 	SDL_SysWMinfo info;
@@ -47,4 +50,29 @@ void* SDL2_Window::getNativeWindowHandle()
 	SDL_GetWindowWMInfo(window, &info);
 
 	return (void*)info.info.win.window;
+}
+
+void* SDL2_Window::GL_CreateContext()
+{
+	return (void*)SDL_GL_CreateContext(this->window);
+}
+
+void SDL2_Window::GL_SetVsync(Vsync setting)
+{
+	SDL_GL_SetSwapInterval((int) setting);
+}
+
+Vsync SDL2_Window::GL_GetVsync()
+{
+	return (Vsync) SDL_GL_GetSwapInterval();
+}
+
+void SDL2_Window::GL_UpdateBuffer()
+{
+	SDL_GL_SwapWindow(this->window);
+}
+
+void SDL2_Window::GL_DeleteContext(void* context)
+{
+	SDL_GL_DeleteContext((SDL_GLContext)context);
 }
