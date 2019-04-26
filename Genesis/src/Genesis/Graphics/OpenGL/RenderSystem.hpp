@@ -10,12 +10,26 @@ namespace Genesis
 {
 	//Prototypes
 	class TexturedMesh;
+	class ShaderProgram;
 
 	struct TexturedModel
 	{
+		TexturedModel(uint16_t mesh, uint16_t texture, uint16_t shader)
+		{
+			this->mesh = mesh;
+			this->texture = texture;
+			this->shader = shader;
+		}
+
 		uint16_t mesh;
 		uint16_t texture;
 		uint16_t shader;
+	};
+
+	struct ShaderSet
+	{
+		string vert;
+		string frag;
 	};
 
 	class RenderSystem
@@ -32,5 +46,6 @@ namespace Genesis
 
 		vector<TexturedMesh*> meshes;
 		vector<uint32_t> textures;
+		vector<ShaderProgram*> shaders;
 	};
 }

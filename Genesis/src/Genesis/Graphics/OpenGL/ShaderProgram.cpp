@@ -47,11 +47,6 @@ void ShaderProgram::setActiveProgram()
 	glUseProgram(this->programID);
 }
 
-void ShaderProgram::deactivateProgram()
-{
-	glUseProgram(0);
-}
-
 ShaderProgram::~ShaderProgram()
 {
 	glDetachShader(programID, vertexID);

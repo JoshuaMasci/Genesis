@@ -7,7 +7,6 @@ int main(int argc, char** argv)
 	//ALPHA
 	SandboxApplication* sandbox = new SandboxApplication();
 
-
 	//Fixed Timestep Stuff
 	//double time_step = 1.0 / 240.0;
 	//double accumulator = 0.0;

@@ -32,6 +32,7 @@ namespace Genesis
 
 		//Temp stuff
 		EntityId temp;
+		EntityId camera;
 
 		RenderSystem* render_system;
 

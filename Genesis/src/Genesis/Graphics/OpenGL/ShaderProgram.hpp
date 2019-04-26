@@ -20,7 +20,6 @@ namespace Genesis
 		ShaderProgram(string VertexShaderLoc, string FragmentShaderLoc);
 		~ShaderProgram();
 		void setActiveProgram();
-		void deactivateProgram();
 
 		void setUniform(string name, const int& value);
 		void setUniform(string name, const unsigned int& value);

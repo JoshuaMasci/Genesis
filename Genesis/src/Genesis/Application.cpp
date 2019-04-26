@@ -10,6 +10,11 @@ Application::Application()
 
 Application::~Application()
 {
+	if (this->scene != nullptr)
+	{
+		delete this->scene;
+	}
+
 	if (this->window != nullptr)
 	{
 		delete this->window;
@@ -18,11 +23,6 @@ Application::~Application()
 	if (this->platform != nullptr)
 	{
 		delete this->platform;
-	}
-
-	if (this->scene != nullptr)
-	{
-		delete this->scene;
 	}
 }
 
