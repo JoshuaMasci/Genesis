@@ -10,8 +10,14 @@ file(GLOB_RECURSE GENESIS_CORE "src/Genesis/Core/*.*")
 source_group("Core" FILES ${GENESIS_CORE})
 
 #TODO Select Subdirectories
-file(GLOB_RECURSE GENESIS_GRAPHICS "src/Genesis/Graphics/*.*")
-source_group("Graphics" FILES ${GENESIS_GRAPHICS})
+file(GLOB GENESIS_GRAPHICS "src/Genesis/Graphics/*.*")
+source_group("Graphics Core" FILES ${GENESIS_GRAPHICS})
+
+#file(GLOB_RECURSE GENESIS_GRAPHICS_OPENGL "src/Genesis/Graphics/OpenGL/*.*")
+#source_group("Graphics OpenGL" FILES ${GENESIS_GRAPHICS})
+
+file(GLOB_RECURSE GENESIS_GRAPHICS_VULKAN "src/Genesis/Graphics/Vulkan/*.*")
+source_group("Graphics Vulkan" FILES ${GENESIS_GRAPHICS})
 
 file(GLOB_RECURSE GENESIS_INPUT "src/Genesis/Input/*.*")
 source_group("Input" FILES ${GENESIS_INPUT})
@@ -27,10 +33,10 @@ file(GLOB_RECURSE GENESIS_PLATFORM "src/Genesis/Platform/*.*")
 source_group("Platform" FILES ${GENESIS_PLATFORM})
 
 #Create Libary
-add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_GRAPHICS} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM})
+add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_GRAPHICS} ${GENESIS_GRAPHICS_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM})
 
 #GLM
-include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/glm/)
 
 #SDL2
 include_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/include/)
@@ -38,28 +44,30 @@ link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 target_link_libraries(Genesis PRIVATE SDL2)
 
 #Bullet
-include_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/src/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/lib/)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/bullet_physics/src/)
+link_directories(${CMAKE_SOURCE_DIR}/submodules/bullet_physics/lib/)
 target_link_libraries(Genesis PRIVATE debug BulletCollision_Debug optimized BulletCollision)
 target_link_libraries(Genesis PRIVATE debug BulletDynamics_Debug optimized BulletDynamics)
 target_link_libraries(Genesis PRIVATE debug LinearMath_Debug optimized LinearMath)
 target_compile_definitions(Genesis PUBLIC BT_USE_DOUBLE_PRECISION)
 
 #ENTT
-include_directories(${CMAKE_SOURCE_DIR}/lib/entt/src/)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/entt/src/)
 
 #Concurrent Queue
-include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/concurrent_queue/)
 
 #OPENGL
-include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
-target_link_libraries (Genesis PRIVATE glew32)
-target_link_libraries (Genesis PRIVATE opengl32)
-target_link_libraries (Genesis PRIVATE glu32)
+#include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
+#link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
+#target_link_libraries (Genesis PRIVATE glew32)
+#target_link_libraries (Genesis PRIVATE opengl32)
+#target_link_libraries (Genesis PRIVATE glu32)
+
+
 
 #STB
-include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/stb/)
 
 #TINYOBJ
-include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/tinyobj/)

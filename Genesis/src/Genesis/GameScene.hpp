@@ -3,7 +3,6 @@
 #include "Genesis/Entity.hpp"
 
 #include "Genesis/Physics/PhysicsSystem.hpp"
-#include "Genesis/Graphics/OpenGL/RenderSystem.hpp"
 
 namespace Genesis
 {
@@ -33,8 +32,6 @@ namespace Genesis
 		//Temp stuff
 		EntityId temp;
 		EntityId camera;
-
-		RenderSystem* render_system;
 
 		//Game Systems
 			//Pre-Frame Update

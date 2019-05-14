@@ -1,19 +1,19 @@
 [submodule "lib/entt"]
-	path = lib/entt
+	path = submodules/entt
 	url = https://github.com/skypjack/entt.git
 [submodule "lib/bullet_physics"]
-	path = lib/bullet_physics
+	path = submodules/bullet_physics
 	url = https://github.com/Iamshortman/bullet3.git
 	ignore = untracked
 [submodule "lib/glm"]
-	path = lib/glm
+	path = submodules/glm
 	url = https://github.com/g-truc/glm.git
 [submodule "lib/concurrent_queue"]
-	path = lib/concurrent_queue
+	path = submodules/concurrent_queue
 	url = https://github.com/cameron314/concurrentqueue.git
 [submodule "lib/stb"]
-	path = lib/stb
+	path = submodules/stb
 	url = https://github.com/nothings/stb.git
 [submodule "lib/tinyobj"]
-	path = lib/tinyobj
+	path = submodules/tinyobj
 	url = https://github.com/syoyo/tinyobjloader.git

@@ -8,15 +8,15 @@ source_group("Sandbox" FILES ${SANDBOX_SOURCES})
 source_group("Sandbox_Headers" FILES ${SANDBOX_HEADERS})
 
 include_directories(${Genesis_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/entt/src/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/src/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/glm/)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/entt/src/)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/bullet_physics/src/)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/concurrent_queue/)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/stb/)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/tinyobj/)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/lib/)
+link_directories(${CMAKE_SOURCE_DIR}/submodules/bullet_physics/lib/)
 
 #OPENGL
 include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
