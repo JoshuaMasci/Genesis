@@ -5,6 +5,7 @@
 
 #include "Genesis/Platform/Platform.hpp"
 #include "Genesis/Platform/Window.hpp"
+#include <Genesis/Graphics/GraphicsContext.hpp>
 
 #include "Genesis/GameScene.hpp"
 
@@ -28,6 +29,7 @@ namespace Genesis
 
 		Platform* platform = nullptr;
 		Window* window = nullptr;
+		GraphicsContext* graphics_context = nullptr;
 
 		GameScene* scene = nullptr;
 

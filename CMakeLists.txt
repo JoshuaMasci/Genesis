@@ -7,6 +7,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option (BUILD_SANDBOX "Creates the Sandbox app" ON) 
 
+add_definitions(-DGENESIS_PLATFORM_WIN)
+
 add_subdirectory(Genesis)
 
 if(BUILD_SANDBOX)

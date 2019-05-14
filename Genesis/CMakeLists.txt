@@ -14,10 +14,10 @@ file(GLOB GENESIS_GRAPHICS "src/Genesis/Graphics/*.*")
 source_group("Graphics Core" FILES ${GENESIS_GRAPHICS})
 
 #file(GLOB_RECURSE GENESIS_GRAPHICS_OPENGL "src/Genesis/Graphics/OpenGL/*.*")
-#source_group("Graphics OpenGL" FILES ${GENESIS_GRAPHICS})
+#source_group("Graphics OpenGL" FILES ${GENESIS_GRAPHICS_OPENGL})
 
 file(GLOB_RECURSE GENESIS_GRAPHICS_VULKAN "src/Genesis/Graphics/Vulkan/*.*")
-source_group("Graphics Vulkan" FILES ${GENESIS_GRAPHICS})
+source_group("Graphics Vulkan" FILES ${GENESIS_GRAPHICS_VULKAN})
 
 file(GLOB_RECURSE GENESIS_INPUT "src/Genesis/Input/*.*")
 source_group("Input" FILES ${GENESIS_INPUT})
@@ -64,7 +64,11 @@ include_directories(${CMAKE_SOURCE_DIR}/submodules/concurrent_queue/)
 #target_link_libraries (Genesis PRIVATE opengl32)
 #target_link_libraries (Genesis PRIVATE glu32)
 
-
+#Vulkan
+include_directories(C:/VulkanSDK/1.1.101.0/Include/)
+link_directories(C:/VulkanSDK/1.1.101.0/Lib)
+target_link_libraries(Genesis PRIVATE vulkan-1)
+include_directories(${CMAKE_SOURCE_DIR}/submodules/vulkan_memory_allocator/src/)
 
 #STB
 include_directories(${CMAKE_SOURCE_DIR}/submodules/stb/)

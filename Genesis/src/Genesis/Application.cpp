@@ -15,6 +15,11 @@ Application::~Application()
 		delete this->scene;
 	}
 
+	if (this->graphics_context != nullptr)
+	{
+		delete this->graphics_context;
+	}
+
 	if (this->window != nullptr)
 	{
 		delete this->window;

@@ -19,8 +19,11 @@ link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 link_directories(${CMAKE_SOURCE_DIR}/submodules/bullet_physics/lib/)
 
 #OPENGL
-include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
+#include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
+#link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
+
+#Vulkan
+link_directories(C:/VulkanSDK/1.1.101.0/Lib)
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})
 set_target_properties(Sandbox PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${Sandbox_SOURCE_DIR}")
