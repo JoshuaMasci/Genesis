@@ -1,5 +1,7 @@
 #include "VulkanInstance.hpp"
 
+#include "Genesis/Rendering/Vulkan/VulkanPhysicalDevicePicker.hpp"
+
 using namespace Genesis;
 
 VulkanInstance::VulkanInstance(Window* window)
@@ -10,10 +12,79 @@ VulkanInstance::VulkanInstance(Window* window)
 		this->create_debug_messenger();
 	}
 	this->create_surface(window);
+
+	this->device = new VulkanDevice(VulkanPhysicalDevicePicker::pickDevice(this->instance, this->surface), this);
+	this->swapchain = new VulkanSwapchain(this->device, window, this->surface);
+
+	//Allocator
+	VmaAllocatorCreateInfo allocatorInfo = {};
+	allocatorInfo.physicalDevice = this->device->getPhysicalDevice();
+	allocatorInfo.device = this->device->getDevice();
+	vmaCreateAllocator(&allocatorInfo, &this->allocator);
 }
 
 VulkanInstance::~VulkanInstance()
 {
+	vmaDestroyAllocator(this->allocator);
+
+	if (this->swapchain != nullptr)
+	{
+		delete this->swapchain;
+	}
+
+	if (this->device != nullptr)
+	{
+		delete this->device;
+	}
+
+	this->delete_surface();
+
+	if (this->use_debug_layers)
+	{
+		this->delete_debug_messenger();
+	}
+
+	this->delete_instance();
+}
+
+vector<const char*> VulkanInstance::getExtensions()
+{
+	vector<const char*> extensions;
+
+	extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+	extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+#endif
+
+	if (this->use_debug_layers)
+	{
+		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+	}
+
+	return extensions;
+}
+
+vector<const char*> VulkanInstance::getDeviceExtensions()
+{
+	vector<const char*> extensions;
+
+	extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+
+	return extensions;
+}
+
+vector<const char*> VulkanInstance::getLayers()
+{
+	vector<const char*> layers;
+
+	if (this->use_debug_layers)
+	{
+		layers.push_back("VK_LAYER_LUNARG_standard_validation");
+	}
+
+	return layers;
 }
 
 void VulkanInstance::create_instance(const char* app_name, uint32_t app_version)
@@ -126,44 +197,4 @@ void VulkanInstance::create_surface(Window* window)
 void VulkanInstance::delete_surface()
 {
 	vkDestroySurfaceKHR(this->instance, this->surface, nullptr);
-}
-
-vector<const char*> VulkanInstance::getExtensions()
-{
-	vector<const char*> extensions;
-
-	extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-
-#ifdef VK_USE_PLATFORM_WIN32_KHR
-	extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-#endif
-
-	if (this->use_debug_layers)
-	{
-		extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-		extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
-	}
-
-	return extensions;
-}
-
-vector<const char*> VulkanInstance::getDeviceExtensions()
-{
-	vector<const char*> extensions;
-
-	extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-
-	return extensions;
-}
-
-vector<const char*> VulkanInstance::getLayers()
-{
-	vector<const char*> layers;
-
-	if (this->use_debug_layers)
-	{
-		layers.push_back("VK_LAYER_LUNARG_standard_validation");
-	}
-
-	return layers;
 }

@@ -1,11 +1,10 @@
 #pragma once
 
-#include "Genesis/Graphics/GraphicsContext.hpp"
 #include "Genesis/Platform/Window.hpp"
 
-#include "Genesis/Graphics/Vulkan/VulkanInclude.hpp"
-#include "Genesis/Graphics/Vulkan/VulkanDevice.hpp"
-#include "Genesis/Graphics/Vulkan/VulkanSwapchain.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanSwapchain.hpp"
 
 namespace Genesis
 {
@@ -22,6 +21,14 @@ namespace Genesis
 		VulkanDevice* device = nullptr;
 		VulkanSwapchain* swapchain = nullptr;
 
+		//Allocator
+		VmaAllocator allocator;
+
+		//Extensions and Layers
+		vector<const char*> getExtensions();
+		vector<const char*> getDeviceExtensions();
+		vector<const char*> getLayers();
+
 	private:
 		bool use_debug_layers = true;
 
@@ -36,10 +43,5 @@ namespace Genesis
 		//Surface
 		void create_surface(Window* window);
 		void delete_surface();
-
-		//Extensions and Layers
-		vector<const char*> getExtensions();
-		vector<const char*> getDeviceExtensions();
-		vector<const char*> getLayers();
 	};
 }

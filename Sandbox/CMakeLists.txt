@@ -23,6 +23,7 @@ link_directories(${CMAKE_SOURCE_DIR}/submodules/bullet_physics/lib/)
 #link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
 
 #Vulkan
+include_directories(${CMAKE_SOURCE_DIR}/submodules/vulkan_memory_allocator/src/)
 link_directories(C:/VulkanSDK/1.1.101.0/Lib)
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})

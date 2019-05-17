@@ -4,6 +4,8 @@
 
 #include "Genesis/Physics/PhysicsSystem.hpp"
 
+#include "Genesis/Rendering/Renderer.hpp"
+
 namespace Genesis
 {
 	//Prototype
@@ -28,6 +30,9 @@ namespace Genesis
 		
 		//Physics
 		PhysicsSystem physics_system;
+
+		//Rendering
+		Renderer* renderer = nullptr;
 
 		//Temp stuff
 		EntityId temp;

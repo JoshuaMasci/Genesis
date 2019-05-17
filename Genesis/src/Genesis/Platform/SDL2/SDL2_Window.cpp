@@ -5,17 +5,12 @@
 
 using namespace Genesis;
 
-SDL2_Window::SDL2_Window(vector2U size, string title, GraphicsAPI api)
+SDL2_Window::SDL2_Window(vector2U size, string title)
 	:Window(size, title)
 {
 	SDL_Init(SDL_INIT_VIDEO);
 
 	uint32_t flags = SDL_WINDOW_RESIZABLE;
-	
-	if (api == GraphicsAPI::OpenGL)
-	{
-		flags |= SDL_WINDOW_OPENGL;
-	}
 
 	this->window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.x, size.y, flags);
 }

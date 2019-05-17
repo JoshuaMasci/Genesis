@@ -15,9 +15,9 @@ Application::~Application()
 		delete this->scene;
 	}
 
-	if (this->graphics_context != nullptr)
+	if (this->rendering_backend != nullptr)
 	{
-		delete this->graphics_context;
+		delete this->rendering_backend;
 	}
 
 	if (this->window != nullptr)

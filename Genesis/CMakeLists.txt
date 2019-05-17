@@ -10,14 +10,14 @@ file(GLOB_RECURSE GENESIS_CORE "src/Genesis/Core/*.*")
 source_group("Core" FILES ${GENESIS_CORE})
 
 #TODO Select Subdirectories
-file(GLOB GENESIS_GRAPHICS "src/Genesis/Graphics/*.*")
-source_group("Graphics Core" FILES ${GENESIS_GRAPHICS})
+file(GLOB GENESIS_RENDERING "src/Genesis/Rendering/*.*")
+source_group("Rendering Core" FILES ${GENESIS_RENDERING})
 
-#file(GLOB_RECURSE GENESIS_GRAPHICS_OPENGL "src/Genesis/Graphics/OpenGL/*.*")
-#source_group("Graphics OpenGL" FILES ${GENESIS_GRAPHICS_OPENGL})
+#file(GLOB_RECURSE GENESIS_RENDERING_OPENGL "src/Genesis/Rendering/OpenGL/*.*")
+#source_group("Rendering OpenGL" FILES ${GENESIS_RENDERING_OPENGL})
 
-file(GLOB_RECURSE GENESIS_GRAPHICS_VULKAN "src/Genesis/Graphics/Vulkan/*.*")
-source_group("Graphics Vulkan" FILES ${GENESIS_GRAPHICS_VULKAN})
+file(GLOB_RECURSE GENESIS_RENDERING_VULKAN "src/Genesis/Rendering/Vulkan/*.*")
+source_group("Rendering Vulkan" FILES ${GENESIS_RENDERING_VULKAN})
 
 file(GLOB_RECURSE GENESIS_INPUT "src/Genesis/Input/*.*")
 source_group("Input" FILES ${GENESIS_INPUT})
@@ -33,7 +33,7 @@ file(GLOB_RECURSE GENESIS_PLATFORM "src/Genesis/Platform/*.*")
 source_group("Platform" FILES ${GENESIS_PLATFORM})
 
 #Create Libary
-add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_GRAPHICS} ${GENESIS_GRAPHICS_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM})
+add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_RENDERING} ${GENESIS_RENDERING_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM})
 
 #GLM
 include_directories(${CMAKE_SOURCE_DIR}/submodules/glm/)

@@ -10,7 +10,7 @@ namespace Genesis
 	class SDL2_Window: public Window
 	{
 	public:
-		SDL2_Window(vector2U size, string title, GraphicsAPI api);
+		SDL2_Window(vector2U size, string title);
 		virtual ~SDL2_Window();
 
 		virtual vector2U getWindowSize();
