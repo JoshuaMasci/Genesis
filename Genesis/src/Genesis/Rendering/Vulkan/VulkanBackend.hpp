@@ -14,8 +14,10 @@ namespace Genesis
 		VulkanBackend(Window* window);
 		~VulkanBackend();
 
-		virtual uint32_t createImage(vector2U size) override;
-		virtual Buffer* createBuffer(uint32_t size_bytes, BufferType type, MemoryUsage memory_usage) override;
+		virtual void beginFrame() override;
+		virtual void endFrame() override;
+
+		virtual Buffer* createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) override;
 
 	private:
 		VulkanInstance* vulkan = nullptr;

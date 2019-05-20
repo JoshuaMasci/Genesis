@@ -1,9 +1,52 @@
 #include "VulkanDevice.hpp"
 
-#include "Genesis/Rendering/Vulkan/VulkanQueueFamilyIndices.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanQueueFamily.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanInstance.hpp"
 
 using namespace Genesis;
+
+void printQueues(VkPhysicalDevice device, VkSurfaceKHR surface)
+{
+	uint32_t queueFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+	vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+	for (uint32_t i = 0; i < queueFamilies.size(); i++)
+	{
+		const auto& queueFamily = queueFamilies[i];
+
+		printf("Queue Family %u: ", i);
+
+		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		{
+			printf("Graphics ");
+		}
+
+		if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT)
+		{
+			printf("Compute ");
+		}
+
+		if (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT)
+		{
+			printf("Transfer ");
+		}
+
+		if (surface != nullptr)
+		{
+			VkBool32 presentSupport = false;
+			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+
+			if (presentSupport)
+			{
+				printf("Present ");
+			}
+		}
+
+		printf(" #%u\n", queueFamily.queueCount);
+	}
+}
 
 VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VulkanInstance* instance)
 {
@@ -14,22 +57,33 @@ VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VulkanInstance* insta
 
 	printf("GPU INFO:\n");
 	printf("Device: %s\n", this->properties.deviceName);
+	//printQueues(this->physical_device, instance->surface);
 
-	VulkanQueueFamilyIndices indices = VulkanQueueFamilyIndices::findQueueFamilies(this->physical_device, instance->surface);
-	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-	std::vector<uint32_t> uniqueQueueFamilies;
-	if (indices.hasGraphics()) { uniqueQueueFamilies.push_back(indices.graphics_family.value()); };
-	if (indices.hasPresent()) { uniqueQueueFamilies.push_back(indices.present_family.value()); };
-	//if (indices.hasCompute()) { uniqueQueueFamilies.push_back(indices.compute_family.value()); };
+	VulkanQueueFamilyAllocator queue_allocator(this->physical_device, instance->surface);
+	vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 
-	float queuePriority = 1.0f;
-	for (uint32_t queueFamily : uniqueQueueFamilies)
+	//Fill queue priorities with the required number of 1.0fs
+	vector<float> queue_priority(1);
+	for (QueueFamilyUseage queueFamily : queue_allocator.queue_families)
+	{
+		if (queue_priority.size() < queueFamily.queues_needed)
+		{
+			queue_priority.resize(queueFamily.queues_needed);
+		}
+	}
+
+	for (uint32_t i = 0; i < queue_priority.size(); i++)
+	{
+		queue_priority[i] = 1.0f;
+	}
+
+	for (QueueFamilyUseage queueFamily : queue_allocator.queue_families)
 	{
 		VkDeviceQueueCreateInfo queueCreateInfo = {};
 		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		queueCreateInfo.queueFamilyIndex = queueFamily;
-		queueCreateInfo.queueCount = 1;
-		queueCreateInfo.pQueuePriorities = &queuePriority;
+		queueCreateInfo.queueFamilyIndex = queueFamily.queue_family;
+		queueCreateInfo.queueCount = queueFamily.queues_needed;
+		queueCreateInfo.pQueuePriorities = queue_priority.data();
 		queueCreateInfos.push_back(queueCreateInfo);
 	}
 
@@ -74,17 +128,14 @@ VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VulkanInstance* insta
 		throw std::runtime_error("failed to create logical device!");
 	}
 
-	vkGetDeviceQueue(this->logical_device, indices.graphics_family.value(), 0, &this->graphics_queue);
-	vkGetDeviceQueue(this->logical_device, indices.present_family.value(), 0, &this->present_queue);
-
-	/*if (indices.hasCompute())
-	{
-		vkGetDeviceQueue(this->logical_device, indices.present_family.value(), 0, &this->present_queue);
-	}*/
+	vkGetDeviceQueue(this->logical_device, queue_allocator.graphics.queue_family, queue_allocator.graphics.queue_index, &this->graphics_queue);
+	vkGetDeviceQueue(this->logical_device, queue_allocator.present.queue_family, queue_allocator.present.queue_index, &this->present_queue);
+	vkGetDeviceQueue(this->logical_device, queue_allocator.transfer.queue_family, queue_allocator.transfer.queue_index, &this->transfer_queue);
+	vkGetDeviceQueue(this->logical_device, queue_allocator.compute.queue_family, queue_allocator.compute.queue_index, &this->compute_queue);
 
 	VkCommandPoolCreateInfo poolInfo = {};
 	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	poolInfo.queueFamilyIndex = indices.graphics_family.value();
+	poolInfo.queueFamilyIndex = queue_allocator.graphics.queue_family;
 	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	if (vkCreateCommandPool(this->logical_device, &poolInfo, nullptr, &this->graphics_command_pool) != VK_SUCCESS)
 	{

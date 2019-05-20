@@ -15,9 +15,9 @@ VkBufferUsageFlags getBufferUsage(BufferType usage)
 	case BufferType::Uniform:
 		return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 	case BufferType::Index:
-		return VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+		return VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT; //Likely going to need to copy into the buffer
 	case BufferType::Vertex:
-		return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT; //Likely going to need to copy into the buffer
 	}
 	return 0;
 }
@@ -44,12 +44,15 @@ VulkanBackend::~VulkanBackend()
 	delete this->vulkan;
 }
 
-uint32_t VulkanBackend::createImage(vector2U size)
+void VulkanBackend::beginFrame()
 {
-	return uint32_t();
 }
 
-Buffer* VulkanBackend::createBuffer(uint32_t size_bytes, BufferType type, MemoryUsage memory_usage)
+void VulkanBackend::endFrame()
 {
-	return new VulkanBuffer(this->vulkan->allocator, size_bytes, getBufferUsage(type), getMemoryUsage(memory_usage));
+}
+
+Buffer* VulkanBackend::createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage)
+{
+	return new VulkanBuffer(this->vulkan, size_bytes, getBufferUsage(type), getMemoryUsage(memory_usage));
 }

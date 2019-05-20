@@ -17,6 +17,11 @@ namespace Genesis
 
 		inline VkCommandPool getGraphicsCommandPool() { return this->graphics_command_pool; };
 
+		inline VkQueue getGraphicsQueue() { return this->graphics_queue; };
+		inline VkQueue getPresentQueue() { return this->present_queue; };
+		inline VkQueue getTransferQueue() { return this->transfer_queue; };
+		inline VkQueue getComputeQueue() { return this->compute_queue; };
+
 	private:
 		//Device
 		VkPhysicalDevice physical_device;
@@ -30,9 +35,9 @@ namespace Genesis
 		VkQueue graphics_queue;
 		VkQueue present_queue;
 		VkQueue compute_queue;
+		VkQueue transfer_queue;
 
 		//CommandPools
 		VkCommandPool graphics_command_pool;
-		VkCommandPool compute_command_pool;
 	};	
 }

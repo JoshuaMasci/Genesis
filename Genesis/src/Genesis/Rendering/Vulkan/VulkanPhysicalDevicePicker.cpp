@@ -1,24 +1,15 @@
 #include "VulkanPhysicalDevicePicker.hpp"
 
-#include "Genesis/Rendering/Vulkan/VulkanQueueFamilyIndices.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanQueueFamily.hpp"
 //#include "Genesis/Rendering/Vulkan/VulkanSwapChainSupportDetails.hpp"
 
 using namespace Genesis;
 
 bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
-	VulkanQueueFamilyIndices indices = VulkanQueueFamilyIndices::findQueueFamilies(device, surface);
+	VulkanSupportedQueues supported_queues(device, surface);
 
-	/*bool extensionsSupported = true;//TODO checkDeviceExtensionSupport(device);
-
-	bool swapChainAdequate = false;
-	if (extensionsSupported) 
-	{
-		VulkanSwapChainSupportDetails swapChainSupport = VulkanSwapChainSupportDetails::querySwapChainSupport(device, surface);
-		swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
-	}*/
-
-	return indices.hasGraphics() && indices.hasPresent();
+	return supported_queues.hasFullSupport();
 }
 
 VkPhysicalDevice VulkanPhysicalDevicePicker::pickDevice(VkInstance instance, VkSurfaceKHR surface)

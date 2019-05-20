@@ -1,6 +1,6 @@
 #include "VulkanSwapchain.hpp"
 
-#include "Genesis/Rendering/Vulkan/VulkanQueueFamilyIndices.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanQueueFamily.hpp"
 #include <algorithm>
 
 using namespace Genesis;
@@ -89,7 +89,7 @@ VulkanSwapchain::VulkanSwapchain(VulkanDevice* vulkan_device, Window* window, Vk
 	this->device = vulkan_device->getDevice();
 
 	VulkanSwapChainSupportDetails swapChainSupport = VulkanSwapChainSupportDetails::querySwapChainSupport(vulkan_device->getPhysicalDevice(), surface);
-	VulkanQueueFamilyIndices indices = VulkanQueueFamilyIndices::findQueueFamilies(vulkan_device->getPhysicalDevice(), surface);
+	VulkanQueueFamilyAllocator queue_allocator(vulkan_device->getPhysicalDevice(), surface);
 
 	//Choose Formats
 	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -116,9 +116,9 @@ VulkanSwapchain::VulkanSwapchain(VulkanDevice* vulkan_device, Window* window, Vk
 	create_info.imageArrayLayers = 1;
 	create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-	uint32_t queueFamilyIndices[] = { indices.graphics_family.value(), indices.present_family.value() };
+	uint32_t queueFamilyIndices[] = { queue_allocator.graphics.queue_family, queue_allocator.present.queue_family };
 
-	if (indices.graphics_family != indices.present_family)
+	if (queueFamilyIndices[0] != queueFamilyIndices[1])
 	{
 		create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
 		create_info.queueFamilyIndexCount = 2;
