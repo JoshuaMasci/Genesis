@@ -31,7 +31,6 @@ JobSystem::JobSystem()
 {
 	unsigned int cores = std::thread::hardware_concurrency();
 	assert(cores >= 4);//Need 4 or more cores for the engine
-	cores -= 2;//Leave 2 threads for OS and other tasks
 
 	for (unsigned int i = 0; i < cores; i++)
 	{

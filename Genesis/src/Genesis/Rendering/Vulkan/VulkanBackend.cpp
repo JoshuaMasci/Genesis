@@ -3,7 +3,6 @@
 #define VMA_IMPLEMENTATION
 
 #include "Genesis/Rendering/Vulkan/VulkanInstance.hpp"
-
 #include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
 
 using namespace Genesis;
@@ -13,7 +12,7 @@ VkBufferUsageFlags getBufferUsage(BufferType usage)
 	switch (usage)
 	{
 	case BufferType::Uniform:
-		return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT; //Probobly won't be held in GPU_Only space, copy bit not needed for now
 	case BufferType::Index:
 		return VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT; //Likely going to need to copy into the buffer
 	case BufferType::Vertex:
