@@ -26,6 +26,8 @@ namespace Genesis
 		inline bool shouldThreadsRun() { return this->should_threads_run; };
 		inline uint8_t getThreadWaitTimeMilliseconds() { return this->thread_wait_time_milli; };
 
+		inline uint32_t getNumberOfJobThreads() { return (uint32_t)this->threads.size(); };
+
 		moodycamel::ConcurrentQueue<Job*> job_queue;
 
 	protected:

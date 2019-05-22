@@ -6,7 +6,7 @@
 
 using namespace Genesis;
 
-VulkanInstance::VulkanInstance(Window* window)
+VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 {
 	this->create_instance("Sandbox", VK_MAKE_VERSION(0, 0, 1));
 	if (this->use_debug_layers)
@@ -17,6 +17,7 @@ VulkanInstance::VulkanInstance(Window* window)
 
 	this->device = new VulkanDevice(VulkanPhysicalDevicePicker::pickDevice(this->instance, this->surface), this);
 	this->swapchain = new VulkanSwapchain(this->device, window, this->surface);
+	this->command_pool = new VulkanCommandPool(this->device, number_of_threads);
 
 	//Allocator
 	VmaAllocatorCreateInfo allocatorInfo = {};
@@ -32,6 +33,11 @@ VulkanInstance::~VulkanInstance()
 	this->delete_TEMP();
 
 	vmaDestroyAllocator(this->allocator);
+
+	if (this->command_pool != nullptr)
+	{
+		delete this->command_pool;
+	}
 
 	if (this->swapchain != nullptr)
 	{

@@ -5,9 +5,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanSwapchain.hpp"
-
-//#include "Genesis/Rendering/Vulkan/VulkanRenderPipline.hpp"
-
+#include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
 
 namespace Genesis
 {
@@ -16,7 +14,7 @@ namespace Genesis
 	class VulkanInstance
 	{
 	public:
-		VulkanInstance(Window* window);
+		VulkanInstance(Window* window, uint32_t number_of_threads);
 		~VulkanInstance();
 
 		VkInstance instance;
@@ -25,6 +23,7 @@ namespace Genesis
 
 		VulkanDevice* device = nullptr;
 		VulkanSwapchain* swapchain = nullptr;
+		VulkanCommandPool* command_pool = nullptr;
 
 		//Allocator
 		VmaAllocator allocator;
@@ -34,13 +33,15 @@ namespace Genesis
 		vector<const char*> getDeviceExtensions();
 		vector<const char*> getLayers();
 
+		VkSemaphore imageAvailableSemaphore;
+		VkSemaphore renderFinishedSemaphore;
+
 		//TEMP DATA
 		//Need to abstract later
 		VkRenderPass screen_render_pass;
 		VkPipelineLayout colored_mesh_pipeline_layout;
 		VulkanRenderPipline* colored_mesh_screen_pipeline = nullptr;
 		//END TEMP DATA
-
 
 	private:
 		bool use_debug_layers = true;

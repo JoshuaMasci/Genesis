@@ -176,23 +176,6 @@ VulkanSwapchain::VulkanSwapchain(VulkanDevice* vulkan_device, Window* window, Vk
 			throw std::runtime_error("failed to create image views!");
 		}
 	}
-
-	//CommandBuffers
-	this->command_buffers.resize(this->swapchain_image_count);
-
-	VkCommandBufferAllocateInfo allocInfo = {};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.commandPool = vulkan_device->getGraphicsCommandPool();
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandBufferCount = (uint32_t)this->command_buffers.size();
-
-	if (vkAllocateCommandBuffers(this->device, &allocInfo, this->command_buffers.data()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate command buffers!");
-	}
-
-	//Validate Swapchain
-	this->invalid_swapchain = false;
 }
 
 

@@ -11,7 +11,7 @@ namespace Genesis
 	class VulkanBackend : public RenderingBackend
 	{
 	public:
-		VulkanBackend(Window* window);
+		VulkanBackend(Window* window, uint32_t number_of_threads);
 		~VulkanBackend();
 
 		virtual void beginFrame() override;

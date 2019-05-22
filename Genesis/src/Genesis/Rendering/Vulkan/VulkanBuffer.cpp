@@ -54,10 +54,11 @@ void VulkanBuffer::fillBuffer(void* data, uint64_t data_size)
 		memcpy(mappedData, data, data_size);
 		vmaUnmapMemory(this->instance->allocator, staging_buffer_memory);
 
+		//TODO use reuseable command buffer
 		VkCommandBufferAllocateInfo commandAllocInfo = {};
 		commandAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		commandAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		commandAllocInfo.commandPool = this->instance->device->getGraphicsCommandPool();
+		commandAllocInfo.commandPool = this->instance->command_pool->getTransferCommandPool();
 		commandAllocInfo.commandBufferCount = 1;
 		VkCommandBuffer commandBuffer;
 		vkAllocateCommandBuffers(this->instance->device->getDevice(), &commandAllocInfo, &commandBuffer);

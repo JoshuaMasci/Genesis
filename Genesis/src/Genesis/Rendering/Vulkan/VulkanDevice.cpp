@@ -5,49 +5,6 @@
 
 using namespace Genesis;
 
-void printQueues(VkPhysicalDevice device, VkSurfaceKHR surface)
-{
-	uint32_t queueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-	vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
-
-	for (uint32_t i = 0; i < queueFamilies.size(); i++)
-	{
-		const auto& queueFamily = queueFamilies[i];
-
-		printf("Queue Family %u: ", i);
-
-		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-		{
-			printf("Graphics ");
-		}
-
-		if (queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT)
-		{
-			printf("Compute ");
-		}
-
-		if (queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT)
-		{
-			printf("Transfer ");
-		}
-
-		if (surface != nullptr)
-		{
-			VkBool32 presentSupport = false;
-			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-
-			if (presentSupport)
-			{
-				printf("Present ");
-			}
-		}
-
-		printf(" #%u\n", queueFamily.queueCount);
-	}
-}
-
 VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VulkanInstance* instance)
 {
 	this->physical_device = chosen_device;
@@ -57,7 +14,6 @@ VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VulkanInstance* insta
 
 	printf("GPU INFO:\n");
 	printf("Device: %s\n", this->properties.deviceName);
-	//printQueues(this->physical_device, instance->surface);
 
 	VulkanQueueFamilyAllocator queue_allocator(this->physical_device, instance->surface);
 	vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -133,14 +89,10 @@ VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VulkanInstance* insta
 	vkGetDeviceQueue(this->logical_device, queue_allocator.transfer.queue_family, queue_allocator.transfer.queue_index, &this->transfer_queue);
 	vkGetDeviceQueue(this->logical_device, queue_allocator.compute.queue_family, queue_allocator.compute.queue_index, &this->compute_queue);
 
-	VkCommandPoolCreateInfo poolInfo = {};
-	poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	poolInfo.queueFamilyIndex = queue_allocator.graphics.queue_family;
-	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	if (vkCreateCommandPool(this->logical_device, &poolInfo, nullptr, &this->graphics_command_pool) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create command pool!");
-	}
+	this->graphics_family_index = queue_allocator.graphics.queue_family;
+	this->present_family_index = queue_allocator.present.queue_family;
+	this->transfer_family_index = queue_allocator.transfer.queue_family;
+	this->compute_family_index = queue_allocator.compute.queue_family;
 }
 
 VulkanDevice::~VulkanDevice()

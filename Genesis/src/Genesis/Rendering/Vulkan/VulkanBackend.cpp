@@ -33,9 +33,9 @@ VmaMemoryUsage getMemoryUsage(MemoryUsage memory_usage)
 	return VMA_MEMORY_USAGE_UNKNOWN;
 }
 
-VulkanBackend::VulkanBackend(Window* window)
+VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 {
-	this->vulkan = new VulkanInstance(window);
+	this->vulkan = new VulkanInstance(window, number_of_threads);
 }
 
 VulkanBackend::~VulkanBackend()
