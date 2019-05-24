@@ -11,7 +11,7 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 	this->create_instance("Sandbox", VK_MAKE_VERSION(0, 0, 1));
 	if (this->use_debug_layers)
 	{
-		this->create_debug_messenger();
+		this->debug_layer = new VulkanDebugLayer(this->instance);
 	}
 	this->create_surface(window);
 
@@ -25,12 +25,36 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 	allocatorInfo.device = this->device->getDevice();
 	vmaCreateAllocator(&allocatorInfo, &this->allocator);
 
+	//TEMP-ISH
+	VkSemaphoreCreateInfo semaphoreInfo = {};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	VkFenceCreateInfo fenceInfo = {};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+	if (vkCreateSemaphore(this->device->getDevice(), &semaphoreInfo, nullptr, &this->image_available_semaphore) != VK_SUCCESS ||
+		vkCreateSemaphore(this->device->getDevice(), &semaphoreInfo, nullptr, &this->render_finished_semaphore) != VK_SUCCESS ||
+		vkCreateFence(this->device->getDevice(), &fenceInfo, nullptr, &this->in_flight_fence) != VK_SUCCESS) {
+
+		throw std::runtime_error("failed to create semaphores!");
+	}
+
+
+	this->swapchain->buildSwapchainDepthBuffers(VK_FORMAT_D32_SFLOAT, this->allocator);
+
+	//TEMP
 	this->create_TEMP();
+
+	//Framebuffers
+	this->swapchain->buildSwapchainFramebuffers(this->screen_render_pass);
 }
 
 VulkanInstance::~VulkanInstance()
 {
 	this->delete_TEMP();
+
+	vkDestroySemaphore(this->device->getDevice(), this->render_finished_semaphore, nullptr);
+	vkDestroySemaphore(this->device->getDevice(), this->image_available_semaphore, nullptr);
+	vkDestroyFence(this->device->getDevice(), this->in_flight_fence, nullptr);
 
 	vmaDestroyAllocator(this->allocator);
 
@@ -51,9 +75,9 @@ VulkanInstance::~VulkanInstance()
 
 	this->delete_surface();
 
-	if (this->use_debug_layers)
+	if (this->debug_layer != nullptr)
 	{
-		this->delete_debug_messenger();
+		delete this->debug_layer;
 	}
 
 	this->delete_instance();
@@ -146,45 +170,6 @@ void VulkanInstance::create_instance(const char* app_name, uint32_t app_version)
 void VulkanInstance::delete_instance()
 {
 	vkDestroyInstance(this->instance, nullptr);
-}
-
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
-{
-	//TODO LOGGING
-	printf("Vulkan Validation Layer: %s\n", pCallbackData->pMessage);
-	return VK_FALSE;
-}
-
-void VulkanInstance::create_debug_messenger()
-{
-	VkDebugUtilsMessengerCreateInfoEXT create_info = {};
-	create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-	create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-	create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-	create_info.pfnUserCallback = debugCallback;
-
-	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(this->instance, "vkCreateDebugUtilsMessengerEXT");
-	if (func != nullptr)
-	{
-		VkResult result = func(this->instance, &create_info, nullptr, &this->debug_messenger);
-		if (result != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to set up debug messenger!");
-		}
-	}
-	else
-	{
-		throw std::runtime_error("failed to set up debug messenger!");
-	}
-}
-
-void VulkanInstance::delete_debug_messenger()
-{
-	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(this->instance, "vkDestroyDebugUtilsMessengerEXT");
-	if (func != nullptr)
-	{
-		func(this->instance, this->debug_messenger, nullptr);
-	}
 }
 
 void VulkanInstance::create_surface(Window* window)

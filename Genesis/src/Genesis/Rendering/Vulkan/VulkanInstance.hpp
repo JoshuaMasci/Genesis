@@ -3,6 +3,7 @@
 #include "Genesis/Platform/Window.hpp"
 
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanDebugLayer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanSwapchain.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
@@ -18,9 +19,9 @@ namespace Genesis
 		~VulkanInstance();
 
 		VkInstance instance;
-		VkDebugUtilsMessengerEXT debug_messenger = VK_NULL_HANDLE;
 		VkSurfaceKHR surface;
 
+		VulkanDebugLayer* debug_layer = nullptr;
 		VulkanDevice* device = nullptr;
 		VulkanSwapchain* swapchain = nullptr;
 		VulkanCommandPool* command_pool = nullptr;
@@ -33,8 +34,9 @@ namespace Genesis
 		vector<const char*> getDeviceExtensions();
 		vector<const char*> getLayers();
 
-		VkSemaphore imageAvailableSemaphore;
-		VkSemaphore renderFinishedSemaphore;
+		VkSemaphore image_available_semaphore;
+		VkSemaphore render_finished_semaphore;
+		VkFence in_flight_fence;
 
 		//TEMP DATA
 		//Need to abstract later
@@ -49,10 +51,6 @@ namespace Genesis
 		//Instance
 		void create_instance(const char* app_name, uint32_t app_version);
 		void delete_instance();
-
-		//Debug
-		void create_debug_messenger();
-		void delete_debug_messenger();
 
 		//Surface
 		void create_surface(Window* window);

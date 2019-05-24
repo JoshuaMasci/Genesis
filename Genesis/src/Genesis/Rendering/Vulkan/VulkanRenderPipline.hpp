@@ -17,6 +17,8 @@ namespace Genesis
 		VulkanRenderPipline(VulkanInstance* instance, VkPipelineLayout pipeline_layout, VkRenderPass renderpass, VulkanShader* shader, VertexInput* vertex_description);
 		virtual ~VulkanRenderPipline();
 
+		inline VkPipeline getPipeline() { return this->pipeline; };
+
 	private:
 		VulkanInstance* instance;
 		VkPipeline pipeline;

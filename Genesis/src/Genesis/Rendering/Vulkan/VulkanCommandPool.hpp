@@ -14,6 +14,9 @@ namespace Genesis
 		inline VkCommandPool getGraphicsCommandPool() { return this->graphics_command_pool; };
 		inline VkCommandPool getTransferCommandPool() { return this->transfer_command_pool; };
 
+		inline VkCommandBuffer getGraphicsBuffer(uint32_t thread_num) { return this->graphics_command_buffers[thread_num]; };
+		inline VkCommandBuffer* getGraphicsBufferArray() { return this->graphics_command_buffers.data(); };
+
 	private:
 		VulkanDevice* device;
 

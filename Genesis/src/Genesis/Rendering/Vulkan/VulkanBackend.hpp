@@ -19,7 +19,12 @@ namespace Genesis
 
 		virtual Buffer* createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) override;
 
+		Buffer* cube_vertices = nullptr;
+		Buffer* cube_indices = nullptr;
+		uint32_t indices_count;
+
 	private:
 		VulkanInstance* vulkan = nullptr;
+		uint32_t swapchain_image_index = 0;
 	};
 }
