@@ -69,15 +69,25 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 
 VulkanBackend::~VulkanBackend()
 {
+	delete this->cube_vertices;
+	delete this->cube_indices;
+
 	delete this->vulkan;
 }
 
 void VulkanBackend::beginFrame()
 {
-	vkWaitForFences(this->vulkan->device->getDevice(), 1, &this->vulkan->in_flight_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+	/*vkWaitForFences(this->vulkan->device->getDevice(), 1, &this->vulkan->in_flight_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
 	vkResetFences(this->vulkan->device->getDevice(), 1, &this->vulkan->in_flight_fence);
 
-	VkResult result = vkAcquireNextImageKHR(this->vulkan->device->getDevice(), this->vulkan->swapchain->getSwapchain(), std::numeric_limits<uint64_t>::max(), this->vulkan->image_available_semaphore, VK_NULL_HANDLE, &this->swapchain_image_index);
+	VkResult result = vkAcquireNextImageKHR(this->vulkan->device->getDevice(), this->vulkan->swapchain->getSwapchain(), std::numeric_limits<uint64_t>::max(), this->vulkan->image_available_semaphore, VK_NULL_HANDLE, &this->swapchain_image_index);*/
+
+	bool image_acquired = this->vulkan->AcquireSwapchainImage(this->swapchain_image_index);
+
+	if (image_acquired == false)
+	{
+		return;
+	}
 
 	//TEMP STUFF
 	VkCommandBuffer buffer = this->vulkan->command_pool->getGraphicsBuffer(0);
@@ -96,7 +106,7 @@ void VulkanBackend::beginFrame()
 	VkRenderPassBeginInfo renderPassInfo = {};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = this->vulkan->screen_render_pass;
-	renderPassInfo.framebuffer = this->vulkan->swapchain->getSwapchainFramebuffer(this->swapchain_image_index);
+	renderPassInfo.framebuffer = this->vulkan->swapchain_framebuffers->getSwapchainFramebuffer(this->swapchain_image_index);
 	renderPassInfo.renderArea.offset = { 0, 0 };
 	renderPassInfo.renderArea.extent = swapchain_extent;
 
@@ -109,34 +119,42 @@ void VulkanBackend::beginFrame()
 
 	vkCmdBeginRenderPass(buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	matrix4F mvp;
-	if (true)
+	static float angle = 0.0f;
+	const float turn_rate = (float)PI / 2.0f;
+	angle += (turn_rate * (1.0f / 2000.0f));
+
+	for (int i = 0; i < 3; i++)
 	{
-		float fov = 1.0f / tan(glm::radians(75.0f) / 2.0f);
-		float aspect = (float)swapchain_extent.width / (float)swapchain_extent.height;
+		matrix4F mvp;
+		if (true)
+		{
+			float fov = 1.0f / tan(glm::radians(75.0f) / 2.0f);
+			float aspect = (float)swapchain_extent.width / (float)swapchain_extent.height;
 
-		const float turn_rate = (float)PI / 2.0f;
-		static float angle = 0.0f;
-		quaternionF quat = glm::angleAxis(angle, vector3F(0.0f, 1.0f, 0.0f));
-		angle += (turn_rate * (1.0f/2000.0f));
+			quaternionF quat = glm::angleAxis(angle, vector3F(0.0f, 1.0f, 0.0f));
 
-		matrix4F model = glm::toMat4(quat);
-		matrix4F view = glm::lookAt(vector3F(0.0f, 0.0f, -2.0f), vector3F(0.0f), vector3F(0.0f, 1.0f, 0.0f));
-		matrix4F proj = glm::infinitePerspective(fov, aspect, 0.1f);
-		proj[1][1] *= -1; //Need to apply this because vulkan flips the y-axis and I don't like that
+			matrix4F model = glm::toMat4(quat);
+			model = glm::translate(matrix4F(1.0f), vector3F((float)i, 0.0f, 0.0f)) * model;
 
-		mvp = proj * view * model;
+			matrix4F view = glm::lookAt(vector3F(0.0f, 0.0f, -2.0f), vector3F(0.0f), vector3F(0.0f, 1.0f, 0.0f));
+			matrix4F proj = glm::infinitePerspective(fov, aspect, 0.1f);
+			proj[1][1] *= -1; //Need to apply this because vulkan flips the y-axis and I don't like that
+
+			mvp = proj * view * model;
+		}
+
+		vkCmdPushConstants(buffer, this->vulkan->colored_mesh_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);//TODO
+		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->colored_mesh_screen_pipeline->getPipeline());
+
+		VkBuffer vertexBuffers[] = { ((VulkanBuffer*)this->cube_vertices)->getBuffer() };
+		VkDeviceSize offsets[] = { 0 };
+		vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
+
+		vkCmdBindIndexBuffer(buffer, ((VulkanBuffer*)this->cube_indices)->getBuffer(), 0, VK_INDEX_TYPE_UINT16);
+
+		vkCmdDrawIndexed(buffer, this->indices_count, 1, 0, 0, 0);
 	}
 
-	vkCmdPushConstants(buffer, this->vulkan->colored_mesh_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);//TODO
-	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->colored_mesh_screen_pipeline->getPipeline());
-
-	VkBuffer vertexBuffers[] = { ((VulkanBuffer*)this->cube_vertices)->getBuffer() };
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
-	vkCmdBindIndexBuffer(buffer, ((VulkanBuffer*)this->cube_indices)->getBuffer(), 0, VK_INDEX_TYPE_UINT16);
-
-	vkCmdDrawIndexed(buffer, this->indices_count, 1, 0, 0, 0);
 
 	vkCmdEndRenderPass(buffer);
 
@@ -148,6 +166,11 @@ void VulkanBackend::beginFrame()
 
 void VulkanBackend::endFrame()
 {
+	if (this->vulkan->swapchain == nullptr)
+	{
+		return;
+	}
+
 	//Submit CommandBuffers
 	VkSubmitInfo submitInfo = {};
 	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

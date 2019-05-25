@@ -8,6 +8,8 @@ using namespace Genesis;
 
 VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 {
+	this->window = window;
+
 	this->create_instance("Sandbox", VK_MAKE_VERSION(0, 0, 1));
 	if (this->use_debug_layers)
 	{
@@ -38,18 +40,23 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 		throw std::runtime_error("failed to create semaphores!");
 	}
 
-
-	this->swapchain->buildSwapchainDepthBuffers(VK_FORMAT_D32_SFLOAT, this->allocator);
-
 	//TEMP
 	this->create_TEMP();
 
 	//Framebuffers
-	this->swapchain->buildSwapchainFramebuffers(this->screen_render_pass);
+	this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->screen_render_pass);
 }
 
 VulkanInstance::~VulkanInstance()
 {
+	vkDeviceWaitIdle(this->device->getDevice());
+
+
+	if (this->swapchain_framebuffers != nullptr)
+	{
+		delete this->swapchain_framebuffers;
+	}
+
 	this->delete_TEMP();
 
 	vkDestroySemaphore(this->device->getDevice(), this->render_finished_semaphore, nullptr);
@@ -81,6 +88,67 @@ VulkanInstance::~VulkanInstance()
 	}
 
 	this->delete_instance();
+}
+
+bool Genesis::VulkanInstance::AcquireSwapchainImage(uint32_t& image_index)
+{
+	if (this->swapchain == nullptr)
+	{
+		//Checks if the swapchain can be created
+		VkSurfaceCapabilitiesKHR capabilities;
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this->device->getPhysicalDevice(), this->surface, &capabilities);
+		if (capabilities.maxImageExtent.width <= 1, capabilities.maxImageExtent.height <= 1)
+		{
+			return false;
+		}
+
+		//Creates swapchain
+		this->swapchain = new VulkanSwapchain(this->device, this->window, this->surface);
+		this->create_TEMP();
+		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->screen_render_pass);
+	}
+
+	VkResult result = vkAcquireNextImageKHR(this->device->getDevice(), this->swapchain->getSwapchain(), std::numeric_limits<uint64_t>::max(), this->image_available_semaphore, VK_NULL_HANDLE, &image_index);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		//WAITS until work is done
+		image_index = UINT32_MAX;
+		vkDeviceWaitIdle(this->device->getDevice());
+
+		//Delete old stuff
+		if (this->swapchain_framebuffers != nullptr)
+		{
+			delete this->swapchain_framebuffers;
+			this->swapchain_framebuffers = nullptr;
+		}
+		this->delete_TEMP();
+		if (this->swapchain != nullptr)
+		{
+			delete this->swapchain;
+			this->swapchain = nullptr;
+		}
+
+		//Checks if the swapchain can be created
+		VkSurfaceCapabilitiesKHR capabilities;
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this->device->getPhysicalDevice(), this->surface, &capabilities);
+		if (capabilities.maxImageExtent.width <= 1, capabilities.maxImageExtent.height <= 1)
+		{
+			return false;
+		}
+
+		//Creates swapchain
+		this->swapchain = new VulkanSwapchain(this->device, this->window, this->surface);
+		this->create_TEMP();
+		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->screen_render_pass);
+
+		VkResult result = vkAcquireNextImageKHR(this->device->getDevice(), this->swapchain->getSwapchain(), std::numeric_limits<uint64_t>::max(), this->image_available_semaphore, VK_NULL_HANDLE, &image_index);
+	}
+
+	vkWaitForFences(this->device->getDevice(), 1, &this->in_flight_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+	vkResetFences(this->device->getDevice(), 1, &this->in_flight_fence);
+
+	return true;
 }
 
 vector<const char*> VulkanInstance::getExtensions()

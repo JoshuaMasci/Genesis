@@ -14,6 +14,8 @@ namespace Genesis
 	class RenderingBackend
 	{
 	public:
+		virtual ~RenderingBackend() {};
+
 		virtual void beginFrame() = 0;
 		virtual void endFrame() = 0;
 

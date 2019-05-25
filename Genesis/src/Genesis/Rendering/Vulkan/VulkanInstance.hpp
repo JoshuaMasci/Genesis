@@ -6,6 +6,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanDebugLayer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanSwapchain.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanSwapchainFramebuffers.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
 
 namespace Genesis
@@ -18,12 +19,16 @@ namespace Genesis
 		VulkanInstance(Window* window, uint32_t number_of_threads);
 		~VulkanInstance();
 
+		bool AcquireSwapchainImage(uint32_t& image_index);
+		
+		Window* window = nullptr;
 		VkInstance instance;
 		VkSurfaceKHR surface;
 
 		VulkanDebugLayer* debug_layer = nullptr;
 		VulkanDevice* device = nullptr;
 		VulkanSwapchain* swapchain = nullptr;
+		VulkanSwapchainFramebuffers* swapchain_framebuffers = nullptr;
 		VulkanCommandPool* command_pool = nullptr;
 
 		//Allocator
@@ -38,9 +43,10 @@ namespace Genesis
 		VkSemaphore render_finished_semaphore;
 		VkFence in_flight_fence;
 
+		VkRenderPass screen_render_pass;
+
 		//TEMP DATA
 		//Need to abstract later
-		VkRenderPass screen_render_pass;
 		VkPipelineLayout colored_mesh_pipeline_layout;
 		VulkanRenderPipline* colored_mesh_screen_pipeline = nullptr;
 		//END TEMP DATA
