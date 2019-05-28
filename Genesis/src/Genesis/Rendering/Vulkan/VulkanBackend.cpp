@@ -37,51 +37,15 @@ VmaMemoryUsage getMemoryUsage(MemoryUsage memory_usage)
 VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 {
 	this->vulkan = new VulkanInstance(window, number_of_threads);
-
-	//Cube
-	std::vector<Vertex> vertices =
-	{
-	{{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-	{{0.5f, -0.5f, -0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-	{{0.5f, 0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-	{{-0.5f, 0.5f, -0.5f}, {0.0f, 1.0f, 1.0f}, {0.0f, 0.0f}},
-	{{-0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-	{{0.5f, -0.5f, 0.5f}, {1.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-	{{0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-	{{-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}}
-	};
-	this->cube_vertices = this->createBuffer(sizeof(Vertex) * vertices.size(), BufferType::Vertex, MemoryUsage::GPU_Only);
-	this->cube_vertices->fillBuffer(vertices.data(), sizeof(Vertex) * vertices.size());
-
-	std::vector<uint16_t> indices =
-	{
-	5, 6, 4, 4, 6, 7, //front
-	1, 0, 2, 2, 0, 3, //back
-	1, 2, 5, 5, 2, 6, //left
-	0, 4, 3, 3, 4, 7, //right
-	2, 3, 6, 6, 3, 7, //top
-	0, 1, 4, 4, 1, 5 //bottom
-	};
-	this->cube_indices = this->createBuffer(sizeof(uint16_t) * indices.size(), BufferType::Index, MemoryUsage::GPU_Only);
-	this->cube_indices->fillBuffer(indices.data(), sizeof(uint16_t) * indices.size());
-	this->indices_count = (uint32_t)indices.size();
 }
 
 VulkanBackend::~VulkanBackend()
 {
-	delete this->cube_vertices;
-	delete this->cube_indices;
-
 	delete this->vulkan;
 }
 
 void VulkanBackend::beginFrame()
 {
-	/*vkWaitForFences(this->vulkan->device->getDevice(), 1, &this->vulkan->in_flight_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
-	vkResetFences(this->vulkan->device->getDevice(), 1, &this->vulkan->in_flight_fence);
-
-	VkResult result = vkAcquireNextImageKHR(this->vulkan->device->getDevice(), this->vulkan->swapchain->getSwapchain(), std::numeric_limits<uint64_t>::max(), this->vulkan->image_available_semaphore, VK_NULL_HANDLE, &this->swapchain_image_index);*/
-
 	bool image_acquired = this->vulkan->AcquireSwapchainImage(this->swapchain_image_index);
 
 	if (image_acquired == false)
@@ -89,14 +53,12 @@ void VulkanBackend::beginFrame()
 		return;
 	}
 
-	//TEMP STUFF
-	VkCommandBuffer buffer = this->vulkan->command_pool->getGraphicsBuffer(0);
-	vkResetCommandBuffer(buffer, 0);
+	vkWaitForFences(this->vulkan->device->getDevice(), 1, &this->vulkan->command_buffer_done_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+	vkResetFences(this->vulkan->device->getDevice(), 1, &this->vulkan->command_buffer_done_fence);
 
-	VkCommandBufferBeginInfo beginInfo = {};
-	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-	if (vkBeginCommandBuffer(buffer, &beginInfo) != VK_SUCCESS)
+	VkCommandBufferBeginInfo begin_info = {};
+	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	if (vkBeginCommandBuffer(this->vulkan->command_pool->graphics_command_buffer, &begin_info) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to begin recording command buffer!");
 	}
@@ -117,79 +79,87 @@ void VulkanBackend::beginFrame()
 	renderPassInfo.clearValueCount = 2;
 	renderPassInfo.pClearValues = clearValues;
 
-	vkCmdBeginRenderPass(buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	vkCmdBeginRenderPass(this->vulkan->command_pool->graphics_command_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-	static float angle = 0.0f;
-	const float turn_rate = (float)PI / 2.0f;
-	angle += (turn_rate * (1.0f / 2000.0f));
+	VkCommandBufferInheritanceInfo inheritance_info = {};
+	inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+	inheritance_info.renderPass = renderPassInfo.renderPass;
+	inheritance_info.framebuffer = renderPassInfo.framebuffer;
 
-	for (int i = 0; i < 3; i++)
+	//TEMP STUFF
+	for (int i = 0; i < this->vulkan->command_pool->graphics_secondary_command_buffers.size(); i++)
 	{
-		matrix4F mvp;
-		if (true)
+		VkCommandBuffer buffer = this->vulkan->command_pool->graphics_secondary_command_buffers[i];
+		vkResetCommandBuffer(buffer, 0);
+
+		VkCommandBufferBeginInfo begin_info = {};
+		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		begin_info.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+		begin_info.pInheritanceInfo = &inheritance_info;
+
+		if (vkBeginCommandBuffer(buffer, &begin_info) != VK_SUCCESS)
 		{
-			float fov = 1.0f / tan(glm::radians(75.0f) / 2.0f);
-			float aspect = (float)swapchain_extent.width / (float)swapchain_extent.height;
-
-			quaternionF quat = glm::angleAxis(angle, vector3F(0.0f, 1.0f, 0.0f));
-
-			matrix4F model = glm::toMat4(quat);
-			model = glm::translate(matrix4F(1.0f), vector3F((float)i, 0.0f, 0.0f)) * model;
-
-			matrix4F view = glm::lookAt(vector3F(0.0f, 0.0f, -2.0f), vector3F(0.0f), vector3F(0.0f, 1.0f, 0.0f));
-			matrix4F proj = glm::infinitePerspective(fov, aspect, 0.1f);
-			proj[1][1] *= -1; //Need to apply this because vulkan flips the y-axis and I don't like that
-
-			mvp = proj * view * model;
+			throw std::runtime_error("failed to begin recording command buffer!");
 		}
-
-		vkCmdPushConstants(buffer, this->vulkan->colored_mesh_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);//TODO
-		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->colored_mesh_screen_pipeline->getPipeline());
-
-		VkBuffer vertexBuffers[] = { ((VulkanBuffer*)this->cube_vertices)->getBuffer() };
-		VkDeviceSize offsets[] = { 0 };
-		vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
-
-		vkCmdBindIndexBuffer(buffer, ((VulkanBuffer*)this->cube_indices)->getBuffer(), 0, VK_INDEX_TYPE_UINT16);
-
-		vkCmdDrawIndexed(buffer, this->indices_count, 1, 0, 0, 0);
-	}
-
-
-	vkCmdEndRenderPass(buffer);
-
-	if (vkEndCommandBuffer(buffer) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to record command buffer!");
 	}
 }
 
 void VulkanBackend::endFrame()
 {
+	for (int i = 0; i < this->vulkan->command_pool->graphics_secondary_command_buffers.size(); i++)
+	{
+		VkCommandBuffer buffer = this->vulkan->command_pool->graphics_secondary_command_buffers[i];
+		if (vkEndCommandBuffer(buffer) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to record command buffer!");
+		}
+	}
+
 	if (this->vulkan->swapchain == nullptr)
 	{
 		return;
 	}
 
+	/*for (int i = 0; i < this->vulkan->command_pool->graphics_command_buffers.size(); i++)
+	{
+		VkCommandBuffer buffer = this->vulkan->command_pool->graphics_command_buffers[i];
+
+		//Submit CommandBuffers
+		VkSubmitInfo submitInfo = {};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.waitSemaphoreCount = 0;
+
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &this->vulkan->command_pool->graphics_command_buffers[i];
+
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &this->vulkan->command_pool->graphics_command_buffer_finished[i];
+
+		if (vkQueueSubmit(this->vulkan->device->getGraphicsQueue(), 1, &submitInfo, this->vulkan->command_buffer_done_fence[i]) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to submit draw command buffer!");
+		}
+	}*/
+
+	vkCmdExecuteCommands(this->vulkan->command_pool->graphics_command_buffer, (uint32_t)this->vulkan->command_pool->graphics_secondary_command_buffers.size(), this->vulkan->command_pool->graphics_secondary_command_buffers.data());
+	vkCmdEndRenderPass(this->vulkan->command_pool->graphics_command_buffer);
+	vkEndCommandBuffer(this->vulkan->command_pool->graphics_command_buffer);
+
 	//Submit CommandBuffers
-	VkSubmitInfo submitInfo = {};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	VkSubmitInfo submit_info = {};
+	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submit_info.waitSemaphoreCount = 1;
+	submit_info.pWaitSemaphores = &this->vulkan->image_available_semaphore;
+	VkPipelineStageFlags wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	submit_info.pWaitDstStageMask = wait_stages;
 
-	VkSemaphore waitSemaphores[] = { this->vulkan->image_available_semaphore};
-	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = waitSemaphores;
-	submitInfo.pWaitDstStageMask = waitStages;
+	submit_info.commandBufferCount = 1;
+	submit_info.pCommandBuffers = &this->vulkan->command_pool->graphics_command_buffer;
 
-	//Only Submit one for now
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = this->vulkan->command_pool->getGraphicsBufferArray();
+	submit_info.signalSemaphoreCount = 1;
+	submit_info.pSignalSemaphores = &this->vulkan->command_pool->graphics_command_buffer_finished;
 
-	VkSemaphore signalSemaphores[] = { this->vulkan->render_finished_semaphore };
-	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = signalSemaphores;
-
-	if (vkQueueSubmit(this->vulkan->device->getGraphicsQueue(), 1, &submitInfo, this->vulkan->in_flight_fence) != VK_SUCCESS)
+	if (vkQueueSubmit(this->vulkan->device->getGraphicsQueue(), 1, &submit_info, this->vulkan->command_buffer_done_fence) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to submit draw command buffer!");
 	}
@@ -197,9 +167,8 @@ void VulkanBackend::endFrame()
 	//Present the image to the screen
 	VkPresentInfoKHR presentInfo = {};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = signalSemaphores;
+	presentInfo.pWaitSemaphores = &this->vulkan->command_pool->graphics_command_buffer_finished;
 
 	VkSwapchainKHR swapChains[] = { this->vulkan->swapchain->getSwapchain() };
 	presentInfo.swapchainCount = 1;
@@ -208,9 +177,39 @@ void VulkanBackend::endFrame()
 	presentInfo.pImageIndices = &this->swapchain_image_index;
 
 	VkResult result = vkQueuePresentKHR(this->vulkan->device->getPresentQueue(), &presentInfo);
+	if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to present image");
+	}
 }
 
 Buffer* VulkanBackend::createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage)
 {
 	return new VulkanBuffer(this->vulkan, size_bytes, getBufferUsage(type), getMemoryUsage(memory_usage));
+}
+
+void VulkanBackend::drawMeshScreen(uint32_t thread, Buffer* vertex_buffer, Buffer* index_buffer, uint32_t index_count, matrix4F mvp)
+{
+	if (this->vulkan->swapchain == nullptr)
+	{
+		return;
+	}
+
+	VkCommandBuffer buffer = this->vulkan->command_pool->graphics_secondary_command_buffers[thread];
+
+	vkCmdPushConstants(buffer, this->vulkan->colored_mesh_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
+	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->colored_mesh_screen_pipeline->getPipeline());
+
+	VkBuffer vertexBuffers[] = { ((VulkanBuffer*)vertex_buffer)->getBuffer() };
+	VkDeviceSize offsets[] = { 0 };
+	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
+
+	vkCmdBindIndexBuffer(buffer, ((VulkanBuffer*)index_buffer)->getBuffer(), 0, VK_INDEX_TYPE_UINT16);
+
+	vkCmdDrawIndexed(buffer, index_count, 1, 0, 0, 0);
+}
+
+void VulkanBackend::waitTillDone()
+{
+	vkDeviceWaitIdle(this->vulkan->device->getDevice());
 }

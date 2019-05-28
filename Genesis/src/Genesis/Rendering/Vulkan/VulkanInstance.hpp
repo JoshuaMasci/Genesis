@@ -40,8 +40,7 @@ namespace Genesis
 		vector<const char*> getLayers();
 
 		VkSemaphore image_available_semaphore;
-		VkSemaphore render_finished_semaphore;
-		VkFence in_flight_fence;
+		VkFence command_buffer_done_fence;
 
 		VkRenderPass screen_render_pass;
 

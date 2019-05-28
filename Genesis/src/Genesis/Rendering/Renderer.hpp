@@ -26,5 +26,8 @@ namespace Genesis
 		//TEMP
 		Buffer* cube_vertices = nullptr;
 		Buffer* cube_indices = nullptr;
+		uint32_t cube_indices_count = 0;
+
+		vector<vector3F> positions;
 	};
 }

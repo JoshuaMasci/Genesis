@@ -1,5 +1,9 @@
 #include "Renderer.hpp"
 
+#include "Genesis/Application.hpp"
+
+#include <random>
+
 using namespace Genesis;
 
 Renderer::Renderer(RenderingBackend* backend)
@@ -32,6 +36,22 @@ Renderer::Renderer(RenderingBackend* backend)
 	};
 	this->cube_indices = this->backend->createBuffer(sizeof(uint16_t) * indices.size(), BufferType::Index, MemoryUsage::GPU_Only);
 	this->cube_indices->fillBuffer(indices.data(), sizeof(uint16_t) * indices.size());
+	this->cube_indices_count = (uint32_t)indices.size();
+
+
+	//TEMP
+	std::random_device random;
+	std::mt19937 e2(random());
+	std::uniform_real_distribution<float> rand_dist(-2.0, 2.0);
+	const uint32_t threads = 12;
+	this->positions.resize(threads);
+
+	for (int i = 0; i < this->positions.size(); i++)
+	{
+		this->positions[i].x = rand_dist(e2);
+		this->positions[i].y = rand_dist(e2);
+		this->positions[i].z = rand_dist(e2);
+	}
 }
 
 Renderer::~Renderer()
@@ -42,7 +62,21 @@ Renderer::~Renderer()
 
 void Renderer::drawFrame()
 {
+	float fov = 1.0f / tan(glm::radians(75.0f) / 2.0f);
+	float aspect = 2560.0f / 1440.0f;
+	matrix4F view = glm::lookAt(vector3F(0.0f, 0.5f, -8.0f), vector3F(0.0f), vector3F(0.0f, 1.0f, 0.0f));
+	matrix4F proj = glm::infinitePerspective(fov, aspect, 0.1f);
+	proj[1][1] *= -1; //Need to apply this because vulkan flips the y-axis and that's not what I need
+
+	matrix4F mv = proj * view;
+
 	this->backend->beginFrame();
+
+	for (int i = 0; i < this->positions.size(); i++)
+	{
+		matrix4F mvp = mv * glm::translate(matrix4F(1.0), this->positions[i]);
+		this->backend->drawMeshScreen(i % 12, this->cube_vertices, this->cube_indices, this->cube_indices_count, mvp);
+	}
 
 	this->backend->endFrame();
 }

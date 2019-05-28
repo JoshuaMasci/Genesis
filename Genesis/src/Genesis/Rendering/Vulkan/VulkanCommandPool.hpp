@@ -11,22 +11,19 @@ namespace Genesis
 		VulkanCommandPool(VulkanDevice* device, uint32_t number_of_threads);
 		~VulkanCommandPool();
 
-		inline VkCommandPool getGraphicsCommandPool() { return this->graphics_command_pool; };
-		inline VkCommandPool getTransferCommandPool() { return this->transfer_command_pool; };
-
-		inline VkCommandBuffer getGraphicsBuffer(uint32_t thread_num) { return this->graphics_command_buffers[thread_num]; };
-		inline VkCommandBuffer* getGraphicsBufferArray() { return this->graphics_command_buffers.data(); };
-
-	private:
-		VulkanDevice* device;
-
 		//For graphics and present commands
 		VkCommandPool graphics_command_pool;
 
+		VkCommandBuffer graphics_command_buffer;
+		VkSemaphore graphics_command_buffer_finished;
+
 		//Per thread command buffers
-		vector<VkCommandBuffer> graphics_command_buffers;
+		vector<VkCommandBuffer> graphics_secondary_command_buffers;
 
 		//For memory operations
 		VkCommandPool transfer_command_pool;
+
+	private:
+		VulkanDevice* device;
 	};
 }

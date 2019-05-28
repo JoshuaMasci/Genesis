@@ -19,9 +19,9 @@ namespace Genesis
 
 		virtual Buffer* createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) override;
 
-		Buffer* cube_vertices = nullptr;
-		Buffer* cube_indices = nullptr;
-		uint32_t indices_count;
+		virtual void drawMeshScreen(uint32_t thread, Buffer* vertex_buffer, Buffer* index_buffer, uint32_t index_count, matrix4F mvp) override;
+
+		virtual void waitTillDone() override;
 
 	private:
 		VulkanInstance* vulkan = nullptr;

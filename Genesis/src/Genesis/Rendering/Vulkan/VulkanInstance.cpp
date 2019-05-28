@@ -30,14 +30,17 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 	//TEMP-ISH
 	VkSemaphoreCreateInfo semaphoreInfo = {};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	if (vkCreateSemaphore(this->device->getDevice(), &semaphoreInfo, nullptr, &this->image_available_semaphore) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create sync objects!");
+	}
+
 	VkFenceCreateInfo fenceInfo = {};
 	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-	if (vkCreateSemaphore(this->device->getDevice(), &semaphoreInfo, nullptr, &this->image_available_semaphore) != VK_SUCCESS ||
-		vkCreateSemaphore(this->device->getDevice(), &semaphoreInfo, nullptr, &this->render_finished_semaphore) != VK_SUCCESS ||
-		vkCreateFence(this->device->getDevice(), &fenceInfo, nullptr, &this->in_flight_fence) != VK_SUCCESS) {
-
-		throw std::runtime_error("failed to create semaphores!");
+	if(vkCreateFence(this->device->getDevice(), &fenceInfo, nullptr, &this->command_buffer_done_fence) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create fence objects!");
 	}
 
 	//TEMP
@@ -51,7 +54,6 @@ VulkanInstance::~VulkanInstance()
 {
 	vkDeviceWaitIdle(this->device->getDevice());
 
-
 	if (this->swapchain_framebuffers != nullptr)
 	{
 		delete this->swapchain_framebuffers;
@@ -59,9 +61,8 @@ VulkanInstance::~VulkanInstance()
 
 	this->delete_TEMP();
 
-	vkDestroySemaphore(this->device->getDevice(), this->render_finished_semaphore, nullptr);
 	vkDestroySemaphore(this->device->getDevice(), this->image_available_semaphore, nullptr);
-	vkDestroyFence(this->device->getDevice(), this->in_flight_fence, nullptr);
+	vkDestroyFence(this->device->getDevice(), this->command_buffer_done_fence, nullptr);
 
 	vmaDestroyAllocator(this->allocator);
 
@@ -144,9 +145,6 @@ bool Genesis::VulkanInstance::AcquireSwapchainImage(uint32_t& image_index)
 
 		VkResult result = vkAcquireNextImageKHR(this->device->getDevice(), this->swapchain->getSwapchain(), std::numeric_limits<uint64_t>::max(), this->image_available_semaphore, VK_NULL_HANDLE, &image_index);
 	}
-
-	vkWaitForFences(this->device->getDevice(), 1, &this->in_flight_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
-	vkResetFences(this->device->getDevice(), 1, &this->in_flight_fence);
 
 	return true;
 }
@@ -281,7 +279,7 @@ void VulkanInstance::create_TEMP()
 		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
 		VkAttachmentDescription depthAttachment = {};
-		depthAttachment.format = VK_FORMAT_D32_SFLOAT;//HARDCODED for now findDepthFormat(this->context.device_properties.physical_device);
+		depthAttachment.format = this->swapchain->getSwapchainDepthFormat();
 		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;

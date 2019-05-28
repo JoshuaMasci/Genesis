@@ -58,7 +58,7 @@ void VulkanBuffer::fillBuffer(void* data, uint64_t data_size)
 		VkCommandBufferAllocateInfo commandAllocInfo = {};
 		commandAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		commandAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		commandAllocInfo.commandPool = this->instance->command_pool->getTransferCommandPool();
+		commandAllocInfo.commandPool = this->instance->command_pool->transfer_command_pool;
 		commandAllocInfo.commandBufferCount = 1;
 		VkCommandBuffer commandBuffer;
 		vkAllocateCommandBuffers(this->instance->device->getDevice(), &commandAllocInfo, &commandBuffer);
@@ -84,5 +84,6 @@ void VulkanBuffer::fillBuffer(void* data, uint64_t data_size)
 		vkQueueWaitIdle(queue);
 
 		vmaDestroyBuffer(this->instance->allocator, staging_buffer, staging_buffer_memory);
+		vkFreeCommandBuffers(this->instance->device->getDevice(),this->instance->command_pool->transfer_command_pool, 1, &commandBuffer);
 	}
 }

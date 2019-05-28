@@ -10,6 +10,12 @@ Application::Application()
 
 Application::~Application()
 {
+	//Needs to wait till the GPU finishes before deleting stuff
+	if (this->rendering_backend != nullptr)
+	{
+		this->rendering_backend->waitTillDone();
+	}
+
 	if (this->scene != nullptr)
 	{
 		delete this->scene;
