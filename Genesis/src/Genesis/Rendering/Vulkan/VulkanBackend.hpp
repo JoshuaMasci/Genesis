@@ -14,7 +14,7 @@ namespace Genesis
 		VulkanBackend(Window* window, uint32_t number_of_threads);
 		~VulkanBackend();
 
-		virtual void beginFrame() override;
+		virtual bool beginFrame() override;
 		virtual void endFrame() override;
 
 		virtual Buffer* createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) override;

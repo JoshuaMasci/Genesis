@@ -35,16 +35,23 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 		throw std::runtime_error("failed to create sync objects!");
 	}
 
-	VkFenceCreateInfo fenceInfo = {};
-	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-	if(vkCreateFence(this->device->getDevice(), &fenceInfo, nullptr, &this->command_buffer_done_fence) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create fence objects!");
-	}
+
 
 	//TEMP
 	this->create_TEMP();
+
+	this->command_buffer = new VulkanMultithreadCommandBuffer(this->device, this->command_pool->graphics_command_pool, number_of_threads);
+	VkFenceCreateInfo fenceInfo = {};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+	if (vkCreateFence(this->device->getDevice(), &fenceInfo, nullptr, &this->command_buffer_done_fence) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create fence objects!");
+	}
+	if (vkCreateSemaphore(this->device->getDevice(), &semaphoreInfo, nullptr, &this->command_buffer_done) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create sync objects!");
+	}
 
 	//Framebuffers
 	this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->screen_render_pass);
@@ -59,10 +66,15 @@ VulkanInstance::~VulkanInstance()
 		delete this->swapchain_framebuffers;
 	}
 
+	//TEMP
 	this->delete_TEMP();
 
-	vkDestroySemaphore(this->device->getDevice(), this->image_available_semaphore, nullptr);
+	delete this->command_buffer;
 	vkDestroyFence(this->device->getDevice(), this->command_buffer_done_fence, nullptr);
+	vkDestroySemaphore(this->device->getDevice(), this->command_buffer_done, nullptr);
+	//TEMP END
+
+	vkDestroySemaphore(this->device->getDevice(), this->image_available_semaphore, nullptr);
 
 	vmaDestroyAllocator(this->allocator);
 

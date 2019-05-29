@@ -8,6 +8,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanSwapchain.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanSwapchainFramebuffers.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanMultithreadCommandBuffer.hpp"
 
 namespace Genesis
 {
@@ -40,7 +41,6 @@ namespace Genesis
 		vector<const char*> getLayers();
 
 		VkSemaphore image_available_semaphore;
-		VkFence command_buffer_done_fence;
 
 		VkRenderPass screen_render_pass;
 
@@ -48,6 +48,10 @@ namespace Genesis
 		//Need to abstract later
 		VkPipelineLayout colored_mesh_pipeline_layout;
 		VulkanRenderPipline* colored_mesh_screen_pipeline = nullptr;
+
+		VkSemaphore command_buffer_done;
+		VkFence command_buffer_done_fence;
+		VulkanMultithreadCommandBuffer* command_buffer = nullptr;
 		//END TEMP DATA
 
 	private:

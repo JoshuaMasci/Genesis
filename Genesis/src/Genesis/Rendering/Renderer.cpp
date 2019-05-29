@@ -70,13 +70,16 @@ void Renderer::drawFrame()
 
 	matrix4F mv = proj * view;
 
-	this->backend->beginFrame();
+	bool result = this->backend->beginFrame();
 
-	for (int i = 0; i < this->positions.size(); i++)
+	if (result)
 	{
-		matrix4F mvp = mv * glm::translate(matrix4F(1.0), this->positions[i]);
-		this->backend->drawMeshScreen(i % 12, this->cube_vertices, this->cube_indices, this->cube_indices_count, mvp);
-	}
+		for (int i = 0; i < this->positions.size(); i++)
+		{
+			matrix4F mvp = mv * glm::translate(matrix4F(1.0), this->positions[i]);
+			this->backend->drawMeshScreen(i % 12, this->cube_vertices, this->cube_indices, this->cube_indices_count, mvp);
+		}
 
-	this->backend->endFrame();
+		this->backend->endFrame();
+	}
 }

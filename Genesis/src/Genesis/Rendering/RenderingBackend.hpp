@@ -16,7 +16,7 @@ namespace Genesis
 	public:
 		virtual ~RenderingBackend() {};
 
-		virtual void beginFrame() = 0;
+		virtual bool beginFrame() = 0;
 		virtual void endFrame() = 0;
 
 		virtual Buffer* createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) = 0;
