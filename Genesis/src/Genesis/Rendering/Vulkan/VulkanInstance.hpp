@@ -21,6 +21,10 @@ namespace Genesis
 		VulkanMultithreadCommandBuffer* command_buffer = nullptr;
 		VkSemaphore command_buffer_done_semaphore = VK_NULL_HANDLE;
 		VkFence command_buffer_done_fence = VK_NULL_HANDLE;
+
+		//Uniform Objects here
+
+		//Frame Buffers here
 	};
 
 	class VulkanInstance
