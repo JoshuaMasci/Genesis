@@ -24,7 +24,7 @@ VulkanBuffer::~VulkanBuffer()
 	vmaDestroyBuffer(this->instance->allocator, this->buffer, this->buffer_memory);
 }
 
-void VulkanBuffer::fillBuffer(void* data, uint64_t data_size)
+void VulkanBuffer::fill(void* data, uint64_t data_size)
 {
 	VkDeviceSize buffer_size = this->buffer_memory_info.size;
 

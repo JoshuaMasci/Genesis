@@ -11,9 +11,9 @@ namespace Genesis
 		VulkanBuffer(VulkanInstance* instance, uint64_t size_bytes, VkBufferUsageFlags usage, VmaMemoryUsage memory_usage);
 		virtual ~VulkanBuffer();
 
-		virtual void fillBuffer(void* data, uint64_t data_size);
+		virtual void fill(void* data, uint64_t data_size);
 
-		inline VkBuffer getBuffer() { return this->buffer; };
+		inline void* getHandle() { return (void*)this->buffer; };
 
 	private:
 		VulkanInstance* instance;

@@ -27,30 +27,38 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 	allocatorInfo.device = this->device->getDevice();
 	vmaCreateAllocator(&allocatorInfo, &this->allocator);
 
-	//TEMP-ISH
-	VkSemaphoreCreateInfo semaphoreInfo = {};
-	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	if (vkCreateSemaphore(this->device->getDevice(), &semaphoreInfo, nullptr, &this->image_available_semaphore) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create sync objects!");
-	}
-
-
-
 	//TEMP
 	this->create_TEMP();
 
-	this->command_buffer = new VulkanMultithreadCommandBuffer(this->device, this->command_pool->graphics_command_pool, number_of_threads);
+
+	VkSemaphoreCreateInfo semaphoreInfo = {};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
 	VkFenceCreateInfo fenceInfo = {};
 	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-	if (vkCreateFence(this->device->getDevice(), &fenceInfo, nullptr, &this->command_buffer_done_fence) != VK_SUCCESS)
+
+	const uint32_t NUM_OF_FRAMES = 4;
+	this->frames_in_flight = Array<VulkanFrame>(NUM_OF_FRAMES);
+	for (int i = 0; i < this->frames_in_flight.size(); i++)
 	{
-		throw std::runtime_error("failed to create fence objects!");
-	}
-	if (vkCreateSemaphore(this->device->getDevice(), &semaphoreInfo, nullptr, &this->command_buffer_done) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create sync objects!");
+		VulkanFrame* frame = &this->frames_in_flight[i];
+		frame->command_buffer = new VulkanMultithreadCommandBuffer(this->device, this->command_pool->graphics_command_pool, number_of_threads);
+
+		if (vkCreateSemaphore(this->device->getDevice(), &semaphoreInfo, nullptr, &frame->image_available_semaphore) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create sync objects!");
+		}
+
+		if (vkCreateFence(this->device->getDevice(), &fenceInfo, nullptr, &frame->command_buffer_done_fence) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create fence objects!");
+		}
+
+		if (vkCreateSemaphore(this->device->getDevice(), &semaphoreInfo, nullptr, &frame->command_buffer_done_semaphore) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create sync objects!");
+		}
 	}
 
 	//Framebuffers
@@ -69,14 +77,16 @@ VulkanInstance::~VulkanInstance()
 	//TEMP
 	this->delete_TEMP();
 
-	delete this->command_buffer;
-	vkDestroyFence(this->device->getDevice(), this->command_buffer_done_fence, nullptr);
-	vkDestroySemaphore(this->device->getDevice(), this->command_buffer_done, nullptr);
-	//TEMP END
-
-	vkDestroySemaphore(this->device->getDevice(), this->image_available_semaphore, nullptr);
-
 	vmaDestroyAllocator(this->allocator);
+
+	for (int i = 0; i < this->frames_in_flight.size(); i++)
+	{
+		VulkanFrame* frame = &this->frames_in_flight[i];
+		delete frame->command_buffer;
+		vkDestroySemaphore(this->device->getDevice(), frame->image_available_semaphore, nullptr);
+		vkDestroyFence(this->device->getDevice(), frame->command_buffer_done_fence, nullptr);
+		vkDestroySemaphore(this->device->getDevice(), frame->command_buffer_done_semaphore, nullptr);
+	}
 
 	if (this->command_pool != nullptr)
 	{
@@ -103,7 +113,7 @@ VulkanInstance::~VulkanInstance()
 	this->delete_instance();
 }
 
-bool Genesis::VulkanInstance::AcquireSwapchainImage(uint32_t& image_index)
+bool Genesis::VulkanInstance::AcquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore)
 {
 	if (this->swapchain == nullptr)
 	{
@@ -121,7 +131,7 @@ bool Genesis::VulkanInstance::AcquireSwapchainImage(uint32_t& image_index)
 		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->screen_render_pass);
 	}
 
-	VkResult result = vkAcquireNextImageKHR(this->device->getDevice(), this->swapchain->getSwapchain(), std::numeric_limits<uint64_t>::max(), this->image_available_semaphore, VK_NULL_HANDLE, &image_index);
+	VkResult result = vkAcquireNextImageKHR(this->device->getDevice(), this->swapchain->getSwapchain(), std::numeric_limits<uint64_t>::max(), signal_semaphore, VK_NULL_HANDLE, &image_index);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
@@ -155,7 +165,7 @@ bool Genesis::VulkanInstance::AcquireSwapchainImage(uint32_t& image_index)
 		this->create_TEMP();
 		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->screen_render_pass);
 
-		VkResult result = vkAcquireNextImageKHR(this->device->getDevice(), this->swapchain->getSwapchain(), std::numeric_limits<uint64_t>::max(), this->image_available_semaphore, VK_NULL_HANDLE, &image_index);
+		VkResult result = vkAcquireNextImageKHR(this->device->getDevice(), this->swapchain->getSwapchain(), std::numeric_limits<uint64_t>::max(), signal_semaphore, VK_NULL_HANDLE, &image_index);
 	}
 
 	return true;

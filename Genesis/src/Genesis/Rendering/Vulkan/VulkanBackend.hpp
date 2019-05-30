@@ -26,5 +26,6 @@ namespace Genesis
 	private:
 		VulkanInstance* vulkan = nullptr;
 		uint32_t swapchain_image_index = 0;
+		uint32_t frame_index = 0;
 	};
 }

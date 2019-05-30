@@ -17,6 +17,11 @@ namespace Genesis
 	{
 	public:
 		virtual ~Buffer() {};
-		virtual void fillBuffer(void* data, uint64_t data_size) = 0;
+
+		//Fills the buffer with data
+		virtual void fill(void* data, uint64_t data_size) = 0;
+
+		//Gets the API handle to the buffer
+		virtual void* getHandle() = 0;
 	};
 }

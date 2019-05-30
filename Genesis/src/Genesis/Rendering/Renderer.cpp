@@ -23,7 +23,7 @@ Renderer::Renderer(RenderingBackend* backend)
 	{{-0.5f, 0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}}
 	};
 	this->cube_vertices = this->backend->createBuffer(sizeof(Vertex) * vertices.size(), BufferType::Vertex, MemoryUsage::GPU_Only);
-	this->cube_vertices->fillBuffer(vertices.data(), sizeof(Vertex) * vertices.size());
+	this->cube_vertices->fill(vertices.data(), sizeof(Vertex) * vertices.size());
 
 	std::vector<uint16_t> indices =
 	{
@@ -35,7 +35,7 @@ Renderer::Renderer(RenderingBackend* backend)
 	0, 1, 4, 4, 1, 5 //bottom
 	};
 	this->cube_indices = this->backend->createBuffer(sizeof(uint16_t) * indices.size(), BufferType::Index, MemoryUsage::GPU_Only);
-	this->cube_indices->fillBuffer(indices.data(), sizeof(uint16_t) * indices.size());
+	this->cube_indices->fill(indices.data(), sizeof(uint16_t) * indices.size());
 	this->cube_indices_count = (uint32_t)indices.size();
 
 

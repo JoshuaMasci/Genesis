@@ -46,15 +46,16 @@ VulkanBackend::~VulkanBackend()
 
 bool VulkanBackend::beginFrame()
 {
-	bool image_acquired = this->vulkan->AcquireSwapchainImage(this->swapchain_image_index);
+	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
+	bool image_acquired = this->vulkan->AcquireSwapchainImage(this->swapchain_image_index, frame->image_available_semaphore);
 
 	if (image_acquired == false)
 	{
 		return false;
 	}
 
-	vkWaitForFences(this->vulkan->device->getDevice(), 1, &this->vulkan->command_buffer_done_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
-	vkResetFences(this->vulkan->device->getDevice(), 1, &this->vulkan->command_buffer_done_fence);
+	vkWaitForFences(this->vulkan->device->getDevice(), 1, &frame->command_buffer_done_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+	vkResetFences(this->vulkan->device->getDevice(), 1, &frame->command_buffer_done_fence);
 
 	VkRenderPassBeginInfo renderPassInfo = {};
 	{
@@ -70,14 +71,16 @@ bool VulkanBackend::beginFrame()
 		renderPassInfo.clearValueCount = 2;
 		renderPassInfo.pClearValues = clearValues;
 	}
-	this->vulkan->command_buffer->beginCommandBuffer(renderPassInfo);
+	frame->command_buffer->beginCommandBuffer(renderPassInfo);
 
 	return true;
 }
 
 void VulkanBackend::endFrame()
 {
-	this->vulkan->command_buffer->endCommandBuffer();
+	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
+
+	frame->command_buffer->endCommandBuffer();
 
 	if (this->vulkan->swapchain == nullptr)
 	{
@@ -86,19 +89,19 @@ void VulkanBackend::endFrame()
 
 	Array<VkSemaphore> wait_semaphores(1);
 	Array<VkPipelineStageFlags> wait_states(1);
-	wait_semaphores[0] = this->vulkan->image_available_semaphore;
+	wait_semaphores[0] = frame->image_available_semaphore;
 	wait_states[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
 	Array<VkSemaphore> signal_semaphores(1);
-	signal_semaphores[0] = this->vulkan->command_buffer_done;
+	signal_semaphores[0] = frame->command_buffer_done_semaphore;
 
-	this->vulkan->command_buffer->submitCommandBuffer(this->vulkan->device->getGraphicsQueue(), wait_semaphores, wait_states, signal_semaphores, this->vulkan->command_buffer_done_fence);
+	frame->command_buffer->submitCommandBuffer(this->vulkan->device->getGraphicsQueue(), wait_semaphores, wait_states, signal_semaphores, frame->command_buffer_done_fence);
 
 	//Present the image to the screen
 	VkPresentInfoKHR presentInfo = {};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &this->vulkan->command_buffer_done;
+	presentInfo.pWaitSemaphores = &frame->command_buffer_done_semaphore;
 
 	VkSwapchainKHR swapChains[] = { this->vulkan->swapchain->getSwapchain() };
 	presentInfo.swapchainCount = 1;
@@ -107,10 +110,8 @@ void VulkanBackend::endFrame()
 	presentInfo.pImageIndices = &this->swapchain_image_index;
 
 	VkResult result = vkQueuePresentKHR(this->vulkan->device->getPresentQueue(), &presentInfo);
-	/*if (result != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to present image");
-	}*/
+
+	this->frame_index = (this->frame_index + 1) % this->vulkan->frames_in_flight.size();
 }
 
 Buffer* VulkanBackend::createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage)
@@ -125,16 +126,18 @@ void VulkanBackend::drawMeshScreen(uint32_t thread, Buffer* vertex_buffer, Buffe
 		return;
 	}
 
-	VkCommandBuffer buffer = vulkan->command_buffer->getSecondaryCommandBuffer(thread);
+	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
+
+	VkCommandBuffer buffer = frame->command_buffer->getSecondaryCommandBuffer(thread);
 
 	vkCmdPushConstants(buffer, this->vulkan->colored_mesh_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
 	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->colored_mesh_screen_pipeline->getPipeline());
 
-	VkBuffer vertexBuffers[] = { ((VulkanBuffer*)vertex_buffer)->getBuffer() };
+	VkBuffer vertexBuffers[] = { (VkBuffer)vertex_buffer->getHandle() };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
 
-	vkCmdBindIndexBuffer(buffer, ((VulkanBuffer*)index_buffer)->getBuffer(), 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindIndexBuffer(buffer, (VkBuffer)index_buffer->getHandle(), 0, VK_INDEX_TYPE_UINT16);
 
 	vkCmdDrawIndexed(buffer, index_count, 1, 0, 0, 0);
 }

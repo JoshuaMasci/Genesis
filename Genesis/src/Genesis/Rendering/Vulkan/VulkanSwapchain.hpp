@@ -17,7 +17,6 @@ namespace Genesis
 		inline VkFormat getSwapchainFormat() { return this->swapchain_image_format; };
 		inline VkFormat getSwapchainDepthFormat() { return this->swapchain_depth_format; };
 		inline VkExtent2D getSwapchainExtent() { return this->swapchain_extent; };
-
 		inline uint32_t getSwapchainImageCount() { return this->swapchain_image_count; };
 
 	private:

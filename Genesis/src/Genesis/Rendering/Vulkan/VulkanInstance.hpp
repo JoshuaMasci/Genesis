@@ -14,13 +14,22 @@ namespace Genesis
 {
 	class VulkanRenderPipline;
 
+	struct VulkanFrame
+	{
+		VkSemaphore image_available_semaphore = VK_NULL_HANDLE;
+
+		VulkanMultithreadCommandBuffer* command_buffer = nullptr;
+		VkSemaphore command_buffer_done_semaphore = VK_NULL_HANDLE;
+		VkFence command_buffer_done_fence = VK_NULL_HANDLE;
+	};
+
 	class VulkanInstance
 	{
 	public:
 		VulkanInstance(Window* window, uint32_t number_of_threads);
 		~VulkanInstance();
 
-		bool AcquireSwapchainImage(uint32_t& image_index);
+		bool AcquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore);
 		
 		Window* window = nullptr;
 		VkInstance instance;
@@ -32,6 +41,8 @@ namespace Genesis
 		VulkanSwapchainFramebuffers* swapchain_framebuffers = nullptr;
 		VulkanCommandPool* command_pool = nullptr;
 
+		Array<VulkanFrame> frames_in_flight;
+
 		//Allocator
 		VmaAllocator allocator;
 
@@ -40,18 +51,12 @@ namespace Genesis
 		vector<const char*> getDeviceExtensions();
 		vector<const char*> getLayers();
 
-		VkSemaphore image_available_semaphore;
-
 		VkRenderPass screen_render_pass;
 
 		//TEMP DATA
 		//Need to abstract later
 		VkPipelineLayout colored_mesh_pipeline_layout;
 		VulkanRenderPipline* colored_mesh_screen_pipeline = nullptr;
-
-		VkSemaphore command_buffer_done;
-		VkFence command_buffer_done_fence;
-		VulkanMultithreadCommandBuffer* command_buffer = nullptr;
 		//END TEMP DATA
 
 	private:
