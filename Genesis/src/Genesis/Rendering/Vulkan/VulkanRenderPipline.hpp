@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Rendering/Vulkan/VulkanInstance.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanShader.hpp"
 
 namespace Genesis
@@ -14,13 +14,13 @@ namespace Genesis
 	class VulkanRenderPipline
 	{
 	public:
-		VulkanRenderPipline(VulkanInstance* instance, VkPipelineLayout pipeline_layout, VkRenderPass renderpass, VulkanShader* shader, VertexInput* vertex_description);
+		VulkanRenderPipline(VkDevice device, VkPipelineLayout pipeline_layout, VkRenderPass renderpass, string shader_path, VertexInput* vertex_description, VkExtent2D extent);
 		virtual ~VulkanRenderPipline();
 
 		inline VkPipeline getPipeline() { return this->pipeline; };
 
 	private:
-		VulkanInstance* instance;
+		VkDevice device;
 		VkPipeline pipeline;
 	};
 }

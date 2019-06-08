@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Container
+namespace Genesis
 {
 	template<typename T>
 	class Array

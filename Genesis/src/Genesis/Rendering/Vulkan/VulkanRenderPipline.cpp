@@ -2,9 +2,9 @@
 
 using namespace Genesis;
 
-VulkanRenderPipline::VulkanRenderPipline(VulkanInstance* instance, VkPipelineLayout pipeline_layout, VkRenderPass renderpass, VulkanShader* shader, VertexInput* vertex_description)
+VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipeline_layout, VkRenderPass renderpass, string shader_path, VertexInput* vertex_description, VkExtent2D extent)
 {
-	this->instance = instance;
+	this->device = device;
 
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -18,7 +18,7 @@ VulkanRenderPipline::VulkanRenderPipline(VulkanInstance* instance, VkPipelineLay
 	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-	VkExtent2D swapchain_extent = this->instance->swapchain->getSwapchainExtent();
+	VkExtent2D swapchain_extent = extent;
 	VkViewport viewport = {};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
@@ -44,7 +44,7 @@ VulkanRenderPipline::VulkanRenderPipline(VulkanInstance* instance, VkPipelineLay
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizer.cullMode = VK_CULL_MODE_NONE;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -76,7 +76,8 @@ VulkanRenderPipline::VulkanRenderPipline(VulkanInstance* instance, VkPipelineLay
 	color_blending.blendConstants[2] = 0.0f;
 	color_blending.blendConstants[3] = 0.0f;
 
-	vector<VkPipelineShaderStageCreateInfo> shader_stage = shader->getShaderStages();
+	VulkanShader shader = VulkanShader(this->device, shader_path + ".vert.spv", shader_path + ".frag.spv");
+	vector<VkPipelineShaderStageCreateInfo> shader_stage = shader.getShaderStages();
 
 	VkGraphicsPipelineCreateInfo pipelineInfo = {};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -94,7 +95,7 @@ VulkanRenderPipline::VulkanRenderPipline(VulkanInstance* instance, VkPipelineLay
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-	if (vkCreateGraphicsPipelines(this->instance->device->getDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &this->pipeline) != VK_SUCCESS)
+	if (vkCreateGraphicsPipelines(this->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &this->pipeline) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create graphics pipeline!");
 	}
@@ -102,5 +103,5 @@ VulkanRenderPipline::VulkanRenderPipline(VulkanInstance* instance, VkPipelineLay
 
 VulkanRenderPipline::~VulkanRenderPipline()
 {
-	vkDestroyPipeline(this->instance->device->getDevice(), this->pipeline, nullptr);
+	vkDestroyPipeline(this->device, this->pipeline, nullptr);
 }

@@ -61,7 +61,7 @@ bool VulkanBackend::beginFrame()
 	{
 		VkExtent2D swapchain_extent = this->vulkan->swapchain->getSwapchainExtent();
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = this->vulkan->screen_render_pass;
+		renderPassInfo.renderPass = this->vulkan->pipeline_manager->getScreenRenderPass();
 		renderPassInfo.framebuffer = this->vulkan->swapchain_framebuffers->getSwapchainFramebuffer(this->swapchain_image_index);
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = swapchain_extent;
@@ -130,14 +130,14 @@ void VulkanBackend::drawMeshScreen(uint32_t thread, Buffer* vertex_buffer, Buffe
 
 	VkCommandBuffer buffer = frame->command_buffer->getSecondaryCommandBuffer(thread);
 
-	vkCmdPushConstants(buffer, this->vulkan->colored_mesh_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
-	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->colored_mesh_screen_pipeline->getPipeline());
+	vkCmdPushConstants(buffer, this->vulkan->pipeline_manager->colored_mesh_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
+	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->colored_mesh_screen_pipeline->getPipeline());
 
 	VkBuffer vertexBuffers[] = { (VkBuffer)vertex_buffer->getHandle() };
 	VkDeviceSize offsets[] = { 0 };
 	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
 
-	vkCmdBindIndexBuffer(buffer, (VkBuffer)index_buffer->getHandle(), 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindIndexBuffer(buffer, (VkBuffer)index_buffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
 
 	vkCmdDrawIndexed(buffer, index_count, 1, 0, 0, 0);
 }
