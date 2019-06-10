@@ -15,5 +15,5 @@ void main()
 {
     gl_Position = matrices.ModelViewProj * vec4(in_position, 1.0);
 	
-	frag_normal = abs(in_normal);
+	frag_normal = vec3(in_tex, 1.0);
 }

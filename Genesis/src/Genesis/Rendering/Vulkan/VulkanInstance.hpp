@@ -11,8 +11,20 @@
 #include "Genesis/Rendering/Vulkan/VulkanMultithreadCommandBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
 
+#include "Genesis/Rendering/RenderingTypes.hpp"
+
 namespace Genesis
 {
+
+	//Texture Stuff: need to move at some point
+	struct VulkanTexture
+	{
+		VkExtent2D size;
+		VkImage image;
+		VmaAllocation image_memory;
+		VmaAllocationInfo image_memory_info;
+	};
+
 	struct VulkanFrame
 	{
 		VkSemaphore image_available_semaphore = VK_NULL_HANDLE;
@@ -55,6 +67,10 @@ namespace Genesis
 		vector<const char*> getExtensions();
 		vector<const char*> getDeviceExtensions();
 		vector<const char*> getLayers();
+
+		//Texture Stuff: need to move at some point
+		TextureIndex next_index = 1;
+		map<TextureIndex, VulkanTexture> textures;
 
 	private:
 		bool use_debug_layers = true;

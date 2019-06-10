@@ -47,7 +47,7 @@ namespace Genesis
 
 		//Temp resource stuff
 		void loadMesh(string mesh_file);
-		void loadTexture(string texture_file);
+		TextureIndex loadTexture(string texture_file);
 
 	private:
 		//Lifetime of the Backend is longer than the Renderer
@@ -55,5 +55,7 @@ namespace Genesis
 
 		//Temp resource stuff
 		map<string, Mesh> loaded_meshes;
+
+		TextureIndex texture = NULL_INDEX;
 	};
 }

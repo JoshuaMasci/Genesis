@@ -6,6 +6,8 @@
 #include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanRenderPipline.hpp"
 
+#include "Genesis/Rendering/Vulkan/VulkanImageUtils.hpp"
+
 using namespace Genesis;
 
 VkBufferUsageFlags getBufferUsage(BufferType usage)
@@ -145,4 +147,90 @@ void VulkanBackend::drawMeshScreen(uint32_t thread, Buffer* vertex_buffer, Buffe
 void VulkanBackend::waitTillDone()
 {
 	vkDeviceWaitIdle(this->vulkan->device->getDevice());
+}
+
+TextureIndex VulkanBackend::createTexture(vector2U size)
+{
+	TextureIndex texture_index = this->vulkan->next_index;
+	this->vulkan->next_index++;
+
+	VulkanTexture* texture = &this->vulkan->textures[texture_index];
+
+	VkImageCreateInfo image_info = {};
+	image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	image_info.imageType = VK_IMAGE_TYPE_2D;
+	image_info.extent.width = size.x;
+	image_info.extent.height = size.y;
+	image_info.extent.depth = 1;
+	image_info.mipLevels = 1;
+	image_info.arrayLayers = 1;
+	image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+	image_info.format = VK_FORMAT_R8G8B8A8_UNORM;
+	image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+	image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+	image_info.flags = 0;
+
+	VmaAllocationCreateInfo alloc_info = {};
+	alloc_info.usage = getMemoryUsage(MemoryUsage::GPU_Only);
+
+	vmaCreateImage(this->vulkan->allocator, &image_info, &alloc_info, &texture->image, &texture->image_memory, &texture->image_memory_info);
+	texture->size = { size.x, size.y };
+
+	return texture_index;
+}
+
+void VulkanBackend::fillTexture(TextureIndex texture_index, void* data, uint64_t data_size)
+{
+	if (texture_index == NULL_INDEX)
+	{
+		printf("Error: null texture index");
+		return;
+	}
+
+	if (this->vulkan->textures.find(texture_index) == this->vulkan->textures.end())
+	{
+		printf("Error: invalid texture index");
+		return;
+	}
+
+	VulkanTexture* texture = &this->vulkan->textures[texture_index];
+
+	if (data_size != texture->size.width * texture->size.height * 4)
+	{
+		printf("Error: image not correct size for texture");
+		return;
+	}
+
+	//Staging Buffer
+	VkBuffer staging_buffer;
+	VmaAllocation staging_buffer_memory;
+	VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+	bufferInfo.size = data_size;
+	bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+	VmaAllocationCreateInfo allocInfo = {};
+	allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+	vmaCreateBuffer(this->vulkan->allocator, &bufferInfo, &allocInfo, &staging_buffer, &staging_buffer_memory, nullptr);
+
+	void* mappedData;
+	vmaMapMemory(this->vulkan->allocator, staging_buffer_memory, &mappedData);
+	memcpy(mappedData, data, data_size);
+	vmaUnmapMemory(this->vulkan->allocator, staging_buffer_memory);
+
+	transitionImageLayout(this->vulkan->command_pool, texture->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	copyBufferToImage(this->vulkan->command_pool, staging_buffer, texture->image, texture->size);
+	transitionImageLayout(this->vulkan->command_pool, texture->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+	vmaDestroyBuffer(this->vulkan->allocator, staging_buffer, staging_buffer_memory);
+}
+
+void VulkanBackend::destroyTexture(TextureIndex texture_index)
+{
+	if (this->vulkan->textures.find(texture_index) != this->vulkan->textures.end())
+	{
+		VulkanTexture* texture = &this->vulkan->textures[texture_index];
+		vmaDestroyImage(this->vulkan->allocator, texture->image, texture->image_memory);
+
+		this->vulkan->textures.erase(texture_index);
+	}
 }

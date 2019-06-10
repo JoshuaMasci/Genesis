@@ -17,6 +17,9 @@ namespace Genesis
 		//For memory operations
 		VkCommandPool transfer_command_pool;
 
+		VkCommandBuffer startTransferCommandBuffer();
+		void endTransferCommandBuffer(VkCommandBuffer command_buffer);
+
 	private:
 		VulkanDevice* device;
 	};

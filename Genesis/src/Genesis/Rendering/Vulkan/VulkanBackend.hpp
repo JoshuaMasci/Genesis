@@ -19,6 +19,10 @@ namespace Genesis
 
 		virtual Buffer* createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) override;
 
+		virtual TextureIndex createTexture(vector2U size) override;
+		virtual void fillTexture(TextureIndex texture_index, void* data, uint64_t data_size) override;
+		virtual void destroyTexture(TextureIndex texture_index) override;
+
 		virtual void drawMeshScreen(uint32_t thread, Buffer* vertex_buffer, Buffer* index_buffer, uint32_t index_count, matrix4F mvp) override;
 
 		virtual void waitTillDone() override;

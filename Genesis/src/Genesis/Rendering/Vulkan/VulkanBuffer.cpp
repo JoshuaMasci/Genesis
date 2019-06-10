@@ -9,14 +9,14 @@ VulkanBuffer::VulkanBuffer(VulkanInstance* instance, uint64_t size_bytes, VkBuff
 	this->instance = instance;
 	this->size = size_bytes;
 
-	VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-	bufferInfo.size = size_bytes;
-	bufferInfo.usage = usage;
+	VkBufferCreateInfo buffer_info = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+	buffer_info.size = size_bytes;
+	buffer_info.usage = usage;
 
-	VmaAllocationCreateInfo allocInfo = {};
-	allocInfo.usage = memory_usage;
+	VmaAllocationCreateInfo alloc_info = {};
+	alloc_info.usage = memory_usage;
 
-	vmaCreateBuffer(this->instance->allocator, &bufferInfo, &allocInfo, &this->buffer, &this->buffer_memory, &this->buffer_memory_info);
+	vmaCreateBuffer(this->instance->allocator, &buffer_info, &alloc_info, &this->buffer, &this->buffer_memory, &this->buffer_memory_info);
 }
 
 VulkanBuffer::~VulkanBuffer()
@@ -55,35 +55,17 @@ void VulkanBuffer::fill(void* data, uint64_t data_size)
 		vmaUnmapMemory(this->instance->allocator, staging_buffer_memory);
 
 		//TODO use reuseable command buffer
-		VkCommandBufferAllocateInfo commandAllocInfo = {};
-		commandAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		commandAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		commandAllocInfo.commandPool = this->instance->command_pool->transfer_command_pool;
-		commandAllocInfo.commandBufferCount = 1;
-		VkCommandBuffer commandBuffer;
-		vkAllocateCommandBuffers(this->instance->device->getDevice(), &commandAllocInfo, &commandBuffer);
+	
+		VkCommandBuffer command_buffer = this->instance->command_pool->startTransferCommandBuffer();
 
-		VkCommandBufferBeginInfo beginInfo = {};
-		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		vkBeginCommandBuffer(commandBuffer, &beginInfo);
 		VkBufferCopy copyRegion = {};
 		copyRegion.srcOffset = 0; // Optional
 		copyRegion.dstOffset = 0; // Optional
 		copyRegion.size = data_size;
-		vkCmdCopyBuffer(commandBuffer, staging_buffer, this->buffer, 1, &copyRegion);
-		vkEndCommandBuffer(commandBuffer);
-
-		VkSubmitInfo submitInfo = {};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &commandBuffer;
-
-		VkQueue queue = this->instance->device->getTransferQueue();
-		vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(queue);
+		vkCmdCopyBuffer(command_buffer, staging_buffer, this->buffer, 1, &copyRegion);
+	
+		this->instance->command_pool->endTransferCommandBuffer(command_buffer);
 
 		vmaDestroyBuffer(this->instance->allocator, staging_buffer, staging_buffer_memory);
-		vkFreeCommandBuffers(this->instance->device->getDevice(),this->instance->command_pool->transfer_command_pool, 1, &commandBuffer);
 	}
 }

@@ -7,10 +7,14 @@ using namespace Genesis;
 Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
+
+	this->texture = this->loadTexture("resources/textures/4K_Grid.png");
 }
 
 Renderer::~Renderer()
 {
+	this->backend->destroyTexture(this->texture);
+
 	for (auto mesh : this->loaded_meshes)
 	{
 		delete mesh.second.vertices;
@@ -115,6 +119,25 @@ void Renderer::loadMesh(string mesh_file)
 	}
 }
 
-void Renderer::loadTexture(string texture_file)
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_PNG
+#include <stb_image.h>
+
+TextureIndex Renderer::loadTexture(string texture_file)
 {
+	int width, height, tex_channels;
+	unsigned char* data = stbi_load((texture_file).c_str(), &width, &height, &tex_channels, STBI_rgb_alpha);
+	uint64_t data_size = width * height * STBI_rgb_alpha;
+
+	if (data == NULL)
+	{
+		printf("Error: Can't Load the given texture: %s\n", texture_file.c_str());
+		return NULL_INDEX;
+	}
+
+	TextureIndex index = this->backend->createTexture(vector2U((uint32_t) width, (uint32_t) height));
+	this->backend->fillTexture(index, (void*)data, data_size);
+	stbi_image_free(data);
+
+	return index;
 }

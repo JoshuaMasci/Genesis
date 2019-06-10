@@ -24,13 +24,6 @@ GameScene::GameScene(Application* app)
 
 	this->renderer = new Renderer(this->application->rendering_backend);
 	this->renderer->loadMesh("resources/meshes/cube.obj");
-
-	for (int i = 0; i < 5; i++)
-	{
-		EntityId entity = this->entity_registry.create();
-		this->entity_registry.assign<WorldTransform>(entity).current_transform.setPosition(vector3D(i * 1.1, 0.0, 0.0));
-		this->entity_registry.assign<Model>(entity, "resources/meshes/cube.obj", "");
-	}
 }
 
 GameScene::~GameScene()
