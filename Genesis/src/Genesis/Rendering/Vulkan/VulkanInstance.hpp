@@ -23,6 +23,9 @@ namespace Genesis
 		VkImage image;
 		VmaAllocation image_memory;
 		VmaAllocationInfo image_memory_info;
+		VkImageView image_view;
+
+		VkDescriptorSet image_descriptor_set;
 	};
 
 	struct VulkanFrame
@@ -71,6 +74,11 @@ namespace Genesis
 		//Texture Stuff: need to move at some point
 		TextureIndex next_index = 1;
 		map<TextureIndex, VulkanTexture> textures;
+
+		VkSampler linear_sampler;
+
+		VkDescriptorPool descriptor_pool;
+		vector<VkDescriptorSet> descriptor_sets;
 
 	private:
 		bool use_debug_layers = true;

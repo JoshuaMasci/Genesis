@@ -9,6 +9,25 @@ VulkanPiplineManager::VulkanPiplineManager(VulkanDevice* device)
 	this->device = device->getDevice();
 
 	{
+		VkDescriptorSetLayoutBinding sampler_layout_binding = {};
+		sampler_layout_binding.binding = 0;
+		sampler_layout_binding.descriptorCount = 1;
+		sampler_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		sampler_layout_binding.pImmutableSamplers = nullptr;
+		sampler_layout_binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		VkDescriptorSetLayoutCreateInfo layout_info = {};
+		layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layout_info.bindingCount = 1;
+		layout_info.pBindings = &sampler_layout_binding;
+
+		if (vkCreateDescriptorSetLayout(this->device, &layout_info, nullptr, &this->textured_descriptor_layout) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create descriptor set layout!");
+		}
+	}
+
+	{
 		VkPushConstantRange pushConstantRange = {};
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 		pushConstantRange.size = sizeof(matrix4F);
@@ -16,10 +35,12 @@ VulkanPiplineManager::VulkanPiplineManager(VulkanDevice* device)
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 0;
-		pipelineLayoutInfo.pSetLayouts = nullptr;
-		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = &this->textured_descriptor_layout;
+
 		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 		if (vkCreatePipelineLayout(this->device, &pipelineLayoutInfo, nullptr, &this->colored_mesh_layout) != VK_SUCCESS)
 		{
@@ -30,6 +51,7 @@ VulkanPiplineManager::VulkanPiplineManager(VulkanDevice* device)
 
 VulkanPiplineManager::~VulkanPiplineManager()
 {
+	vkDestroyDescriptorSetLayout(this->device, this->textured_descriptor_layout, nullptr);
 	vkDestroyPipelineLayout(this->device, this->colored_mesh_layout, nullptr);
 	vkDestroyRenderPass(this->device, this->screen_render_pass, nullptr);
 

@@ -21,8 +21,12 @@ namespace Genesis
 		void rebuildSwapchainPipelines(VkExtent2D swapchain_size);
 
 		VkPipelineLayout colored_mesh_layout;
+
 		//Pipeline
 		VulkanRenderPipline* colored_mesh_screen_pipeline = nullptr;
+
+		//DescriptorSet Layouts
+		VkDescriptorSetLayout textured_descriptor_layout;
 
 	private:
 		VkDevice device = VK_NULL_HANDLE;

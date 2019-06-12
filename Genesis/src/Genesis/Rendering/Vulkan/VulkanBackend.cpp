@@ -134,6 +134,8 @@ void VulkanBackend::drawMeshScreen(uint32_t thread, Buffer* vertex_buffer, Buffe
 
 	vkCmdPushConstants(buffer, this->vulkan->pipeline_manager->colored_mesh_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
 	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->colored_mesh_screen_pipeline->getPipeline());
+	
+	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->colored_mesh_layout, 0, 1, &this->vulkan->textures[1].image_descriptor_set, 0, nullptr);
 
 	VkBuffer vertexBuffers[] = { (VkBuffer)vertex_buffer->getHandle() };
 	VkDeviceSize offsets[] = { 0 };
@@ -177,6 +179,50 @@ TextureIndex VulkanBackend::createTexture(vector2U size)
 	vmaCreateImage(this->vulkan->allocator, &image_info, &alloc_info, &texture->image, &texture->image_memory, &texture->image_memory_info);
 	texture->size = { size.x, size.y };
 
+	VkImageViewCreateInfo view_info = {};
+	view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	view_info.image = texture->image;
+	view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	view_info.format = image_info.format;
+	view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	view_info.subresourceRange.baseMipLevel = 0;
+	view_info.subresourceRange.levelCount = 1;
+	view_info.subresourceRange.baseArrayLayer = 0;
+	view_info.subresourceRange.layerCount = 1;
+	if (vkCreateImageView(this->vulkan->device->getDevice(), &view_info, nullptr, &texture->image_view) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create texture image view!");
+	}
+
+	{
+		VkDescriptorSetAllocateInfo set_alloc_info = {};
+		set_alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		set_alloc_info.descriptorPool = this->vulkan->descriptor_pool;
+		set_alloc_info.descriptorSetCount = 1;
+		set_alloc_info.pSetLayouts = &this->vulkan->pipeline_manager->textured_descriptor_layout;
+
+		if (vkAllocateDescriptorSets(this->vulkan->device->getDevice(), &set_alloc_info, &texture->image_descriptor_set) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to allocate descriptor sets!");
+		}
+
+		VkDescriptorImageInfo descriptor_image_info = {};
+		descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		descriptor_image_info.imageView = texture->image_view;
+		descriptor_image_info.sampler = this->vulkan->linear_sampler;
+
+		VkWriteDescriptorSet descriptor_write = {};
+		descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptor_write.dstSet = texture->image_descriptor_set;
+		descriptor_write.dstBinding = 0;
+		descriptor_write.dstArrayElement = 0;
+		descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptor_write.descriptorCount = 1;
+		descriptor_write.pImageInfo = &descriptor_image_info;
+
+		vkUpdateDescriptorSets(this->vulkan->device->getDevice(), 1, &descriptor_write, 0, nullptr);
+	}
+
 	return texture_index;
 }
 
@@ -196,7 +242,8 @@ void VulkanBackend::fillTexture(TextureIndex texture_index, void* data, uint64_t
 
 	VulkanTexture* texture = &this->vulkan->textures[texture_index];
 
-	if (data_size != texture->size.width * texture->size.height * 4)
+	const uint32_t bytes_per_pixel = 4;
+	if (data_size != texture->size.width * texture->size.height * bytes_per_pixel)
 	{
 		printf("Error: image not correct size for texture");
 		return;
@@ -229,6 +276,7 @@ void VulkanBackend::destroyTexture(TextureIndex texture_index)
 	if (this->vulkan->textures.find(texture_index) != this->vulkan->textures.end())
 	{
 		VulkanTexture* texture = &this->vulkan->textures[texture_index];
+		vkDestroyImageView(this->vulkan->device->getDevice(), texture->image_view, nullptr);
 		vmaDestroyImage(this->vulkan->allocator, texture->image, texture->image_memory);
 
 		this->vulkan->textures.erase(texture_index);

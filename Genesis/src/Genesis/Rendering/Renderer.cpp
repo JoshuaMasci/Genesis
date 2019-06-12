@@ -8,7 +8,7 @@ Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
 
-	this->texture = this->loadTexture("resources/textures/4K_Grid.png");
+	this->texture = this->loadTexture("resources/textures/1K_Grid.png");
 }
 
 Renderer::~Renderer()

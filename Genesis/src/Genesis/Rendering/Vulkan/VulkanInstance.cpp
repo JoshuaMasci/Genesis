@@ -27,10 +27,6 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 	allocatorInfo.device = this->device->getDevice();
 	vmaCreateAllocator(&allocatorInfo, &this->allocator);
 
-	//TEMP
-	//this->create_TEMP();
-
-
 	VkSemaphoreCreateInfo semaphoreInfo = {};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -67,10 +63,89 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 
 	//Framebuffers
 	this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->pipeline_manager->getScreenRenderPass());
+
+	{
+		VkSamplerCreateInfo samplerInfo = {};
+		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerInfo.magFilter = VK_FILTER_LINEAR;
+		samplerInfo.minFilter = VK_FILTER_LINEAR;
+		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		samplerInfo.anisotropyEnable = VK_FALSE;
+		samplerInfo.maxAnisotropy = 0;
+		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerInfo.unnormalizedCoordinates = VK_FALSE;
+		samplerInfo.compareEnable = VK_FALSE;
+		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+		if (vkCreateSampler(this->device->getDevice(), &samplerInfo, nullptr, &this->linear_sampler) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("failed to create texture sampler!");
+		}
+	}
+
+	{
+		Array<VkDescriptorPoolSize> pool_sizes(1);
+		pool_sizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		pool_sizes[0].descriptorCount = this->swapchain->getSwapchainImageCount();
+
+		VkDescriptorPoolCreateInfo pool_info = {};
+		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
+		pool_info.pPoolSizes = pool_sizes.data();
+		pool_info.maxSets = this->swapchain->getSwapchainImageCount();
+
+		if (vkCreateDescriptorPool(this->device->getDevice(), &pool_info, nullptr, &this->descriptor_pool) != VK_SUCCESS) 
+		{
+			throw std::runtime_error("failed to create descriptor pool!");
+		}
+	}
+
+	/*{
+		vector<VkDescriptorSetLayout> layouts(this->swapchain->getSwapchainImageCount(), this->pipeline_manager->textured_descriptor_layout);
+		VkDescriptorSetAllocateInfo alloc_info = {};
+		alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		alloc_info.descriptorPool = this->descriptor_pool;
+		alloc_info.descriptorSetCount = this->swapchain->getSwapchainImageCount();
+		alloc_info.pSetLayouts = layouts.data();
+
+		this->descriptor_sets.resize(this->swapchain->getSwapchainImageCount());
+
+		if (vkAllocateDescriptorSets(this->device->getDevice(), &alloc_info, this->descriptor_sets.data()) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to allocate descriptor sets!");
+		}
+
+		for (size_t i = 0; i < this->descriptor_sets.size(); i++)
+		{
+			VkDescriptorImageInfo image_info = {};
+			image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			image_info.imageView = textureImageView;
+			image_info.sampler = this->linear_sampler;
+
+			Array<VkWriteDescriptorSet> descriptor_writes(1);
+
+			descriptor_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			descriptor_writes[0].dstSet = this->descriptor_sets[i];
+			descriptor_writes[0].dstBinding = 1;
+			descriptor_writes[0].dstArrayElement = 0;
+			descriptor_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			descriptor_writes[0].descriptorCount = 1;
+			descriptor_writes[0].pImageInfo = &image_info;
+
+			vkUpdateDescriptorSets(this->device->getDevice(), static_cast<uint32_t>(descriptor_writes.size()), descriptor_writes.data(), 0, nullptr);
+		}
+	}*/
 }
 
 VulkanInstance::~VulkanInstance()
 {
+	vkDestroyDescriptorPool(this->device->getDevice(), this->descriptor_pool, nullptr);
+
+	vkDestroySampler(this->device->getDevice(), this->linear_sampler, nullptr);
+
 	vkDeviceWaitIdle(this->device->getDevice());
 
 	if (this->pipeline_manager != nullptr)
