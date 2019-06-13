@@ -102,42 +102,6 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 			throw std::runtime_error("failed to create descriptor pool!");
 		}
 	}
-
-	/*{
-		vector<VkDescriptorSetLayout> layouts(this->swapchain->getSwapchainImageCount(), this->pipeline_manager->textured_descriptor_layout);
-		VkDescriptorSetAllocateInfo alloc_info = {};
-		alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		alloc_info.descriptorPool = this->descriptor_pool;
-		alloc_info.descriptorSetCount = this->swapchain->getSwapchainImageCount();
-		alloc_info.pSetLayouts = layouts.data();
-
-		this->descriptor_sets.resize(this->swapchain->getSwapchainImageCount());
-
-		if (vkAllocateDescriptorSets(this->device->getDevice(), &alloc_info, this->descriptor_sets.data()) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to allocate descriptor sets!");
-		}
-
-		for (size_t i = 0; i < this->descriptor_sets.size(); i++)
-		{
-			VkDescriptorImageInfo image_info = {};
-			image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			image_info.imageView = textureImageView;
-			image_info.sampler = this->linear_sampler;
-
-			Array<VkWriteDescriptorSet> descriptor_writes(1);
-
-			descriptor_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptor_writes[0].dstSet = this->descriptor_sets[i];
-			descriptor_writes[0].dstBinding = 1;
-			descriptor_writes[0].dstArrayElement = 0;
-			descriptor_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			descriptor_writes[0].descriptorCount = 1;
-			descriptor_writes[0].pImageInfo = &image_info;
-
-			vkUpdateDescriptorSets(this->device->getDevice(), static_cast<uint32_t>(descriptor_writes.size()), descriptor_writes.data(), 0, nullptr);
-		}
-	}*/
 }
 
 VulkanInstance::~VulkanInstance()

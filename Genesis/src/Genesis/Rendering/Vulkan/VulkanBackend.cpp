@@ -3,9 +3,7 @@
 #define VMA_IMPLEMENTATION
 
 #include "Genesis/Rendering/Vulkan/VulkanInstance.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanRenderPipline.hpp"
-
 #include "Genesis/Rendering/Vulkan/VulkanImageUtils.hpp"
 
 using namespace Genesis;
@@ -116,45 +114,97 @@ void VulkanBackend::endFrame()
 	this->frame_index = (this->frame_index + 1) % this->vulkan->frames_in_flight.size();
 }
 
-Buffer* VulkanBackend::createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage)
+BufferIndex Genesis::VulkanBackend::createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage)
 {
-	return new VulkanBuffer(this->vulkan, size_bytes, getBufferUsage(type), getMemoryUsage(memory_usage));
+	BufferIndex buffer_index = this->vulkan->next_index_buffer;
+	this->vulkan->next_index_buffer++;
+
+	VulkanBuffer* buffer = &this->vulkan->buffers[buffer_index];
+
+	VkBufferCreateInfo buffer_info = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+	buffer_info.size = size_bytes;
+	buffer_info.usage = getBufferUsage(type);
+
+	VmaAllocationCreateInfo alloc_info = {};
+	alloc_info.usage = getMemoryUsage(memory_usage);
+
+	vmaCreateBuffer(this->vulkan->allocator, &buffer_info, &alloc_info, &buffer->buffer, &buffer->buffer_memory, &buffer->buffer_memory_info);
+
+	return buffer_index;
 }
 
-void VulkanBackend::drawMeshScreen(uint32_t thread, Buffer* vertex_buffer, Buffer* index_buffer, uint32_t index_count, matrix4F mvp)
+void Genesis::VulkanBackend::fillBuffer(BufferIndex buffer_index, void* data, uint64_t data_size)
 {
-	if (this->vulkan->swapchain == nullptr)
+	if (buffer_index == NULL_INDEX)
 	{
+		printf("Error: null buffer index\n");
 		return;
 	}
 
-	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
+	if (this->vulkan->buffers.find(buffer_index) == this->vulkan->buffers.end())
+	{
+		printf("Error: invalid buffer index\n");
+		return;
+	}
 
-	VkCommandBuffer buffer = frame->command_buffer->getSecondaryCommandBuffer(thread);
+	VulkanBuffer* buffer = &this->vulkan->buffers[buffer_index];
 
-	vkCmdPushConstants(buffer, this->vulkan->pipeline_manager->colored_mesh_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
-	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->colored_mesh_screen_pipeline->getPipeline());
-	
-	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->colored_mesh_layout, 0, 1, &this->vulkan->textures[1].image_descriptor_set, 0, nullptr);
+	VkDeviceSize buffer_size = buffer->buffer_memory_info.size;
 
-	VkBuffer vertexBuffers[] = { (VkBuffer)vertex_buffer->getHandle() };
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
+	VkMemoryPropertyFlags memFlags;
+	vmaGetMemoryTypeProperties(this->vulkan->allocator, buffer->buffer_memory_info.memoryType, &memFlags);
+	if ((memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0)
+	{
+		void* mappedData;
+		vmaMapMemory(this->vulkan->allocator, buffer->buffer_memory, &mappedData);
+		memcpy(mappedData, data, data_size);
+		vmaUnmapMemory(this->vulkan->allocator, buffer->buffer_memory);
+	}
+	else
+	{
+		//Staging Buffer
+		VkBuffer staging_buffer;
+		VmaAllocation staging_buffer_memory;
+		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+		bufferInfo.size = data_size;
+		bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		VmaAllocationCreateInfo allocInfo = {};
+		allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+		vmaCreateBuffer(this->vulkan->allocator, &bufferInfo, &allocInfo, &staging_buffer, &staging_buffer_memory, nullptr);
 
-	vkCmdBindIndexBuffer(buffer, (VkBuffer)index_buffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
+		void* mappedData;
+		vmaMapMemory(this->vulkan->allocator, staging_buffer_memory, &mappedData);
+		memcpy(mappedData, data, data_size);
+		vmaUnmapMemory(this->vulkan->allocator, staging_buffer_memory);
 
-	vkCmdDrawIndexed(buffer, index_count, 1, 0, 0, 0);
+		//TODO use reuseable command buffer
+		VkCommandBuffer command_buffer = this->vulkan->command_pool->startTransferCommandBuffer();
+		VkBufferCopy copyRegion = {};
+		copyRegion.srcOffset = 0; // Optional
+		copyRegion.dstOffset = 0; // Optional
+		copyRegion.size = data_size;
+		vkCmdCopyBuffer(command_buffer, staging_buffer, buffer->buffer, 1, &copyRegion);
+		this->vulkan->command_pool->endTransferCommandBuffer(command_buffer);
+		vmaDestroyBuffer(this->vulkan->allocator, staging_buffer, staging_buffer_memory);
+	}
 }
 
-void VulkanBackend::waitTillDone()
+void Genesis::VulkanBackend::destroyBuffer(BufferIndex buffer_index)
 {
-	vkDeviceWaitIdle(this->vulkan->device->getDevice());
+	if (this->vulkan->buffers.find(buffer_index) == this->vulkan->buffers.end())
+	{
+		printf("Error: buffer doesn't exsist\n");
+		return;
+	}
+
+	VulkanBuffer* buffer = &this->vulkan->buffers[buffer_index];
+	vmaDestroyBuffer(this->vulkan->allocator, buffer->buffer, buffer->buffer_memory);
 }
 
 TextureIndex VulkanBackend::createTexture(vector2U size)
 {
-	TextureIndex texture_index = this->vulkan->next_index;
-	this->vulkan->next_index++;
+	TextureIndex texture_index = this->vulkan->next_index_texture;
+	this->vulkan->next_index_texture++;
 
 	VulkanTexture* texture = &this->vulkan->textures[texture_index];
 
@@ -230,13 +280,13 @@ void VulkanBackend::fillTexture(TextureIndex texture_index, void* data, uint64_t
 {
 	if (texture_index == NULL_INDEX)
 	{
-		printf("Error: null texture index");
+		printf("Error: null texture index\n");
 		return;
 	}
 
 	if (this->vulkan->textures.find(texture_index) == this->vulkan->textures.end())
 	{
-		printf("Error: invalid texture index");
+		printf("Error: invalid texture index\n");
 		return;
 	}
 
@@ -245,7 +295,7 @@ void VulkanBackend::fillTexture(TextureIndex texture_index, void* data, uint64_t
 	const uint32_t bytes_per_pixel = 4;
 	if (data_size != texture->size.width * texture->size.height * bytes_per_pixel)
 	{
-		printf("Error: image not correct size for texture");
+		printf("Error: image not correct size for texture\n");
 		return;
 	}
 
@@ -281,4 +331,55 @@ void VulkanBackend::destroyTexture(TextureIndex texture_index)
 
 		this->vulkan->textures.erase(texture_index);
 	}
+}
+
+void VulkanBackend::drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp)
+{
+	if (this->vulkan->swapchain == nullptr)
+	{
+		return;
+	}
+
+	if (this->vulkan->buffers.find(vertices_index) == this->vulkan->buffers.end())
+	{
+		printf("Error: invalid vertex buffer\n");
+		return;
+	}
+	VulkanBuffer* vertices_buffer = &this->vulkan->buffers[vertices_index];
+
+	if (this->vulkan->buffers.find(indices_index) == this->vulkan->buffers.end())
+	{
+		printf("Error: invalid index buffer\n");
+		return;
+	}
+	VulkanBuffer* indices_buffer = &this->vulkan->buffers[indices_index];
+
+	if (this->vulkan->textures.find(texture_index) == this->vulkan->textures.end())
+	{
+		printf("Error: invalid texture\n");
+		return;
+	}
+	VulkanTexture* texture = &this->vulkan->textures[texture_index];
+
+	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
+
+	VkCommandBuffer buffer = frame->command_buffer->getSecondaryCommandBuffer(thread);
+
+	vkCmdPushConstants(buffer, this->vulkan->pipeline_manager->colored_mesh_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
+	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->colored_mesh_screen_pipeline->getPipeline());
+	
+	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->colored_mesh_layout, 0, 1, &texture->image_descriptor_set, 0, nullptr);
+
+	VkBuffer vertexBuffers[] = { vertices_buffer->buffer };
+	VkDeviceSize offsets[] = { 0 };
+	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
+
+	vkCmdBindIndexBuffer(buffer, indices_buffer->buffer, 0, VK_INDEX_TYPE_UINT32);
+
+	vkCmdDrawIndexed(buffer, indices_count, 1, 0, 0, 0);
+}
+
+void VulkanBackend::waitTillDone()
+{
+	vkDeviceWaitIdle(this->vulkan->device->getDevice());
 }

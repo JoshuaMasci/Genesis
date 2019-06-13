@@ -32,8 +32,8 @@ namespace Genesis
 
 	struct Mesh
 	{
-		Buffer* vertices = nullptr;
-		Buffer* indices = nullptr;
+		BufferIndex vertices = NULL_INDEX;
+		BufferIndex indices = NULL_INDEX;
 		uint32_t indices_count = 0;
 	};
 

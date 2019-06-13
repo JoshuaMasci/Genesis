@@ -17,8 +17,8 @@ Renderer::~Renderer()
 
 	for (auto mesh : this->loaded_meshes)
 	{
-		delete mesh.second.vertices;
-		delete mesh.second.indices;
+		this->backend->destroyBuffer(mesh.second.vertices);
+		this->backend->destroyBuffer(mesh.second.indices);
 	}
 }
 
@@ -26,7 +26,7 @@ void Renderer::drawFrame(EntityRegistry& EntityRegistry)
 {
 	float fov = 1.0f / tan(glm::radians(75.0f) / 2.0f);
 	float aspect = 2560.0f / 1440.0f;
-	matrix4F view = glm::lookAt(vector3F(0.0f, 2.0f, -4.0f), vector3F(0.0f), vector3F(0.0f, 1.0f, 0.0f));
+	matrix4F view = glm::lookAt(vector3F(0.0f, 2.0f, -2.0f), vector3F(0.0f), vector3F(0.0f, 1.0f, 0.0f));
 	matrix4F proj = glm::infinitePerspective(fov, aspect, 0.1f);
 	proj[1][1] *= -1; //Need to apply this because vulkan flips the y-axis and that's not what I need
 
@@ -48,7 +48,7 @@ void Renderer::drawFrame(EntityRegistry& EntityRegistry)
 			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)transform.current_transform.getPosition());
 			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 			matrix4F mvp = mv * (translation * orientation);
-			this->backend->drawMeshScreen(0, mesh->vertices, mesh->indices, mesh->indices_count, mvp);
+			this->backend->drawMeshScreen(0, mesh->vertices, mesh->indices, this->texture, mesh->indices_count, mvp);
 		}
 
 		this->backend->endFrame();
@@ -101,10 +101,10 @@ void Renderer::loadMesh(string mesh_file)
 			Mesh* mesh = &this->loaded_meshes[mesh_file];
 
 			mesh->vertices = this->backend->createBuffer(sizeof(TexturedVertex) * vertices.size(), BufferType::Vertex, MemoryUsage::GPU_Only);
-			mesh->vertices->fill(vertices.data(), sizeof(TexturedVertex) * vertices.size());
+			this->backend->fillBuffer(mesh->vertices, vertices.data(), sizeof(TexturedVertex) * vertices.size());
 
 			mesh->indices = this->backend->createBuffer(sizeof(uint32_t) * indices.size(), BufferType::Index, MemoryUsage::GPU_Only);
-			mesh->indices->fill(indices.data(), sizeof(uint32_t) * indices.size());
+			this->backend->fillBuffer(mesh->indices, indices.data(), sizeof(uint32_t) * indices.size());
 
 			mesh->indices_count = (uint32_t)indices.size();
 		}

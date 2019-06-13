@@ -17,13 +17,15 @@ namespace Genesis
 		virtual bool beginFrame() override;
 		virtual void endFrame() override;
 
-		virtual Buffer* createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) override;
+		virtual BufferIndex createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) override;
+		virtual void fillBuffer(BufferIndex buffer_index, void* data, uint64_t data_size) override;
+		virtual void destroyBuffer(BufferIndex buffer_index) override;
 
 		virtual TextureIndex createTexture(vector2U size) override;
 		virtual void fillTexture(TextureIndex texture_index, void* data, uint64_t data_size) override;
 		virtual void destroyTexture(TextureIndex texture_index) override;
 
-		virtual void drawMeshScreen(uint32_t thread, Buffer* vertex_buffer, Buffer* index_buffer, uint32_t index_count, matrix4F mvp) override;
+		virtual void drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp) override;
 
 		virtual void waitTillDone() override;
 

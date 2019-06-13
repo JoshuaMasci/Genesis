@@ -28,6 +28,16 @@ namespace Genesis
 		VkDescriptorSet image_descriptor_set;
 	};
 
+	struct VulkanBuffer
+	{
+		VkBuffer buffer;
+		VmaAllocation buffer_memory;
+		VmaAllocationInfo buffer_memory_info;
+
+		//Uniform only
+		VkDescriptorSet buffer_descriptor_set;
+	};
+
 	struct VulkanFrame
 	{
 		VkSemaphore image_available_semaphore = VK_NULL_HANDLE;
@@ -72,13 +82,15 @@ namespace Genesis
 		vector<const char*> getLayers();
 
 		//Texture Stuff: need to move at some point
-		TextureIndex next_index = 1;
+		TextureIndex next_index_texture = 1;
 		map<TextureIndex, VulkanTexture> textures;
-
 		VkSampler linear_sampler;
 
+		//Buffer Stuff
+		BufferIndex next_index_buffer = 1;
+		map<BufferIndex, VulkanBuffer> buffers;
+
 		VkDescriptorPool descriptor_pool;
-		vector<VkDescriptorSet> descriptor_sets;
 
 	private:
 		bool use_debug_layers = true;
