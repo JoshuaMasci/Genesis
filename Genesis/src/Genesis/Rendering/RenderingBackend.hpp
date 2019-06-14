@@ -30,6 +30,11 @@ namespace Genesis
 		//TEMP
 		virtual void drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp) = 0;
 
+		virtual matrix4F getPerspectiveMatrix(float frame_of_view, float aspect_ratio, float z_near) = 0;
+		//virtual matrix4F getorthographicMatrix();
+
+		virtual vector2U getScreenSize() = 0;
+
 		//Wait until all GPU proccessing is done
 		virtual void waitTillDone() = 0;
 

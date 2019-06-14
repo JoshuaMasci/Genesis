@@ -9,7 +9,7 @@ namespace Genesis
 {
 	struct Model
 	{
-		Model(string mesh, string textrue)
+		Model(string mesh, string texture)
 		{
 			this->mesh = mesh;
 			this->texture = texture;
@@ -43,11 +43,11 @@ namespace Genesis
 		Renderer(RenderingBackend* backend);
 		~Renderer();
 
-		void drawFrame(EntityRegistry& EntityRegistry);
+		void drawFrame(EntityRegistry& entity_registry, EntityId camera_entity);
 
 		//Temp resource stuff
 		void loadMesh(string mesh_file);
-		TextureIndex loadTexture(string texture_file);
+		void loadTexture(string texture_file);
 
 	private:
 		//Lifetime of the Backend is longer than the Renderer
@@ -55,7 +55,6 @@ namespace Genesis
 
 		//Temp resource stuff
 		map<string, Mesh> loaded_meshes;
-
-		TextureIndex texture = NULL_INDEX;
+		map<string, TextureIndex> loaded_textures;
 	};
 }

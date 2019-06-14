@@ -6,6 +6,8 @@
 #include "Genesis/Rendering/Vulkan/VulkanRenderPipline.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanImageUtils.hpp"
 
+#include "Genesis/Core/VectorTypes.hpp"
+
 using namespace Genesis;
 
 VkBufferUsageFlags getBufferUsage(BufferType usage)
@@ -377,6 +379,21 @@ void VulkanBackend::drawMeshScreen(uint32_t thread, BufferIndex vertices_index, 
 	vkCmdBindIndexBuffer(buffer, indices_buffer->buffer, 0, VK_INDEX_TYPE_UINT32);
 
 	vkCmdDrawIndexed(buffer, indices_count, 1, 0, 0, 0);
+}
+
+matrix4F VulkanBackend::getPerspectiveMatrix(float frame_of_view, float aspect_ratio, float z_near)
+{
+	float fov = 1.0f / tan(glm::radians(frame_of_view) / 2.0f);
+	matrix4F proj = glm::infinitePerspective(fov, aspect_ratio, z_near);
+	proj[1][1] *= -1; //Need to apply this because vulkan flips the y-axis and that's not what I need
+
+	return proj;
+}
+
+vector2U VulkanBackend::getScreenSize()
+{
+	VkExtent2D extent = this->vulkan->swapchain->getSwapchainExtent();
+	return { extent.width, extent.height };
 }
 
 void VulkanBackend::waitTillDone()

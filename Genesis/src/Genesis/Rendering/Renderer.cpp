@@ -1,19 +1,21 @@
 #include "Renderer.hpp"
 
 #include "Genesis/Application.hpp"
+#include "Genesis/Rendering/Camera.hpp"
 
 using namespace Genesis;
 
 Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
-
-	this->texture = this->loadTexture("resources/textures/1K_Grid.png");
 }
 
 Renderer::~Renderer()
 {
-	this->backend->destroyTexture(this->texture);
+	for (auto textures : this->loaded_textures)
+	{
+		this->backend->destroyTexture(textures.second);
+	}
 
 	for (auto mesh : this->loaded_meshes)
 	{
@@ -22,13 +24,25 @@ Renderer::~Renderer()
 	}
 }
 
-void Renderer::drawFrame(EntityRegistry& EntityRegistry)
+void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity)
 {
-	float fov = 1.0f / tan(glm::radians(75.0f) / 2.0f);
-	float aspect = 2560.0f / 1440.0f;
-	matrix4F view = glm::lookAt(vector3F(0.0f, 2.0f, -2.0f), vector3F(0.0f), vector3F(0.0f, 1.0f, 0.0f));
-	matrix4F proj = glm::infinitePerspective(fov, aspect, 0.1f);
-	proj[1][1] *= -1; //Need to apply this because vulkan flips the y-axis and that's not what I need
+	vector2U screen_size = this->backend->getScreenSize();
+
+	float aspect_ratio = ((float)screen_size.x) / ((float)screen_size.y);
+	matrix4F view = glm::lookAt(vector3F(0.0f), vector3F(0.0f, 0.0f, 1.0f), vector3F(0.0f, 1.0f, 0.0f));
+	matrix4F proj = this->backend->getPerspectiveMatrix(75.0f, 16.0f / 9.0f, 0.1f);
+
+	if (entity_registry.has<WorldTransform>(camera_entity) && entity_registry.has<Camera>(camera_entity))
+	{
+		auto& camera = entity_registry.get<Camera>(camera_entity);
+		auto& transform = entity_registry.get<WorldTransform>(camera_entity);
+		Transform& current = transform.current_transform;
+
+		vector3D forward = current.getForward();
+
+		view = glm::lookAt(current.getPosition(), current.getPosition() + current.getForward(), current.getUp());
+		proj = this->backend->getPerspectiveMatrix(camera.frame_of_view, aspect_ratio, camera.z_near);
+	}
 
 	matrix4F mv = proj * view;
 
@@ -36,7 +50,7 @@ void Renderer::drawFrame(EntityRegistry& EntityRegistry)
 
 	if (result)
 	{
-		auto view = EntityRegistry.view<Model, WorldTransform>();
+		auto view = entity_registry.view<Model, WorldTransform>();
 
 		for (auto entity : view)
 		{
@@ -44,11 +58,12 @@ void Renderer::drawFrame(EntityRegistry& EntityRegistry)
 			auto &transform = view.get<WorldTransform>(entity);
 			
 			Mesh* mesh = &this->loaded_meshes[model.mesh];
+			TextureIndex texture = this->loaded_textures[model.texture];
 
 			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)transform.current_transform.getPosition());
 			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 			matrix4F mvp = mv * (translation * orientation);
-			this->backend->drawMeshScreen(0, mesh->vertices, mesh->indices, this->texture, mesh->indices_count, mvp);
+			this->backend->drawMeshScreen(0, mesh->vertices, mesh->indices, texture, mesh->indices_count, mvp);
 		}
 
 		this->backend->endFrame();
@@ -87,7 +102,7 @@ void Renderer::loadMesh(string mesh_file)
 						tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
 						vector3F position = vector3F(attrib.vertices[3 * idx.vertex_index + 0], attrib.vertices[3 * idx.vertex_index + 1], attrib.vertices[3 * idx.vertex_index + 2]);
 						vector3F normal = vector3F(attrib.normals[3 * idx.normal_index + 0], attrib.normals[3 * idx.normal_index + 1], attrib.normals[3 * idx.normal_index + 2]);
-						vector2F uv = vector2F(attrib.texcoords[2 * idx.texcoord_index + 0], attrib.texcoords[2 * idx.texcoord_index + 1]);
+						vector2F uv = vector2F(attrib.texcoords[2 * idx.texcoord_index + 0], -attrib.texcoords[2 * idx.texcoord_index + 1]);
 
 						TexturedVertex vertex = { position, normal, uv };
 
@@ -123,21 +138,29 @@ void Renderer::loadMesh(string mesh_file)
 #define STBI_ONLY_PNG
 #include <stb_image.h>
 
-TextureIndex Renderer::loadTexture(string texture_file)
+void Renderer::loadTexture(string texture_file)
 {
-	int width, height, tex_channels;
-	unsigned char* data = stbi_load((texture_file).c_str(), &width, &height, &tex_channels, STBI_rgb_alpha);
-	uint64_t data_size = width * height * STBI_rgb_alpha;
-
-	if (data == NULL)
+	if (this->loaded_textures.find(texture_file) == this->loaded_textures.end())
 	{
-		printf("Error: Can't Load the given texture: %s\n", texture_file.c_str());
-		return NULL_INDEX;
+
+		int width, height, tex_channels;
+		unsigned char* data = stbi_load((texture_file).c_str(), &width, &height, &tex_channels, STBI_rgb_alpha);
+		uint64_t data_size = width * height * STBI_rgb_alpha;
+
+		if (data == NULL)
+		{
+			printf("Error: Can't load Texture: %s\n", texture_file.c_str());
+			return;
+		}
+
+		TextureIndex index = this->backend->createTexture(vector2U((uint32_t)width, (uint32_t)height));
+		this->backend->fillTexture(index, (void*)data, data_size);
+		stbi_image_free(data);
+
+		this->loaded_textures[texture_file] = index;
 	}
-
-	TextureIndex index = this->backend->createTexture(vector2U((uint32_t) width, (uint32_t) height));
-	this->backend->fillTexture(index, (void*)data, data_size);
-	stbi_image_free(data);
-
-	return index;
+	else
+	{
+		printf("Error: Already loaded Texture: %s\n", texture_file.c_str());
+	}
 }
