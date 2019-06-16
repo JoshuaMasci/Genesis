@@ -86,7 +86,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExte
 
 VulkanSwapchain::VulkanSwapchain(VulkanDevice* vulkan_device, Window* window, VkSurfaceKHR surface)
 {
-	this->device = vulkan_device->getDevice();
+	this->device = vulkan_device->get();
 
 	VulkanSwapChainSupportDetails swapChainSupport = VulkanSwapChainSupportDetails::querySwapChainSupport(vulkan_device->getPhysicalDevice(), surface);
 	VulkanQueueFamilyAllocator queue_allocator(vulkan_device->getPhysicalDevice(), surface);
@@ -140,14 +140,14 @@ VulkanSwapchain::VulkanSwapchain(VulkanDevice* vulkan_device, Window* window, Vk
 	create_info.clipped = VK_TRUE;
 	create_info.oldSwapchain = VK_NULL_HANDLE;
 
-	VkResult result = vkCreateSwapchainKHR(vulkan_device->getDevice(), &create_info, nullptr, &this->swapchain);
+	VkResult result = vkCreateSwapchainKHR(vulkan_device->get(), &create_info, nullptr, &this->swapchain);
 	if (result != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create swap chain!");
 	}
 
 	//Swapchain Images
-	vkGetSwapchainImagesKHR(vulkan_device->getDevice(), this->swapchain, &this->swapchain_image_count, nullptr);
+	vkGetSwapchainImagesKHR(vulkan_device->get(), this->swapchain, &this->swapchain_image_count, nullptr);
 
 	this->swapchain_depth_format = findDepthFormat(vulkan_device->getPhysicalDevice());
 }

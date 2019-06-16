@@ -17,7 +17,7 @@ namespace Genesis
 			this->previous_transform = transform;
 		};
 
-		WorldTransform(vector3D position, quaternionD orientation = quaternionD())
+		WorldTransform(vector3D position, quaternionD orientation = quaternionD(1.0, 0.0, 0.0, 0.0))
 		: WorldTransform(Transform(position, orientation)){};
 
 		Transform current_transform;

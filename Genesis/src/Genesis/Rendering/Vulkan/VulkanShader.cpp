@@ -47,28 +47,46 @@ VulkanShader::VulkanShader(VkDevice device, string vertex_name, string fragment_
 	auto vertShaderCode = readFile(vertex_name);
 	auto fragShaderCode = readFile(fragment_name);
 
-	vertShaderModule = createShaderModule(this->device, vertShaderCode);
-	fragShaderModule = createShaderModule(this->device, fragShaderCode);
+	this->vertShaderModule = createShaderModule(this->device, vertShaderCode);
+	this->fragShaderModule = createShaderModule(this->device, fragShaderCode);
 
 	VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
 	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	vertShaderStageInfo.module = vertShaderModule;
+	vertShaderStageInfo.module = this->vertShaderModule;
 	vertShaderStageInfo.pName = "main";
 
 	VkPipelineShaderStageCreateInfo fragShaderStageInfo = {};
 	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	fragShaderStageInfo.module = fragShaderModule;
+	fragShaderStageInfo.module = this->fragShaderModule;
 	fragShaderStageInfo.pName = "main";
 
 	shaderStages = { vertShaderStageInfo, fragShaderStageInfo };
 }
 
+VulkanShader::VulkanShader(VkDevice device, string vertex_name)
+{
+	this->device = device;
+
+	auto vertShaderCode = readFile(vertex_name);
+	this->vertShaderModule = createShaderModule(this->device, vertShaderCode);
+	VkPipelineShaderStageCreateInfo vertShaderStageInfo = {};
+
+	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	vertShaderStageInfo.module = this->vertShaderModule;
+	vertShaderStageInfo.pName = "main";
+
+	shaderStages = { vertShaderStageInfo };
+}
+
 VulkanShader::~VulkanShader()
 {
-	vkDestroyShaderModule(this->device, this->fragShaderModule, nullptr);
 	vkDestroyShaderModule(this->device, this->vertShaderModule, nullptr);
+
+
+	vkDestroyShaderModule(this->device, this->fragShaderModule, nullptr);
 }
 
 vector<VkPipelineShaderStageCreateInfo> Genesis::VulkanShader::getShaderStages()

@@ -15,6 +15,8 @@ namespace Genesis
 		bool getButtonPressed(string name);
 		double getAxis(string name);
 
+		double getButtonAxisCombo(string axis_name, string pos_button_name, string neg_button_name, bool clamp_value = true);
+
 		void update();
 
 		void addInputDevice(InputDevice* device);

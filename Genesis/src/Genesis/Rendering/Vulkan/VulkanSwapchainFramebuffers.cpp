@@ -4,7 +4,7 @@ using namespace Genesis;
 
 VulkanSwapchainFramebuffers::VulkanSwapchainFramebuffers(VulkanDevice* device, VulkanSwapchain* swapchain, VmaAllocator allocator, VkRenderPass screen_render_pass)
 {
-	this->device = device->getDevice();
+	this->device = device->get();
 	this->allocator = allocator;
 
 	uint32_t swapchain_image_count = swapchain->getSwapchainImageCount();
@@ -14,7 +14,7 @@ VulkanSwapchainFramebuffers::VulkanSwapchainFramebuffers(VulkanDevice* device, V
 
 	//Swapchain Images
 	this->swapchain_images.resize(swapchain_image_count);
-	vkGetSwapchainImagesKHR(device->getDevice(), swapchain->getSwapchain(), &swapchain_image_count, this->swapchain_images.data());
+	vkGetSwapchainImagesKHR(device->get(), swapchain->get(), &swapchain_image_count, this->swapchain_images.data());
 
 	//Swapchain Image Views
 	this->swapchain_imageviews.resize(swapchain_image_count);
@@ -35,7 +35,7 @@ VulkanSwapchainFramebuffers::VulkanSwapchainFramebuffers(VulkanDevice* device, V
 		create_info.subresourceRange.baseArrayLayer = 0;
 		create_info.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(device->getDevice(), &create_info, nullptr, &this->swapchain_imageviews[i]) != VK_SUCCESS)
+		if (vkCreateImageView(device->get(), &create_info, nullptr, &this->swapchain_imageviews[i]) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create image views!");
 		}
@@ -77,7 +77,7 @@ VulkanSwapchainFramebuffers::VulkanSwapchainFramebuffers(VulkanDevice* device, V
 		viewInfo.subresourceRange.baseArrayLayer = 0;
 		viewInfo.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(device->getDevice(), &viewInfo, nullptr, &this->depth_imageviews[i]) != VK_SUCCESS)
+		if (vkCreateImageView(device->get(), &viewInfo, nullptr, &this->depth_imageviews[i]) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create texture image view!");
 		}
@@ -100,7 +100,7 @@ VulkanSwapchainFramebuffers::VulkanSwapchainFramebuffers(VulkanDevice* device, V
 		framebufferInfo.height = swapchain_extent.height;
 		framebufferInfo.layers = 1;
 
-		if (vkCreateFramebuffer(device->getDevice(), &framebufferInfo, nullptr, &this->swapchain_framebuffers[i]) != VK_SUCCESS)
+		if (vkCreateFramebuffer(device->get(), &framebufferInfo, nullptr, &this->swapchain_framebuffers[i]) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create framebuffer!");
 		}

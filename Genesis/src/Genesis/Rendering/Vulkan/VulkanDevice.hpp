@@ -12,7 +12,7 @@ namespace Genesis
 		VulkanDevice(VkPhysicalDevice chosen_device, VulkanInstance* instance);
 		~VulkanDevice();
 		
-		inline VkDevice getDevice() { return this->logical_device; };
+		inline VkDevice get() { return this->logical_device; };
 		inline VkPhysicalDevice getPhysicalDevice() { return this->physical_device; };
 
 		inline VkQueue getGraphicsQueue() { return this->graphics_queue; };

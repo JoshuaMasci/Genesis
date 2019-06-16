@@ -56,8 +56,8 @@ bool VulkanBackend::beginFrame()
 		return false;
 	}
 
-	vkWaitForFences(this->vulkan->device->getDevice(), 1, &frame->command_buffer_done_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
-	vkResetFences(this->vulkan->device->getDevice(), 1, &frame->command_buffer_done_fence);
+	vkWaitForFences(this->vulkan->device->get(), 1, &frame->command_buffer_done_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+	vkResetFences(this->vulkan->device->get(), 1, &frame->command_buffer_done_fence);
 
 	VkRenderPassBeginInfo renderPassInfo = {};
 	{
@@ -105,7 +105,7 @@ void VulkanBackend::endFrame()
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pWaitSemaphores = &frame->command_buffer_done_semaphore;
 
-	VkSwapchainKHR swapChains[] = { this->vulkan->swapchain->getSwapchain() };
+	VkSwapchainKHR swapChains[] = { this->vulkan->swapchain->get() };
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = swapChains;
 
@@ -116,7 +116,7 @@ void VulkanBackend::endFrame()
 	this->frame_index = (this->frame_index + 1) % this->vulkan->frames_in_flight.size();
 }
 
-BufferIndex Genesis::VulkanBackend::createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage)
+BufferIndex VulkanBackend::createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage)
 {
 	BufferIndex buffer_index = this->vulkan->next_index_buffer;
 	this->vulkan->next_index_buffer++;
@@ -135,7 +135,7 @@ BufferIndex Genesis::VulkanBackend::createBuffer(uint64_t size_bytes, BufferType
 	return buffer_index;
 }
 
-void Genesis::VulkanBackend::fillBuffer(BufferIndex buffer_index, void* data, uint64_t data_size)
+void VulkanBackend::fillBuffer(BufferIndex buffer_index, void* data, uint64_t data_size)
 {
 	if (buffer_index == NULL_INDEX)
 	{
@@ -191,7 +191,7 @@ void Genesis::VulkanBackend::fillBuffer(BufferIndex buffer_index, void* data, ui
 	}
 }
 
-void Genesis::VulkanBackend::destroyBuffer(BufferIndex buffer_index)
+void VulkanBackend::destroyBuffer(BufferIndex buffer_index)
 {
 	if (this->vulkan->buffers.find(buffer_index) == this->vulkan->buffers.end())
 	{
@@ -241,7 +241,7 @@ TextureIndex VulkanBackend::createTexture(vector2U size)
 	view_info.subresourceRange.levelCount = 1;
 	view_info.subresourceRange.baseArrayLayer = 0;
 	view_info.subresourceRange.layerCount = 1;
-	if (vkCreateImageView(this->vulkan->device->getDevice(), &view_info, nullptr, &texture->image_view) != VK_SUCCESS)
+	if (vkCreateImageView(this->vulkan->device->get(), &view_info, nullptr, &texture->image_view) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create texture image view!");
 	}
@@ -253,11 +253,11 @@ TextureIndex VulkanBackend::createTexture(vector2U size)
 		set_alloc_info.descriptorSetCount = 1;
 		set_alloc_info.pSetLayouts = &this->vulkan->pipeline_manager->textured_descriptor_layout;
 
-		if (vkAllocateDescriptorSets(this->vulkan->device->getDevice(), &set_alloc_info, &texture->image_descriptor_set) != VK_SUCCESS)
+		if (vkAllocateDescriptorSets(this->vulkan->device->get(), &set_alloc_info, &texture->image_descriptor_set) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to allocate descriptor sets!");
 		}
-
+	
 		VkDescriptorImageInfo descriptor_image_info = {};
 		descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		descriptor_image_info.imageView = texture->image_view;
@@ -272,7 +272,7 @@ TextureIndex VulkanBackend::createTexture(vector2U size)
 		descriptor_write.descriptorCount = 1;
 		descriptor_write.pImageInfo = &descriptor_image_info;
 
-		vkUpdateDescriptorSets(this->vulkan->device->getDevice(), 1, &descriptor_write, 0, nullptr);
+		vkUpdateDescriptorSets(this->vulkan->device->get(), 1, &descriptor_write, 0, nullptr);
 	}
 
 	return texture_index;
@@ -328,10 +328,101 @@ void VulkanBackend::destroyTexture(TextureIndex texture_index)
 	if (this->vulkan->textures.find(texture_index) != this->vulkan->textures.end())
 	{
 		VulkanTexture* texture = &this->vulkan->textures[texture_index];
-		vkDestroyImageView(this->vulkan->device->getDevice(), texture->image_view, nullptr);
+		vkDestroyImageView(this->vulkan->device->get(), texture->image_view, nullptr);
 		vmaDestroyImage(this->vulkan->allocator, texture->image, texture->image_memory);
 
+		vkFreeDescriptorSets(this->vulkan->device->get(), this->vulkan->descriptor_pool, 1, &texture->image_descriptor_set);
+
 		this->vulkan->textures.erase(texture_index);
+	}
+}
+
+FrameBufferIndex VulkanBackend::createShadowMap(vector2U size)
+{
+	ShadowMapIndex shadow_map_index = this->vulkan->next_index_shadow_map;
+	this->vulkan->next_index_shadow_map++;
+
+	VulkanShadowMap* shadow_map = &this->vulkan->shadow_maps[shadow_map_index];
+	shadow_map->size.width = size.x;
+	shadow_map->size.height = size.y;
+
+	shadow_map->images = Array<VulkanShadowMapImage>(this->vulkan->frames_in_flight.size());
+
+	VkFormat depth_format = this->vulkan->swapchain->getSwapchainDepthFormat();
+	for (int i = 0; i < shadow_map->images.size(); i++)
+	{
+		VkImageCreateInfo image_info = {};
+		image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		image_info.imageType = VK_IMAGE_TYPE_2D;
+		image_info.extent.width = shadow_map->size.width;
+		image_info.extent.height = shadow_map->size.height;
+		image_info.extent.depth = 1;
+		image_info.mipLevels = 1;
+		image_info.arrayLayers = 1;
+		image_info.format = depth_format;
+		image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+		image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		image_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+		image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		VmaAllocationCreateInfo depth_image_alloc_create_info = {};
+		depth_image_alloc_create_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		vmaCreateImage(this->vulkan->allocator, &image_info, &depth_image_alloc_create_info, &shadow_map->images[i].depth_image, &shadow_map->images[i].depth_image_memory, nullptr);
+
+		VkImageViewCreateInfo view_info = {};
+		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		view_info.image = shadow_map->images[i].depth_image;
+		view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		view_info.format = depth_format;
+		view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		view_info.subresourceRange.baseMipLevel = 0;
+		view_info.subresourceRange.levelCount = 1;
+		view_info.subresourceRange.baseArrayLayer = 0;
+		view_info.subresourceRange.layerCount = 1;
+
+		if (vkCreateImageView(this->vulkan->device->get(), &view_info, nullptr, &shadow_map->images[i].depth_image_view) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create texture image view!");
+		}
+
+		//TODO DESCRIPTOR SET
+
+		VkFramebufferCreateInfo framebufferInfo = {};
+		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		framebufferInfo.renderPass = this->vulkan->shadow_render_pass;
+
+		framebufferInfo.attachmentCount = 1;
+		framebufferInfo.pAttachments = &shadow_map->images[i].depth_image_view;
+		
+		framebufferInfo.width = shadow_map->size.width;
+		framebufferInfo.height = shadow_map->size.height;
+		framebufferInfo.layers = 1;
+
+		if (vkCreateFramebuffer(this->vulkan->device->get(), &framebufferInfo, nullptr, &shadow_map->images[i].depth_frame_buffer) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create framebuffer!");
+		}
+	}
+
+	return shadow_map_index;
+}
+
+void VulkanBackend::destroyShadowMap(ShadowMapIndex shadow_index)
+{
+	if (this->vulkan->shadow_maps.find(shadow_index) != this->vulkan->shadow_maps.end())
+	{
+		VulkanShadowMap* shadow_map = &this->vulkan->shadow_maps[shadow_index];
+		VkDevice device = this->vulkan->device->get();
+
+		for (int i = 0; i < shadow_map->images.size(); i++)
+		{
+			vkDestroyFramebuffer(device, shadow_map->images[i].depth_frame_buffer, nullptr);
+			vkDestroyImageView(device, shadow_map->images[i].depth_image_view, nullptr);
+			vmaDestroyImage(this->vulkan->allocator, shadow_map->images[i].depth_image, shadow_map->images[i].depth_image_memory);
+		}
+
+		this->vulkan->textures.erase(shadow_index);
 	}
 }
 
@@ -367,10 +458,10 @@ void VulkanBackend::drawMeshScreen(uint32_t thread, BufferIndex vertices_index, 
 
 	VkCommandBuffer buffer = frame->command_buffer->getSecondaryCommandBuffer(thread);
 
-	vkCmdPushConstants(buffer, this->vulkan->pipeline_manager->colored_mesh_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
-	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->colored_mesh_screen_pipeline->getPipeline());
+	vkCmdPushConstants(buffer, this->vulkan->pipeline_manager->textured_mesh_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
+	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->textured_mesh_screen_pipeline->getPipeline());
 	
-	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->colored_mesh_layout, 0, 1, &texture->image_descriptor_set, 0, nullptr);
+	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->textured_mesh_layout, 0, 1, &texture->image_descriptor_set, 0, nullptr);
 
 	VkBuffer vertexBuffers[] = { vertices_buffer->buffer };
 	VkDeviceSize offsets[] = { 0 };
@@ -398,5 +489,5 @@ vector2U VulkanBackend::getScreenSize()
 
 void VulkanBackend::waitTillDone()
 {
-	vkDeviceWaitIdle(this->vulkan->device->getDevice());
+	vkDeviceWaitIdle(this->vulkan->device->get());
 }

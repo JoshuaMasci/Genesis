@@ -16,6 +16,21 @@ SDL2_Platform::SDL2_Platform(Application* app)
 	this->keyboard_device = new KeyboardDevice("SDL2 Keyboard");
 	this->application->input_manager.addInputDevice(this->keyboard_device);
 
+	this->keyboard_device->addButton("Debug_Forward", (ButtonIndex) KeyboardButton::W);
+	this->keyboard_device->addButton("Debug_Backward", (ButtonIndex)KeyboardButton::S);
+	this->keyboard_device->addButton("Debug_Up", (ButtonIndex)KeyboardButton::LShift);
+	this->keyboard_device->addButton("Debug_Down", (ButtonIndex)KeyboardButton::LCtrl);
+	this->keyboard_device->addButton("Debug_Left", (ButtonIndex)KeyboardButton::A);
+	this->keyboard_device->addButton("Debug_Right", (ButtonIndex)KeyboardButton::D);
+
+	this->keyboard_device->addButton("Debug_PitchUp", (ButtonIndex)KeyboardButton::Up);
+	this->keyboard_device->addButton("Debug_PitchDown", (ButtonIndex)KeyboardButton::Down);
+	this->keyboard_device->addButton("Debug_YawLeft", (ButtonIndex)KeyboardButton::Left);
+	this->keyboard_device->addButton("Debug_YawRight", (ButtonIndex)KeyboardButton::Right);
+	this->keyboard_device->addButton("Debug_RollLeft", (ButtonIndex)KeyboardButton::Q);
+	this->keyboard_device->addButton("Debug_RollRight", (ButtonIndex)KeyboardButton::E);
+
+
 	//Create Mouse Device
 	this->mouse_device = new MouseDevice("SDL2 Mouse");
 	this->application->input_manager.addInputDevice(this->mouse_device);

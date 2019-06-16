@@ -14,7 +14,7 @@ bool ArrayInputDevice::hasButton(string button_name)
 	return this->button_bindings.find(button_name) != this->button_bindings.end();
 }
 
-ButtonValue Genesis::ArrayInputDevice::getButton(string button_name)
+ButtonValue ArrayInputDevice::getButton(string button_name)
 {
 	if (this->hasButton(button_name))
 	{

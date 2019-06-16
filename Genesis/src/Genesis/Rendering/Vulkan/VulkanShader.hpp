@@ -9,6 +9,7 @@ namespace Genesis
 	{
 	public:
 		VulkanShader(VkDevice device, string vertex_name, string fragment_name);
+		VulkanShader(VkDevice device, string vertex_name);
 		~VulkanShader();
 
 		vector<VkPipelineShaderStageCreateInfo> getShaderStages();
@@ -16,8 +17,8 @@ namespace Genesis
 	private:
 		VkDevice device;
 
-		VkShaderModule vertShaderModule;
-		VkShaderModule fragShaderModule;
+		VkShaderModule vertShaderModule = VK_NULL_HANDLE;
+		VkShaderModule fragShaderModule = VK_NULL_HANDLE;
 
 		vector<VkPipelineShaderStageCreateInfo> shaderStages;
 	};

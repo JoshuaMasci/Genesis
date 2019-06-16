@@ -20,10 +20,10 @@ namespace Genesis
 		//TODO used to rebuild pipelines when the swapchain is rebuilt
 		void rebuildSwapchainPipelines(VkExtent2D swapchain_size);
 
-		VkPipelineLayout colored_mesh_layout;
+		VkPipelineLayout textured_mesh_layout;
 
 		//Pipeline
-		VulkanRenderPipline* colored_mesh_screen_pipeline = nullptr;
+		VulkanRenderPipline* textured_mesh_screen_pipeline = nullptr;
 
 		//DescriptorSet Layouts
 		VkDescriptorSetLayout textured_descriptor_layout;
@@ -33,10 +33,5 @@ namespace Genesis
 
 		//Render Passes
 		VkRenderPass screen_render_pass;
-		VkRenderPass gbuffer_render_pass;
-		VkRenderPass shadow_render_pass;
-
-		//Pipeline layouts
-		VkPipelineLayout textured_mesh_layout;
 	};
 }

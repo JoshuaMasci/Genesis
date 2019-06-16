@@ -15,7 +15,6 @@
 
 namespace Genesis
 {
-
 	//Texture Stuff: need to move at some point
 	struct VulkanTexture
 	{
@@ -49,6 +48,23 @@ namespace Genesis
 		//Uniform Objects here
 
 		//Frame Buffers here
+	};
+
+
+	struct VulkanShadowMapImage
+	{
+		VkImage depth_image;
+		VmaAllocation depth_image_memory;
+		VkImageView depth_image_view;
+		VkDescriptorSet depth_image_descriptor_set;
+
+		VkFramebuffer depth_frame_buffer;
+	};
+
+	struct VulkanShadowMap
+	{
+		VkExtent2D size;
+		Array<VulkanShadowMapImage> images;
 	};
 
 	class VulkanInstance
@@ -91,6 +107,14 @@ namespace Genesis
 		map<BufferIndex, VulkanBuffer> buffers;
 
 		VkDescriptorPool descriptor_pool;
+
+		//Shadow Map Stuff
+		VkRenderPass shadow_render_pass;
+		void buildShadowRenderPass(VkFormat depth_format);
+		VkPipelineLayout shadow_pipeline_layout;
+
+		ShadowMapIndex next_index_shadow_map = 1;
+		map<ShadowMapIndex, VulkanShadowMap> shadow_maps;
 
 	private:
 		bool use_debug_layers = true;

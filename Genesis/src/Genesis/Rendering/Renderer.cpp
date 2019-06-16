@@ -8,10 +8,14 @@ using namespace Genesis;
 Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
+
+	//this->temp = this->backend->createShadowMap(vector2U(1024));
 }
 
 Renderer::~Renderer()
 {
+	//this->backend->destroyShadowMap(this->temp);
+
 	for (auto textures : this->loaded_textures)
 	{
 		this->backend->destroyTexture(textures.second);
@@ -38,8 +42,6 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 		auto& transform = entity_registry.get<WorldTransform>(camera_entity);
 		Transform& current = transform.current_transform;
 
-		vector3D forward = current.getForward();
-
 		view = glm::lookAt(current.getPosition(), current.getPosition() + current.getForward(), current.getUp());
 		proj = this->backend->getPerspectiveMatrix(camera.frame_of_view, aspect_ratio, camera.z_near);
 	}
@@ -60,7 +62,7 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 			Mesh* mesh = &this->loaded_meshes[model.mesh];
 			TextureIndex texture = this->loaded_textures[model.texture];
 
-			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)transform.current_transform.getPosition());
+			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
 			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 			matrix4F mvp = mv * (translation * orientation);
 			this->backend->drawMeshScreen(0, mesh->vertices, mesh->indices, texture, mesh->indices_count, mvp);

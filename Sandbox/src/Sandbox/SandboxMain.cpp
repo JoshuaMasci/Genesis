@@ -35,7 +35,9 @@ int main(int argc, char** argv)
 		auto frame_delta = std::chrono::duration_cast<std::chrono::duration<double>>(time_last - time_last_frame);
 		if (frame_delta.count() > 1.0)
 		{
-			printf("FPS: %zu\n", frames);
+			//printf("FPS: %zu\n", frames);
+			sandbox->window->setWindowTitle("Sandbox: FPS " + std::to_string(frames));
+			
 			frames = 0;
 			time_last_frame = time_last;
 		}

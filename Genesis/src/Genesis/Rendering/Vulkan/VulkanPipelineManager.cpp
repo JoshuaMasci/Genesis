@@ -6,7 +6,7 @@ using namespace Genesis;
 
 VulkanPiplineManager::VulkanPiplineManager(VulkanDevice* device)
 {
-	this->device = device->getDevice();
+	this->device = device->get();
 
 	{
 		VkDescriptorSetLayoutBinding sampler_layout_binding = {};
@@ -42,7 +42,7 @@ VulkanPiplineManager::VulkanPiplineManager(VulkanDevice* device)
 		pipelineLayoutInfo.pushConstantRangeCount = 1;
 		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
-		if (vkCreatePipelineLayout(this->device, &pipelineLayoutInfo, nullptr, &this->colored_mesh_layout) != VK_SUCCESS)
+		if (vkCreatePipelineLayout(this->device, &pipelineLayoutInfo, nullptr, &this->textured_mesh_layout) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create pipeline layout!");
 		}
@@ -52,12 +52,12 @@ VulkanPiplineManager::VulkanPiplineManager(VulkanDevice* device)
 VulkanPiplineManager::~VulkanPiplineManager()
 {
 	vkDestroyDescriptorSetLayout(this->device, this->textured_descriptor_layout, nullptr);
-	vkDestroyPipelineLayout(this->device, this->colored_mesh_layout, nullptr);
+	vkDestroyPipelineLayout(this->device, this->textured_mesh_layout, nullptr);
 	vkDestroyRenderPass(this->device, this->screen_render_pass, nullptr);
 
-	if (this->colored_mesh_screen_pipeline != nullptr)
+	if (this->textured_mesh_screen_pipeline != nullptr)
 	{
-		delete this->colored_mesh_screen_pipeline;
+		delete this->textured_mesh_screen_pipeline;
 	}
 }
 
@@ -123,13 +123,13 @@ void VulkanPiplineManager::buildScreenRenderPass(VkFormat image_format, VkFormat
 
 void VulkanPiplineManager::rebuildSwapchainPipelines(VkExtent2D swapchain_size)
 {
-	if (this->colored_mesh_screen_pipeline != nullptr)
+	if (this->textured_mesh_screen_pipeline != nullptr)
 	{
-		delete this->colored_mesh_screen_pipeline;
+		delete this->textured_mesh_screen_pipeline;
 	}
 
 	VertexInput input;
 	input.binding_descriptions = TexturedVertexInfo::getBindingDescriptions();
 	input.attribute_descriptions = TexturedVertexInfo::getAttributeDescriptions();
-	this->colored_mesh_screen_pipeline = new VulkanRenderPipline(this->device, this->colored_mesh_layout, this->screen_render_pass, "resources/shaders/Vulkan/shader", &input, swapchain_size);
+	this->textured_mesh_screen_pipeline = new VulkanRenderPipline(this->device, this->textured_mesh_layout, this->screen_render_pass, "resources/shaders/Vulkan/texture", &input, swapchain_size);
 }

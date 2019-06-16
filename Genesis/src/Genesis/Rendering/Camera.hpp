@@ -12,6 +12,6 @@ namespace Genesis
 		};
 
 		float frame_of_view = 75.0f;
-		float z_near = 0.1f;
+		float z_near = 0.01f;
 	};
 }

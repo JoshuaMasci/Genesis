@@ -13,7 +13,7 @@ namespace Genesis
 		VulkanSwapchain(VulkanDevice* device, Window* window, VkSurfaceKHR surface);
 		~VulkanSwapchain();
 
-		inline VkSwapchainKHR getSwapchain() { return this->swapchain; };
+		inline VkSwapchainKHR get() { return this->swapchain; };
 		inline VkFormat getSwapchainFormat() { return this->swapchain_image_format; };
 		inline VkFormat getSwapchainDepthFormat() { return this->swapchain_depth_format; };
 		inline VkExtent2D getSwapchainExtent() { return this->swapchain_extent; };

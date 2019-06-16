@@ -18,18 +18,17 @@ VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipel
 	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-	VkExtent2D swapchain_extent = extent;
 	VkViewport viewport = {};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = (float)swapchain_extent.width;
-	viewport.height = (float)swapchain_extent.height;
+	viewport.width = (float)extent.width;
+	viewport.height = (float)extent.height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
 	VkRect2D scissor = {};
 	scissor.offset = { 0, 0 };
-	scissor.extent = swapchain_extent;
+	scissor.extent = extent;
 
 	VkPipelineViewportStateCreateInfo viewportState = {};
 	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;

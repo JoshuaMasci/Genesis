@@ -4,7 +4,7 @@ using namespace Genesis;
 
 VulkanMultithreadCommandBuffer::VulkanMultithreadCommandBuffer(VulkanDevice* device, VkCommandPool command_pool, uint32_t secondary_command_buffers)
 {
-	this->device = device->getDevice();
+	this->device = device->get();
 	this->command_pool = command_pool;
 
 	//PRIMARY

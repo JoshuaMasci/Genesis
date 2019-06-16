@@ -51,10 +51,13 @@ namespace Genesis
 
 	private:
 		//Lifetime of the Backend is longer than the Renderer
+		//No deleteing please
 		RenderingBackend* backend;
 
 		//Temp resource stuff
 		map<string, Mesh> loaded_meshes;
 		map<string, TextureIndex> loaded_textures;
+
+		ShadowMapIndex temp;
 	};
 }

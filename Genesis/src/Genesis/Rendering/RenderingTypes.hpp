@@ -14,4 +14,8 @@ namespace Genesis
 
 	typedef uint32_t BufferIndex;
 	typedef uint32_t TextureIndex;
+	typedef uint32_t FrameBufferIndex;
+	typedef uint32_t ShadowMapIndex;
+
+	const FrameBufferIndex ScreenFrameBuffer = 0;
 }

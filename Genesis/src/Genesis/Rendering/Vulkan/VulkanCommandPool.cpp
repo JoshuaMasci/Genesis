@@ -13,7 +13,7 @@ VulkanCommandPool::VulkanCommandPool(VulkanDevice* device, uint32_t number_of_th
 	graphics_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	graphics_pool_info.queueFamilyIndex = this->device->getGraphicsFamilyIndex();
 	graphics_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	if (vkCreateCommandPool(this->device->getDevice(), &graphics_pool_info, nullptr, &this->graphics_command_pool) != VK_SUCCESS)
+	if (vkCreateCommandPool(this->device->get(), &graphics_pool_info, nullptr, &this->graphics_command_pool) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create graphics command pool!");
 	}
@@ -23,7 +23,7 @@ VulkanCommandPool::VulkanCommandPool(VulkanDevice* device, uint32_t number_of_th
 	transfer_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	transfer_pool_info.queueFamilyIndex = this->device->getTransferFamilyIndex();
 	transfer_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	if (vkCreateCommandPool(this->device->getDevice(), &transfer_pool_info, nullptr, &this->transfer_command_pool) != VK_SUCCESS)
+	if (vkCreateCommandPool(this->device->get(), &transfer_pool_info, nullptr, &this->transfer_command_pool) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create transfer command pool!");
 	}
@@ -31,8 +31,8 @@ VulkanCommandPool::VulkanCommandPool(VulkanDevice* device, uint32_t number_of_th
 
 VulkanCommandPool::~VulkanCommandPool()
 {
-	vkDestroyCommandPool(this->device->getDevice(), this->graphics_command_pool, nullptr);
-	vkDestroyCommandPool(this->device->getDevice(), this->transfer_command_pool, nullptr);
+	vkDestroyCommandPool(this->device->get(), this->graphics_command_pool, nullptr);
+	vkDestroyCommandPool(this->device->get(), this->transfer_command_pool, nullptr);
 }
 
 VkCommandBuffer VulkanCommandPool::startTransferCommandBuffer()
@@ -44,7 +44,7 @@ VkCommandBuffer VulkanCommandPool::startTransferCommandBuffer()
 	command_alloc_info.commandBufferCount = 1;
 
 	VkCommandBuffer command_buffer;
-	vkAllocateCommandBuffers(this->device->getDevice(), &command_alloc_info, &command_buffer);
+	vkAllocateCommandBuffers(this->device->get(), &command_alloc_info, &command_buffer);
 
 	VkCommandBufferBeginInfo begin_info = {};
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -68,5 +68,5 @@ void VulkanCommandPool::endTransferCommandBuffer(VkCommandBuffer command_buffer)
 	vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
 	vkQueueWaitIdle(queue);
 
-	vkFreeCommandBuffers(this->device->getDevice(), this->transfer_command_pool, 1, &command_buffer);
+	vkFreeCommandBuffers(this->device->get(), this->transfer_command_pool, 1, &command_buffer);
 }
