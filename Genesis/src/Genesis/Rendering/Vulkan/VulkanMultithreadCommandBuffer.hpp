@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Genesis/Core/Types.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 
 namespace Genesis
@@ -9,7 +9,7 @@ namespace Genesis
 	class VulkanMultithreadCommandBuffer
 	{
 	public:
-		VulkanMultithreadCommandBuffer(VulkanDevice* device, VkCommandPool command_pool, uint32_t secondary_command_buffers);
+		VulkanMultithreadCommandBuffer(VulkanCommandPool* primary_command_pool, Array<VulkanCommandPool*>* secondary_command_pools);
 		~VulkanMultithreadCommandBuffer();
 
 		void beginCommandBuffer(VkRenderPassBeginInfo& render_pass_info);
@@ -21,8 +21,8 @@ namespace Genesis
 		inline VkCommandBuffer getSecondaryCommandBuffer(uint32_t index) { return this->secondary_command_buffers[index]; };
 
 	private:
-		VkDevice device;
-		VkCommandPool command_pool;
+		VulkanCommandPool* primary_command_pool;
+		Array<VulkanCommandPool*>* secondary_command_pools;
 
 		VkCommandBuffer primary_command_buffer;
 		Array<VkCommandBuffer> secondary_command_buffers;

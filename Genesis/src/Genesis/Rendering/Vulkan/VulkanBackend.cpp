@@ -179,14 +179,28 @@ void VulkanBackend::fillBuffer(BufferIndex buffer_index, void* data, uint64_t da
 		memcpy(mappedData, data, data_size);
 		vmaUnmapMemory(this->vulkan->allocator, staging_buffer_memory);
 
-		//TODO use reuseable command buffer
-		VkCommandBuffer command_buffer = this->vulkan->command_pool->startTransferCommandBuffer();
+		VkCommandBuffer command_buffer = this->vulkan->primary_command_pool->getCommandBuffer();
+		VkCommandBufferBeginInfo begin_info = {};
+		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		vkBeginCommandBuffer(command_buffer, &begin_info);
+
 		VkBufferCopy copyRegion = {};
 		copyRegion.srcOffset = 0; // Optional
 		copyRegion.dstOffset = 0; // Optional
 		copyRegion.size = data_size;
 		vkCmdCopyBuffer(command_buffer, staging_buffer, buffer->buffer, 1, &copyRegion);
-		this->vulkan->command_pool->endTransferCommandBuffer(command_buffer);
+
+		vkEndCommandBuffer(command_buffer);
+		VkSubmitInfo submit_info = {};
+		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submit_info.commandBufferCount = 1;
+		submit_info.pCommandBuffers = &command_buffer;
+
+		vkQueueSubmit(this->vulkan->device->getGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE);
+		vkQueueWaitIdle(this->vulkan->device->getGraphicsQueue());
+		this->vulkan->primary_command_pool->releaseCommandBuffer(command_buffer);
+
 		vmaDestroyBuffer(this->vulkan->allocator, staging_buffer, staging_buffer_memory);
 	}
 }
@@ -316,9 +330,9 @@ void VulkanBackend::fillTexture(TextureIndex texture_index, void* data, uint64_t
 	memcpy(mappedData, data, data_size);
 	vmaUnmapMemory(this->vulkan->allocator, staging_buffer_memory);
 
-	transitionImageLayout(this->vulkan->command_pool, texture->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-	copyBufferToImage(this->vulkan->command_pool, staging_buffer, texture->image, texture->size);
-	transitionImageLayout(this->vulkan->command_pool, texture->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	transitionImageLayout(this->vulkan->primary_command_pool, this->vulkan->device->getGraphicsQueue(), texture->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	copyBufferToImage(this->vulkan->primary_command_pool, this->vulkan->device->getGraphicsQueue(), staging_buffer, texture->image, texture->size);
+	transitionImageLayout(this->vulkan->primary_command_pool, this->vulkan->device->getGraphicsQueue(), texture->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	vmaDestroyBuffer(this->vulkan->allocator, staging_buffer, staging_buffer_memory);
 }
@@ -331,7 +345,7 @@ void VulkanBackend::destroyTexture(TextureIndex texture_index)
 		vkDestroyImageView(this->vulkan->device->get(), texture->image_view, nullptr);
 		vmaDestroyImage(this->vulkan->allocator, texture->image, texture->image_memory);
 
-		vkFreeDescriptorSets(this->vulkan->device->get(), this->vulkan->descriptor_pool, 1, &texture->image_descriptor_set);
+		//vkFreeDescriptorSets(this->vulkan->device->get(), this->vulkan->descriptor_pool, 1, &texture->image_descriptor_set);
 
 		this->vulkan->textures.erase(texture_index);
 	}
@@ -422,7 +436,7 @@ void VulkanBackend::destroyShadowMap(ShadowMapIndex shadow_index)
 			vmaDestroyImage(this->vulkan->allocator, shadow_map->images[i].depth_image, shadow_map->images[i].depth_image_memory);
 		}
 
-		this->vulkan->textures.erase(shadow_index);
+		this->vulkan->shadow_maps.erase(shadow_index);
 	}
 }
 

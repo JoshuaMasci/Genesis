@@ -3,24 +3,28 @@
 #include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
 #include "Genesis/Core/Types.hpp"
 
+#include <concurrentqueue.h>
+
 namespace Genesis
 {
 	class VulkanCommandPool
 	{
 	public:
-		VulkanCommandPool(VulkanDevice* device, uint32_t number_of_threads);
+		VulkanCommandPool(VkDevice device, uint32_t queue_family_index, VkCommandBufferLevel level, VkCommandPoolCreateFlagBits flags);
 		~VulkanCommandPool();
 
-		//For graphics and present commands
-		VkCommandPool graphics_command_pool;
+		inline VkCommandPool get() { return this->command_pool; };
 
-		//For memory operations
-		VkCommandPool transfer_command_pool;
-
-		VkCommandBuffer startTransferCommandBuffer();
-		void endTransferCommandBuffer(VkCommandBuffer command_buffer);
+		VkCommandBuffer getCommandBuffer();
+		void releaseCommandBuffer(VkCommandBuffer buffer);
 
 	private:
-		VulkanDevice* device;
+		VkDevice device;
+		VkCommandPool command_pool;
+		VkCommandBufferLevel command_buffer_level;
+
+
+		uint16_t command_buffers_allocated = 0;
+		moodycamel::ConcurrentQueue<VkCommandBuffer> command_buffer_queue;
 	};
 }

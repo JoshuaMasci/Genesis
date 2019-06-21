@@ -19,7 +19,13 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 
 	this->device = new VulkanDevice(VulkanPhysicalDevicePicker::pickDevice(this->instance, this->surface), this);
 	this->swapchain = new VulkanSwapchain(this->device, window, this->surface);
-	this->command_pool = new VulkanCommandPool(this->device, number_of_threads);
+
+	this->primary_command_pool = new VulkanCommandPool(this->device->get(), this->device->getGraphicsFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+	this->secondary_command_pools = Array<VulkanCommandPool*>(number_of_threads);
+	for (int i = 0; i < this->secondary_command_pools.size(); i++)
+	{
+		this->secondary_command_pools[i] = new VulkanCommandPool(this->device->get(), this->device->getGraphicsFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_SECONDARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+	}
 
 	//Allocator
 	VmaAllocatorCreateInfo allocatorInfo = {};
@@ -39,7 +45,7 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 	for (int i = 0; i < this->frames_in_flight.size(); i++)
 	{
 		VulkanFrame* frame = &this->frames_in_flight[i];
-		frame->command_buffer = new VulkanMultithreadCommandBuffer(this->device, this->command_pool->graphics_command_pool, number_of_threads);
+		frame->command_buffer = new VulkanMultithreadCommandBuffer(this->primary_command_pool, &this->secondary_command_pools);
 
 		if (vkCreateSemaphore(this->device->get(), &semaphoreInfo, nullptr, &frame->image_available_semaphore) != VK_SUCCESS)
 		{
@@ -138,9 +144,10 @@ VulkanInstance::~VulkanInstance()
 		vkDestroySemaphore(this->device->get(), frame->command_buffer_done_semaphore, nullptr);
 	}
 
-	if (this->command_pool != nullptr)
+	delete this->primary_command_pool;
+	for (int i = 0; i < this->secondary_command_pools.size(); i++)
 	{
-		delete this->command_pool;
+		delete this->secondary_command_pools[i];
 	}
 
 	if (this->swapchain != nullptr)
@@ -148,10 +155,7 @@ VulkanInstance::~VulkanInstance()
 		delete this->swapchain;
 	}
 
-	if (this->device != nullptr)
-	{
-		delete this->device;
-	}
+	delete this->device;
 
 	this->delete_surface();
 

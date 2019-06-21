@@ -4,69 +4,53 @@
 
 using namespace Genesis;
 
-VulkanCommandPool::VulkanCommandPool(VulkanDevice* device, uint32_t number_of_threads)
+VulkanCommandPool::VulkanCommandPool(VkDevice device, uint32_t queue_family_index, VkCommandBufferLevel level, VkCommandPoolCreateFlagBits flags)
 {
 	this->device = device;
 
+	this->command_buffer_level = level;
+
 	//POOL
-	VkCommandPoolCreateInfo graphics_pool_info = {};
-	graphics_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	graphics_pool_info.queueFamilyIndex = this->device->getGraphicsFamilyIndex();
-	graphics_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	if (vkCreateCommandPool(this->device->get(), &graphics_pool_info, nullptr, &this->graphics_command_pool) != VK_SUCCESS)
+	VkCommandPoolCreateInfo pool_info = {};
+	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	pool_info.queueFamilyIndex = queue_family_index;
+	pool_info.flags = flags;
+	if (vkCreateCommandPool(this->device, &pool_info, nullptr, &this->command_pool) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create graphics command pool!");
-	}
-
-	//Transfer
-	VkCommandPoolCreateInfo transfer_pool_info = {};
-	transfer_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	transfer_pool_info.queueFamilyIndex = this->device->getTransferFamilyIndex();
-	transfer_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-	if (vkCreateCommandPool(this->device->get(), &transfer_pool_info, nullptr, &this->transfer_command_pool) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create transfer command pool!");
 	}
 }
 
 VulkanCommandPool::~VulkanCommandPool()
 {
-	vkDestroyCommandPool(this->device->get(), this->graphics_command_pool, nullptr);
-	vkDestroyCommandPool(this->device->get(), this->transfer_command_pool, nullptr);
+	vkDestroyCommandPool(this->device, this->command_pool, nullptr);
 }
 
-VkCommandBuffer VulkanCommandPool::startTransferCommandBuffer()
+VkCommandBuffer VulkanCommandPool::getCommandBuffer()
 {
-	VkCommandBufferAllocateInfo command_alloc_info = {};
-	command_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	command_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	command_alloc_info.commandPool = this->transfer_command_pool;
-	command_alloc_info.commandBufferCount = 1;
+	VkCommandBuffer buffer;
+	bool got_buffer = this->command_buffer_queue.try_dequeue(buffer);
+	
+	if (!got_buffer)
+	{
+		VkCommandBufferAllocateInfo alloc_info = {};
+		alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		alloc_info.commandPool = this->command_pool;
+		alloc_info.level = this->command_buffer_level;
+		alloc_info.commandBufferCount = 1;
+		if (vkAllocateCommandBuffers(this->device, &alloc_info, &buffer) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to allocate command buffers!");
+		}
+	}
 
-	VkCommandBuffer command_buffer;
-	vkAllocateCommandBuffers(this->device->get(), &command_alloc_info, &command_buffer);
+	this->command_buffers_allocated++;
 
-	VkCommandBufferBeginInfo begin_info = {};
-	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	vkBeginCommandBuffer(command_buffer, &begin_info);
-
-	return command_buffer;
+	return buffer;
 }
 
-void VulkanCommandPool::endTransferCommandBuffer(VkCommandBuffer command_buffer)
+void VulkanCommandPool::releaseCommandBuffer(VkCommandBuffer buffer)
 {
-	vkEndCommandBuffer(command_buffer);
-
-	VkSubmitInfo submit_info = {};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &command_buffer;
-
-	VkQueue queue = this->device->getTransferQueue();
-	vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
-	vkQueueWaitIdle(queue);
-
-	vkFreeCommandBuffers(this->device->get(), this->transfer_command_pool, 1, &command_buffer);
+	this->command_buffers_allocated--;
+	this->command_buffer_queue.enqueue(buffer);
 }

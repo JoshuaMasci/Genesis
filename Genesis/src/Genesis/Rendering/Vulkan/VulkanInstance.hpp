@@ -83,7 +83,9 @@ namespace Genesis
 		VulkanDevice* device = nullptr;
 		VulkanSwapchain* swapchain = nullptr;
 		VulkanSwapchainFramebuffers* swapchain_framebuffers = nullptr;
-		VulkanCommandPool* command_pool = nullptr;
+
+		VulkanCommandPool* primary_command_pool = nullptr;
+		Array<VulkanCommandPool*> secondary_command_pools;
 
 		Array<VulkanFrame> frames_in_flight;
 

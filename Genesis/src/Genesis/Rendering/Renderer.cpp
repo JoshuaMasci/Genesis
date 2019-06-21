@@ -9,12 +9,12 @@ Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
 
-	//this->temp = this->backend->createShadowMap(vector2U(1024));
+	this->temp = this->backend->createShadowMap(vector2U(1024));
 }
 
 Renderer::~Renderer()
 {
-	//this->backend->destroyShadowMap(this->temp);
+	this->backend->destroyShadowMap(this->temp);
 
 	for (auto textures : this->loaded_textures)
 	{
@@ -30,34 +30,34 @@ Renderer::~Renderer()
 
 void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity)
 {
-	vector2U screen_size = this->backend->getScreenSize();
-
-	float aspect_ratio = ((float)screen_size.x) / ((float)screen_size.y);
-	matrix4F view = glm::lookAt(vector3F(0.0f), vector3F(0.0f, 0.0f, 1.0f), vector3F(0.0f, 1.0f, 0.0f));
-	matrix4F proj = this->backend->getPerspectiveMatrix(75.0f, 16.0f / 9.0f, 0.1f);
-
-	if (entity_registry.has<WorldTransform>(camera_entity) && entity_registry.has<Camera>(camera_entity))
-	{
-		auto& camera = entity_registry.get<Camera>(camera_entity);
-		auto& transform = entity_registry.get<WorldTransform>(camera_entity);
-		Transform& current = transform.current_transform;
-
-		view = glm::lookAt(current.getPosition(), current.getPosition() + current.getForward(), current.getUp());
-		proj = this->backend->getPerspectiveMatrix(camera.frame_of_view, aspect_ratio, camera.z_near);
-	}
-
-	matrix4F mv = proj * view;
-
 	bool result = this->backend->beginFrame();
 
 	if (result)
 	{
-		auto view = entity_registry.view<Model, WorldTransform>();
+		vector2U screen_size = this->backend->getScreenSize();
 
-		for (auto entity : view)
+		float aspect_ratio = ((float)screen_size.x) / ((float)screen_size.y);
+		matrix4F view = glm::lookAt(vector3F(0.0f), vector3F(0.0f, 0.0f, 1.0f), vector3F(0.0f, 1.0f, 0.0f));
+		matrix4F proj = this->backend->getPerspectiveMatrix(75.0f, 16.0f / 9.0f, 0.1f);
+
+		if (entity_registry.has<WorldTransform>(camera_entity) && entity_registry.has<Camera>(camera_entity))
 		{
-			auto &model = view.get<Model>(entity);
-			auto &transform = view.get<WorldTransform>(entity);
+			auto& camera = entity_registry.get<Camera>(camera_entity);
+			auto& transform = entity_registry.get<WorldTransform>(camera_entity);
+			Transform& current = transform.current_transform;
+
+			view = glm::lookAt(current.getPosition(), current.getPosition() + current.getForward(), current.getUp());
+			proj = this->backend->getPerspectiveMatrix(camera.frame_of_view, aspect_ratio, camera.z_near);
+		}
+
+		matrix4F mv = proj * view;
+
+		auto entity_view = entity_registry.view<Model, WorldTransform>();
+
+		for (auto entity : entity_view)
+		{
+			auto &model = entity_view.get<Model>(entity);
+			auto &transform = entity_view.get<WorldTransform>(entity);
 			
 			Mesh* mesh = &this->loaded_meshes[model.mesh];
 			TextureIndex texture = this->loaded_textures[model.texture];

@@ -61,6 +61,38 @@ namespace Genesis
 			return *this;
 		};
 
+		void resize(size_t new_size)
+		{
+			if (new_size == 0)
+			{
+				delete this->array_data;
+				this->array_data = nullptr;
+				this->array_size = 0;
+				return;
+			}
+	
+			T* new_array = new T[this->array_size];
+
+			if (new_size >= this->array_size)
+			{
+				for (int i = 0; i < this->array_size; i++)
+				{
+					new_array[i] = this->array_data[i];
+				}
+			}
+			else
+			{
+				for (int i = 0; i < new_size; i++)
+				{
+					new_array[i] = this->array_data[i];
+				}
+			}
+
+			delete this->array_data;
+			this->array_data = new_array;
+			this->array_size = new_size;
+		};
+
 	private:
 		size_t array_size = 0;
 		T* array_data = nullptr;

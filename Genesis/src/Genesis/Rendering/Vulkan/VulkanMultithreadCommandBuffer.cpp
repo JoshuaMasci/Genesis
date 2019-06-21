@@ -2,41 +2,27 @@
 
 using namespace Genesis;
 
-VulkanMultithreadCommandBuffer::VulkanMultithreadCommandBuffer(VulkanDevice* device, VkCommandPool command_pool, uint32_t secondary_command_buffers)
+VulkanMultithreadCommandBuffer::VulkanMultithreadCommandBuffer(VulkanCommandPool* primary_command_pool, Array<VulkanCommandPool*>* secondary_command_pools)
 {
-	this->device = device->get();
-	this->command_pool = command_pool;
+	this->primary_command_pool = primary_command_pool;
+	this->secondary_command_pools = secondary_command_pools;
 
-	//PRIMARY
-	VkCommandBufferAllocateInfo allocInfo = {};
-	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	allocInfo.commandPool = this->command_pool;
-	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	allocInfo.commandBufferCount = 1;
-	if (vkAllocateCommandBuffers(this->device, &allocInfo, &this->primary_command_buffer) != VK_SUCCESS)
+	this->primary_command_buffer = this->primary_command_pool->getCommandBuffer();
+	
+	this->secondary_command_buffers = Array<VkCommandBuffer>(this->secondary_command_pools->size());
+	for (int i = 0; i < this->secondary_command_buffers.size(); i++)
 	{
-		throw std::runtime_error("failed to allocate command buffers!");
-	}
-
-	//SECONDARY
-	this->secondary_command_buffers = Array<VkCommandBuffer>(secondary_command_buffers);
-
-	VkCommandBufferAllocateInfo secondary_buffers_info = {};
-	secondary_buffers_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	secondary_buffers_info.commandPool = this->command_pool;
-	secondary_buffers_info.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-	secondary_buffers_info.commandBufferCount = (uint32_t)this->secondary_command_buffers.size();
-	if (vkAllocateCommandBuffers(this->device, &secondary_buffers_info, this->secondary_command_buffers.data()) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate command buffers!");
+		this->secondary_command_buffers[i] = (*this->secondary_command_pools)[i]->getCommandBuffer();
 	}
 }
 
 VulkanMultithreadCommandBuffer::~VulkanMultithreadCommandBuffer()
 {
-	//Tells the driver we are done with these
-	vkFreeCommandBuffers(this->device, this->command_pool, 1, &this->primary_command_buffer);
-	vkFreeCommandBuffers(this->device, this->command_pool, (uint32_t)this->secondary_command_buffers.size(), this->secondary_command_buffers.data());
+	this->primary_command_pool->releaseCommandBuffer(this->primary_command_buffer);
+	for (int i = 0; i < this->secondary_command_buffers.size(); i++)
+	{
+		(*this->secondary_command_pools)[i]->releaseCommandBuffer(this->secondary_command_buffers[i]);
+	}
 }
 
 void VulkanMultithreadCommandBuffer::beginCommandBuffer(VkRenderPassBeginInfo& render_pass_info)
