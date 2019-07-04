@@ -18,17 +18,17 @@ GameScene::GameScene(Application* app)
 	this->application = app;
 
 	this->temp = this->entity_registry.create();
-	this->entity_registry.assign<WorldTransform>(this->temp, vector3D(0.5, 0.0, 0.0), glm::angleAxis(3.1415926/2.0, vector3D(0.0, 1.0, 0.0)));
-	this->entity_registry.assign<Model>(this->temp, "resources/models/Cerberus/Cerberus.obj", "resources/models/Cerberus/Cerberus_A.png");
+	this->entity_registry.assign<WorldTransform>(this->temp, vector3D(0.0, 0.0, 0.0), glm::angleAxis(3.1415926/2.0, vector3D(0.0, 1.0, 0.0)));
+	this->entity_registry.assign<Model>(this->temp, "resources/meshes/cube.obj", "resources/textures/1k_Grid.png");
 
 	this->camera = this->entity_registry.create();
-	this->entity_registry.assign<WorldTransform>(this->camera, vector3D(0.0, 0.0, -1.0));
+	this->entity_registry.assign<WorldTransform>(this->camera, vector3D(0.0, 0.75, -2.5));
 	this->entity_registry.assign<Camera>(this->camera, 75.0f);
 	this->entity_registry.assign<DebugCamera>(this->camera, 0.5, 0.2);
 
 	this->renderer = new Renderer(this->application->rendering_backend);
-	this->renderer->loadMesh("resources/models/Cerberus/Cerberus.obj");
-	this->renderer->loadTexture("resources/models/Cerberus/Cerberus_A.png");
+	this->renderer->loadMesh("resources/meshes/cube.obj");
+	this->renderer->loadTexture("resources/textures/1k_Grid.png");
 }
 
 GameScene::~GameScene()

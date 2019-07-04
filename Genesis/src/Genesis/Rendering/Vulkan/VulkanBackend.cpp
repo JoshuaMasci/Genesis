@@ -1,7 +1,5 @@
 #include "VulkanBackend.hpp"
 
-#define VMA_IMPLEMENTATION
-
 #include "Genesis/Rendering/Vulkan/VulkanInstance.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanRenderPipline.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanImageUtils.hpp"
@@ -127,10 +125,7 @@ BufferIndex VulkanBackend::createBuffer(uint64_t size_bytes, BufferType type, Me
 	buffer_info.size = size_bytes;
 	buffer_info.usage = getBufferUsage(type);
 
-	VmaAllocationCreateInfo alloc_info = {};
-	alloc_info.usage = getMemoryUsage(memory_usage);
-
-	vmaCreateBuffer(this->vulkan->allocator, &buffer_info, &alloc_info, &buffer->buffer, &buffer->buffer_memory, &buffer->buffer_memory_info);
+	this->vulkan->allocator->createBuffer(&buffer_info, getMemoryUsage(memory_usage), &buffer->buffer, &buffer->buffer_memory, &buffer->buffer_memory_info);
 
 	return buffer_index;
 }
@@ -153,14 +148,12 @@ void VulkanBackend::fillBuffer(BufferIndex buffer_index, void* data, uint64_t da
 
 	VkDeviceSize buffer_size = buffer->buffer_memory_info.size;
 
-	VkMemoryPropertyFlags memFlags;
-	vmaGetMemoryTypeProperties(this->vulkan->allocator, buffer->buffer_memory_info.memoryType, &memFlags);
-	if ((memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0)
+	if (this->vulkan->allocator->isMemoryHostVisible(buffer->buffer_memory_info))
 	{
-		void* mappedData;
-		vmaMapMemory(this->vulkan->allocator, buffer->buffer_memory, &mappedData);
-		memcpy(mappedData, data, data_size);
-		vmaUnmapMemory(this->vulkan->allocator, buffer->buffer_memory);
+		void* mapped_data;
+		this->vulkan->allocator->mapMemory(buffer->buffer_memory, &mapped_data);
+		memcpy(mapped_data, data, data_size);
+		this->vulkan->allocator->unmapMemory(buffer->buffer_memory);
 	}
 	else
 	{
@@ -170,14 +163,13 @@ void VulkanBackend::fillBuffer(BufferIndex buffer_index, void* data, uint64_t da
 		VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 		bufferInfo.size = data_size;
 		bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-		VmaAllocationCreateInfo allocInfo = {};
-		allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-		vmaCreateBuffer(this->vulkan->allocator, &bufferInfo, &allocInfo, &staging_buffer, &staging_buffer_memory, nullptr);
 
-		void* mappedData;
-		vmaMapMemory(this->vulkan->allocator, staging_buffer_memory, &mappedData);
-		memcpy(mappedData, data, data_size);
-		vmaUnmapMemory(this->vulkan->allocator, staging_buffer_memory);
+		this->vulkan->allocator->createBuffer(&bufferInfo, VMA_MEMORY_USAGE_CPU_ONLY, &staging_buffer, &staging_buffer_memory, nullptr);
+
+		void* mapped_data;
+		this->vulkan->allocator->mapMemory(staging_buffer_memory, &mapped_data);
+		memcpy(mapped_data, data, data_size);
+		this->vulkan->allocator->unmapMemory(staging_buffer_memory);
 
 		VkCommandBuffer command_buffer = this->vulkan->primary_command_pool->getCommandBuffer();
 		VkCommandBufferBeginInfo begin_info = {};
@@ -201,7 +193,7 @@ void VulkanBackend::fillBuffer(BufferIndex buffer_index, void* data, uint64_t da
 		vkQueueWaitIdle(this->vulkan->device->getGraphicsQueue());
 		this->vulkan->primary_command_pool->releaseCommandBuffer(command_buffer);
 
-		vmaDestroyBuffer(this->vulkan->allocator, staging_buffer, staging_buffer_memory);
+		this->vulkan->allocator->destroyBuffer(staging_buffer, staging_buffer_memory);
 	}
 }
 
@@ -214,7 +206,9 @@ void VulkanBackend::destroyBuffer(BufferIndex buffer_index)
 	}
 
 	VulkanBuffer* buffer = &this->vulkan->buffers[buffer_index];
-	vmaDestroyBuffer(this->vulkan->allocator, buffer->buffer, buffer->buffer_memory);
+	this->vulkan->allocator->destroyBuffer(buffer->buffer, buffer->buffer_memory);
+
+	this->vulkan->buffers.erase(buffer_index);
 }
 
 TextureIndex VulkanBackend::createTexture(vector2U size)
@@ -239,10 +233,7 @@ TextureIndex VulkanBackend::createTexture(vector2U size)
 	image_info.samples = VK_SAMPLE_COUNT_1_BIT;
 	image_info.flags = 0;
 
-	VmaAllocationCreateInfo alloc_info = {};
-	alloc_info.usage = getMemoryUsage(MemoryUsage::GPU_Only);
-
-	vmaCreateImage(this->vulkan->allocator, &image_info, &alloc_info, &texture->image, &texture->image_memory, &texture->image_memory_info);
+	this->vulkan->allocator->createImage(&image_info, getMemoryUsage(MemoryUsage::GPU_Only), &texture->image, &texture->image_memory, &texture->image_memory_info);
 	texture->size = { size.x, size.y };
 
 	VkImageViewCreateInfo view_info = {};
@@ -321,20 +312,19 @@ void VulkanBackend::fillTexture(TextureIndex texture_index, void* data, uint64_t
 	VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	bufferInfo.size = data_size;
 	bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-	VmaAllocationCreateInfo allocInfo = {};
-	allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-	vmaCreateBuffer(this->vulkan->allocator, &bufferInfo, &allocInfo, &staging_buffer, &staging_buffer_memory, nullptr);
 
-	void* mappedData;
-	vmaMapMemory(this->vulkan->allocator, staging_buffer_memory, &mappedData);
-	memcpy(mappedData, data, data_size);
-	vmaUnmapMemory(this->vulkan->allocator, staging_buffer_memory);
+	this->vulkan->allocator->createBuffer(&bufferInfo, VMA_MEMORY_USAGE_CPU_ONLY, &staging_buffer, &staging_buffer_memory, nullptr);
+
+	void* mapped_data;
+	this->vulkan->allocator->mapMemory(staging_buffer_memory, &mapped_data);
+	memcpy(mapped_data, data, data_size);
+	this->vulkan->allocator->unmapMemory(staging_buffer_memory);
 
 	transitionImageLayout(this->vulkan->primary_command_pool, this->vulkan->device->getGraphicsQueue(), texture->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 	copyBufferToImage(this->vulkan->primary_command_pool, this->vulkan->device->getGraphicsQueue(), staging_buffer, texture->image, texture->size);
 	transitionImageLayout(this->vulkan->primary_command_pool, this->vulkan->device->getGraphicsQueue(), texture->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-	vmaDestroyBuffer(this->vulkan->allocator, staging_buffer, staging_buffer_memory);
+	this->vulkan->allocator->destroyBuffer(staging_buffer, staging_buffer_memory);
 }
 
 void VulkanBackend::destroyTexture(TextureIndex texture_index)
@@ -343,7 +333,7 @@ void VulkanBackend::destroyTexture(TextureIndex texture_index)
 	{
 		VulkanTexture* texture = &this->vulkan->textures[texture_index];
 		vkDestroyImageView(this->vulkan->device->get(), texture->image_view, nullptr);
-		vmaDestroyImage(this->vulkan->allocator, texture->image, texture->image_memory);
+		this->vulkan->allocator->destroyImage(texture->image, texture->image_memory);
 
 		//vkFreeDescriptorSets(this->vulkan->device->get(), this->vulkan->descriptor_pool, 1, &texture->image_descriptor_set);
 
@@ -382,7 +372,7 @@ FrameBufferIndex VulkanBackend::createShadowMap(vector2U size)
 
 		VmaAllocationCreateInfo depth_image_alloc_create_info = {};
 		depth_image_alloc_create_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-		vmaCreateImage(this->vulkan->allocator, &image_info, &depth_image_alloc_create_info, &shadow_map->images[i].depth_image, &shadow_map->images[i].depth_image_memory, nullptr);
+		this->vulkan->allocator->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &shadow_map->images[i].depth_image, &shadow_map->images[i].depth_image_memory, nullptr);
 
 		VkImageViewCreateInfo view_info = {};
 		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -433,11 +423,20 @@ void VulkanBackend::destroyShadowMap(ShadowMapIndex shadow_index)
 		{
 			vkDestroyFramebuffer(device, shadow_map->images[i].depth_frame_buffer, nullptr);
 			vkDestroyImageView(device, shadow_map->images[i].depth_image_view, nullptr);
-			vmaDestroyImage(this->vulkan->allocator, shadow_map->images[i].depth_image, shadow_map->images[i].depth_image_memory);
+			this->vulkan->allocator->destroyImage(shadow_map->images[i].depth_image, shadow_map->images[i].depth_image_memory);
 		}
 
 		this->vulkan->shadow_maps.erase(shadow_index);
 	}
+}
+
+ViewIndex VulkanBackend::createView(ViewType type)
+{
+	return ViewIndex();
+}
+
+void VulkanBackend::destroyView(ViewIndex view_index)
+{
 }
 
 void VulkanBackend::drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp)
@@ -486,10 +485,10 @@ void VulkanBackend::drawMeshScreen(uint32_t thread, BufferIndex vertices_index, 
 	vkCmdDrawIndexed(buffer, indices_count, 1, 0, 0, 0);
 }
 
-matrix4F VulkanBackend::getPerspectiveMatrix(float frame_of_view, float aspect_ratio, float z_near)
+matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, float aspect_ratio)
 {
-	float fov = 1.0f / tan(glm::radians(frame_of_view) / 2.0f);
-	matrix4F proj = glm::infinitePerspective(fov, aspect_ratio, z_near);
+	float fov = 1.0f / tan(glm::radians(camera->frame_of_view) / 2.0f);
+	matrix4F proj = glm::infinitePerspective(fov, aspect_ratio, camera->z_near);
 	proj[1][1] *= -1; //Need to apply this because vulkan flips the y-axis and that's not what I need
 
 	return proj;

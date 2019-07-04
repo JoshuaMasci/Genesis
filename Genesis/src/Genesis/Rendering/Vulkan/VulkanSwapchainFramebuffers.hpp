@@ -3,20 +3,21 @@
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanSwapchain.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanAllocator.hpp"
 
 namespace Genesis
 {
 	class VulkanSwapchainFramebuffers
 	{
 	public:
-		VulkanSwapchainFramebuffers(VulkanDevice* device, VulkanSwapchain* swapchain, VmaAllocator allocator, VkRenderPass screen_render_pass);
+		VulkanSwapchainFramebuffers(VulkanDevice* device, VulkanSwapchain* swapchain, VulkanAllocator* allocator, VkRenderPass screen_render_pass);
 		~VulkanSwapchainFramebuffers();
 
 		inline VkFramebuffer getSwapchainFramebuffer(int index) { return this->swapchain_framebuffers[index]; };
 
 	private:
 		VkDevice device;
-		VmaAllocator allocator;
+		VulkanAllocator* allocator;
 
 		vector<VkImage> swapchain_images;
 		vector<VkImageView> swapchain_imageviews;

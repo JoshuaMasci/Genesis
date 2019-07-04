@@ -28,9 +28,12 @@ namespace Genesis
 		virtual ShadowMapIndex createShadowMap(vector2U size) override;
 		virtual void destroyShadowMap(ShadowMapIndex shadow_index) override;
 
+		virtual ViewIndex createView(ViewType type) override;
+		virtual void destroyView(ViewIndex view_index) override;
+
 		virtual void drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp) override;
 
-		virtual matrix4F getPerspectiveMatrix(float frame_of_view, float aspect_ratio, float z_near) override;
+		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) override;
 
 		virtual vector2U getScreenSize() override;
 

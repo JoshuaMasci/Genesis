@@ -13,6 +13,8 @@
 
 #include "Genesis/Rendering/RenderingTypes.hpp"
 
+#include "Genesis/Rendering/Vulkan/VulkanAllocator.hpp"
+
 namespace Genesis
 {
 	//Texture Stuff: need to move at some point
@@ -67,6 +69,15 @@ namespace Genesis
 		Array<VulkanShadowMapImage> images;
 	};
 
+	struct VulkanView
+	{
+		ViewType type;
+		FrameBufferIndex index;//Could be shadow map
+
+		Array<VulkanMultithreadCommandBuffer*> command_buffers;
+		Array<VkSemaphore> view_done_semaphore;
+	};
+
 	class VulkanInstance
 	{
 	public:
@@ -81,6 +92,7 @@ namespace Genesis
 
 		VulkanDebugLayer* debug_layer = nullptr;
 		VulkanDevice* device = nullptr;
+		VulkanAllocator* allocator = nullptr;
 		VulkanSwapchain* swapchain = nullptr;
 		VulkanSwapchainFramebuffers* swapchain_framebuffers = nullptr;
 
@@ -88,9 +100,6 @@ namespace Genesis
 		Array<VulkanCommandPool*> secondary_command_pools;
 
 		Array<VulkanFrame> frames_in_flight;
-
-		//Allocator
-		VmaAllocator allocator;
 
 		VulkanPiplineManager* pipeline_manager = nullptr;
 

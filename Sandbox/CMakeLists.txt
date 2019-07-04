@@ -24,9 +24,11 @@ link_directories(${CMAKE_SOURCE_DIR}/submodules/bullet_physics/lib/)
 
 #Vulkan
 include_directories(${CMAKE_SOURCE_DIR}/submodules/vulkan_memory_allocator/src/)
+include_directories(C:/VulkanSDK/1.1.101.0/Include/)
 link_directories(C:/VulkanSDK/1.1.101.0/Lib)
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})
 set_target_properties(Sandbox PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${Sandbox_SOURCE_DIR}")
 
 target_link_libraries(Sandbox Genesis)
+

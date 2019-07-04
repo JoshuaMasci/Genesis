@@ -2,7 +2,7 @@
 
 using namespace Genesis;
 
-VulkanSwapchainFramebuffers::VulkanSwapchainFramebuffers(VulkanDevice* device, VulkanSwapchain* swapchain, VmaAllocator allocator, VkRenderPass screen_render_pass)
+VulkanSwapchainFramebuffers::VulkanSwapchainFramebuffers(VulkanDevice* device, VulkanSwapchain* swapchain, VulkanAllocator* allocator, VkRenderPass screen_render_pass)
 {
 	this->device = device->get();
 	this->allocator = allocator;
@@ -47,24 +47,22 @@ VulkanSwapchainFramebuffers::VulkanSwapchainFramebuffers(VulkanDevice* device, V
 	this->depth_images_memory.resize(swapchain_image_count);
 	for (size_t i = 0; i < swapchain_image_count; i++)
 	{
-		VkImageCreateInfo imageInfo = {};
-		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		imageInfo.imageType = VK_IMAGE_TYPE_2D;
-		imageInfo.extent.width = swapchain_extent.width;
-		imageInfo.extent.height = swapchain_extent.height;
-		imageInfo.extent.depth = 1;
-		imageInfo.mipLevels = 1;
-		imageInfo.arrayLayers = 1;
-		imageInfo.format = swapchain_depth_format;
-		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		imageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		VkImageCreateInfo image_info = {};
+		image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		image_info.imageType = VK_IMAGE_TYPE_2D;
+		image_info.extent.width = swapchain_extent.width;
+		image_info.extent.height = swapchain_extent.height;
+		image_info.extent.depth = 1;
+		image_info.mipLevels = 1;
+		image_info.arrayLayers = 1;
+		image_info.format = swapchain_depth_format;
+		image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+		image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		image_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+		image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		VmaAllocationCreateInfo depthImageAllocCreateInfo = {};
-		depthImageAllocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-		vmaCreateImage(allocator, &imageInfo, &depthImageAllocCreateInfo, &this->depth_images[i], &this->depth_images_memory[i], nullptr);
+		this->allocator->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &this->depth_images[i], &this->depth_images_memory[i], nullptr);
 
 		VkImageViewCreateInfo viewInfo = {};
 		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -115,6 +113,7 @@ VulkanSwapchainFramebuffers::~VulkanSwapchainFramebuffers()
 		vkDestroyFramebuffer(this->device, this->swapchain_framebuffers[i], nullptr);
 		vkDestroyImageView(this->device, this->swapchain_imageviews[i], nullptr);
 		vkDestroyImageView(this->device, this->depth_imageviews[i], nullptr);
-		vmaDestroyImage(this->allocator, this->depth_images[i], this->depth_images_memory[i]);
+		
+		this->allocator->destroyImage(this->depth_images[i], this->depth_images_memory[i]);
 	}
 }

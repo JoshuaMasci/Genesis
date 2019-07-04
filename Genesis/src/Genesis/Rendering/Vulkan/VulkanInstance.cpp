@@ -18,6 +18,8 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 	this->create_surface(window);
 
 	this->device = new VulkanDevice(VulkanPhysicalDevicePicker::pickDevice(this->instance, this->surface), this);
+	this->allocator = new VulkanAllocator(this->device);
+
 	this->swapchain = new VulkanSwapchain(this->device, window, this->surface);
 
 	this->primary_command_pool = new VulkanCommandPool(this->device->get(), this->device->getGraphicsFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
@@ -26,12 +28,6 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 	{
 		this->secondary_command_pools[i] = new VulkanCommandPool(this->device->get(), this->device->getGraphicsFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_SECONDARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 	}
-
-	//Allocator
-	VmaAllocatorCreateInfo allocatorInfo = {};
-	allocatorInfo.physicalDevice = this->device->getPhysicalDevice();
-	allocatorInfo.device = this->device->get();
-	vmaCreateAllocator(&allocatorInfo, &this->allocator);
 
 	VkSemaphoreCreateInfo semaphoreInfo = {};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -133,8 +129,6 @@ VulkanInstance::~VulkanInstance()
 		delete this->swapchain_framebuffers;
 	}
 
-	vmaDestroyAllocator(this->allocator);
-
 	for (int i = 0; i < this->frames_in_flight.size(); i++)
 	{
 		VulkanFrame* frame = &this->frames_in_flight[i];
@@ -154,6 +148,8 @@ VulkanInstance::~VulkanInstance()
 	{
 		delete this->swapchain;
 	}
+
+	delete this->allocator;
 
 	delete this->device;
 
