@@ -44,13 +44,10 @@ VkCommandBuffer VulkanCommandPool::getCommandBuffer()
 		}
 	}
 
-	this->command_buffers_allocated++;
-
 	return buffer;
 }
 
-void VulkanCommandPool::releaseCommandBuffer(VkCommandBuffer buffer)
+void VulkanCommandPool::freeCommandBuffer(VkCommandBuffer buffer)
 {
-	this->command_buffers_allocated--;
 	this->command_buffer_queue.enqueue(buffer);
 }

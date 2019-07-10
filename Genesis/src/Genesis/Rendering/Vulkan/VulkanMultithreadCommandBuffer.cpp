@@ -18,10 +18,10 @@ VulkanMultithreadCommandBuffer::VulkanMultithreadCommandBuffer(VulkanCommandPool
 
 VulkanMultithreadCommandBuffer::~VulkanMultithreadCommandBuffer()
 {
-	this->primary_command_pool->releaseCommandBuffer(this->primary_command_buffer);
+	this->primary_command_pool->freeCommandBuffer(this->primary_command_buffer);
 	for (int i = 0; i < this->secondary_command_buffers.size(); i++)
 	{
-		(*this->secondary_command_pools)[i]->releaseCommandBuffer(this->secondary_command_buffers[i]);
+		(*this->secondary_command_pools)[i]->freeCommandBuffer(this->secondary_command_buffers[i]);
 	}
 }
 

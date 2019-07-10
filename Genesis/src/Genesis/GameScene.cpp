@@ -29,6 +29,10 @@ GameScene::GameScene(Application* app)
 	this->renderer = new Renderer(this->application->rendering_backend);
 	this->renderer->loadMesh("resources/meshes/cube.obj");
 	this->renderer->loadTexture("resources/textures/1k_Grid.png");
+	this->renderer->loadTexture("resources/textures/4k_Grid.png");
+	this->renderer->loadTexture("resources/textures/Red.png");
+	this->renderer->loadTexture("resources/textures/Blue.png");
+	this->renderer->loadTexture("resources/textures/Green.png");
 }
 
 GameScene::~GameScene()

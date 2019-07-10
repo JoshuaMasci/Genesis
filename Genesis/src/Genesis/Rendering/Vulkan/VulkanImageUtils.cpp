@@ -62,7 +62,7 @@ void Genesis::transitionImageLayout(VulkanCommandPool* command_pool, VkQueue que
 
 	vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
 	vkQueueWaitIdle(queue);
-	command_pool->releaseCommandBuffer(command_buffer);
+	command_pool->freeCommandBuffer(command_buffer);
 }
 
 void Genesis::copyBufferToImage(VulkanCommandPool* command_pool, VkQueue queue, VkBuffer buffer, VkImage image, VkExtent2D size)
@@ -94,5 +94,5 @@ void Genesis::copyBufferToImage(VulkanCommandPool* command_pool, VkQueue queue, 
 
 	vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
 	vkQueueWaitIdle(queue);
-	command_pool->releaseCommandBuffer(command_buffer);
+	command_pool->freeCommandBuffer(command_buffer);
 }

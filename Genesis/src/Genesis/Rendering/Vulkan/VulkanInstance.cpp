@@ -4,6 +4,8 @@
 #include "Genesis/Rendering/Vulkan/VulkanShader.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanRenderPipline.hpp"
 
+#include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
+
 using namespace Genesis;
 
 VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
@@ -88,16 +90,18 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 		}
 	}
 
+	this->descriptor_pool_2 = new VulkanDescriptorPool(this->device->get(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, this->pipeline_manager->textured_descriptor_layout, 2048);
+
 	{
 		Array<VkDescriptorPoolSize> pool_sizes(1);
 		pool_sizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		pool_sizes[0].descriptorCount = this->swapchain->getSwapchainImageCount();
+		pool_sizes[0].descriptorCount = 100;
 
 		VkDescriptorPoolCreateInfo pool_info = {};
 		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
 		pool_info.pPoolSizes = pool_sizes.data();
-		pool_info.maxSets = this->swapchain->getSwapchainImageCount();
+		pool_info.maxSets = 100;
 
 		if (vkCreateDescriptorPool(this->device->get(), &pool_info, nullptr, &this->descriptor_pool) != VK_SUCCESS) 
 		{
@@ -106,6 +110,13 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 	}
 
 	this->buildShadowRenderPass(this->swapchain->getSwapchainDepthFormat());
+
+	Array<VkFormat> color_formats(1);
+	color_formats[0] = this->swapchain->getSwapchainFormat();
+	VulkanFramebufferLayout pass_2(this->device->get(), color_formats, this->swapchain->getSwapchainDepthFormat());
+
+
+	VkRenderPass render = pass_2.getRenderPass();
 }
 
 VulkanInstance::~VulkanInstance()
@@ -119,10 +130,9 @@ VulkanInstance::~VulkanInstance()
 
 	vkDeviceWaitIdle(this->device->get());
 
-	if (this->pipeline_manager != nullptr)
-	{
-		delete this->pipeline_manager;
-	}
+	delete this->descriptor_pool_2;
+
+	delete this->pipeline_manager;
 
 	if (this->swapchain_framebuffers != nullptr)
 	{
@@ -335,6 +345,46 @@ void VulkanInstance::buildShadowRenderPass(VkFormat depth_format)
 	{
 		throw std::runtime_error("failed to create pipeline layout!");
 	}
+}
+
+void VulkanInstance::createFrameBufferAttachment(VkExtent2D size, VkFormat format, VkImageUsageFlagBits usage, FrameBufferAttachment* attachment)
+{
+	VkImageCreateInfo image_info = {};
+	image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	image_info.imageType = VK_IMAGE_TYPE_2D;
+	image_info.extent.width = size.width;
+	image_info.extent.height = size.height;
+	image_info.extent.depth = 1;
+	image_info.mipLevels = 1;
+	image_info.arrayLayers = 1;
+	image_info.format = format;
+	image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+	image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	image_info.usage = usage;
+	image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+	image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	VmaAllocationCreateInfo depth_image_alloc_create_info = {};
+	depth_image_alloc_create_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+	this->allocator->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &attachment->image, &attachment->image_memory, nullptr);
+
+	VkImageViewCreateInfo view_info = {};
+	view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	view_info.image = attachment->image;
+	view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	view_info.format = format;
+	view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+	view_info.subresourceRange.baseMipLevel = 0;
+	view_info.subresourceRange.levelCount = 1;
+	view_info.subresourceRange.baseArrayLayer = 0;
+	view_info.subresourceRange.layerCount = 1;
+
+	if (vkCreateImageView(this->device->get(), &view_info, nullptr, &attachment->image_view) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create attachment image view!");
+	}
+
+
 }
 
 void VulkanInstance::create_instance(const char* app_name, uint32_t app_version)

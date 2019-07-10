@@ -16,15 +16,13 @@ namespace Genesis
 		inline VkCommandPool get() { return this->command_pool; };
 
 		VkCommandBuffer getCommandBuffer();
-		void releaseCommandBuffer(VkCommandBuffer buffer);
+		void freeCommandBuffer(VkCommandBuffer buffer);
 
 	private:
 		VkDevice device;
 		VkCommandPool command_pool;
 		VkCommandBufferLevel command_buffer_level;
 
-
-		uint16_t command_buffers_allocated = 0;
 		moodycamel::ConcurrentQueue<VkCommandBuffer> command_buffer_queue;
 	};
 }

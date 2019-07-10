@@ -25,11 +25,11 @@ namespace Genesis
 		virtual void fillTexture(TextureIndex texture_index, void* data, uint64_t data_size) override;
 		virtual void destroyTexture(TextureIndex texture_index) override;
 
+		virtual GBufferIndex createGBuffer(vector2U size) override;
+		virtual void destroyGBuffer(GBufferIndex gbuffer_index) override;
+
 		virtual ShadowMapIndex createShadowMap(vector2U size) override;
 		virtual void destroyShadowMap(ShadowMapIndex shadow_index) override;
-
-		virtual ViewIndex createView(ViewType type) override;
-		virtual void destroyView(ViewIndex view_index) override;
 
 		virtual void drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp) override;
 

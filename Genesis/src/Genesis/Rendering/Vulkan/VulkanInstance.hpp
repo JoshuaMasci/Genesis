@@ -10,6 +10,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanMultithreadCommandBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
 
 #include "Genesis/Rendering/RenderingTypes.hpp"
 
@@ -52,6 +53,14 @@ namespace Genesis
 		//Frame Buffers here
 	};
 
+	struct FrameBufferAttachment
+	{
+		VkImage image;
+		VmaAllocation image_memory;
+		VkImageView image_view;
+		VkDescriptorSet image_descriptor_set;
+		VkFormat image_format;
+	};
 
 	struct VulkanShadowMapImage
 	{
@@ -69,13 +78,19 @@ namespace Genesis
 		Array<VulkanShadowMapImage> images;
 	};
 
-	struct VulkanView
+	struct VulkanGBufferImage
 	{
-		ViewType type;
-		FrameBufferIndex index;//Could be shadow map
+		VkImage image;
+		VmaAllocation image_memory;
+		VkImageView image_view;
+		VkDescriptorSet image_descriptor_set;
+	};
 
-		Array<VulkanMultithreadCommandBuffer*> command_buffers;
-		Array<VkSemaphore> view_done_semaphore;
+	struct VulkanGBuffer
+	{
+		VkExtent2D size;
+		Array<VulkanGBufferImage> images;
+		VkFramebuffer framebuffer;
 	};
 
 	class VulkanInstance
@@ -103,6 +118,8 @@ namespace Genesis
 
 		VulkanPiplineManager* pipeline_manager = nullptr;
 
+		VulkanDescriptorPool* descriptor_pool_2 = nullptr;
+
 		//Extensions and Layers
 		vector<const char*> getExtensions();
 		vector<const char*> getDeviceExtensions();
@@ -126,6 +143,8 @@ namespace Genesis
 
 		ShadowMapIndex next_index_shadow_map = 1;
 		map<ShadowMapIndex, VulkanShadowMap> shadow_maps;
+
+		void createFrameBufferAttachment(VkExtent2D size, VkFormat format, VkImageUsageFlagBits usage, FrameBufferAttachment *attachment);
 
 	private:
 		bool use_debug_layers = true;

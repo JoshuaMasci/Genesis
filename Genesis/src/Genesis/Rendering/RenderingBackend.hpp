@@ -22,11 +22,11 @@ namespace Genesis
 		virtual void fillTexture(TextureIndex texture_index, void* data, uint64_t data_size) = 0;
 		virtual void destroyTexture(TextureIndex texture_index) = 0;
 
+		virtual GBufferIndex createGBuffer(vector2U size) = 0;
+		virtual void destroyGBuffer(GBufferIndex gbuffer_index) = 0;
+
 		virtual ShadowMapIndex createShadowMap(vector2U size) = 0;
 		virtual void destroyShadowMap(ShadowMapIndex shadow_index) = 0;
-
-		virtual ViewIndex createView(ViewType type) = 0;
-		virtual void destroyView(ViewIndex view_index) = 0;
 
 		//TEMP
 		virtual void drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp) = 0;
