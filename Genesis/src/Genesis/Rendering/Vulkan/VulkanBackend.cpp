@@ -78,18 +78,29 @@ bool VulkanBackend::beginFrame()
 
 void VulkanBackend::endFrame()
 {
-	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
-
-	frame->command_buffer->endCommandBuffer();
-
 	if (this->vulkan->swapchain == nullptr)
 	{
 		return;
 	}
 
+	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
+
+	frame->command_buffer->endCommandBuffer();
+}
+
+void VulkanBackend::submitFrame()
+{
+	if (this->vulkan->swapchain == nullptr)
+	{
+		return;
+	}
+
+	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
+
 	Array<VkSemaphore> wait_semaphores(1);
-	Array<VkPipelineStageFlags> wait_states(1);
 	wait_semaphores[0] = frame->image_available_semaphore;
+
+	Array<VkPipelineStageFlags> wait_states(1);
 	wait_states[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
 	Array<VkSemaphore> signal_semaphores(1);
@@ -252,7 +263,7 @@ TextureIndex VulkanBackend::createTexture(vector2U size)
 	}
 
 	{
-		texture->image_descriptor_set = this->vulkan->descriptor_pool_2->getDescriptorSet();
+		texture->image_descriptor_set = this->vulkan->descriptor_pool->getDescriptorSet();
 	
 		VkDescriptorImageInfo descriptor_image_info = {};
 		descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -326,113 +337,21 @@ void VulkanBackend::destroyTexture(TextureIndex texture_index)
 		vkDestroyImageView(this->vulkan->device->get(), texture->image_view, nullptr);
 		this->vulkan->allocator->destroyImage(texture->image, texture->image_memory);
 
-		this->vulkan->descriptor_pool_2->freeDescriptorSet(texture->image_descriptor_set);
+		this->vulkan->descriptor_pool->freeDescriptorSet(texture->image_descriptor_set);
 
 		this->vulkan->textures.erase(texture_index);
 	}
 }
 
-GBufferIndex VulkanBackend::createGBuffer(vector2U size)
+ViewIndex VulkanBackend::createView(ViewType type, vector2U size)
 {
-	VulkanGBuffer* g_buffer;
-	g_buffer->size.width = size.x;
-	g_buffer->size.height = size.y;
+	
 
-	g_buffer->images = Array<VulkanGBufferImage>(this->vulkan->frames_in_flight.size());
-
-
-	return GBufferIndex();
+	return ViewIndex();
 }
 
-void VulkanBackend::destroyGBuffer(GBufferIndex gbuffer_index)
+void VulkanBackend::destroyView(ViewIndex index)
 {
-}
-
-ShadowMapIndex VulkanBackend::createShadowMap(vector2U size)
-{
-	ShadowMapIndex shadow_map_index = this->vulkan->next_index_shadow_map;
-	this->vulkan->next_index_shadow_map++;
-
-	VulkanShadowMap* shadow_map = &this->vulkan->shadow_maps[shadow_map_index];
-	shadow_map->size.width = size.x;
-	shadow_map->size.height = size.y;
-
-	shadow_map->images = Array<VulkanShadowMapImage>(this->vulkan->frames_in_flight.size());
-
-	VkFormat depth_format = this->vulkan->swapchain->getSwapchainDepthFormat();
-	for (int i = 0; i < shadow_map->images.size(); i++)
-	{
-		VkImageCreateInfo image_info = {};
-		image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		image_info.imageType = VK_IMAGE_TYPE_2D;
-		image_info.extent.width = shadow_map->size.width;
-		image_info.extent.height = shadow_map->size.height;
-		image_info.extent.depth = 1;
-		image_info.mipLevels = 1;
-		image_info.arrayLayers = 1;
-		image_info.format = depth_format;
-		image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-		image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		image_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-		image_info.samples = VK_SAMPLE_COUNT_1_BIT;
-		image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-		this->vulkan->allocator->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &shadow_map->images[i].depth_image, &shadow_map->images[i].depth_image_memory, nullptr);
-
-		VkImageViewCreateInfo view_info = {};
-		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		view_info.image = shadow_map->images[i].depth_image;
-		view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		view_info.format = depth_format;
-		view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-		view_info.subresourceRange.baseMipLevel = 0;
-		view_info.subresourceRange.levelCount = 1;
-		view_info.subresourceRange.baseArrayLayer = 0;
-		view_info.subresourceRange.layerCount = 1;
-
-		if (vkCreateImageView(this->vulkan->device->get(), &view_info, nullptr, &shadow_map->images[i].depth_image_view) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create depth image view!");
-		}
-
-		//TODO DESCRIPTOR SET
-
-		VkFramebufferCreateInfo framebufferInfo = {};
-		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-		framebufferInfo.renderPass = this->vulkan->shadow_render_pass;
-
-		framebufferInfo.attachmentCount = 1;
-		framebufferInfo.pAttachments = &shadow_map->images[i].depth_image_view;
-		
-		framebufferInfo.width = shadow_map->size.width;
-		framebufferInfo.height = shadow_map->size.height;
-		framebufferInfo.layers = 1;
-
-		if (vkCreateFramebuffer(this->vulkan->device->get(), &framebufferInfo, nullptr, &shadow_map->images[i].depth_frame_buffer) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create framebuffer!");
-		}
-	}
-
-	return shadow_map_index;
-}
-
-void VulkanBackend::destroyShadowMap(ShadowMapIndex shadow_index)
-{
-	if (this->vulkan->shadow_maps.find(shadow_index) != this->vulkan->shadow_maps.end())
-	{
-		VulkanShadowMap* shadow_map = &this->vulkan->shadow_maps[shadow_index];
-		VkDevice device = this->vulkan->device->get();
-
-		for (int i = 0; i < shadow_map->images.size(); i++)
-		{
-			vkDestroyFramebuffer(device, shadow_map->images[i].depth_frame_buffer, nullptr);
-			vkDestroyImageView(device, shadow_map->images[i].depth_image_view, nullptr);
-			this->vulkan->allocator->destroyImage(shadow_map->images[i].depth_image, shadow_map->images[i].depth_image_memory);
-		}
-
-		this->vulkan->shadow_maps.erase(shadow_index);
-	}
 }
 
 void VulkanBackend::drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp)

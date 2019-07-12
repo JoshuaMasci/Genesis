@@ -27,6 +27,12 @@ namespace Genesis
 		inline VkQueue getComputeQueue() { return this->compute_queue; };
 		inline uint32_t getComputeFamilyIndex() { return this->compute_family_index; };
 
+		VkSemaphore createSemaphore();
+		void destroySemaphore(VkSemaphore semaphore);
+
+		VkFence createFence();
+		void destroyFence(VkFence fence);
+
 	private:
 		//Device
 		VkPhysicalDevice physical_device;

@@ -16,6 +16,7 @@ namespace Genesis
 
 		virtual bool beginFrame() override;
 		virtual void endFrame() override;
+		virtual void submitFrame() override;
 
 		virtual BufferIndex createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) override;
 		virtual void fillBuffer(BufferIndex buffer_index, void* data, uint64_t data_size) override;
@@ -25,18 +26,15 @@ namespace Genesis
 		virtual void fillTexture(TextureIndex texture_index, void* data, uint64_t data_size) override;
 		virtual void destroyTexture(TextureIndex texture_index) override;
 
-		virtual GBufferIndex createGBuffer(vector2U size) override;
-		virtual void destroyGBuffer(GBufferIndex gbuffer_index) override;
+		virtual ViewIndex createView(ViewType type, vector2U size) override;
+		virtual void destroyView(ViewIndex index) override;
 
-		virtual ShadowMapIndex createShadowMap(vector2U size) override;
-		virtual void destroyShadowMap(ShadowMapIndex shadow_index) override;
-
+		//TEMP commands
 		virtual void drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp) override;
 
+		//Utils
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) override;
-
 		virtual vector2U getScreenSize() override;
-
 		virtual void waitTillDone() override;
 
 	private:

@@ -26,7 +26,6 @@ namespace Genesis
 
 	typedef uint32_t BufferIndex;
 	typedef uint32_t TextureIndex;
-	typedef uint32_t GBufferIndex;
-	typedef uint32_t ShadowMapIndex;
-	typedef uint32_t ViewIndex;
+
+	typedef void* ViewIndex;
 }

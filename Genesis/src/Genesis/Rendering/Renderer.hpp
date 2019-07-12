@@ -7,6 +7,13 @@
 
 namespace Genesis
 {
+	//TEMP
+	struct SecondView
+	{
+
+	};
+
+
 	struct Model
 	{
 		Model(string mesh, string texture)
@@ -57,7 +64,5 @@ namespace Genesis
 		//Temp resource stuff
 		map<string, Mesh> loaded_meshes;
 		map<string, TextureIndex> loaded_textures;
-
-		ShadowMapIndex temp;
 	};
 }

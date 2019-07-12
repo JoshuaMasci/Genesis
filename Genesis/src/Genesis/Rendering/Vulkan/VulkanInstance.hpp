@@ -11,6 +11,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanMultithreadCommandBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
 
 #include "Genesis/Rendering/RenderingTypes.hpp"
 
@@ -18,6 +19,8 @@
 
 namespace Genesis
 {
+	const uint32_t NUM_OF_FRAMES = 3;
+
 	//Texture Stuff: need to move at some point
 	struct VulkanTexture
 	{
@@ -53,46 +56,6 @@ namespace Genesis
 		//Frame Buffers here
 	};
 
-	struct FrameBufferAttachment
-	{
-		VkImage image;
-		VmaAllocation image_memory;
-		VkImageView image_view;
-		VkDescriptorSet image_descriptor_set;
-		VkFormat image_format;
-	};
-
-	struct VulkanShadowMapImage
-	{
-		VkImage depth_image;
-		VmaAllocation depth_image_memory;
-		VkImageView depth_image_view;
-		VkDescriptorSet depth_image_descriptor_set;
-
-		VkFramebuffer depth_frame_buffer;
-	};
-
-	struct VulkanShadowMap
-	{
-		VkExtent2D size;
-		Array<VulkanShadowMapImage> images;
-	};
-
-	struct VulkanGBufferImage
-	{
-		VkImage image;
-		VmaAllocation image_memory;
-		VkImageView image_view;
-		VkDescriptorSet image_descriptor_set;
-	};
-
-	struct VulkanGBuffer
-	{
-		VkExtent2D size;
-		Array<VulkanGBufferImage> images;
-		VkFramebuffer framebuffer;
-	};
-
 	class VulkanInstance
 	{
 	public:
@@ -118,7 +81,9 @@ namespace Genesis
 
 		VulkanPiplineManager* pipeline_manager = nullptr;
 
-		VulkanDescriptorPool* descriptor_pool_2 = nullptr;
+		VulkanDescriptorPool* descriptor_pool = nullptr;
+
+		VulkanFramebufferLayout* shadow_pass_layout = nullptr;
 
 		//Extensions and Layers
 		vector<const char*> getExtensions();
@@ -133,18 +98,6 @@ namespace Genesis
 		//Buffer Stuff
 		BufferIndex next_index_buffer = 1;
 		map<BufferIndex, VulkanBuffer> buffers;
-
-		VkDescriptorPool descriptor_pool;
-
-		//Shadow Map Stuff
-		VkRenderPass shadow_render_pass;
-		void buildShadowRenderPass(VkFormat depth_format);
-		VkPipelineLayout shadow_pipeline_layout;
-
-		ShadowMapIndex next_index_shadow_map = 1;
-		map<ShadowMapIndex, VulkanShadowMap> shadow_maps;
-
-		void createFrameBufferAttachment(VkExtent2D size, VkFormat format, VkImageUsageFlagBits usage, FrameBufferAttachment *attachment);
 
 	private:
 		bool use_debug_layers = true;

@@ -64,6 +64,8 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 		}
 
 		this->backend->endFrame();
+
+		this->backend->submitFrame();
 	}
 }
 

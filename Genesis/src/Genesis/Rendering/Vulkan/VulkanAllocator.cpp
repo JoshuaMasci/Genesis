@@ -53,7 +53,11 @@ void VulkanAllocator::createImage(VkImageCreateInfo* image_create, VmaMemoryUsag
 	VmaAllocationCreateInfo alloc_info = {};
 	alloc_info.usage = memory_usage;
 
-	vmaCreateImage(this->allocator, image_create, &alloc_info, image, memory, memory_info);
+	VkResult result = vmaCreateImage(this->allocator, image_create, &alloc_info, image, memory, memory_info);
+	if (result != VK_SUCCESS)
+	{
+		printf("Error\n");
+	}
 }
 
 void VulkanAllocator::destroyImage(VkImage image, VmaAllocation memory)

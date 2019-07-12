@@ -99,3 +99,44 @@ VulkanDevice::~VulkanDevice()
 {
 	vkDestroyDevice(this->logical_device, nullptr);
 }
+
+VkSemaphore VulkanDevice::createSemaphore()
+{
+	VkSemaphoreCreateInfo semaphoreInfo = {};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	VkSemaphore semaphore;
+
+	if (vkCreateSemaphore(this->logical_device, &semaphoreInfo, nullptr, &semaphore) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create semaphore");
+	}
+
+	return semaphore;
+}
+
+void VulkanDevice::destroySemaphore(VkSemaphore semaphore)
+{
+	vkDestroySemaphore(this->logical_device, semaphore, nullptr);
+}
+
+VkFence VulkanDevice::createFence()
+{
+	VkFenceCreateInfo fenceInfo = {};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	VkFence fence;
+
+	if (vkCreateFence(this->logical_device, &fenceInfo, nullptr, &fence) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create fence");
+	}
+
+	return fence;
+}
+
+void VulkanDevice::destroyFence(VkFence fence)
+{
+	vkDestroyFence(this->logical_device, fence, nullptr);
+}

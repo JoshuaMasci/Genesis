@@ -4,8 +4,6 @@
 #include "Genesis/Rendering/Vulkan/VulkanShader.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanRenderPipline.hpp"
 
-#include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
-
 using namespace Genesis;
 
 VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
@@ -31,34 +29,15 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 		this->secondary_command_pools[i] = new VulkanCommandPool(this->device->get(), this->device->getGraphicsFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_SECONDARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 	}
 
-	VkSemaphoreCreateInfo semaphoreInfo = {};
-	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-	VkFenceCreateInfo fenceInfo = {};
-	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-	const uint32_t NUM_OF_FRAMES = 3;
 	this->frames_in_flight = Array<VulkanFrame>(NUM_OF_FRAMES);
 	for (int i = 0; i < this->frames_in_flight.size(); i++)
 	{
 		VulkanFrame* frame = &this->frames_in_flight[i];
 		frame->command_buffer = new VulkanMultithreadCommandBuffer(this->primary_command_pool, &this->secondary_command_pools);
 
-		if (vkCreateSemaphore(this->device->get(), &semaphoreInfo, nullptr, &frame->image_available_semaphore) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create sync objects!");
-		}
-
-		if (vkCreateFence(this->device->get(), &fenceInfo, nullptr, &frame->command_buffer_done_fence) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create fence objects!");
-		}
-
-		if (vkCreateSemaphore(this->device->get(), &semaphoreInfo, nullptr, &frame->command_buffer_done_semaphore) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create sync objects!");
-		}
+		frame->image_available_semaphore = this->device->createSemaphore();
+		frame->command_buffer_done_fence = this->device->createFence();
+		frame->command_buffer_done_semaphore = this->device->createSemaphore();
 	}
 
 	this->pipeline_manager = new VulkanPiplineManager(this->device);
@@ -84,53 +63,27 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
 		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-		if (vkCreateSampler(this->device->get(), &samplerInfo, nullptr, &this->linear_sampler) != VK_SUCCESS) 
+		if (vkCreateSampler(this->device->get(), &samplerInfo, nullptr, &this->linear_sampler) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create texture sampler!");
 		}
 	}
 
-	this->descriptor_pool_2 = new VulkanDescriptorPool(this->device->get(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, this->pipeline_manager->textured_descriptor_layout, 2048);
+	this->descriptor_pool = new VulkanDescriptorPool(this->device->get(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, this->pipeline_manager->textured_descriptor_layout, 2048);
 
-	{
-		Array<VkDescriptorPoolSize> pool_sizes(1);
-		pool_sizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		pool_sizes[0].descriptorCount = 100;
+	this->shadow_pass_layout = new VulkanFramebufferLayout(this->device->get(), Array<VkFormat>(), this->swapchain->getSwapchainDepthFormat());
 
-		VkDescriptorPoolCreateInfo pool_info = {};
-		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
-		pool_info.pPoolSizes = pool_sizes.data();
-		pool_info.maxSets = 100;
-
-		if (vkCreateDescriptorPool(this->device->get(), &pool_info, nullptr, &this->descriptor_pool) != VK_SUCCESS) 
-		{
-			throw std::runtime_error("failed to create descriptor pool!");
-		}
-	}
-
-	this->buildShadowRenderPass(this->swapchain->getSwapchainDepthFormat());
-
-	Array<VkFormat> color_formats(1);
-	color_formats[0] = this->swapchain->getSwapchainFormat();
-	VulkanFramebufferLayout pass_2(this->device->get(), color_formats, this->swapchain->getSwapchainDepthFormat());
-
-
-	VkRenderPass render = pass_2.getRenderPass();
 }
 
 VulkanInstance::~VulkanInstance()
 {
-	vkDestroyPipelineLayout(this->device->get(), this->shadow_pipeline_layout, nullptr);
-	vkDestroyRenderPass(this->device->get(), this->shadow_render_pass, nullptr);
-
-	vkDestroyDescriptorPool(this->device->get(), this->descriptor_pool, nullptr);
-
 	vkDestroySampler(this->device->get(), this->linear_sampler, nullptr);
 
 	vkDeviceWaitIdle(this->device->get());
 
-	delete this->descriptor_pool_2;
+	delete this->shadow_pass_layout;
+
+	delete this->descriptor_pool;
 
 	delete this->pipeline_manager;
 
@@ -143,9 +96,9 @@ VulkanInstance::~VulkanInstance()
 	{
 		VulkanFrame* frame = &this->frames_in_flight[i];
 		delete frame->command_buffer;
-		vkDestroySemaphore(this->device->get(), frame->image_available_semaphore, nullptr);
-		vkDestroyFence(this->device->get(), frame->command_buffer_done_fence, nullptr);
-		vkDestroySemaphore(this->device->get(), frame->command_buffer_done_semaphore, nullptr);
+		this->device->destroySemaphore( frame->image_available_semaphore);
+		this->device->destroyFence(frame->command_buffer_done_fence);
+		this->device->destroySemaphore(frame->command_buffer_done_semaphore);
 	}
 
 	delete this->primary_command_pool;
@@ -269,122 +222,6 @@ vector<const char*> VulkanInstance::getLayers()
 	}
 
 	return layers;
-}
-
-void VulkanInstance::buildShadowRenderPass(VkFormat depth_format)
-{
-	VkAttachmentDescription attachment_description = {};
-	attachment_description.format = depth_format;
-	attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
-	attachment_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR; //Clear depth at beginning of the render pass
-	attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE; //We will read from depth, so it's important to store the depth attachment results
-	attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attachment_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED; //We don't care about initial layout of the attachment
-	attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; //Attachment will be transitioned to shader read at render pass end
-
-	VkAttachmentReference depthReference = {};
-	depthReference.attachment = 0;
-	depthReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; //Attachment will be used as depth/stencil during render pass
-
-	VkSubpassDescription subpass = {};
-	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpass.colorAttachmentCount = 0; //No color attachments
-	subpass.pDepthStencilAttachment = &depthReference; //Reference to our depth attachment
-
-	//Use subpass dependencies for layout transitions
-	Array<VkSubpassDependency> dependencies(2);
-
-	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[0].dstSubpass = 0;
-	dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	dependencies[0].dstStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-	dependencies[0].srcAccessMask = 0;
-	dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-	dependencies[1].srcSubpass = 0;
-	dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-	dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-	VkRenderPassCreateInfo render_pass_info = {};
-	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-
-	render_pass_info.attachmentCount = 1;
-	render_pass_info.pAttachments = &attachment_description;
-	render_pass_info.subpassCount = 1;
-	render_pass_info.pSubpasses = &subpass;
-	render_pass_info.dependencyCount = (uint32_t) dependencies.size();
-	render_pass_info.pDependencies = dependencies.data();
-
-	if (vkCreateRenderPass(this->device->get(), &render_pass_info, nullptr, &this->shadow_render_pass) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create render pass!");
-	}
-
-
-	//BUILD PIPELINE LAYOUT AS WELL
-	VkPushConstantRange pushConstantRange = {};
-	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-	pushConstantRange.size = sizeof(matrix4F);
-	pushConstantRange.offset = 0;
-
-	VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
-	pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-
-	pipelineLayoutInfo.setLayoutCount = 0;
-
-	pipelineLayoutInfo.pushConstantRangeCount = 1;
-	pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
-
-	if (vkCreatePipelineLayout(this->device->get(), &pipelineLayoutInfo, nullptr, &this->shadow_pipeline_layout) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create pipeline layout!");
-	}
-}
-
-void VulkanInstance::createFrameBufferAttachment(VkExtent2D size, VkFormat format, VkImageUsageFlagBits usage, FrameBufferAttachment* attachment)
-{
-	VkImageCreateInfo image_info = {};
-	image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-	image_info.imageType = VK_IMAGE_TYPE_2D;
-	image_info.extent.width = size.width;
-	image_info.extent.height = size.height;
-	image_info.extent.depth = 1;
-	image_info.mipLevels = 1;
-	image_info.arrayLayers = 1;
-	image_info.format = format;
-	image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-	image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	image_info.usage = usage;
-	image_info.samples = VK_SAMPLE_COUNT_1_BIT;
-	image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	VmaAllocationCreateInfo depth_image_alloc_create_info = {};
-	depth_image_alloc_create_info.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-	this->allocator->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &attachment->image, &attachment->image_memory, nullptr);
-
-	VkImageViewCreateInfo view_info = {};
-	view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-	view_info.image = attachment->image;
-	view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	view_info.format = format;
-	view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-	view_info.subresourceRange.baseMipLevel = 0;
-	view_info.subresourceRange.levelCount = 1;
-	view_info.subresourceRange.baseArrayLayer = 0;
-	view_info.subresourceRange.layerCount = 1;
-
-	if (vkCreateImageView(this->device->get(), &view_info, nullptr, &attachment->image_view) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create attachment image view!");
-	}
-
-
 }
 
 void VulkanInstance::create_instance(const char* app_name, uint32_t app_version)

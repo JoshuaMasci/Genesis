@@ -26,7 +26,6 @@ namespace Genesis
 			if (this->array_data != nullptr)
 			{
 				delete this->array_data;
-				this->array_data = nullptr;
 			}
 		};
 
@@ -71,7 +70,7 @@ namespace Genesis
 				return;
 			}
 	
-			T* new_array = new T[this->array_size];
+			T* new_array = new T[new_size];
 
 			if (new_size >= this->array_size)
 			{
