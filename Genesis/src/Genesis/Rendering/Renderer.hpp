@@ -64,5 +64,8 @@ namespace Genesis
 		//Temp resource stuff
 		map<string, Mesh> loaded_meshes;
 		map<string, TextureIndex> loaded_textures;
+
+		//SecondCam
+		ViewIndex view;
 	};
 }

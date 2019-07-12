@@ -3,6 +3,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanInstance.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanRenderPipline.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanImageUtils.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanView.hpp"
 
 #include "Genesis/Core/VectorTypes.hpp"
 
@@ -47,7 +48,7 @@ VulkanBackend::~VulkanBackend()
 bool VulkanBackend::beginFrame()
 {
 	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
-	bool image_acquired = this->vulkan->AcquireSwapchainImage(this->swapchain_image_index, frame->image_available_semaphore);
+	bool image_acquired = this->vulkan->acquireSwapchainImage(this->swapchain_image_index, frame->image_available_semaphore);
 
 	if (image_acquired == false)
 	{
@@ -123,6 +124,9 @@ void VulkanBackend::submitFrame()
 	VkResult result = vkQueuePresentKHR(this->vulkan->device->getPresentQueue(), &presentInfo);
 
 	this->frame_index = (this->frame_index + 1) % this->vulkan->frames_in_flight.size();
+
+	//Cleanup Resources
+	this->vulkan->cycleResourceDeleters();
 }
 
 BufferIndex VulkanBackend::createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage)
@@ -182,7 +186,7 @@ void VulkanBackend::fillBuffer(BufferIndex buffer_index, void* data, uint64_t da
 		memcpy(mapped_data, data, data_size);
 		this->vulkan->allocator->unmapMemory(staging_buffer_memory);
 
-		VkCommandBuffer command_buffer = this->vulkan->primary_command_pool->getCommandBuffer();
+		VkCommandBuffer command_buffer = this->vulkan->graphics_command_pool_set->getPrimaryCommandPool()->getCommandBuffer();
 		VkCommandBufferBeginInfo begin_info = {};
 		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -202,7 +206,7 @@ void VulkanBackend::fillBuffer(BufferIndex buffer_index, void* data, uint64_t da
 
 		vkQueueSubmit(this->vulkan->device->getGraphicsQueue(), 1, &submit_info, VK_NULL_HANDLE);
 		vkQueueWaitIdle(this->vulkan->device->getGraphicsQueue());
-		this->vulkan->primary_command_pool->freeCommandBuffer(command_buffer);
+		this->vulkan->graphics_command_pool_set->getPrimaryCommandPool()->freeCommandBuffer(command_buffer);
 
 		this->vulkan->allocator->destroyBuffer(staging_buffer, staging_buffer_memory);
 	}
@@ -322,9 +326,9 @@ void VulkanBackend::fillTexture(TextureIndex texture_index, void* data, uint64_t
 	memcpy(mapped_data, data, data_size);
 	this->vulkan->allocator->unmapMemory(staging_buffer_memory);
 
-	transitionImageLayout(this->vulkan->primary_command_pool, this->vulkan->device->getGraphicsQueue(), texture->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-	copyBufferToImage(this->vulkan->primary_command_pool, this->vulkan->device->getGraphicsQueue(), staging_buffer, texture->image, texture->size);
-	transitionImageLayout(this->vulkan->primary_command_pool, this->vulkan->device->getGraphicsQueue(), texture->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	transitionImageLayout(this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), texture->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+	copyBufferToImage(this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), staging_buffer, texture->image, texture->size);
+	transitionImageLayout(this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), texture->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	this->vulkan->allocator->destroyBuffer(staging_buffer, staging_buffer_memory);
 }
@@ -345,13 +349,25 @@ void VulkanBackend::destroyTexture(TextureIndex texture_index)
 
 ViewIndex VulkanBackend::createView(ViewType type, vector2U size)
 {
-	
+	VkExtent2D vk_size = {size.x, size.y};
 
-	return ViewIndex();
+	uint32_t frames_in_flight = (uint32_t)this->vulkan->frames_in_flight.size();
+
+	VulkanFramebufferLayout* layout = this->vulkan->color_pass_layout;
+
+	VulkanView* view = new VulkanView(this->vulkan->device, this->vulkan->allocator, frames_in_flight, this->vulkan->graphics_command_pool_set, vk_size, layout);
+
+	Array<VkClearValue> clear_values(2);
+	clear_values[0].color = { 0.8f, 0.0f, 0.8f, 1.0f };
+	clear_values[1].depthStencil = { 1.0f, 0 };
+	view->setClearValues(clear_values);
+
+	return (ViewIndex)view;
 }
 
 void VulkanBackend::destroyView(ViewIndex index)
 {
+	this->vulkan->view_deleter->addToQueue((VulkanView*)index);
 }
 
 void VulkanBackend::drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp)

@@ -22,18 +22,13 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 
 	this->swapchain = new VulkanSwapchain(this->device, window, this->surface);
 
-	this->primary_command_pool = new VulkanCommandPool(this->device->get(), this->device->getGraphicsFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-	this->secondary_command_pools = Array<VulkanCommandPool*>(number_of_threads);
-	for (int i = 0; i < this->secondary_command_pools.size(); i++)
-	{
-		this->secondary_command_pools[i] = new VulkanCommandPool(this->device->get(), this->device->getGraphicsFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_SECONDARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-	}
+	this->graphics_command_pool_set = new VulkanCommandPoolSet(this->device, this->device->getGraphicsFamilyIndex(), number_of_threads);
 
 	this->frames_in_flight = Array<VulkanFrame>(NUM_OF_FRAMES);
 	for (int i = 0; i < this->frames_in_flight.size(); i++)
 	{
 		VulkanFrame* frame = &this->frames_in_flight[i];
-		frame->command_buffer = new VulkanMultithreadCommandBuffer(this->primary_command_pool, &this->secondary_command_pools);
+		frame->command_buffer = this->graphics_command_pool_set->createCommandBuffer();
 
 		frame->image_available_semaphore = this->device->createSemaphore();
 		frame->command_buffer_done_fence = this->device->createFence();
@@ -73,15 +68,26 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 
 	this->shadow_pass_layout = new VulkanFramebufferLayout(this->device->get(), Array<VkFormat>(), this->swapchain->getSwapchainDepthFormat());
 
+	Array<VkFormat> color(1);
+	color[0] = this->swapchain->getSwapchainFormat();
+	this->color_pass_layout = new VulkanFramebufferLayout(this->device->get(), color, this->swapchain->getSwapchainDepthFormat());
+
+	//Resources
+	uint8_t delay_cycles = (uint8_t) this->frames_in_flight.size() + 1;
+	this->view_deleter = new DelayedResourceDeleter<VulkanView>(delay_cycles);
 }
 
 VulkanInstance::~VulkanInstance()
 {
-	vkDestroySampler(this->device->get(), this->linear_sampler, nullptr);
+	//Resources
+	delete this->view_deleter;
 
 	vkDeviceWaitIdle(this->device->get());
 
+	vkDestroySampler(this->device->get(), this->linear_sampler, nullptr);
+
 	delete this->shadow_pass_layout;
+	delete this->color_pass_layout;
 
 	delete this->descriptor_pool;
 
@@ -101,11 +107,7 @@ VulkanInstance::~VulkanInstance()
 		this->device->destroySemaphore(frame->command_buffer_done_semaphore);
 	}
 
-	delete this->primary_command_pool;
-	for (int i = 0; i < this->secondary_command_pools.size(); i++)
-	{
-		delete this->secondary_command_pools[i];
-	}
+	delete this->graphics_command_pool_set;
 
 	if (this->swapchain != nullptr)
 	{
@@ -126,7 +128,7 @@ VulkanInstance::~VulkanInstance()
 	this->delete_instance();
 }
 
-bool VulkanInstance::AcquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore)
+bool VulkanInstance::acquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore)
 {
 	if (this->swapchain == nullptr)
 	{
@@ -182,6 +184,11 @@ bool VulkanInstance::AcquireSwapchainImage(uint32_t& image_index, VkSemaphore si
 	}
 
 	return true;
+}
+
+void VulkanInstance::cycleResourceDeleters()
+{
+	this->view_deleter->cycle();
 }
 
 vector<const char*> VulkanInstance::getExtensions()

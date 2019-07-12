@@ -5,6 +5,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDebugLayer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanAllocator.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanSwapchain.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanSwapchainFramebuffers.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
@@ -12,10 +13,10 @@
 #include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanView.hpp"
 
+#include "Genesis/Rendering/DelayedResourceDeleter.hpp"
 #include "Genesis/Rendering/RenderingTypes.hpp"
-
-#include "Genesis/Rendering/Vulkan/VulkanAllocator.hpp"
 
 namespace Genesis
 {
@@ -62,8 +63,10 @@ namespace Genesis
 		VulkanInstance(Window* window, uint32_t number_of_threads);
 		~VulkanInstance();
 
-		bool AcquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore);
+		bool acquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore);
 		
+		void cycleResourceDeleters();
+
 		Window* window = nullptr;
 		VkInstance instance;
 		VkSurfaceKHR surface;
@@ -74,8 +77,7 @@ namespace Genesis
 		VulkanSwapchain* swapchain = nullptr;
 		VulkanSwapchainFramebuffers* swapchain_framebuffers = nullptr;
 
-		VulkanCommandPool* primary_command_pool = nullptr;
-		Array<VulkanCommandPool*> secondary_command_pools;
+		VulkanCommandPoolSet* graphics_command_pool_set = nullptr;
 
 		Array<VulkanFrame> frames_in_flight;
 
@@ -84,6 +86,7 @@ namespace Genesis
 		VulkanDescriptorPool* descriptor_pool = nullptr;
 
 		VulkanFramebufferLayout* shadow_pass_layout = nullptr;
+		VulkanFramebufferLayout* color_pass_layout = nullptr;
 
 		//Extensions and Layers
 		vector<const char*> getExtensions();
@@ -98,6 +101,8 @@ namespace Genesis
 		//Buffer Stuff
 		BufferIndex next_index_buffer = 1;
 		map<BufferIndex, VulkanBuffer> buffers;
+
+		DelayedResourceDeleter<VulkanView>* view_deleter;
 
 	private:
 		bool use_debug_layers = true;

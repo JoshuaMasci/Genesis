@@ -8,10 +8,14 @@ using namespace Genesis;
 Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
+
+	this->view = this->backend->createView(ViewType::ShadowMap, vector2U(1024));
 }
 
 Renderer::~Renderer()
 {
+	this->backend->destroyView(this->view);
+
 	for (auto textures : this->loaded_textures)
 	{
 		this->backend->destroyTexture(textures.second);

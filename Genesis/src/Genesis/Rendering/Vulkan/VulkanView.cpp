@@ -2,62 +2,83 @@
 
 using namespace Genesis;
 
-VulkanView::VulkanView(VulkanDevice* device, VulkanAllocator* allocator, VulkanMultithreadCommandBuffer* command_buffer, VkExtent2D size, VulkanFramebufferLayout* layout)
+VulkanView::VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VulkanCommandPoolSet* command_pool_set, VkExtent2D size, VulkanFramebufferLayout* layout)
 {
 	this->device = device;
 
-	this->command_buffer = command_buffer;
+	this->command_buffers.resize(frames_in_flight);
+	for (size_t i = 0; i < this->command_buffers.size(); i++)
+	{
+		this->command_buffers[i] = command_pool_set->createCommandBuffer();
+	}
 
-	this->framebuffer = layout->createFramebuffer(size, allocator);
+	this->framebuffers.resize(frames_in_flight);
+	for (size_t i = 0; i < this->framebuffers.size(); i++)
+	{
+		this->framebuffers[i] = layout->createFramebuffer(size, allocator);
+	}
 
-	this->view_done_semaphore = this->device->createSemaphore();
+	this->view_done_semaphores.resize(frames_in_flight);
+	for (size_t i = 0; i < this->view_done_semaphores.size(); i++)
+	{
+		this->view_done_semaphores[i] = this->device->createSemaphore();
+	}
 }
 
 VulkanView::~VulkanView()
 {
-	this->device->destroySemaphore(this->view_done_semaphore);
+	for (size_t i = 0; i < this->view_done_semaphores.size(); i++)
+	{
+		this->device->destroySemaphore(this->view_done_semaphores[i]);
+	}
 
-	delete this->framebuffer;
-	delete this->command_buffer;
+	for (size_t i = 0; i < this->framebuffers.size(); i++)
+	{
+		delete this->framebuffers[i];
+	}
+
+	for (size_t i = 0; i < this->command_buffers.size(); i++)
+	{
+		delete this->command_buffers[i];
+	}
 }
 
-void VulkanView::startView()
+void VulkanView::startView(uint32_t frame)
 {
+	VulkanFramebuffer* framebuffer = this->framebuffers[frame];
+	VulkanMultithreadCommandBuffer* command_buffer = this->command_buffers[frame];
+
 	VkRenderPassBeginInfo renderPassInfo = {};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassInfo.renderPass = this->framebuffer->getRenderPass();
-	renderPassInfo.framebuffer = this->framebuffer->get();
+	renderPassInfo.renderPass = framebuffer->getRenderPass();
+	renderPassInfo.framebuffer = framebuffer->get();
 	renderPassInfo.renderArea.offset = { 0, 0 };
-	renderPassInfo.renderArea.extent = this->framebuffer->getSize();
+	renderPassInfo.renderArea.extent = framebuffer->getSize();
 
-	//TODO clear values that line up with renderpass
-	VkClearValue clearValues[2];
-	clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-	clearValues[1].depthStencil = { 1.0f, 0 };
-	renderPassInfo.clearValueCount = 2;
-	renderPassInfo.pClearValues = clearValues;
+	renderPassInfo.clearValueCount = (uint32_t) this->clear_values.size();
+	renderPassInfo.pClearValues = this->clear_values.data();
 
-	this->command_buffer->beginCommandBuffer(renderPassInfo);
+	command_buffer->beginCommandBuffer(renderPassInfo);
 }
 
-void VulkanView::endView()
+void VulkanView::endView(uint32_t frame)
 {
-	this->command_buffer->endCommandBuffer();
+	this->command_buffers[frame]->endCommandBuffer();
 }
 
-void VulkanView::submitView(vector<VulkanView*> sub_views, VkFence view_done_fence)
+void VulkanView::submitView(uint32_t frame, vector<VulkanView*> sub_views, VkFence view_done_fence)
 {
 	Array<VkSemaphore> wait_semaphores(sub_views.size());
 	Array<VkPipelineStageFlags> wait_states(sub_views.size());
 
 	for (size_t i = 0; i < wait_semaphores.size(); i++)
 	{
-		wait_semaphores[i] = sub_views[i]->getWaitSemaphore();
+		wait_semaphores[i] = sub_views[i]->getWaitSemaphore(frame);
 		wait_states[i] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; //TODO figure out better system maybe
 	}
 
 	Array<VkSemaphore> signal_semaphores(1);
-	signal_semaphores[0] = this->view_done_semaphore;
+	signal_semaphores[0] = this->view_done_semaphores[frame];
 
-	this->command_buffer->submitCommandBuffer(this->device->getGraphicsQueue(), wait_semaphores, wait_states, signal_semaphores, view_done_fence);
+	this->command_buffers[frame]->submitCommandBuffer(this->device->getGraphicsQueue(), wait_semaphores, wait_states, signal_semaphores, view_done_fence);
 }

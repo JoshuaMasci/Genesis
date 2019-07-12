@@ -25,4 +25,23 @@ namespace Genesis
 
 		moodycamel::ConcurrentQueue<VkCommandBuffer> command_buffer_queue;
 	};
+
+	//Prototype
+	class VulkanMultithreadCommandBuffer;
+
+	class VulkanCommandPoolSet
+	{
+	public:
+		VulkanCommandPoolSet(VulkanDevice* device, uint32_t queue_family_index, uint32_t number_of_threads);
+		~VulkanCommandPoolSet();
+
+		inline VulkanCommandPool* getPrimaryCommandPool() { return this->primary_command_pool; };
+		inline VulkanCommandPool* getSecondaryCommandPool(uint32_t thread) { return this->secondary_command_pools[thread]; };
+
+		VulkanMultithreadCommandBuffer* createCommandBuffer();
+
+	private:
+		VulkanCommandPool* primary_command_pool = nullptr;
+		Array<VulkanCommandPool*> secondary_command_pools;
+	};
 }
