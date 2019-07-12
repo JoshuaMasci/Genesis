@@ -18,10 +18,12 @@ namespace Genesis
 		void endView(uint32_t frame);
 		void submitView(uint32_t frame, vector<VulkanView*> sub_views, VkFence view_done_fence);
 
-		inline VkSemaphore getWaitSemaphore(uint32_t i) { return this->view_done_semaphores[i]; };
 		inline VkExtent2D getViewSize() { return this->size; };
-
 		inline void setClearValues(Array<VkClearValue>& clear) { this->clear_values = clear; };
+
+		inline VkSemaphore getWaitSemaphore(uint32_t i) { return this->view_done_semaphores[i]; };
+		inline VulkanMultithreadCommandBuffer* getCommandBuffer(uint32_t i) { return this->command_buffers[i]; };
+		inline VulkanFramebuffer* getFramebuffer(uint32_t i) { return this->framebuffers[i]; };
 
 	private:
 		VulkanDevice* device = nullptr;

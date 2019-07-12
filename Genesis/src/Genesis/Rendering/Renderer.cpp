@@ -9,7 +9,7 @@ Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
 
-	this->view = this->backend->createView(ViewType::ShadowMap, vector2U(1024));
+	this->view = this->backend->createView(ViewType::ShadowMap, this->backend->getScreenSize());
 }
 
 Renderer::~Renderer()
@@ -40,6 +40,8 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 
 	if (result)
 	{
+		this->backend->startView(this->view);
+
 		vector2U screen_size = this->backend->getScreenSize();
 		float aspect_ratio = ((float)screen_size.x) / ((float)screen_size.y);
 
@@ -51,8 +53,9 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 		matrix4F proj = this->backend->getPerspectiveMatrix(&camera, aspect_ratio);
 		matrix4F mv = proj * view;
 
-		auto entity_view = entity_registry.view<Model, WorldTransform>();
+		matrix4F proj2 = this->backend->getPerspectiveMatrix(&camera, this->view);
 
+		auto entity_view = entity_registry.view<Model, WorldTransform>();
 		for (auto entity : entity_view)
 		{
 			auto &model = entity_view.get<Model>(entity);
@@ -64,12 +67,19 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
 			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 			matrix4F mvp = mv * (translation * orientation);
-			this->backend->drawMeshScreen(0, mesh->vertices, mesh->indices, texture, mesh->indices_count, mvp);
+			this->backend->drawMeshScreenViewTextured(0, mesh->vertices, mesh->indices, this->view, mesh->indices_count, mvp);
+
+			this->backend->drawMeshView(this->view, 0, mesh->vertices, mesh->indices, texture, mesh->indices_count, proj2 * view * (translation * orientation));
 		}
 
 		this->backend->endFrame();
 
-		this->backend->submitFrame();
+		this->backend->endView(this->view);
+		this->backend->sumbitView(this->view);
+
+		vector<ViewIndex> views;
+		views.push_back(this->view);
+		this->backend->submitFrame(views);
 	}
 }
 

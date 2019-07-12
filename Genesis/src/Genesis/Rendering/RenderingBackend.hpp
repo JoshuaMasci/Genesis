@@ -13,7 +13,7 @@ namespace Genesis
 
 		virtual bool beginFrame() = 0;
 		virtual void endFrame() = 0;
-		virtual void submitFrame() = 0;
+		virtual void submitFrame(vector<ViewIndex> sub_views) = 0;
 
 		virtual BufferIndex createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) = 0;
 		virtual void fillBuffer(BufferIndex buffer_index, void* data, uint64_t data_size) = 0;
@@ -26,11 +26,18 @@ namespace Genesis
 		virtual ViewIndex createView(ViewType type, vector2U size) = 0;
 		virtual void destroyView(ViewIndex index) = 0;
 
+		virtual void startView(ViewIndex index) = 0;
+		virtual void endView(ViewIndex index) = 0;
+		virtual void sumbitView(ViewIndex index) = 0;
+		virtual void drawMeshView(ViewIndex index, uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp) = 0;
 
 		//TEMP
 		virtual void drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp) = 0;
+		virtual void drawMeshScreenViewTextured(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, ViewIndex view_index, uint32_t indices_count, matrix4F mvp) = 0;
+
 
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) = 0;
+		virtual matrix4F getPerspectiveMatrix(Camera* camera, ViewIndex view) = 0;
 		//virtual matrix4F getorthographicMatrix();
 
 		virtual vector2U getScreenSize() = 0;

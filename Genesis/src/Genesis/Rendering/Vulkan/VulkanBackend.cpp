@@ -89,7 +89,7 @@ void VulkanBackend::endFrame()
 	frame->command_buffer->endCommandBuffer();
 }
 
-void VulkanBackend::submitFrame()
+void VulkanBackend::submitFrame(vector<ViewIndex> sub_views)
 {
 	if (this->vulkan->swapchain == nullptr)
 	{
@@ -98,11 +98,18 @@ void VulkanBackend::submitFrame()
 
 	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
 
-	Array<VkSemaphore> wait_semaphores(1);
-	wait_semaphores[0] = frame->image_available_semaphore;
+	size_t wait_stages = sub_views.size() + 1;
 
-	Array<VkPipelineStageFlags> wait_states(1);
+	Array<VkSemaphore> wait_semaphores(wait_stages);
+	wait_semaphores[0] = frame->image_available_semaphore;
+	Array<VkPipelineStageFlags> wait_states(wait_stages);
 	wait_states[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
+	for (size_t i = 1; i < wait_stages; i++)
+	{
+		wait_semaphores[i] = ((VulkanView*)sub_views[i - 1])->getWaitSemaphore(this->frame_index);
+		wait_states[i] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; //TODO figure out better system maybe
+	}
 
 	Array<VkSemaphore> signal_semaphores(1);
 	signal_semaphores[0] = frame->command_buffer_done_semaphore;
@@ -370,6 +377,65 @@ void VulkanBackend::destroyView(ViewIndex index)
 	this->vulkan->view_deleter->addToQueue((VulkanView*)index);
 }
 
+void VulkanBackend::startView(ViewIndex index)
+{
+	VulkanView* view = (VulkanView*)index;
+	view->startView(this->frame_index);
+}
+
+void VulkanBackend::endView(ViewIndex index)
+{
+	VulkanView* view = (VulkanView*)index;
+	view->endView(this->frame_index);
+}
+
+void VulkanBackend::sumbitView(ViewIndex index)
+{
+	VulkanView* view = (VulkanView*)index;
+	view->submitView(this->frame_index, vector<VulkanView*>(), VK_NULL_HANDLE);
+}
+
+void VulkanBackend::drawMeshView(ViewIndex index, uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp)
+{
+	VulkanView* view = (VulkanView*)index;
+
+	if (this->vulkan->buffers.find(vertices_index) == this->vulkan->buffers.end())
+	{
+		printf("Error: invalid vertex buffer\n");
+		return;
+	}
+	VulkanBuffer* vertices_buffer = &this->vulkan->buffers[vertices_index];
+
+	if (this->vulkan->buffers.find(indices_index) == this->vulkan->buffers.end())
+	{
+		printf("Error: invalid index buffer\n");
+		return;
+	}
+	VulkanBuffer* indices_buffer = &this->vulkan->buffers[indices_index];
+
+	if (this->vulkan->textures.find(texture_index) == this->vulkan->textures.end())
+	{
+		printf("Error: invalid texture\n");
+		return;
+	}
+	VulkanTexture* texture = &this->vulkan->textures[texture_index];
+
+	VkCommandBuffer buffer = view->getCommandBuffer(this->frame_index)->getSecondaryCommandBuffer(thread);
+
+	vkCmdPushConstants(buffer, this->vulkan->pipeline_manager->textured_mesh_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
+	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->textured_mesh_screen_pipeline->getPipeline());
+
+	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->textured_mesh_layout, 0, 1, &texture->image_descriptor_set, 0, nullptr);
+
+	VkBuffer vertexBuffers[] = { vertices_buffer->buffer };
+	VkDeviceSize offsets[] = { 0 };
+	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
+
+	vkCmdBindIndexBuffer(buffer, indices_buffer->buffer, 0, VK_INDEX_TYPE_UINT32);
+
+	vkCmdDrawIndexed(buffer, indices_count, 1, 0, 0, 0);
+}
+
 void VulkanBackend::drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp)
 {
 	if (this->vulkan->swapchain == nullptr)
@@ -416,6 +482,73 @@ void VulkanBackend::drawMeshScreen(uint32_t thread, BufferIndex vertices_index, 
 	vkCmdDrawIndexed(buffer, indices_count, 1, 0, 0, 0);
 }
 
+void VulkanBackend::drawMeshScreenViewTextured(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, ViewIndex view_index, uint32_t indices_count, matrix4F mvp)
+{
+	if (this->vulkan->swapchain == nullptr)
+	{
+		return;
+	}
+
+	if (this->vulkan->buffers.find(vertices_index) == this->vulkan->buffers.end())
+	{
+		printf("Error: invalid vertex buffer\n");
+		return;
+	}
+	VulkanBuffer* vertices_buffer = &this->vulkan->buffers[vertices_index];
+
+	if (this->vulkan->buffers.find(indices_index) == this->vulkan->buffers.end())
+	{
+		printf("Error: invalid index buffer\n");
+		return;
+	}
+	VulkanBuffer* indices_buffer = &this->vulkan->buffers[indices_index];
+
+	VulkanView* view = (VulkanView*)view_index;
+	VulkanFramebuffer* framebuffer = view->getFramebuffer(this->frame_index);
+
+	//HACKY soltion, do not leave in
+	static VkDescriptorSet set[] = {VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE};
+	if (set[0] == VK_NULL_HANDLE)
+	{
+		set[0] = this->vulkan->descriptor_pool->getDescriptorSet();
+		set[1] = this->vulkan->descriptor_pool->getDescriptorSet();
+		set[2] = this->vulkan->descriptor_pool->getDescriptorSet();
+	}
+
+	VkDescriptorImageInfo descriptor_image_info = {};
+	descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	descriptor_image_info.imageView = framebuffer->getImageView();
+	descriptor_image_info.sampler = this->vulkan->linear_sampler;
+
+	VkWriteDescriptorSet descriptor_write = {};
+	descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	descriptor_write.dstSet = set[this->frame_index];
+	descriptor_write.dstBinding = 0;
+	descriptor_write.dstArrayElement = 0;
+	descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	descriptor_write.descriptorCount = 1;
+	descriptor_write.pImageInfo = &descriptor_image_info;
+
+	vkUpdateDescriptorSets(this->vulkan->device->get(), 1, &descriptor_write, 0, nullptr);
+
+	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
+
+	VkCommandBuffer buffer = frame->command_buffer->getSecondaryCommandBuffer(thread);
+
+	vkCmdPushConstants(buffer, this->vulkan->pipeline_manager->textured_mesh_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
+	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->textured_mesh_screen_pipeline->getPipeline());
+
+	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->textured_mesh_layout, 0, 1, &set[this->frame_index], 0, nullptr);
+
+	VkBuffer vertexBuffers[] = { vertices_buffer->buffer };
+	VkDeviceSize offsets[] = { 0 };
+	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
+
+	vkCmdBindIndexBuffer(buffer, indices_buffer->buffer, 0, VK_INDEX_TYPE_UINT32);
+
+	vkCmdDrawIndexed(buffer, indices_count, 1, 0, 0, 0);
+}
+
 matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, float aspect_ratio)
 {
 	float fov = 1.0f / tan(glm::radians(camera->frame_of_view) / 2.0f);
@@ -423,6 +556,15 @@ matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, float aspect_ratio)
 	proj[1][1] *= -1; //Need to apply this because vulkan flips the y-axis and that's not what I need
 
 	return proj;
+}
+
+matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, ViewIndex view_index)
+{
+	VulkanView* view = (VulkanView*)view_index;
+
+	VkExtent2D screen_size = view->getViewSize();
+	float aspect_ratio = ((float)screen_size.width) / ((float)screen_size.height);
+	return this->getPerspectiveMatrix(camera, aspect_ratio);
 }
 
 vector2U VulkanBackend::getScreenSize()
