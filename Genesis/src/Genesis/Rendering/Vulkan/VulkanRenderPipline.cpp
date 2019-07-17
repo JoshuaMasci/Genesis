@@ -1,17 +1,52 @@
 #include "VulkanRenderPipline.hpp"
 
+#include "Genesis/Rendering/Vulkan/VulkanShader.hpp"
+
 using namespace Genesis;
 
-VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipeline_layout, VkRenderPass renderpass, string shader_path, VertexInput* vertex_description, VkExtent2D extent)
+VkFormat getVulkanType(VertexElementType type)
+{
+	switch (type)
+	{
+	case VertexElementType::float1:
+		return VK_FORMAT_R32_SFLOAT;
+	case VertexElementType::float2:
+		return VK_FORMAT_R32G32_SFLOAT;
+	case VertexElementType::float3:
+		return VK_FORMAT_R32G32B32_SFLOAT;
+	case VertexElementType::float4:
+		return VK_FORMAT_R32G32B32A32_SFLOAT;
+	default:
+		return VK_FORMAT_UNDEFINED;
+	}
+}
+
+VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipeline_layout, VkRenderPass renderpass, string shader_path, VertexInputDescription& vertex_description, VkExtent2D extent)
 {
 	this->device = device;
 
+	VkVertexInputBindingDescription binding_description;
+	binding_description.binding = 0;
+	binding_description.stride = vertex_description.getSize();
+	binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+	Array<VkVertexInputAttributeDescription> attribute_descriptions(vertex_description.getNumberOfElements());
+	for (size_t i = 0; i < attribute_descriptions.size(); i++)
+	{
+		attribute_descriptions[i].binding = 0;
+		attribute_descriptions[i].location = (uint32_t) i;
+		attribute_descriptions[i].format = getVulkanType(vertex_description.getElementType(i));
+		attribute_descriptions[i].offset = vertex_description.getElementOffset(i);
+	}
+
 	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(vertex_description->binding_descriptions.size());
-	vertexInputInfo.pVertexBindingDescriptions = vertex_description->binding_descriptions.data();
-	vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertex_description->attribute_descriptions.size());
-	vertexInputInfo.pVertexAttributeDescriptions = vertex_description->attribute_descriptions.data();
+
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.pVertexBindingDescriptions = &binding_description;
+
+	vertexInputInfo.vertexAttributeDescriptionCount = (uint32_t) attribute_descriptions.size();
+	vertexInputInfo.pVertexAttributeDescriptions = attribute_descriptions.data();
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -43,7 +78,7 @@ VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipel
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_NONE;
+	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
 	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 	rasterizer.depthBiasEnable = VK_FALSE;
 

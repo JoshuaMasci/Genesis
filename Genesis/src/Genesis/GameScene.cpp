@@ -19,7 +19,7 @@ GameScene::GameScene(Application* app)
 
 	this->temp = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->temp, vector3D(0.0, 0.0, 0.0), glm::angleAxis(3.1415926/2.0, vector3D(0.0, 1.0, 0.0)));
-	this->entity_registry.assign<Model>(this->temp, "resources/meshes/cube.obj", "resources/textures/1k_Grid.png");
+	this->entity_registry.assign<Model>(this->temp, "resources/meshes/cube1.obj", "resources/textures/1k_Grid.png");
 
 	this->camera = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->camera, vector3D(0.0, 0.75, -2.5));
@@ -27,12 +27,12 @@ GameScene::GameScene(Application* app)
 	this->entity_registry.assign<DebugCamera>(this->camera, 0.5, 0.2);
 
 	this->renderer = new Renderer(this->application->rendering_backend);
-	this->renderer->loadMesh("resources/meshes/cube.obj");
+	this->renderer->loadMesh("resources/meshes/cube1.obj");
 	this->renderer->loadTexture("resources/textures/1k_Grid.png");
-	this->renderer->loadTexture("resources/textures/4k_Grid.png");
+	/*this->renderer->loadTexture("resources/textures/4k_Grid.png");
 	this->renderer->loadTexture("resources/textures/Red.png");
 	this->renderer->loadTexture("resources/textures/Blue.png");
-	this->renderer->loadTexture("resources/textures/Green.png");
+	this->renderer->loadTexture("resources/textures/Green.png");*/
 }
 
 GameScene::~GameScene()

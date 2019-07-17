@@ -29,11 +29,11 @@ namespace Genesis
 		virtual void startView(ViewIndex index) = 0;
 		virtual void endView(ViewIndex index) = 0;
 		virtual void sumbitView(ViewIndex index) = 0;
-		virtual void drawMeshView(ViewIndex index, uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp) = 0;
+		virtual void drawMeshView(ViewIndex index, uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, uint32_t indices_count, TextureIndex texture_index, matrix4F mvp) = 0;
 
 		//TEMP
-		virtual void drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, TextureIndex texture_index, uint32_t indices_count, matrix4F mvp) = 0;
-		virtual void drawMeshScreenViewTextured(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, ViewIndex view_index, uint32_t indices_count, matrix4F mvp) = 0;
+		virtual void drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, uint32_t indices_count, TextureIndex texture_index, matrix4F mvp) = 0;
+		virtual void drawMeshScreenViewTextured(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, uint32_t indices_count, ViewIndex view_index, matrix4F mvp) = 0;
 
 
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) = 0;

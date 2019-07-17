@@ -6,8 +6,7 @@ namespace Genesis
 	class Array
 	{
 	public:
-		Array(){};//Empty Array
-		Array(size_t size)
+		Array(size_t size = 0)
 		{
 			if (size > 0)
 			{
@@ -20,6 +19,18 @@ namespace Genesis
 				this->array_data = nullptr;
 			}
 		};
+
+		//Copy Constructor
+		Array(const Array<T>& source)
+		{
+			this->array_size = source.array_size;
+			this->array_data = new T[this->array_size];
+
+			for (int i = 0; i < this->array_size; i++)
+			{
+				this->array_data[i] = source->array_data[i];
+			}
+		}
 
 		~Array()
 		{

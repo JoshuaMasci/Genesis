@@ -2,7 +2,6 @@
 
 #include <cstdint>
 
-#define NULL_INDEX 0
 namespace Genesis
 {
 	enum class MemoryUsage
@@ -24,8 +23,7 @@ namespace Genesis
 		ShadowMap
 	};
 
-	typedef uint32_t BufferIndex;
-	typedef uint32_t TextureIndex;
-
+	typedef void* BufferIndex;
+	typedef void* TextureIndex;
 	typedef void* ViewIndex;
 }

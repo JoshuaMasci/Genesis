@@ -14,7 +14,7 @@ SDL2_Window::SDL2_Window(vector2U size, string title)
 
 	this->window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.x, size.y, flags);
 
-	SDL_MaximizeWindow(this->window);
+	//SDL_MaximizeWindow(this->window);
 }
 
 SDL2_Window::~SDL2_Window()

@@ -64,22 +64,27 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 		}
 	}
 
-	this->descriptor_pool = new VulkanDescriptorPool(this->device->get(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, this->pipeline_manager->textured_descriptor_layout, 2048);
+	this->image_descriptor_pool = new VulkanDescriptorPool(this->device->get(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, this->pipeline_manager->textured_descriptor_layout, 8000);
 
-	this->shadow_pass_layout = new VulkanFramebufferLayout(this->device->get(), Array<VkFormat>(), this->swapchain->getSwapchainDepthFormat());
+	this->shadow_pass_layout = new VulkanFramebufferLayout(this->device->get(), Array<VkFormat>(), this->swapchain->getSwapchainDepthFormat(), this->linear_sampler);
 
 	Array<VkFormat> color(1);
 	color[0] = this->swapchain->getSwapchainFormat();
-	this->color_pass_layout = new VulkanFramebufferLayout(this->device->get(), color, this->swapchain->getSwapchainDepthFormat());
+	this->color_pass_layout = new VulkanFramebufferLayout(this->device->get(), color, this->swapchain->getSwapchainDepthFormat(), this->linear_sampler);
 
-	//Resources
+	//Resource Deleters
+	//Add 1 to the delete delay just to make sure it's totaly out of the pipeline
 	uint8_t delay_cycles = (uint8_t) this->frames_in_flight.size() + 1;
+	this->buffer_deleter = new DelayedResourceDeleter<VulkanBuffer>(delay_cycles);
+	this->texture_deleter = new DelayedResourceDeleter<VulkanTexture>(delay_cycles);
 	this->view_deleter = new DelayedResourceDeleter<VulkanView>(delay_cycles);
 }
 
 VulkanInstance::~VulkanInstance()
 {
-	//Resources
+	//Resource Deleters
+	delete this->buffer_deleter;
+	delete this->texture_deleter;
 	delete this->view_deleter;
 
 	vkDeviceWaitIdle(this->device->get());
@@ -89,7 +94,7 @@ VulkanInstance::~VulkanInstance()
 	delete this->shadow_pass_layout;
 	delete this->color_pass_layout;
 
-	delete this->descriptor_pool;
+	delete this->image_descriptor_pool;
 
 	delete this->pipeline_manager;
 
@@ -188,6 +193,8 @@ bool VulkanInstance::acquireSwapchainImage(uint32_t& image_index, VkSemaphore si
 
 void VulkanInstance::cycleResourceDeleters()
 {
+	this->buffer_deleter->cycle();
+	this->texture_deleter->cycle();
 	this->view_deleter->cycle();
 }
 

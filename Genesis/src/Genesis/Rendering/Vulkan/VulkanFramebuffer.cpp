@@ -2,12 +2,14 @@
 
 using namespace Genesis;
 
-VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VulkanAllocator* allocator, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass)
+VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VulkanAllocator* allocator, VulkanDescriptorPool* descriptor_pool, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, VkSampler sampler)
 {
 	this->device = device;
 	this->size = size;
 	this->render_pass = render_pass;
+
 	this->allocator = allocator;
+	this->descriptor_pool = descriptor_pool;
 
 	vector<VkImageView> image_views;
 
@@ -107,10 +109,62 @@ VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VulkanAllocator* allocator
 	{
 		throw std::runtime_error("failed to create framebuffer!");
 	}
+
+	for (uint16_t i = 0; i < this->images.size(); i++)
+	{
+		this->images[i].image_descriptor_set = this->descriptor_pool->getDescriptorSet();
+
+		VkDescriptorImageInfo descriptor_image_info = {};
+		descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		descriptor_image_info.imageView = this->images[i].image_view;
+		descriptor_image_info.sampler = sampler;
+
+		VkWriteDescriptorSet descriptor_write = {};
+		descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptor_write.dstSet = this->images[i].image_descriptor_set;
+		descriptor_write.dstBinding = 0;
+		descriptor_write.dstArrayElement = 0;
+		descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptor_write.descriptorCount = 1;
+		descriptor_write.pImageInfo = &descriptor_image_info;
+
+		vkUpdateDescriptorSets(this->device, 1, &descriptor_write, 0, nullptr);
+	}
+
+	if (this->depth_image.image_format != VK_FORMAT_UNDEFINED)
+	{
+		this->depth_image.image_descriptor_set = this->descriptor_pool->getDescriptorSet();
+
+		VkDescriptorImageInfo descriptor_image_info = {};
+		descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		descriptor_image_info.imageView = this->depth_image.image_view;
+		descriptor_image_info.sampler = sampler;
+
+		VkWriteDescriptorSet descriptor_write = {};
+		descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptor_write.dstSet = this->depth_image.image_descriptor_set;
+		descriptor_write.dstBinding = 0;
+		descriptor_write.dstArrayElement = 0;
+		descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptor_write.descriptorCount = 1;
+		descriptor_write.pImageInfo = &descriptor_image_info;
+
+		vkUpdateDescriptorSets(this->device, 1, &descriptor_write, 0, nullptr);
+	}
 }
 
 VulkanFramebuffer::~VulkanFramebuffer()
 {
+	if (this->depth_image.image_format != VK_FORMAT_UNDEFINED)
+	{
+		this->descriptor_pool->freeDescriptorSet(this->depth_image.image_descriptor_set);
+	}
+
+	for (uint16_t i = 0; i < this->images.size(); i++)
+	{
+		this->descriptor_pool->freeDescriptorSet(this->images[i].image_descriptor_set);
+	}
+
 	vkDestroyFramebuffer(this->device, this->framebuffer, nullptr);
 
 	if (this->depth_image.image_format != VK_FORMAT_UNDEFINED)
@@ -126,11 +180,12 @@ VulkanFramebuffer::~VulkanFramebuffer()
 	}
 }
 
-VulkanFramebufferLayout::VulkanFramebufferLayout(VkDevice device, Array<VkFormat>& color_formats, VkFormat depth_format)
+VulkanFramebufferLayout::VulkanFramebufferLayout(VkDevice device, Array<VkFormat>& color_formats, VkFormat depth_format, VkSampler sampler)
 {
 	this->device = device;
 	this->color_formats = color_formats;
 	this->depth_format = depth_format;
+	this->image_sampler = sampler;
 
 	vector<VkAttachmentDescription> attachment_descriptions;
 	vector<VkAttachmentReference> color_attachment_references;
@@ -227,7 +282,7 @@ VulkanFramebufferLayout::~VulkanFramebufferLayout()
 	vkDestroyRenderPass(this->device, this->render_pass, nullptr);
 }
 
-VulkanFramebuffer* Genesis::VulkanFramebufferLayout::createFramebuffer(VkExtent2D size, VulkanAllocator* allocator)
+VulkanFramebuffer* Genesis::VulkanFramebufferLayout::createFramebuffer(VkExtent2D size, VulkanAllocator* allocator, VulkanDescriptorPool* descriptor_pool)
 {
-	return new VulkanFramebuffer(this->device, allocator, size, this->color_formats, this->depth_format, this->render_pass);
+	return new VulkanFramebuffer(this->device, allocator, descriptor_pool, size, this->color_formats, this->depth_format, this->render_pass, this->image_sampler);
 }

@@ -8,14 +8,10 @@ using namespace Genesis;
 Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
-
-	this->view = this->backend->createView(ViewType::ShadowMap, this->backend->getScreenSize());
 }
 
 Renderer::~Renderer()
 {
-	this->backend->destroyView(this->view);
-
 	for (auto textures : this->loaded_textures)
 	{
 		this->backend->destroyTexture(textures.second);
@@ -40,8 +36,6 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 
 	if (result)
 	{
-		this->backend->startView(this->view);
-
 		vector2U screen_size = this->backend->getScreenSize();
 		float aspect_ratio = ((float)screen_size.x) / ((float)screen_size.y);
 
@@ -53,13 +47,36 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 		matrix4F proj = this->backend->getPerspectiveMatrix(&camera, aspect_ratio);
 		matrix4F mv = proj * view;
 
-		matrix4F proj2 = this->backend->getPerspectiveMatrix(&camera, this->view);
+		vector<ViewIndex> sub_views;
 
-		auto entity_view = entity_registry.view<Model, WorldTransform>();
+		auto entity_view = entity_registry.view<ViewModel, WorldTransform>();
 		for (auto entity : entity_view)
 		{
-			auto &model = entity_view.get<Model>(entity);
+			auto &view_model = entity_view.get<ViewModel>(entity);
+
+			if (view_model.view == nullptr)
+			{
+				view_model.view = this->backend->createView(ViewType::FrameBuffer, view_model.view_size);
+			}
+
+			this->drawView(entity_registry, view_model.camera_entity, view_model.view);
+			sub_views.push_back(view_model.view);
+
+			Mesh* mesh = &this->loaded_meshes[view_model.mesh];
 			auto &transform = entity_view.get<WorldTransform>(entity);
+
+			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
+			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
+			matrix4F mvp = mv * (translation * orientation);
+
+			this->backend->drawMeshScreenViewTextured(0, mesh->vertices, mesh->indices, mesh->indices_count, view_model.view, mvp);
+		}
+
+		auto entity_model = entity_registry.view<Model, WorldTransform>();
+		for (auto entity : entity_model)
+		{
+			auto &model = entity_model.get<Model>(entity);
+			auto &transform = entity_model.get<WorldTransform>(entity);
 			
 			Mesh* mesh = &this->loaded_meshes[model.mesh];
 			TextureIndex texture = this->loaded_textures[model.texture];
@@ -67,19 +84,12 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
 			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 			matrix4F mvp = mv * (translation * orientation);
-			this->backend->drawMeshScreenViewTextured(0, mesh->vertices, mesh->indices, this->view, mesh->indices_count, mvp);
-
-			this->backend->drawMeshView(this->view, 0, mesh->vertices, mesh->indices, texture, mesh->indices_count, proj2 * view * (translation * orientation));
+			this->backend->drawMeshScreen(0, mesh->vertices, mesh->indices, mesh->indices_count, texture, mvp);
 		}
 
 		this->backend->endFrame();
 
-		this->backend->endView(this->view);
-		this->backend->sumbitView(this->view);
-
-		vector<ViewIndex> views;
-		views.push_back(this->view);
-		this->backend->submitFrame(views);
+		this->backend->submitFrame(sub_views);
 	}
 }
 
@@ -176,4 +186,35 @@ void Renderer::loadTexture(string texture_file)
 	{
 		printf("Error: Already loaded Texture: %s\n", texture_file.c_str());
 	}
+}
+
+void Renderer::drawView(EntityRegistry & entity_registry, EntityId camera_entity, ViewIndex view_index)
+{
+	this->backend->startView(view_index);
+
+	auto& camera = entity_registry.get<Camera>(camera_entity);
+	auto& transform = entity_registry.get<WorldTransform>(camera_entity);
+	Transform& current = transform.current_transform;
+
+	matrix4F view = glm::lookAt(current.getPosition(), current.getPosition() + current.getForward(), current.getUp());
+	matrix4F proj = this->backend->getPerspectiveMatrix(&camera, view_index);
+	matrix4F mv = proj * view;
+
+	auto entity_model = entity_registry.view<Model, WorldTransform>();
+	for (auto entity : entity_model)
+	{
+		auto &model = entity_model.get<Model>(entity);
+		auto &transform = entity_model.get<WorldTransform>(entity);
+
+		Mesh* mesh = &this->loaded_meshes[model.mesh];
+		TextureIndex texture = this->loaded_textures[model.texture];
+
+		matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
+		matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
+		matrix4F mvp = mv * (translation * orientation);
+		this->backend->drawMeshView(view_index, 0, mesh->vertices, mesh->indices, mesh->indices_count, texture, mvp);
+	}
+
+	this->backend->endView(view_index);
+	this->backend->sumbitView(view_index);
 }

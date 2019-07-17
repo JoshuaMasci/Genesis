@@ -13,6 +13,8 @@
 #include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanTexture.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanView.hpp"
 
 #include "Genesis/Rendering/DelayedResourceDeleter.hpp"
@@ -21,40 +23,12 @@
 namespace Genesis
 {
 	const uint32_t NUM_OF_FRAMES = 3;
-
-	//Texture Stuff: need to move at some point
-	struct VulkanTexture
-	{
-		VkExtent2D size;
-		VkImage image;
-		VmaAllocation image_memory;
-		VmaAllocationInfo image_memory_info;
-		VkImageView image_view;
-
-		VkDescriptorSet image_descriptor_set;
-	};
-
-	struct VulkanBuffer
-	{
-		VkBuffer buffer;
-		VmaAllocation buffer_memory;
-		VmaAllocationInfo buffer_memory_info;
-
-		//Uniform only
-		VkDescriptorSet buffer_descriptor_set;
-	};
-
 	struct VulkanFrame
 	{
 		VkSemaphore image_available_semaphore = VK_NULL_HANDLE;
-
 		VulkanMultithreadCommandBuffer* command_buffer = nullptr;
 		VkSemaphore command_buffer_done_semaphore = VK_NULL_HANDLE;
 		VkFence command_buffer_done_fence = VK_NULL_HANDLE;
-
-		//Uniform Objects here
-
-		//Frame Buffers here
 	};
 
 	class VulkanInstance
@@ -65,8 +39,6 @@ namespace Genesis
 
 		bool acquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore);
 		
-		void cycleResourceDeleters();
-
 		Window* window = nullptr;
 		VkInstance instance;
 		VkSurfaceKHR surface;
@@ -83,7 +55,7 @@ namespace Genesis
 
 		VulkanPiplineManager* pipeline_manager = nullptr;
 
-		VulkanDescriptorPool* descriptor_pool = nullptr;
+		VulkanDescriptorPool* image_descriptor_pool = nullptr;
 
 		VulkanFramebufferLayout* shadow_pass_layout = nullptr;
 		VulkanFramebufferLayout* color_pass_layout = nullptr;
@@ -93,15 +65,12 @@ namespace Genesis
 		vector<const char*> getDeviceExtensions();
 		vector<const char*> getLayers();
 
-		//Texture Stuff: need to move at some point
-		TextureIndex next_index_texture = 1;
-		map<TextureIndex, VulkanTexture> textures;
 		VkSampler linear_sampler;
 
-		//Buffer Stuff
-		BufferIndex next_index_buffer = 1;
-		map<BufferIndex, VulkanBuffer> buffers;
-
+		//Resource Stuff
+		void cycleResourceDeleters();
+		DelayedResourceDeleter<VulkanBuffer>* buffer_deleter;
+		DelayedResourceDeleter<VulkanTexture>* texture_deleter;
 		DelayedResourceDeleter<VulkanView>* view_deleter;
 
 	private:

@@ -8,11 +8,21 @@
 namespace Genesis
 {
 	//TEMP
-	struct SecondView
+	struct ViewModel
 	{
+		ViewModel(string mesh, EntityId camera, vector2U view_size)
+		{
+			this->mesh = mesh;
+			this->camera_entity = camera;
+			this->view_size = view_size;
+		};
 
+		string mesh;
+		EntityId camera_entity;
+		vector2U view_size;
+
+		ViewIndex view = nullptr;
 	};
-
 
 	struct Model
 	{
@@ -39,8 +49,8 @@ namespace Genesis
 
 	struct Mesh
 	{
-		BufferIndex vertices = NULL_INDEX;
-		BufferIndex indices = NULL_INDEX;
+		BufferIndex vertices = nullptr;
+		BufferIndex indices = nullptr;
 		uint32_t indices_count = 0;
 	};
 
@@ -57,6 +67,8 @@ namespace Genesis
 		void loadTexture(string texture_file);
 
 	private:
+		void drawView(EntityRegistry& entity_registry, EntityId camera_entity, ViewIndex view);
+
 		//Lifetime of the Backend is longer than the Renderer
 		//No deleteing please
 		RenderingBackend* backend;
@@ -64,8 +76,5 @@ namespace Genesis
 		//Temp resource stuff
 		map<string, Mesh> loaded_meshes;
 		map<string, TextureIndex> loaded_textures;
-
-		//SecondCam
-		ViewIndex view;
 	};
 }

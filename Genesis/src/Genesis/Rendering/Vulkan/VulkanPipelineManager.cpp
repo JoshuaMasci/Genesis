@@ -2,6 +2,8 @@
 
 #include "Genesis/Rendering/Vulkan/VulkanMeshTypes.hpp"
 
+#include "Genesis/Rendering/ShaderInputDescription.hpp"
+
 using namespace Genesis;
 
 VulkanPiplineManager::VulkanPiplineManager(VulkanDevice* device)
@@ -128,8 +130,12 @@ void VulkanPiplineManager::rebuildSwapchainPipelines(VkExtent2D swapchain_size)
 		delete this->textured_mesh_screen_pipeline;
 	}
 
-	VertexInput input;
-	input.binding_descriptions = TexturedVertexInfo::getBindingDescriptions();
-	input.attribute_descriptions = TexturedVertexInfo::getAttributeDescriptions();
-	this->textured_mesh_screen_pipeline = new VulkanRenderPipline(this->device, this->textured_mesh_layout, this->screen_render_pass, "resources/shaders/Vulkan/texture", &input, swapchain_size);
+	VertexInputDescription vertex_input
+	({ 
+		{"in_position", VertexElementType::float3},
+		{"in_normal", VertexElementType::float3},
+		{"in_uv", VertexElementType::float2}
+	});
+
+	this->textured_mesh_screen_pipeline = new VulkanRenderPipline(this->device, this->textured_mesh_layout, this->screen_render_pass, "resources/shaders/Vulkan/texture", vertex_input, swapchain_size);
 }

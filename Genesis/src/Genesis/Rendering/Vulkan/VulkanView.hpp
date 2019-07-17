@@ -5,13 +5,14 @@
 #include "Genesis/Rendering/Vulkan/VulkanAllocator.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanMultithreadCommandBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
 
 namespace Genesis
 {
 	class VulkanView
 	{
 	public:
-		VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VulkanCommandPoolSet* command_pool_set, VkExtent2D size, VulkanFramebufferLayout* layout);
+		VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VulkanCommandPoolSet* command_pool_set, VkExtent2D size, VulkanFramebufferLayout* layout, VulkanDescriptorPool* descriptor_pool);
 		~VulkanView();
 
 		void startView(uint32_t frame);
