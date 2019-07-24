@@ -21,7 +21,7 @@ VkFormat getVulkanType(VertexElementType type)
 	}
 }
 
-VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipeline_layout, VkRenderPass renderpass, string shader_path, VertexInputDescription& vertex_description, VkExtent2D extent)
+VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipeline_layout, VkRenderPass renderpass, PipelineSettings& settings, VulkanShader& shader, VertexInputDescription& vertex_description, VkExtent2D extent)
 {
 	this->device = device;
 
@@ -39,19 +39,19 @@ VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipel
 		attribute_descriptions[i].offset = vertex_description.getElementOffset(i);
 	}
 
-	VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
-	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
+	vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-	vertexInputInfo.vertexBindingDescriptionCount = 1;
-	vertexInputInfo.pVertexBindingDescriptions = &binding_description;
+	vertex_input_info.vertexBindingDescriptionCount = 1;
+	vertex_input_info.pVertexBindingDescriptions = &binding_description;
 
-	vertexInputInfo.vertexAttributeDescriptionCount = (uint32_t) attribute_descriptions.size();
-	vertexInputInfo.pVertexAttributeDescriptions = attribute_descriptions.data();
+	vertex_input_info.vertexAttributeDescriptionCount = (uint32_t) attribute_descriptions.size();
+	vertex_input_info.pVertexAttributeDescriptions = attribute_descriptions.data();
 
-	VkPipelineInputAssemblyStateCreateInfo inputAssembly = {};
-	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-	inputAssembly.primitiveRestartEnable = VK_FALSE;
+	VkPipelineInputAssemblyStateCreateInfo input_assembly = {};
+	input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	input_assembly.primitiveRestartEnable = VK_FALSE;
 
 	VkViewport viewport = {};
 	viewport.x = 0.0f;
@@ -78,8 +78,22 @@ VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipel
 	rasterizer.rasterizerDiscardEnable = VK_FALSE;
 	rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
 	rasterizer.lineWidth = 1.0f;
-	rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+
+	switch (settings.cull_mode)
+	{
+	case CullMode::None:
+		rasterizer.cullMode = VK_CULL_MODE_NONE;
+		break;
+	case CullMode::Front:
+		rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
+		break;
+	case CullMode::Back:
+		rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
+	case CullMode::All:
+		rasterizer.cullMode = VK_CULL_MODE_FRONT_AND_BACK;
+		break;
+	}
+	rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; //Front Face is always Counter Clockwise
 	rasterizer.depthBiasEnable = VK_FALSE;
 
 	VkPipelineMultisampleStateCreateInfo multisampling = {};
@@ -89,9 +103,51 @@ VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipel
 
 	VkPipelineDepthStencilStateCreateInfo depth_stencil = {};
 	depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-	depth_stencil.depthTestEnable = VK_TRUE;
-	depth_stencil.depthWriteEnable = VK_TRUE;
-	depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
+
+	switch (settings.depth_test)
+	{
+	case Genesis::DepthTest::None:
+		depth_stencil.depthTestEnable = VK_FALSE;
+		depth_stencil.depthWriteEnable = VK_FALSE;
+		break;
+	case Genesis::DepthTest::Test_Only:
+		depth_stencil.depthTestEnable = VK_TRUE;
+		depth_stencil.depthWriteEnable = VK_FALSE;
+		break;
+	case Genesis::DepthTest::Test_And_Write:
+		depth_stencil.depthTestEnable = VK_TRUE;
+		depth_stencil.depthWriteEnable = VK_TRUE;
+		break;
+	}
+
+	switch (settings.depth_op)
+	{
+	case Genesis::DepthOp::Never:
+		depth_stencil.depthCompareOp = VK_COMPARE_OP_NEVER;
+		break;
+	case Genesis::DepthOp::Less:
+		depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
+		break;
+	case Genesis::DepthOp::Equal:
+		depth_stencil.depthCompareOp = VK_COMPARE_OP_EQUAL;
+		break;
+	case Genesis::DepthOp::Less_Equal:
+		depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+		break;
+	case Genesis::DepthOp::Greater:
+		depth_stencil.depthCompareOp = VK_COMPARE_OP_GREATER;
+		break;
+	case Genesis::DepthOp::Not_Equal:
+		depth_stencil.depthCompareOp = VK_COMPARE_OP_NOT_EQUAL;
+		break;
+	case Genesis::DepthOp::Greater_Equal:
+		depth_stencil.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
+		break;
+	case Genesis::DepthOp::Always:
+		depth_stencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;
+		break;
+	}
+
 	depth_stencil.depthBoundsTestEnable = VK_FALSE;
 	depth_stencil.stencilTestEnable = VK_FALSE;
 
@@ -110,15 +166,14 @@ VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipel
 	color_blending.blendConstants[2] = 0.0f;
 	color_blending.blendConstants[3] = 0.0f;
 
-	VulkanShader shader = VulkanShader(this->device, shader_path + ".vert.spv", shader_path + ".frag.spv");
 	vector<VkPipelineShaderStageCreateInfo> shader_stage = shader.getShaderStages();
 
 	VkGraphicsPipelineCreateInfo pipelineInfo = {};
 	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	pipelineInfo.stageCount = (uint32_t)shader_stage.size();
 	pipelineInfo.pStages = shader_stage.data();
-	pipelineInfo.pVertexInputState = &vertexInputInfo;
-	pipelineInfo.pInputAssemblyState = &inputAssembly;
+	pipelineInfo.pVertexInputState = &vertex_input_info;
+	pipelineInfo.pInputAssemblyState = &input_assembly;
 	pipelineInfo.pViewportState = &viewportState;
 	pipelineInfo.pRasterizationState = &rasterizer;
 	pipelineInfo.pMultisampleState = &multisampling;

@@ -13,12 +13,12 @@
 #include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanShader.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanTexture.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanView.hpp"
 
 #include "Genesis/Rendering/DelayedResourceDeleter.hpp"
-#include "Genesis/Rendering/RenderingTypes.hpp"
 
 namespace Genesis
 {
@@ -69,9 +69,9 @@ namespace Genesis
 
 		//Resource Stuff
 		void cycleResourceDeleters();
-		DelayedResourceDeleter<VulkanBuffer>* buffer_deleter;
-		DelayedResourceDeleter<VulkanTexture>* texture_deleter;
-		DelayedResourceDeleter<VulkanView>* view_deleter;
+		DelayedResourceDeleter<VulkanBuffer>* buffer_deleter = nullptr;
+		DelayedResourceDeleter<VulkanTexture>* texture_deleter = nullptr;
+		DelayedResourceDeleter<VulkanView>* view_deleter = nullptr;
 
 	private:
 		bool use_debug_layers = true;

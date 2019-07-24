@@ -88,7 +88,7 @@ void VulkanBackend::endFrame()
 	frame->command_buffer->endCommandBuffer();
 }
 
-void VulkanBackend::submitFrame(vector<ViewIndex> sub_views)
+void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
 {
 	if (this->vulkan->swapchain == nullptr)
 	{
@@ -135,47 +135,67 @@ void VulkanBackend::submitFrame(vector<ViewIndex> sub_views)
 	this->vulkan->cycleResourceDeleters();
 }
 
-BufferIndex VulkanBackend::createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage)
+ShaderHandle VulkanBackend::createShader(string vert_data, string frag_data)
 {
-	VulkanBuffer* buffer = new VulkanBuffer(this->vulkan->allocator, size_bytes, getBufferUsage(type), getMemoryUsage(memory_usage));
-	return (BufferIndex)buffer;
+	VulkanShader* shader = new VulkanShader(this->vulkan->device->get(), vert_data, frag_data);
+	return shader;
 }
 
-void VulkanBackend::fillBuffer(BufferIndex buffer_index, void* data, uint64_t data_size)
+void VulkanBackend::destroyShader(ShaderHandle shader_handle)
 {
-	VulkanBuffer* buffer = (VulkanBuffer*)buffer_index;
+	//TEMP
+	delete (VulkanShader*)shader_handle;
+}
+
+BufferHandle VulkanBackend::createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage)
+{
+	VulkanBuffer* buffer = new VulkanBuffer(this->vulkan->allocator, size_bytes, getBufferUsage(type), getMemoryUsage(memory_usage));
+	return (BufferHandle)buffer;
+}
+
+void VulkanBackend::fillBuffer(BufferHandle buffer_handle, void* data, uint64_t data_size)
+{
+	VulkanBuffer* buffer = (VulkanBuffer*)buffer_handle;
 	buffer->fillBuffer(this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), data, data_size);
 }
 
-void VulkanBackend::destroyBuffer(BufferIndex buffer_index)
+void VulkanBackend::destroyBuffer(BufferHandle buffer_handle)
 {
-	this->vulkan->buffer_deleter->addToQueue((VulkanBuffer*)buffer_index);
+	this->vulkan->buffer_deleter->addToQueue((VulkanBuffer*)buffer_handle);
 }
 
-TextureIndex VulkanBackend::createTexture(vector2U size)
+TextureHandle VulkanBackend::createTexture(vector2U size)
 {
 	VulkanTexture* texture = new VulkanTexture(this->vulkan->device, this->vulkan->allocator, this->vulkan->image_descriptor_pool, {size.x, size.y}, getMemoryUsage(MemoryUsage::GPU_Only), this->vulkan->linear_sampler);
-	return (TextureIndex)texture;
+	return (TextureHandle)texture;
 }
 
-void VulkanBackend::fillTexture(TextureIndex texture_index, void* data, uint64_t data_size)
+void VulkanBackend::fillTexture(TextureHandle texture_handle, void* data, uint64_t data_size)
 {
-	VulkanTexture* texture = (VulkanTexture*)texture_index;
+	VulkanTexture* texture = (VulkanTexture*)texture_handle;
 	texture->fillTexture(this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), data, data_size);
 }
 
-void VulkanBackend::destroyTexture(TextureIndex texture_index)
+void VulkanBackend::destroyTexture(TextureHandle texture_handle)
 {
-	this->vulkan->texture_deleter->addToQueue((VulkanTexture*)texture_index);
+	this->vulkan->texture_deleter->addToQueue((VulkanTexture*)texture_handle);
 }
 
-ViewIndex VulkanBackend::createView(ViewType type, vector2U size)
+ViewHandle VulkanBackend::createView(ViewType type, vector2U size)
 {
 	VkExtent2D vk_size = {size.x, size.y};
 
 	uint32_t frames_in_flight = (uint32_t)this->vulkan->frames_in_flight.size();
 
-	VulkanFramebufferLayout* layout = this->vulkan->color_pass_layout;
+	VulkanFramebufferLayout* layout = nullptr;
+	if (type == ViewType::FrameBuffer)
+	{
+		layout = this->vulkan->color_pass_layout;
+	}
+	else if (type == ViewType::ShadowMap)
+	{
+		layout = this->vulkan->shadow_pass_layout;
+	}
 
 	VulkanView* view = new VulkanView(this->vulkan->device, this->vulkan->allocator, frames_in_flight, this->vulkan->graphics_command_pool_set, vk_size, layout, this->vulkan->image_descriptor_pool);
 
@@ -184,39 +204,39 @@ ViewIndex VulkanBackend::createView(ViewType type, vector2U size)
 	clear_values[1].depthStencil = { 1.0f, 0 };
 	view->setClearValues(clear_values);
 
-	return (ViewIndex)view;
+	return (ViewHandle)view;
 }
 
-void VulkanBackend::destroyView(ViewIndex index)
+void VulkanBackend::destroyView(ViewHandle index)
 {
 	this->vulkan->view_deleter->addToQueue((VulkanView*)index);
 }
 
-void VulkanBackend::startView(ViewIndex index)
+void VulkanBackend::startView(ViewHandle index)
 {
 	VulkanView* view = (VulkanView*)index;
 	view->startView(this->frame_index);
 }
 
-void VulkanBackend::endView(ViewIndex index)
+void VulkanBackend::endView(ViewHandle index)
 {
 	VulkanView* view = (VulkanView*)index;
 	view->endView(this->frame_index);
 }
 
-void VulkanBackend::sumbitView(ViewIndex index)
+void VulkanBackend::sumbitView(ViewHandle index)
 {
 	VulkanView* view = (VulkanView*)index;
 	view->submitView(this->frame_index, vector<VulkanView*>(), VK_NULL_HANDLE);
 }
 
-void VulkanBackend::drawMeshView(ViewIndex index, uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, uint32_t indices_count, TextureIndex texture_index, matrix4F mvp)
+void VulkanBackend::drawMeshView(ViewHandle index, uint32_t thread, BufferHandle vertices_handle, BufferHandle indices_handle, uint32_t indices_count, TextureHandle texture_handle, matrix4F mvp)
 {
 	VulkanView* view = (VulkanView*)index;
 
-	VulkanBuffer* vertices_buffer = (VulkanBuffer*)vertices_index;
-	VulkanBuffer* indices_buffer = (VulkanBuffer*)indices_index;
-	VulkanTexture* texture = (VulkanTexture*)texture_index;
+	VulkanBuffer* vertices_buffer = (VulkanBuffer*)vertices_handle;
+	VulkanBuffer* indices_buffer = (VulkanBuffer*)indices_handle;
+	VulkanTexture* texture = (VulkanTexture*)texture_handle;
 	VkDescriptorSet descriptor_set = texture->getDescriptorSet();
 
 	VkCommandBuffer buffer = view->getCommandBuffer(this->frame_index)->getSecondaryCommandBuffer(thread);
@@ -235,16 +255,16 @@ void VulkanBackend::drawMeshView(ViewIndex index, uint32_t thread, BufferIndex v
 	vkCmdDrawIndexed(buffer, indices_count, 1, 0, 0, 0);
 }
 
-void VulkanBackend::drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, uint32_t indices_count, TextureIndex texture_index, matrix4F mvp)
+void VulkanBackend::drawMeshScreen(uint32_t thread, BufferHandle vertices_handle, BufferHandle indices_handle, uint32_t indices_count, TextureHandle texture_handle, matrix4F mvp)
 {
 	if (this->vulkan->swapchain == nullptr)
 	{
 		return;
 	}
 
-	VulkanBuffer* vertices_buffer = (VulkanBuffer*)vertices_index;
-	VulkanBuffer* indices_buffer = (VulkanBuffer*)indices_index;
-	VulkanTexture* texture = (VulkanTexture*)texture_index;
+	VulkanBuffer* vertices_buffer = (VulkanBuffer*)vertices_handle;
+	VulkanBuffer* indices_buffer = (VulkanBuffer*)indices_handle;
+	VulkanTexture* texture = (VulkanTexture*)texture_handle;
 	VkDescriptorSet descriptor_set = texture->getDescriptorSet();
 
 	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
@@ -265,17 +285,17 @@ void VulkanBackend::drawMeshScreen(uint32_t thread, BufferIndex vertices_index, 
 	vkCmdDrawIndexed(buffer, indices_count, 1, 0, 0, 0);
 }
 
-void VulkanBackend::drawMeshScreenViewTextured(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, uint32_t indices_count, ViewIndex view_index, matrix4F mvp)
+void VulkanBackend::drawMeshScreenViewTextured(uint32_t thread, BufferHandle vertices_handle, BufferHandle indices_handle, uint32_t indices_count, ViewHandle view_handle, matrix4F mvp)
 {
 	if (this->vulkan->swapchain == nullptr)
 	{
 		return;
 	}
 
-	VulkanBuffer* vertices_buffer = (VulkanBuffer*)vertices_index;
-	VulkanBuffer* indices_buffer = (VulkanBuffer*)indices_index;
+	VulkanBuffer* vertices_buffer = (VulkanBuffer*)vertices_handle;
+	VulkanBuffer* indices_buffer = (VulkanBuffer*)indices_handle;
 
-	VulkanView* view = (VulkanView*)view_index;
+	VulkanView* view = (VulkanView*)view_handle;
 	VulkanFramebuffer* framebuffer = view->getFramebuffer(this->frame_index);
 	VkDescriptorSet descriptor_set = framebuffer->getImageDescriptor(0);
 
@@ -306,9 +326,9 @@ matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, float aspect_ratio)
 	return proj;
 }
 
-matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, ViewIndex view_index)
+matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, ViewHandle view_handle)
 {
-	VulkanView* view = (VulkanView*)view_index;
+	VulkanView* view = (VulkanView*)view_handle;
 
 	VkExtent2D screen_size = view->getViewSize();
 	float aspect_ratio = ((float)screen_size.width) / ((float)screen_size.height);

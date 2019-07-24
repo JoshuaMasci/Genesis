@@ -2,12 +2,43 @@
 
 #include "Genesis/Application.hpp"
 #include "Genesis/Rendering/Camera.hpp"
+#include "Genesis/Rendering/PipelineSettings.hpp"
+
+#include <fstream>
 
 using namespace Genesis;
 
 Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
+
+
+	{
+		string vert_data = "";
+		string frag_data = "";
+
+		{
+			string file_name = "resources/shaders/Vulkan/texture.vert.spv";
+			std::ifstream file(file_name, std::ios::ate | std::ios::binary);
+			size_t fileSize = (size_t)file.tellg();
+			file.seekg(0);
+			vert_data.resize(fileSize);
+			file.read(vert_data.data(), vert_data.size());
+			file.close();
+		}
+
+		{
+			string file_name = "resources/shaders/Vulkan/texture.frag.spv";
+			std::ifstream file(file_name, std::ios::ate | std::ios::binary);
+			size_t fileSize = (size_t)file.tellg();
+			file.seekg(0);
+			frag_data.resize(fileSize);
+			file.read(frag_data.data(), frag_data.size());
+			file.close();
+		}
+
+		ShaderHandle shader = this->backend->createShader(vert_data, frag_data);
+	}
 }
 
 Renderer::~Renderer()
@@ -26,6 +57,8 @@ Renderer::~Renderer()
 
 void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity)
 {
+	PipelineSettings base_pipeline = {};
+
 	if (!entity_registry.has<WorldTransform>(camera_entity) || !entity_registry.has<Camera>(camera_entity))
 	{
 		//No camera
@@ -47,20 +80,17 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 		matrix4F proj = this->backend->getPerspectiveMatrix(&camera, aspect_ratio);
 		matrix4F mv = proj * view;
 
-		vector<ViewIndex> sub_views;
+		vector<ViewHandle> sub_views;
 
 		auto entity_view = entity_registry.view<ViewModel, WorldTransform>();
 		for (auto entity : entity_view)
 		{
 			auto &view_model = entity_view.get<ViewModel>(entity);
-
-			if (view_model.view == nullptr)
+			if (view_model.view != nullptr)
 			{
-				view_model.view = this->backend->createView(ViewType::FrameBuffer, view_model.view_size);
+				this->drawView(entity_registry, view_model.camera_entity, view_model.view);
+				sub_views.push_back(view_model.view);
 			}
-
-			this->drawView(entity_registry, view_model.camera_entity, view_model.view);
-			sub_views.push_back(view_model.view);
 
 			Mesh* mesh = &this->loaded_meshes[view_model.mesh];
 			auto &transform = entity_view.get<WorldTransform>(entity);
@@ -79,7 +109,7 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 			auto &transform = entity_model.get<WorldTransform>(entity);
 			
 			Mesh* mesh = &this->loaded_meshes[model.mesh];
-			TextureIndex texture = this->loaded_textures[model.texture];
+			TextureHandle texture = this->loaded_textures[model.texture];
 
 			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
 			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
@@ -176,7 +206,7 @@ void Renderer::loadTexture(string texture_file)
 			return;
 		}
 
-		TextureIndex index = this->backend->createTexture(vector2U((uint32_t)width, (uint32_t)height));
+		TextureHandle index = this->backend->createTexture(vector2U((uint32_t)width, (uint32_t)height));
 		this->backend->fillTexture(index, (void*)data, data_size);
 		stbi_image_free(data);
 
@@ -188,16 +218,16 @@ void Renderer::loadTexture(string texture_file)
 	}
 }
 
-void Renderer::drawView(EntityRegistry & entity_registry, EntityId camera_entity, ViewIndex view_index)
+void Renderer::drawView(EntityRegistry & entity_registry, EntityId camera_entity, ViewHandle view_handle)
 {
-	this->backend->startView(view_index);
+	this->backend->startView(view_handle);
 
 	auto& camera = entity_registry.get<Camera>(camera_entity);
 	auto& transform = entity_registry.get<WorldTransform>(camera_entity);
 	Transform& current = transform.current_transform;
 
 	matrix4F view = glm::lookAt(current.getPosition(), current.getPosition() + current.getForward(), current.getUp());
-	matrix4F proj = this->backend->getPerspectiveMatrix(&camera, view_index);
+	matrix4F proj = this->backend->getPerspectiveMatrix(&camera, view_handle);
 	matrix4F mv = proj * view;
 
 	auto entity_model = entity_registry.view<Model, WorldTransform>();
@@ -207,14 +237,14 @@ void Renderer::drawView(EntityRegistry & entity_registry, EntityId camera_entity
 		auto &transform = entity_model.get<WorldTransform>(entity);
 
 		Mesh* mesh = &this->loaded_meshes[model.mesh];
-		TextureIndex texture = this->loaded_textures[model.texture];
+		TextureHandle texture = this->loaded_textures[model.texture];
 
 		matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
 		matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 		matrix4F mvp = mv * (translation * orientation);
-		this->backend->drawMeshView(view_index, 0, mesh->vertices, mesh->indices, mesh->indices_count, texture, mvp);
+		this->backend->drawMeshView(view_handle, 0, mesh->vertices, mesh->indices, mesh->indices_count, texture, mvp);
 	}
 
-	this->backend->endView(view_index);
-	this->backend->sumbitView(view_index);
+	this->backend->endView(view_handle);
+	this->backend->sumbitView(view_handle);
 }

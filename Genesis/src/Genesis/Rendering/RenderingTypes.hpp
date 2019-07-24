@@ -23,7 +23,8 @@ namespace Genesis
 		ShadowMap
 	};
 
-	typedef void* BufferIndex;
-	typedef void* TextureIndex;
-	typedef void* ViewIndex;
+	typedef void* BufferHandle;
+	typedef void* TextureHandle;
+	typedef void* ViewHandle;
+	typedef void* ShaderHandle;
 }

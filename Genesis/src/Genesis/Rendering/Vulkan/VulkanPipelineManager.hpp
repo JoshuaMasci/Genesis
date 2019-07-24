@@ -17,9 +17,6 @@ namespace Genesis
 
 		void buildScreenRenderPass(VkFormat image_format, VkFormat depth_format);
 
-		//TODO used to rebuild pipelines when the swapchain is rebuilt
-		void rebuildSwapchainPipelines(VkExtent2D swapchain_size);
-
 		VkPipelineLayout textured_mesh_layout;
 
 		//Pipeline

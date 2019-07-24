@@ -37,7 +37,6 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 
 	this->pipeline_manager = new VulkanPiplineManager(this->device);
 	this->pipeline_manager->buildScreenRenderPass(this->swapchain->getSwapchainFormat(), this->swapchain->getSwapchainDepthFormat());
-	this->pipeline_manager->rebuildSwapchainPipelines(this->swapchain->getSwapchainExtent());
 
 	//Framebuffers
 	this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->pipeline_manager->getScreenRenderPass());
@@ -148,7 +147,6 @@ bool VulkanInstance::acquireSwapchainImage(uint32_t& image_index, VkSemaphore si
 		//Creates swapchain
 		this->swapchain = new VulkanSwapchain(this->device, this->window, this->surface);
 		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->pipeline_manager->getScreenRenderPass());
-		this->pipeline_manager->rebuildSwapchainPipelines(this->swapchain->getSwapchainExtent());
 	}
 
 	VkResult result = vkAcquireNextImageKHR(this->device->get(), this->swapchain->get(), std::numeric_limits<uint64_t>::max(), signal_semaphore, VK_NULL_HANDLE, &image_index);
@@ -183,7 +181,6 @@ bool VulkanInstance::acquireSwapchainImage(uint32_t& image_index, VkSemaphore si
 		//Creates swapchain
 		this->swapchain = new VulkanSwapchain(this->device, this->window, this->surface);
 		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->pipeline_manager->getScreenRenderPass());
-		this->pipeline_manager->rebuildSwapchainPipelines(this->swapchain->getSwapchainExtent());
 
 		VkResult result = vkAcquireNextImageKHR(this->device->get(), this->swapchain->get(), std::numeric_limits<uint64_t>::max(), signal_semaphore, VK_NULL_HANDLE, &image_index);
 	}

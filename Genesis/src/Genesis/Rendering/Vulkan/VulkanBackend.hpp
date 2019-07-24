@@ -16,32 +16,35 @@ namespace Genesis
 
 		virtual bool beginFrame() override;
 		virtual void endFrame() override;
-		virtual void submitFrame(vector<ViewIndex> sub_views) override;
+		virtual void submitFrame(vector<ViewHandle> sub_views) override;
 
-		virtual BufferIndex createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) override;
-		virtual void fillBuffer(BufferIndex buffer_index, void* data, uint64_t data_size) override;
-		virtual void destroyBuffer(BufferIndex buffer_index) override;
+		virtual ShaderHandle createShader(string vert_data, string frag_data) override;
+		virtual void destroyShader(ShaderHandle shader_handle) override;
 
-		virtual TextureIndex createTexture(vector2U size) override;
-		virtual void fillTexture(TextureIndex texture_index, void* data, uint64_t data_size) override;
-		virtual void destroyTexture(TextureIndex texture_index) override;
+		virtual BufferHandle createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) override;
+		virtual void fillBuffer(BufferHandle buffer_handle, void* data, uint64_t data_size) override;
+		virtual void destroyBuffer(BufferHandle buffer_handle) override;
 
-		virtual ViewIndex createView(ViewType type, vector2U size) override;
-		virtual void destroyView(ViewIndex index) override;
+		virtual TextureHandle createTexture(vector2U size) override;
+		virtual void fillTexture(TextureHandle texture_handle, void* data, uint64_t data_size) override;
+		virtual void destroyTexture(TextureHandle texture_handle) override;
 
-		virtual void startView(ViewIndex index) override;
-		virtual void endView(ViewIndex index) override;
-		virtual void sumbitView(ViewIndex index) override;
+		virtual ViewHandle createView(ViewType type, vector2U size) override;
+		virtual void destroyView(ViewHandle index) override;
 
-		virtual void drawMeshView(ViewIndex index, uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, uint32_t indices_count, TextureIndex texture_index, matrix4F mvp) override;
+		virtual void startView(ViewHandle index) override;
+		virtual void endView(ViewHandle index) override;
+		virtual void sumbitView(ViewHandle index) override;
+
+		virtual void drawMeshView(ViewHandle index, uint32_t thread, BufferHandle vertices_handle, BufferHandle indices_handle, uint32_t indices_count, TextureHandle texture_handle, matrix4F mvp) override;
 
 		//TEMP commands
-		virtual void drawMeshScreen(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, uint32_t indices_count, TextureIndex texture_index, matrix4F mvp) override;
-		virtual void drawMeshScreenViewTextured(uint32_t thread, BufferIndex vertices_index, BufferIndex indices_index, uint32_t indices_count, ViewIndex view_index, matrix4F mvp) override;
+		virtual void drawMeshScreen(uint32_t thread, BufferHandle vertices_handle, BufferHandle indices_handle, uint32_t indices_count, TextureHandle texture_handle, matrix4F mvp) override;
+		virtual void drawMeshScreenViewTextured(uint32_t thread, BufferHandle vertices_handle, BufferHandle indices_handle, uint32_t indices_count, ViewHandle view_handle, matrix4F mvp) override;
 
 		//Utils
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) override;
-		virtual matrix4F getPerspectiveMatrix(Camera* camera, ViewIndex view) override;
+		virtual matrix4F getPerspectiveMatrix(Camera* camera, ViewHandle view) override;
 
 		virtual vector2U getScreenSize() override;
 		virtual void waitTillDone() override;

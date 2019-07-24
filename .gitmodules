@@ -20,3 +20,6 @@
 [submodule "submodules/vulkan_memory_allocator"]
 	path = submodules/vulkan_memory_allocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+[submodule "submodules/spirv-reflect"]
+	path = submodules/spirv-reflect
+	url = https://github.com/chaoticbob/SPIRV-Reflect

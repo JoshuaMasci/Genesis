@@ -20,26 +20,6 @@ namespace Genesis
 
 	class VertexInputDescription
 	{
-	private:
-		uint32_t getInputElementSize(VertexElementType type)
-		{
-			switch (type)
-			{
-			case Genesis::VertexElementType::float1:
-				return sizeof(float);
-			case Genesis::VertexElementType::float2:
-				return sizeof(float) * 2;
-			case Genesis::VertexElementType::float3:
-				return sizeof(float) * 3;
-			case Genesis::VertexElementType::float4:
-				return sizeof(float) * 4;
-			}
-
-			printf("Error: invalid input type\n");
-			assert(false);
-			return 0;
-		};
-
 	public:
 		VertexInputDescription(vector<InputElement> input_elements)
 		{
@@ -67,6 +47,25 @@ namespace Genesis
 		inline uint32_t getSize() { return this->total_size; };
 
 	private:
+		uint32_t getInputElementSize(VertexElementType type)
+		{
+			switch (type)
+			{
+			case Genesis::VertexElementType::float1:
+				return sizeof(float);
+			case Genesis::VertexElementType::float2:
+				return sizeof(float) * 2;
+			case Genesis::VertexElementType::float3:
+				return sizeof(float) * 3;
+			case Genesis::VertexElementType::float4:
+				return sizeof(float) * 4;
+			}
+
+			printf("Error: invalid input type\n");
+			assert(false);
+			return 0;
+		};
+
 		struct InputElementInternal
 		{
 			string name;

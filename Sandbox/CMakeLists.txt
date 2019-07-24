@@ -22,10 +22,11 @@ link_directories(${CMAKE_SOURCE_DIR}/submodules/bullet_physics/lib/)
 #include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
 #link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
 
-#Vulkan
-include_directories(${CMAKE_SOURCE_DIR}/submodules/vulkan_memory_allocator/src/)
-include_directories(C:/VulkanSDK/1.1.101.0/Include/)
-link_directories(C:/VulkanSDK/1.1.101.0/Lib)
+if(INCLUDE_VULKAN)
+	find_package(Vulkan REQUIRED)
+	include_directories(${CMAKE_SOURCE_DIR}/submodules/vulkan_memory_allocator/src/)
+	include_directories(Vulkan_INCLUDE_DIR)
+endif()
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})
 set_target_properties(Sandbox PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${Sandbox_SOURCE_DIR}")

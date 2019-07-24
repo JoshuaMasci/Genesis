@@ -2,7 +2,7 @@
 
 #include "Genesis/Rendering/Vulkan/VulkanMeshTypes.hpp"
 
-#include "Genesis/Rendering/ShaderInputDescription.hpp"
+#include "Genesis/Rendering/VertexInputDescription.hpp"
 
 using namespace Genesis;
 
@@ -121,21 +121,4 @@ void VulkanPiplineManager::buildScreenRenderPass(VkFormat image_format, VkFormat
 	{
 		throw std::runtime_error("failed to create render pass!");
 	}
-}
-
-void VulkanPiplineManager::rebuildSwapchainPipelines(VkExtent2D swapchain_size)
-{
-	if (this->textured_mesh_screen_pipeline != nullptr)
-	{
-		delete this->textured_mesh_screen_pipeline;
-	}
-
-	VertexInputDescription vertex_input
-	({ 
-		{"in_position", VertexElementType::float3},
-		{"in_normal", VertexElementType::float3},
-		{"in_uv", VertexElementType::float2}
-	});
-
-	this->textured_mesh_screen_pipeline = new VulkanRenderPipline(this->device, this->textured_mesh_layout, this->screen_render_pass, "resources/shaders/Vulkan/texture", vertex_input, swapchain_size);
 }

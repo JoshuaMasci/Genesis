@@ -25,15 +25,20 @@ source_group("Input" FILES ${GENESIS_INPUT})
 file(GLOB_RECURSE GENESIS_JOB "src/Genesis/Job/*.*")
 source_group("Job" FILES ${GENESIS_JOB})
 
-file(GLOB_RECURSE GENESIS_PHYSICS "src/Genesis/Physics/*.*")
-source_group("Physics" FILES ${GENESIS_PHYSICS})
+if(INCLUDE_VULKAN)
+	file(GLOB GENESIS_SPIRV "${CMAKE_SOURCE_DIR}/submodules/spirv-reflect/spirv_reflect.c" "${CMAKE_SOURCE_DIR}/submodules/spirv-reflect/spirv_reflect.h")
+	source_group("SPIRV UTILS" FILES ${GENESIS_SPIRV})
+endif()
 
 #TODO Select Subdirectories
 file(GLOB_RECURSE GENESIS_PLATFORM "src/Genesis/Platform/*.*")
 source_group("Platform" FILES ${GENESIS_PLATFORM})
 
+file(GLOB_RECURSE GENESIS_PHYSICS "src/Genesis/Physics/*.*")
+source_group("Physics" FILES ${GENESIS_PHYSICS})
+
 #Create Libary
-add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_RENDERING} ${GENESIS_RENDERING_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM})
+add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_RENDERING} ${GENESIS_RENDERING_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM} ${GENESIS_SPIRV})
 
 #GLM
 include_directories(${CMAKE_SOURCE_DIR}/submodules/glm/)
@@ -64,11 +69,15 @@ include_directories(${CMAKE_SOURCE_DIR}/submodules/concurrent_queue/)
 #target_link_libraries (Genesis PRIVATE opengl32)
 #target_link_libraries (Genesis PRIVATE glu32)
 
-#Vulkan
-include_directories(C:/VulkanSDK/1.1.101.0/Include/)
-link_directories(C:/VulkanSDK/1.1.101.0/Lib)
-target_link_libraries(Genesis PRIVATE vulkan-1)
-include_directories(${CMAKE_SOURCE_DIR}/submodules/vulkan_memory_allocator/src/)
+
+if(INCLUDE_VULKAN)
+	find_package(Vulkan REQUIRED)
+	include_directories(Vulkan_INCLUDE_DIR)
+	target_link_libraries(Genesis PRIVATE Vulkan::Vulkan)
+	
+	include_directories(${CMAKE_SOURCE_DIR}/submodules/vulkan_memory_allocator/src/)
+	include_directories(${CMAKE_SOURCE_DIR}/submodules/spirv-reflect/)
+endif()
 
 #STB
 include_directories(${CMAKE_SOURCE_DIR}/submodules/stb/)

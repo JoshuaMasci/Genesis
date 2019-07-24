@@ -21,7 +21,7 @@ namespace Genesis
 		EntityId camera_entity;
 		vector2U view_size;
 
-		ViewIndex view = nullptr;
+		ViewHandle view = nullptr;
 	};
 
 	struct Model
@@ -49,8 +49,8 @@ namespace Genesis
 
 	struct Mesh
 	{
-		BufferIndex vertices = nullptr;
-		BufferIndex indices = nullptr;
+		BufferHandle vertices = nullptr;
+		BufferHandle indices = nullptr;
 		uint32_t indices_count = 0;
 	};
 
@@ -67,14 +67,14 @@ namespace Genesis
 		void loadTexture(string texture_file);
 
 	private:
-		void drawView(EntityRegistry& entity_registry, EntityId camera_entity, ViewIndex view);
+		void drawView(EntityRegistry& entity_registry, EntityId camera_entity, ViewHandle view);
 
 		//Lifetime of the Backend is longer than the Renderer
 		//No deleteing please
 		RenderingBackend* backend;
 
-		//Temp resource stuff
+		//Resources
 		map<string, Mesh> loaded_meshes;
-		map<string, TextureIndex> loaded_textures;
+		map<string, TextureHandle> loaded_textures;
 	};
 }

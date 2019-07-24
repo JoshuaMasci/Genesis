@@ -37,4 +37,14 @@ namespace Genesis
 
 		Array<VkClearValue> clear_values;
 	};
+
+	class VulkanScreenView : public VulkanView
+	{
+
+	};
+
+	class VulkanOffscreenView : public VulkanView
+	{
+
+	};
 }
