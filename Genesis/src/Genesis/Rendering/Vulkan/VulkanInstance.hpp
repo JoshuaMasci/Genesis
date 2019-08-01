@@ -10,7 +10,6 @@
 #include "Genesis/Rendering/Vulkan/VulkanSwapchainFramebuffers.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanMultithreadCommandBuffer.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanShader.hpp"
@@ -53,9 +52,8 @@ namespace Genesis
 
 		Array<VulkanFrame> frames_in_flight;
 
-		VulkanPiplineManager* pipeline_manager = nullptr;
-
 		VulkanDescriptorPool* image_descriptor_pool = nullptr;
+		VulkanDescriptorPool* uniform_descriptor_pool = nullptr;
 
 		VulkanFramebufferLayout* shadow_pass_layout = nullptr;
 		VulkanFramebufferLayout* color_pass_layout = nullptr;
@@ -72,6 +70,7 @@ namespace Genesis
 		DelayedResourceDeleter<VulkanBuffer>* buffer_deleter = nullptr;
 		DelayedResourceDeleter<VulkanTexture>* texture_deleter = nullptr;
 		DelayedResourceDeleter<VulkanView>* view_deleter = nullptr;
+		DelayedResourceDeleter<VulkanShader>* shader_deleter = nullptr;
 
 	private:
 		bool use_debug_layers = true;

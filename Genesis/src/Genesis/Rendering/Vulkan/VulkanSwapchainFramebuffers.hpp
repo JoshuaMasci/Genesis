@@ -10,21 +10,24 @@ namespace Genesis
 	class VulkanSwapchainFramebuffers
 	{
 	public:
-		VulkanSwapchainFramebuffers(VulkanDevice* device, VulkanSwapchain* swapchain, VulkanAllocator* allocator, VkRenderPass screen_render_pass);
+		VulkanSwapchainFramebuffers(VulkanDevice* device, VulkanSwapchain* swapchain, VulkanAllocator* allocator);
 		~VulkanSwapchainFramebuffers();
 
 		inline VkFramebuffer getSwapchainFramebuffer(int index) { return this->swapchain_framebuffers[index]; };
 
+		inline VkRenderPass getRenderPass() { return this->render_pass; };
+
 	private:
 		VkDevice device;
 		VulkanAllocator* allocator;
+		VkRenderPass render_pass;
 
-		vector<VkImage> swapchain_images;
-		vector<VkImageView> swapchain_imageviews;
-		vector<VkFramebuffer> swapchain_framebuffers;
+		Array<VkImage> swapchain_images;
+		Array<VkImageView> swapchain_imageviews;
+		Array<VkFramebuffer> swapchain_framebuffers;
 
-		vector<VkImage> depth_images;
-		vector<VkImageView> depth_imageviews;
-		vector<VmaAllocation> depth_images_memory;
+		Array<VkImage> depth_images;
+		Array<VkImageView> depth_imageviews;
+		Array<VmaAllocation> depth_images_memory;
 	};
 }

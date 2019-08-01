@@ -12,7 +12,6 @@ Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
 
-
 	{
 		string vert_data = "";
 		string frag_data = "";
@@ -38,6 +37,7 @@ Renderer::Renderer(RenderingBackend* backend)
 		}
 
 		ShaderHandle shader = this->backend->createShader(vert_data, frag_data);
+		this->backend->destroyShader(shader);
 	}
 }
 
@@ -99,7 +99,7 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 			matrix4F mvp = mv * (translation * orientation);
 
-			this->backend->drawMeshScreenViewTextured(0, mesh->vertices, mesh->indices, mesh->indices_count, view_model.view, mvp);
+			//this->backend->drawMeshScreenViewTextured(0, mesh->vertices, mesh->indices, mesh->indices_count, view_model.view, mvp);
 		}
 
 		auto entity_model = entity_registry.view<Model, WorldTransform>();
@@ -114,7 +114,7 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
 			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 			matrix4F mvp = mv * (translation * orientation);
-			this->backend->drawMeshScreen(0, mesh->vertices, mesh->indices, mesh->indices_count, texture, mvp);
+			//this->backend->drawMeshScreen(0, mesh->vertices, mesh->indices, mesh->indices_count, texture, mvp);
 		}
 
 		this->backend->endFrame();
@@ -242,7 +242,7 @@ void Renderer::drawView(EntityRegistry & entity_registry, EntityId camera_entity
 		matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
 		matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 		matrix4F mvp = mv * (translation * orientation);
-		this->backend->drawMeshView(view_handle, 0, mesh->vertices, mesh->indices, mesh->indices_count, texture, mvp);
+		//this->backend->drawMeshView(view_handle, 0, mesh->vertices, mesh->indices, mesh->indices_count, texture, mvp);
 	}
 
 	this->backend->endView(view_handle);

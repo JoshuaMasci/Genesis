@@ -2,7 +2,7 @@
 
 using namespace Genesis;
 
-VulkanView::VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VulkanCommandPoolSet* command_pool_set, VkExtent2D size, VulkanFramebufferLayout* layout, VulkanDescriptorPool* descriptor_pool)
+VulkanView::VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VulkanCommandPoolSet* command_pool_set, VkExtent2D size, VulkanFramebufferLayout* layout)
 {
 	this->device = device;
 
@@ -15,7 +15,7 @@ VulkanView::VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_
 	this->framebuffers.resize(frames_in_flight);
 	for (size_t i = 0; i < this->framebuffers.size(); i++)
 	{
-		this->framebuffers[i] = layout->createFramebuffer(size, allocator, descriptor_pool);
+		this->framebuffers[i] = layout->createFramebuffer(size, allocator);
 	}
 
 	this->view_done_semaphores.resize(frames_in_flight);

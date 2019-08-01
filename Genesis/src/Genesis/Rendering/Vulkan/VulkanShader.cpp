@@ -135,6 +135,13 @@ VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
 
 VulkanShader::~VulkanShader()
 {
+	for (size_t i = 0; i < this->descriptor_set_layouts.size(); i++)
+	{
+		vkDestroyDescriptorSetLayout(this->device, this->descriptor_set_layouts[i], nullptr);
+	}
+
+	vkDestroyPipelineLayout(this->device, this->pipeline_layout, nullptr);
+
 	vkDestroyShaderModule(this->device, this->vertShaderModule, nullptr);
 
 	if (this->fragShaderModule != VK_NULL_HANDLE)

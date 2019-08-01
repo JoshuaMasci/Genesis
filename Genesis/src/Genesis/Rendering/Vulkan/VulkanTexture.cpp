@@ -4,11 +4,10 @@
 
 using namespace Genesis;
 
-VulkanTexture::VulkanTexture(VulkanDevice* device, VulkanAllocator* allocator, VulkanDescriptorPool* descriptor_pool, VkExtent2D size, VmaMemoryUsage memory_usage, VkSampler sampler)
+VulkanTexture::VulkanTexture(VulkanDevice* device, VulkanAllocator* allocator, VkExtent2D size, VmaMemoryUsage memory_usage, VkSampler sampler)
 {
 	this->device = device->get();
 	this->allocator = allocator;
-	this->descriptor_pool = descriptor_pool;
 	this->size = size;
 
 	VkImageCreateInfo image_info = {};
@@ -38,26 +37,10 @@ VulkanTexture::VulkanTexture(VulkanDevice* device, VulkanAllocator* allocator, V
 	view_info.subresourceRange.baseArrayLayer = 0;
 	view_info.subresourceRange.layerCount = 1;
 	vkCreateImageView(this->device, &view_info, nullptr, &this->image_view);
-
-	this->image_descriptor_set = this->descriptor_pool->getDescriptorSet();
-	VkDescriptorImageInfo descriptor_image_info = {};
-	descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-	descriptor_image_info.imageView = this->image_view;
-	descriptor_image_info.sampler = sampler;
-	VkWriteDescriptorSet descriptor_write = {};
-	descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-	descriptor_write.dstSet = this->image_descriptor_set;
-	descriptor_write.dstBinding = 0;
-	descriptor_write.dstArrayElement = 0;
-	descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-	descriptor_write.descriptorCount = 1;
-	descriptor_write.pImageInfo = &descriptor_image_info;
-	vkUpdateDescriptorSets(this->device, 1, &descriptor_write, 0, nullptr);
 }
 
 VulkanTexture::~VulkanTexture()
 {
-	this->descriptor_pool->freeDescriptorSet(this->image_descriptor_set);
 	vkDestroyImageView(this->device, this->image_view, nullptr);
 	this->allocator->destroyImage(this->image, this->image_memory);
 }

@@ -15,14 +15,13 @@ namespace Genesis
 		VkImage image = VK_NULL_HANDLE;
 		VmaAllocation image_memory;
 		VkImageView image_view = VK_NULL_HANDLE;
-		VkDescriptorSet image_descriptor_set;
 		VkFormat image_format = VK_FORMAT_UNDEFINED;
 	};
 
 	class VulkanFramebuffer
 	{
 	public:
-		VulkanFramebuffer(VkDevice device, VulkanAllocator* allocator, VulkanDescriptorPool* descriptor_pool, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, VkSampler sampler);
+		VulkanFramebuffer(VkDevice device, VulkanAllocator* allocator, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass);
 		virtual ~VulkanFramebuffer();
 
 		inline VkExtent2D getSize() { return this->size; };
@@ -30,30 +29,30 @@ namespace Genesis
 		inline VkFramebuffer get() { return this->framebuffer; };
 
 		//TEMP
-		inline VkImageView getImageView(uint16_t i) { return this->images[i].image_view; };
-		inline VkDescriptorSet getImageDescriptor(uint16_t i) { return this->images[i].image_descriptor_set; };
+		//inline VkImageView getImageView(uint16_t i) { return this->images[i].image_view; };
 
 	private:
 		VkDevice device;
 		VkExtent2D size;
+		VkRenderPass render_pass;
+
+		//TODO ARRAY
 		Array<VulkanFramebufferImage> images;
 		VulkanFramebufferImage depth_image;
-		VkRenderPass render_pass;
 		VkFramebuffer framebuffer;
 		
 		VulkanAllocator* allocator = nullptr;
-		VulkanDescriptorPool* descriptor_pool = nullptr;
 	};
 
 	class VulkanFramebufferLayout
 	{
 	public:
-		VulkanFramebufferLayout(VkDevice device, Array<VkFormat>& color_formats, VkFormat depth_format, VkSampler sampler);
+		VulkanFramebufferLayout(VkDevice device, Array<VkFormat>& color_formats, VkFormat depth_format);
 		~VulkanFramebufferLayout();
 
 		inline VkRenderPass getRenderPass() { return this->render_pass; };
 
-		VulkanFramebuffer* createFramebuffer(VkExtent2D size, VulkanAllocator* allocator, VulkanDescriptorPool* descriptor_pool);
+		VulkanFramebuffer* createFramebuffer(VkExtent2D size, VulkanAllocator* allocator);
 
 	private:
 		VkDevice device;
@@ -61,6 +60,5 @@ namespace Genesis
 
 		Array<VkFormat> color_formats;
 		VkFormat depth_format;
-		VkSampler image_sampler;
 	};
 }

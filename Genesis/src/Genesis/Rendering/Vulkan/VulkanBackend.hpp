@@ -36,12 +36,6 @@ namespace Genesis
 		virtual void endView(ViewHandle index) override;
 		virtual void sumbitView(ViewHandle index) override;
 
-		virtual void drawMeshView(ViewHandle index, uint32_t thread, BufferHandle vertices_handle, BufferHandle indices_handle, uint32_t indices_count, TextureHandle texture_handle, matrix4F mvp) override;
-
-		//TEMP commands
-		virtual void drawMeshScreen(uint32_t thread, BufferHandle vertices_handle, BufferHandle indices_handle, uint32_t indices_count, TextureHandle texture_handle, matrix4F mvp) override;
-		virtual void drawMeshScreenViewTextured(uint32_t thread, BufferHandle vertices_handle, BufferHandle indices_handle, uint32_t indices_count, ViewHandle view_handle, matrix4F mvp) override;
-
 		//Utils
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) override;
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, ViewHandle view) override;

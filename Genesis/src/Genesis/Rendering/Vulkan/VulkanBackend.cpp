@@ -61,7 +61,7 @@ bool VulkanBackend::beginFrame()
 	{
 		VkExtent2D swapchain_extent = this->vulkan->swapchain->getSwapchainExtent();
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = this->vulkan->pipeline_manager->getScreenRenderPass();
+		renderPassInfo.renderPass = this->vulkan->swapchain_framebuffers->getRenderPass();
 		renderPassInfo.framebuffer = this->vulkan->swapchain_framebuffers->getSwapchainFramebuffer(this->swapchain_image_index);
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = swapchain_extent;
@@ -107,7 +107,7 @@ void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
 	for (size_t i = 1; i < wait_stages; i++)
 	{
 		wait_semaphores[i] = ((VulkanView*)sub_views[i - 1])->getWaitSemaphore(this->frame_index);
-		wait_states[i] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT; //TODO figure out better system maybe
+		wait_states[i] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 	}
 
 	Array<VkSemaphore> signal_semaphores(1);
@@ -166,7 +166,7 @@ void VulkanBackend::destroyBuffer(BufferHandle buffer_handle)
 
 TextureHandle VulkanBackend::createTexture(vector2U size)
 {
-	VulkanTexture* texture = new VulkanTexture(this->vulkan->device, this->vulkan->allocator, this->vulkan->image_descriptor_pool, {size.x, size.y}, getMemoryUsage(MemoryUsage::GPU_Only), this->vulkan->linear_sampler);
+	VulkanTexture* texture = new VulkanTexture(this->vulkan->device, this->vulkan->allocator, {size.x, size.y}, getMemoryUsage(MemoryUsage::GPU_Only), this->vulkan->linear_sampler);
 	return (TextureHandle)texture;
 }
 
@@ -197,7 +197,7 @@ ViewHandle VulkanBackend::createView(ViewType type, vector2U size)
 		layout = this->vulkan->shadow_pass_layout;
 	}
 
-	VulkanView* view = new VulkanView(this->vulkan->device, this->vulkan->allocator, frames_in_flight, this->vulkan->graphics_command_pool_set, vk_size, layout, this->vulkan->image_descriptor_pool);
+	VulkanView* view = new VulkanView(this->vulkan->device, this->vulkan->allocator, frames_in_flight, this->vulkan->graphics_command_pool_set, vk_size, layout);
 
 	Array<VkClearValue> clear_values(2);
 	clear_values[0].color = { 0.8f, 0.0f, 0.8f, 1.0f };
@@ -228,93 +228,6 @@ void VulkanBackend::sumbitView(ViewHandle index)
 {
 	VulkanView* view = (VulkanView*)index;
 	view->submitView(this->frame_index, vector<VulkanView*>(), VK_NULL_HANDLE);
-}
-
-void VulkanBackend::drawMeshView(ViewHandle index, uint32_t thread, BufferHandle vertices_handle, BufferHandle indices_handle, uint32_t indices_count, TextureHandle texture_handle, matrix4F mvp)
-{
-	VulkanView* view = (VulkanView*)index;
-
-	VulkanBuffer* vertices_buffer = (VulkanBuffer*)vertices_handle;
-	VulkanBuffer* indices_buffer = (VulkanBuffer*)indices_handle;
-	VulkanTexture* texture = (VulkanTexture*)texture_handle;
-	VkDescriptorSet descriptor_set = texture->getDescriptorSet();
-
-	VkCommandBuffer buffer = view->getCommandBuffer(this->frame_index)->getSecondaryCommandBuffer(thread);
-
-	vkCmdPushConstants(buffer, this->vulkan->pipeline_manager->textured_mesh_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
-	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->textured_mesh_screen_pipeline->getPipeline());
-
-	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->textured_mesh_layout, 0, 1, &descriptor_set, 0, nullptr);
-
-	VkBuffer vertexBuffers[] = { vertices_buffer->get() };
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
-
-	vkCmdBindIndexBuffer(buffer, indices_buffer->get(), 0, VK_INDEX_TYPE_UINT32);
-
-	vkCmdDrawIndexed(buffer, indices_count, 1, 0, 0, 0);
-}
-
-void VulkanBackend::drawMeshScreen(uint32_t thread, BufferHandle vertices_handle, BufferHandle indices_handle, uint32_t indices_count, TextureHandle texture_handle, matrix4F mvp)
-{
-	if (this->vulkan->swapchain == nullptr)
-	{
-		return;
-	}
-
-	VulkanBuffer* vertices_buffer = (VulkanBuffer*)vertices_handle;
-	VulkanBuffer* indices_buffer = (VulkanBuffer*)indices_handle;
-	VulkanTexture* texture = (VulkanTexture*)texture_handle;
-	VkDescriptorSet descriptor_set = texture->getDescriptorSet();
-
-	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
-
-	VkCommandBuffer buffer = frame->command_buffer->getSecondaryCommandBuffer(thread);
-
-	vkCmdPushConstants(buffer, this->vulkan->pipeline_manager->textured_mesh_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
-	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->textured_mesh_screen_pipeline->getPipeline());
-	
-	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->textured_mesh_layout, 0, 1, &descriptor_set, 0, nullptr);
-
-	VkBuffer vertexBuffers[] = { vertices_buffer->get() };
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
-
-	vkCmdBindIndexBuffer(buffer, indices_buffer->get(), 0, VK_INDEX_TYPE_UINT32);
-
-	vkCmdDrawIndexed(buffer, indices_count, 1, 0, 0, 0);
-}
-
-void VulkanBackend::drawMeshScreenViewTextured(uint32_t thread, BufferHandle vertices_handle, BufferHandle indices_handle, uint32_t indices_count, ViewHandle view_handle, matrix4F mvp)
-{
-	if (this->vulkan->swapchain == nullptr)
-	{
-		return;
-	}
-
-	VulkanBuffer* vertices_buffer = (VulkanBuffer*)vertices_handle;
-	VulkanBuffer* indices_buffer = (VulkanBuffer*)indices_handle;
-
-	VulkanView* view = (VulkanView*)view_handle;
-	VulkanFramebuffer* framebuffer = view->getFramebuffer(this->frame_index);
-	VkDescriptorSet descriptor_set = framebuffer->getImageDescriptor(0);
-
-	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
-
-	VkCommandBuffer buffer = frame->command_buffer->getSecondaryCommandBuffer(thread);
-
-	vkCmdPushConstants(buffer, this->vulkan->pipeline_manager->textured_mesh_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(matrix4F), &mvp);
-	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->textured_mesh_screen_pipeline->getPipeline());
-
-	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->vulkan->pipeline_manager->textured_mesh_layout, 0, 1, &descriptor_set, 0, nullptr);
-
-	VkBuffer vertexBuffers[] = { vertices_buffer->get() };
-	VkDeviceSize offsets[] = { 0 };
-	vkCmdBindVertexBuffers(buffer, 0, 1, vertexBuffers, offsets);
-
-	vkCmdBindIndexBuffer(buffer, indices_buffer->get(), 0, VK_INDEX_TYPE_UINT32);
-
-	vkCmdDrawIndexed(buffer, indices_count, 1, 0, 0, 0);
 }
 
 matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, float aspect_ratio)

@@ -6,10 +6,9 @@
 
 using namespace Genesis;
 
-VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, VkDescriptorType type, VkDescriptorSetLayout layout, uint32_t max_number)
+VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, VkDescriptorType type, uint32_t max_number)
 {
 	this->device = device;
-	this->layout = layout;
 
 	Array<VkDescriptorPoolSize> pool_sizes(1);
 	pool_sizes[0].type = type;
@@ -33,21 +32,15 @@ VulkanDescriptorPool::~VulkanDescriptorPool()
 	vkDestroyDescriptorPool(this->device, this->pool, nullptr);
 }
 
-VkDescriptorSet VulkanDescriptorPool::getDescriptorSet()
+VkDescriptorSet VulkanDescriptorPool::getDescriptorSet(VkDescriptorSetLayout layout)
 {
 	VkDescriptorSet descriptor_set;
-
-	/*bool got_set = this->descriptor_set_queue.try_dequeue(descriptor_set);
-	if (got_set)
-	{
-		return descriptor_set;
-	}*/
 
 	VkDescriptorSetAllocateInfo set_alloc_info = {};
 	set_alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	set_alloc_info.descriptorPool = this->pool;
 	set_alloc_info.descriptorSetCount = 1;
-	set_alloc_info.pSetLayouts = &this->layout;
+	set_alloc_info.pSetLayouts = &layout;
 
 	if (vkAllocateDescriptorSets(this->device, &set_alloc_info, &descriptor_set) != VK_SUCCESS)
 	{
@@ -59,6 +52,5 @@ VkDescriptorSet VulkanDescriptorPool::getDescriptorSet()
 
 void VulkanDescriptorPool::freeDescriptorSet(VkDescriptorSet descriptor_set)
 {
-	//this->descriptor_set_queue.enqueue(descriptor_set);
 	vkFreeDescriptorSets(this->device, this->pool, 1, &descriptor_set);
 }

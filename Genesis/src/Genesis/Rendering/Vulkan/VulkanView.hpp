@@ -12,7 +12,7 @@ namespace Genesis
 	class VulkanView
 	{
 	public:
-		VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VulkanCommandPoolSet* command_pool_set, VkExtent2D size, VulkanFramebufferLayout* layout, VulkanDescriptorPool* descriptor_pool);
+		VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VulkanCommandPoolSet* command_pool_set, VkExtent2D size, VulkanFramebufferLayout* layout);
 		~VulkanView();
 
 		void startView(uint32_t frame);

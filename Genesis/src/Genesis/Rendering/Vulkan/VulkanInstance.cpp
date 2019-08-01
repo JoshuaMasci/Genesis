@@ -35,11 +35,13 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 		frame->command_buffer_done_semaphore = this->device->createSemaphore();
 	}
 
-	this->pipeline_manager = new VulkanPiplineManager(this->device);
-	this->pipeline_manager->buildScreenRenderPass(this->swapchain->getSwapchainFormat(), this->swapchain->getSwapchainDepthFormat());
+	Array<VkFormat> color(1);
+	color[0] = this->swapchain->getSwapchainFormat();
+	VulkanFramebufferLayout* screen_layout = new VulkanFramebufferLayout(this->device->get(), color, this->swapchain->getSwapchainDepthFormat());
+	delete screen_layout;
 
 	//Framebuffers
-	this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->pipeline_manager->getScreenRenderPass());
+	this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator);
 
 	{
 		VkSamplerCreateInfo samplerInfo = {};
@@ -63,13 +65,14 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 		}
 	}
 
-	this->image_descriptor_pool = new VulkanDescriptorPool(this->device->get(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, this->pipeline_manager->textured_descriptor_layout, 8000);
+	this->image_descriptor_pool = new VulkanDescriptorPool(this->device->get(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8000);
+	this->uniform_descriptor_pool = new VulkanDescriptorPool(this->device->get(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000);
 
-	this->shadow_pass_layout = new VulkanFramebufferLayout(this->device->get(), Array<VkFormat>(), this->swapchain->getSwapchainDepthFormat(), this->linear_sampler);
+	this->shadow_pass_layout = new VulkanFramebufferLayout(this->device->get(), Array<VkFormat>(), this->swapchain->getSwapchainDepthFormat());
 
-	Array<VkFormat> color(1);
-	color[0] = this->swapchain->getSwapchainFormat();
-	this->color_pass_layout = new VulkanFramebufferLayout(this->device->get(), color, this->swapchain->getSwapchainDepthFormat(), this->linear_sampler);
+	Array<VkFormat> screen_color(1);
+	screen_color[0] = this->swapchain->getSwapchainFormat();
+	this->color_pass_layout = new VulkanFramebufferLayout(this->device->get(), screen_color, this->swapchain->getSwapchainDepthFormat());
 
 	//Resource Deleters
 	//Add 1 to the delete delay just to make sure it's totaly out of the pipeline
@@ -77,6 +80,7 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 	this->buffer_deleter = new DelayedResourceDeleter<VulkanBuffer>(delay_cycles);
 	this->texture_deleter = new DelayedResourceDeleter<VulkanTexture>(delay_cycles);
 	this->view_deleter = new DelayedResourceDeleter<VulkanView>(delay_cycles);
+	this->shader_deleter = new DelayedResourceDeleter<VulkanShader>(delay_cycles);
 }
 
 VulkanInstance::~VulkanInstance()
@@ -85,6 +89,7 @@ VulkanInstance::~VulkanInstance()
 	delete this->buffer_deleter;
 	delete this->texture_deleter;
 	delete this->view_deleter;
+	delete this->shader_deleter;
 
 	vkDeviceWaitIdle(this->device->get());
 
@@ -94,8 +99,7 @@ VulkanInstance::~VulkanInstance()
 	delete this->color_pass_layout;
 
 	delete this->image_descriptor_pool;
-
-	delete this->pipeline_manager;
+	delete this->uniform_descriptor_pool;
 
 	if (this->swapchain_framebuffers != nullptr)
 	{
@@ -146,7 +150,7 @@ bool VulkanInstance::acquireSwapchainImage(uint32_t& image_index, VkSemaphore si
 
 		//Creates swapchain
 		this->swapchain = new VulkanSwapchain(this->device, this->window, this->surface);
-		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->pipeline_manager->getScreenRenderPass());
+		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator);
 	}
 
 	VkResult result = vkAcquireNextImageKHR(this->device->get(), this->swapchain->get(), std::numeric_limits<uint64_t>::max(), signal_semaphore, VK_NULL_HANDLE, &image_index);
@@ -180,7 +184,7 @@ bool VulkanInstance::acquireSwapchainImage(uint32_t& image_index, VkSemaphore si
 
 		//Creates swapchain
 		this->swapchain = new VulkanSwapchain(this->device, this->window, this->surface);
-		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator, this->pipeline_manager->getScreenRenderPass());
+		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator);
 
 		VkResult result = vkAcquireNextImageKHR(this->device->get(), this->swapchain->get(), std::numeric_limits<uint64_t>::max(), signal_semaphore, VK_NULL_HANDLE, &image_index);
 	}
@@ -193,6 +197,7 @@ void VulkanInstance::cycleResourceDeleters()
 	this->buffer_deleter->cycle();
 	this->texture_deleter->cycle();
 	this->view_deleter->cycle();
+	this->shader_deleter->cycle();
 }
 
 vector<const char*> VulkanInstance::getExtensions()
