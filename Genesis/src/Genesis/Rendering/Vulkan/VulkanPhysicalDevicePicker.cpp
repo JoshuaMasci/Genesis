@@ -1,7 +1,6 @@
 #include "VulkanPhysicalDevicePicker.hpp"
 
 #include "Genesis/Rendering/Vulkan/VulkanQueueFamily.hpp"
-//#include "Genesis/Rendering/Vulkan/VulkanSwapChainSupportDetails.hpp"
 
 using namespace Genesis;
 

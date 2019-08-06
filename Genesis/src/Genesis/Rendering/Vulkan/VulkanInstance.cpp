@@ -2,7 +2,7 @@
 
 #include "Genesis/Rendering/Vulkan/VulkanPhysicalDevicePicker.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanShader.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanRenderPipline.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanPipline.hpp"
 
 using namespace Genesis;
 
@@ -35,10 +35,11 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 		frame->command_buffer_done_semaphore = this->device->createSemaphore();
 	}
 
+	this->pipeline_manager = new VulkanPipelineManager(this->device->get());
+
 	Array<VkFormat> color(1);
 	color[0] = this->swapchain->getSwapchainFormat();
-	VulkanFramebufferLayout* screen_layout = new VulkanFramebufferLayout(this->device->get(), color, this->swapchain->getSwapchainDepthFormat());
-	delete screen_layout;
+	this->screen_layout = new VulkanFramebufferLayout(this->device->get(), color, this->swapchain->getSwapchainDepthFormat());
 
 	//Framebuffers
 	this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator);
@@ -64,6 +65,8 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 			throw std::runtime_error("failed to create texture sampler!");
 		}
 	}
+
+	this->descriptor_layouts = new VulkanDescriptorSetLayouts(this->device->get());
 
 	this->image_descriptor_pool = new VulkanDescriptorPool(this->device->get(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8000);
 	this->uniform_descriptor_pool = new VulkanDescriptorPool(this->device->get(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000);
@@ -98,13 +101,19 @@ VulkanInstance::~VulkanInstance()
 	delete this->shadow_pass_layout;
 	delete this->color_pass_layout;
 
+	delete this->screen_layout;
+
 	delete this->image_descriptor_pool;
 	delete this->uniform_descriptor_pool;
+
+	delete this->descriptor_layouts;
 
 	if (this->swapchain_framebuffers != nullptr)
 	{
 		delete this->swapchain_framebuffers;
 	}
+
+	delete this->pipeline_manager;
 
 	for (int i = 0; i < this->frames_in_flight.size(); i++)
 	{

@@ -2,8 +2,6 @@
 
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 
-//#include <concurrentqueue.h>
-
 namespace Genesis
 {
 	class VulkanDescriptorPool

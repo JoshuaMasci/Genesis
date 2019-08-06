@@ -1,10 +1,11 @@
 #include "VulkanBackend.hpp"
 
 #include "Genesis/Rendering/Vulkan/VulkanInstance.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanRenderPipline.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanPipline.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanView.hpp"
 
 #include "Genesis/Core/VectorTypes.hpp"
+#include "Genesis/Core/MurmurHash2.hpp"
 
 using namespace Genesis;
 
@@ -37,6 +38,28 @@ VmaMemoryUsage getMemoryUsage(MemoryUsage memory_usage)
 VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 {
 	this->vulkan = new VulkanInstance(window, number_of_threads);
+
+	/*VkRenderPass renderpass = this->vulkan->screen_layout->getRenderPass();
+	PipelineSettings settings;
+	VertexInputDescription vertex_description
+	({
+		{"in_position", VertexElementType::float_3},
+		{"in_normal", VertexElementType::float_3},
+		{"in_uv", VertexElementType::float_2}
+		});
+
+	VkExtent2D extent = this->vulkan->swapchain->getSwapchainExtent();
+
+
+	MurmurHash2 murmur_hash;
+	murmur_hash.begin();
+	murmur_hash.add(renderpass);
+	murmur_hash.add(settings.getHash());
+	murmur_hash.add(extent);
+	murmur_hash.add(vertex_description.getHash());
+	uint32_t pipeline_hash = murmur_hash.end();
+
+	printf("pipeline_hash: %d\n", pipeline_hash);*/
 }
 
 VulkanBackend::~VulkanBackend()
@@ -137,7 +160,7 @@ void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
 
 ShaderHandle VulkanBackend::createShader(string vert_data, string frag_data)
 {
-	VulkanShader* shader = new VulkanShader(this->vulkan->device->get(), vert_data, frag_data);
+	VulkanShader* shader = new VulkanShader(this->vulkan->device->get(), vert_data, frag_data, this->vulkan->descriptor_layouts);
 	return shader;
 }
 

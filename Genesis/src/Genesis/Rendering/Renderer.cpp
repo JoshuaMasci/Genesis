@@ -12,33 +12,8 @@ Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
 
-	{
-		string vert_data = "";
-		string frag_data = "";
-
-		{
-			string file_name = "resources/shaders/Vulkan/texture.vert.spv";
-			std::ifstream file(file_name, std::ios::ate | std::ios::binary);
-			size_t fileSize = (size_t)file.tellg();
-			file.seekg(0);
-			vert_data.resize(fileSize);
-			file.read(vert_data.data(), vert_data.size());
-			file.close();
-		}
-
-		{
-			string file_name = "resources/shaders/Vulkan/texture.frag.spv";
-			std::ifstream file(file_name, std::ios::ate | std::ios::binary);
-			size_t fileSize = (size_t)file.tellg();
-			file.seekg(0);
-			frag_data.resize(fileSize);
-			file.read(frag_data.data(), frag_data.size());
-			file.close();
-		}
-
-		ShaderHandle shader = this->backend->createShader(vert_data, frag_data);
-		this->backend->destroyShader(shader);
-	}
+	ShaderHandle shader = this->loadShaderSingle("resources/shaders/Vulkan/texture");
+	this->backend->destroyShader(shader);
 }
 
 Renderer::~Renderer()
@@ -216,6 +191,39 @@ void Renderer::loadTexture(string texture_file)
 	{
 		printf("Error: Already loaded Texture: %s\n", texture_file.c_str());
 	}
+}
+
+ShaderHandle Renderer::loadShader(string shader_vert_file, string shader_frag_file)
+{
+	string vert_data = "";
+	string frag_data = "";
+
+	std::ifstream vert_file(shader_vert_file, std::ios::ate | std::ios::binary);
+	if (vert_file.is_open())
+	{
+		size_t fileSize = (size_t)vert_file.tellg();
+		vert_file.seekg(0);
+		vert_data.resize(fileSize);
+		vert_file.read(vert_data.data(), vert_data.size());
+		vert_file.close();
+	}
+		
+	std::ifstream frag_file(shader_frag_file, std::ios::ate | std::ios::binary);
+	if (frag_file.is_open())
+	{
+		size_t fileSize = (size_t)frag_file.tellg();
+		frag_file.seekg(0);
+		frag_data.resize(fileSize);
+		frag_file.read(frag_data.data(), frag_data.size());
+		frag_file.close();
+	}
+
+	return this->backend->createShader(vert_data, frag_data);
+}
+
+ShaderHandle Renderer::loadShaderSingle(string shader_file_base)
+{
+	return this->loadShader(shader_file_base + ".vert.spv", shader_file_base + ".frag.spv");
 }
 
 void Renderer::drawView(EntityRegistry & entity_registry, EntityId camera_entity, ViewHandle view_handle)

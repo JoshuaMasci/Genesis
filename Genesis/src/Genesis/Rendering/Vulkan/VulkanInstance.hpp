@@ -16,6 +16,8 @@
 #include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanTexture.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanView.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanDescriptorSetLayouts.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
 
 #include "Genesis/Rendering/DelayedResourceDeleter.hpp"
 
@@ -52,8 +54,14 @@ namespace Genesis
 
 		Array<VulkanFrame> frames_in_flight;
 
+		VulkanPipelineManager* pipeline_manager = nullptr;
+
+		VulkanDescriptorSetLayouts* descriptor_layouts = nullptr;
+
 		VulkanDescriptorPool* image_descriptor_pool = nullptr;
 		VulkanDescriptorPool* uniform_descriptor_pool = nullptr;
+
+		VulkanFramebufferLayout* screen_layout = nullptr;
 
 		VulkanFramebufferLayout* shadow_pass_layout = nullptr;
 		VulkanFramebufferLayout* color_pass_layout = nullptr;

@@ -66,6 +66,9 @@ namespace Genesis
 		void loadMesh(string mesh_file);
 		void loadTexture(string texture_file);
 
+		ShaderHandle loadShader(string shader_vert_file, string shader_frag_file);
+		ShaderHandle loadShaderSingle(string shader_file_base);
+
 	private:
 		void drawView(EntityRegistry& entity_registry, EntityId camera_entity, ViewHandle view);
 

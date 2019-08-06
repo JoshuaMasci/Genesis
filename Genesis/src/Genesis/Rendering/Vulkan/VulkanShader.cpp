@@ -17,15 +17,15 @@ VkShaderModule VulkanShader::createShaderModule(string shader_code)
 		throw std::runtime_error("failed to create shader module!");
 	}
 
-	this->extractLayout(shader_code);
-
 	return shaderModule;
 }
 
-void VulkanShader::extractLayout(string shader_code)
+void VulkanShader::extractLayout(string shader_code, VulkanDescriptorSetLayouts* layouts)
 {
 	SpvReflectShaderModule module;
 	SpvReflectResult result = spvReflectCreateShaderModule(shader_code.length(), (uint32_t*)shader_code.data(), &module);
+
+	VkShaderStageFlags shader_stage = (VkShaderStageFlagBits)module.shader_stage;
 
 	//Descriptor Sets
 	{
@@ -37,61 +37,50 @@ void VulkanShader::extractLayout(string shader_code)
 		{
 			SpvReflectDescriptorSet* descriptor_set = descriptor_sets[descriptor_set_index];
 
-			vector<VkDescriptorSetLayoutBinding> binding_layouts;
-
-			for (size_t binding_index = 0; binding_index < descriptor_set->binding_count; binding_index++)
+			if (descriptor_set->binding_count > 1)
 			{
-				SpvReflectDescriptorBinding* spirv_binding = descriptor_set->bindings[binding_index];
-
-				VkDescriptorSetLayoutBinding set_binding = {};
-				set_binding.stageFlags = (VkShaderStageFlagBits)module.shader_stage;
-				set_binding.binding = spirv_binding->binding;
-				set_binding.descriptorType = (VkDescriptorType)spirv_binding->descriptor_type;
-				set_binding.descriptorCount = 1;
-				for (size_t array_index = 0; array_index < spirv_binding->array.dims_count; array_index++)
-				{
-					set_binding.descriptorCount *= spirv_binding->array.dims[array_index];
-				}
-				binding_layouts.push_back(set_binding);
+				//Only one binding supported for each set
 			}
 
-			VkDescriptorSetLayout descriptor_set_layout;
-			VkDescriptorSetLayoutCreateInfo layout_info = {};
-			layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-			layout_info.bindingCount = (uint32_t)binding_layouts.size();
-			layout_info.pBindings = binding_layouts.data();
+			string set_name = descriptor_set->bindings[0]->name;
 
-			if (vkCreateDescriptorSetLayout(this->device, &layout_info, nullptr, &descriptor_set_layout) != VK_SUCCESS)
+			if (this->descriptor_map.find(set_name) != this->descriptor_map.end())
 			{
-				throw std::runtime_error("failed to create descriptor set layout!");
+				//Already exists
+				continue;
 			}
 
+			DescriptorSetInfo& info = this->descriptor_map[set_name];
+
+			info.index = descriptor_set->bindings[0]->set;
+			info.type = (VkDescriptorType)descriptor_set->bindings[0]->descriptor_type;
+			info.size = descriptor_set->bindings[0]->block.size;
+			info.shader_stage = shader_stage;
+
+
+			VkDescriptorSetLayout descriptor_set_layout = layouts->getDescriptorSetLayout(info.type, shader_stage);
 			this->descriptor_set_layouts.push_back(descriptor_set_layout);
-		}}
+		}
+	}
 
 	//Push Constants
 	{
-		uint32_t count = 0;
-		spvReflectEnumeratePushConstantBlocks(&module, &count, NULL);
-		vector<SpvReflectBlockVariable*> push_constants(count);
-		spvReflectEnumeratePushConstantBlocks(&module, &count, push_constants.data());
-
-		for (size_t block_index = 0; block_index < push_constants.size(); block_index++)
+		uint32_t push_constant_count = 0;
+		spvReflectEnumeratePushConstantBlocks(&module, &push_constant_count, NULL);
+		if (push_constant_count > 0)
 		{
-			VkPushConstantRange push_constant = {};
-			push_constant.stageFlags = (VkShaderStageFlagBits)module.shader_stage;
-			push_constant.offset = push_constants[block_index]->offset;
-			push_constant.size = push_constants[block_index]->size;
-
-			this->push_constant_layouts.push_back(push_constant);
+			//Push Constants not supported
 		}
 	}
 
 	spvReflectDestroyShaderModule(&module);
 }
 
-VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
+VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data, VulkanDescriptorSetLayouts* layouts)
 {
+	size_t sz = sizeof(VkExtent2D);
+
+
 	this->device = device;
 
 	this->vertShaderModule = createShaderModule(vert_data);
@@ -102,7 +91,7 @@ VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
 	vertShaderStageInfo.module = this->vertShaderModule;
 	vertShaderStageInfo.pName = "main";
 
-	this->shaderStages.push_back(vertShaderStageInfo);
+	this->shader_stages.push_back(vertShaderStageInfo);
 
 	if (frag_data != "")
 	{
@@ -114,9 +103,16 @@ VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
 		fragShaderStageInfo.module = this->fragShaderModule;
 		fragShaderStageInfo.pName = "main";
 
-		this->shaderStages.push_back(fragShaderStageInfo);
+		this->shader_stages.push_back(fragShaderStageInfo);
 	}
 
+	//Pipeline Layout Creation
+	this->extractLayout(vert_data, layouts);
+
+	if (frag_data != "")
+	{
+		this->extractLayout(frag_data, layouts);
+	}
 
 	VkPipelineLayoutCreateInfo pipeline_layout_info = {};
 	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -124,8 +120,7 @@ VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
 	pipeline_layout_info.setLayoutCount = (uint32_t)this->descriptor_set_layouts.size();
 	pipeline_layout_info.pSetLayouts = this->descriptor_set_layouts.data();
 
-	pipeline_layout_info.pushConstantRangeCount = (uint32_t)this->push_constant_layouts.size();
-	pipeline_layout_info.pPushConstantRanges = this->push_constant_layouts.data();
+	pipeline_layout_info.pushConstantRangeCount = 0;
 
 	if (vkCreatePipelineLayout(this->device, &pipeline_layout_info, nullptr, &this->pipeline_layout) != VK_SUCCESS)
 	{
@@ -135,11 +130,6 @@ VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
 
 VulkanShader::~VulkanShader()
 {
-	for (size_t i = 0; i < this->descriptor_set_layouts.size(); i++)
-	{
-		vkDestroyDescriptorSetLayout(this->device, this->descriptor_set_layouts[i], nullptr);
-	}
-
 	vkDestroyPipelineLayout(this->device, this->pipeline_layout, nullptr);
 
 	vkDestroyShaderModule(this->device, this->vertShaderModule, nullptr);

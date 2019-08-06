@@ -36,7 +36,7 @@ namespace Genesis
 		{
 			if (this->array_data != nullptr)
 			{
-				delete this->array_data;
+				delete[] this->array_data;
 			}
 		};
 
@@ -98,7 +98,11 @@ namespace Genesis
 				}
 			}
 
-			delete this->array_data;
+			if (this->array_data != nullptr)
+			{
+				delete[] this->array_data;
+			}
+
 			this->array_data = new_array;
 			this->array_size = new_size;
 		};

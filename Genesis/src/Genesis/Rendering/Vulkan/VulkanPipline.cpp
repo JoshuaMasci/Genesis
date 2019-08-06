@@ -1,4 +1,4 @@
-#include "VulkanRenderPipline.hpp"
+#include "VulkanPipline.hpp"
 
 #include "Genesis/Rendering/Vulkan/VulkanShader.hpp"
 
@@ -8,20 +8,28 @@ VkFormat getVulkanType(VertexElementType type)
 {
 	switch (type)
 	{
-	case VertexElementType::float1:
+	case VertexElementType::float_1:
 		return VK_FORMAT_R32_SFLOAT;
-	case VertexElementType::float2:
+	case VertexElementType::float_2:
 		return VK_FORMAT_R32G32_SFLOAT;
-	case VertexElementType::float3:
+	case VertexElementType::float_3:
 		return VK_FORMAT_R32G32B32_SFLOAT;
-	case VertexElementType::float4:
+	case VertexElementType::float_4:
 		return VK_FORMAT_R32G32B32A32_SFLOAT;
+	case VertexElementType::uint16_1:
+		return VK_FORMAT_R16_UINT;
+	case VertexElementType::uint16_2:
+		return VK_FORMAT_R16G16_UINT;
+	case VertexElementType::uint16_3:
+		return VK_FORMAT_R16G16B16_UINT;
+	case VertexElementType::uint16_4:
+		return VK_FORMAT_R16G16B16A16_UINT;
 	default:
 		return VK_FORMAT_UNDEFINED;
 	}
 }
 
-VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipeline_layout, VkRenderPass renderpass, PipelineSettings& settings, VulkanShader& shader, VertexInputDescription& vertex_description, VkExtent2D extent)
+VulkanPipline::VulkanPipline(VkDevice device, VulkanShader& shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription& vertex_description, VkExtent2D extent)
 {
 	this->device = device;
 
@@ -179,7 +187,7 @@ VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipel
 	pipelineInfo.pMultisampleState = &multisampling;
 	pipelineInfo.pDepthStencilState = &depth_stencil;
 	pipelineInfo.pColorBlendState = &color_blending;
-	pipelineInfo.layout = pipeline_layout;
+	pipelineInfo.layout = shader.getPipelineLayout();
 	pipelineInfo.renderPass = renderpass;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -190,7 +198,7 @@ VulkanRenderPipline::VulkanRenderPipline(VkDevice device, VkPipelineLayout pipel
 	}
 }
 
-VulkanRenderPipline::~VulkanRenderPipline()
+VulkanPipline::~VulkanPipline()
 {
 	vkDestroyPipeline(this->device, this->pipeline, nullptr);
 }
