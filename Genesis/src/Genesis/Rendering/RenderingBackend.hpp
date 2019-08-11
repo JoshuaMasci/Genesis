@@ -16,16 +16,21 @@ namespace Genesis
 		virtual void endFrame() = 0;
 		virtual void submitFrame(vector<ViewHandle> sub_views) = 0;
 
+		virtual VertexBufferHandle createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description) = 0;
+		virtual void destroyVertexBuffer(VertexBufferHandle vertex_buffer_index) = 0;
+
+		virtual IndexBufferHandle createIndexBuffer(void* data, uint64_t data_size, uint32_t indices_count) = 0;
+		virtual void destroyIndexBuffer(IndexBufferHandle index_buffer_index) = 0;
+
+		virtual UniformBufferHandle createUniformBuffer(ShaderHandle shader_handle, string uniform_name) = 0;
+		virtual void fillUniformBuffer(UniformBufferHandle uniform_buffer_index, void* data, uint64_t data_size) = 0;
+		virtual void destroyUniformBuffer(UniformBufferHandle uniform_buffer_index) = 0;
+
+		virtual TextureHandle createTexture(vector2U size, void* data, uint64_t data_size) = 0;
+		virtual void destroyTexture(TextureHandle texture_index) = 0;
+
 		virtual ShaderHandle createShader(string vert_data, string frag_data) = 0;
 		virtual void destroyShader(ShaderHandle shader_handle) = 0;
-
-		virtual BufferHandle createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) = 0;
-		virtual void fillBuffer(BufferHandle buffer_index, void* data, uint64_t data_size) = 0;
-		virtual void destroyBuffer(BufferHandle buffer_index) = 0;
-
-		virtual TextureHandle createTexture(vector2U size) = 0;
-		virtual void fillTexture(TextureHandle texture_index, void* data, uint64_t data_size) = 0;
-		virtual void destroyTexture(TextureHandle texture_index) = 0;
 
 		virtual ViewHandle createView(ViewType type, vector2U size) = 0;
 		virtual void destroyView(ViewHandle index) = 0;
@@ -42,8 +47,5 @@ namespace Genesis
 
 		//Wait until all GPU proccessing is done
 		virtual void waitTillDone() = 0;
-
-	private:
-		uint32_t current_frame = 0;
 	};
 }

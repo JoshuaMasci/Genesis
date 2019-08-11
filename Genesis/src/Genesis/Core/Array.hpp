@@ -28,7 +28,7 @@ namespace Genesis
 
 			for (int i = 0; i < this->array_size; i++)
 			{
-				this->array_data[i] = source->array_data[i];
+				this->array_data[i] = source.array_data[i];
 			}
 		}
 

@@ -3,6 +3,7 @@
 #include "Genesis/Application.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/PipelineSettings.hpp"
+#include "Genesis/WorldTransform.hpp"
 
 #include <fstream>
 
@@ -13,6 +14,9 @@ Renderer::Renderer(RenderingBackend* backend)
 	this->backend = backend;
 
 	ShaderHandle shader = this->loadShaderSingle("resources/shaders/Vulkan/texture");
+	UniformBufferHandle uniform = this->backend->createUniformBuffer(shader, "matrices");
+
+	this->backend->destroyUniformBuffer(uniform);
 	this->backend->destroyShader(shader);
 }
 
@@ -25,8 +29,8 @@ Renderer::~Renderer()
 
 	for (auto mesh : this->loaded_meshes)
 	{
-		this->backend->destroyBuffer(mesh.second.vertices);
-		this->backend->destroyBuffer(mesh.second.indices);
+		this->backend->destroyVertexBuffer(mesh.second.vertices);
+		this->backend->destroyIndexBuffer(mesh.second.indices);
 	}
 }
 
@@ -141,15 +145,17 @@ void Renderer::loadMesh(string mesh_file)
 				}
 			}
 
+			VertexInputDescription vertex_description
+			({
+			{"in_position", VertexElementType::float_3},
+			{"in_normal", VertexElementType::float_3},
+			{"in_uv", VertexElementType::float_2}
+			});
+
 			Mesh* mesh = &this->loaded_meshes[mesh_file];
 
-			mesh->vertices = this->backend->createBuffer(sizeof(TexturedVertex) * vertices.size(), BufferType::Vertex, MemoryUsage::GPU_Only);
-			this->backend->fillBuffer(mesh->vertices, vertices.data(), sizeof(TexturedVertex) * vertices.size());
-
-			mesh->indices = this->backend->createBuffer(sizeof(uint32_t) * indices.size(), BufferType::Index, MemoryUsage::GPU_Only);
-			this->backend->fillBuffer(mesh->indices, indices.data(), sizeof(uint32_t) * indices.size());
-
-			mesh->indices_count = (uint32_t)indices.size();
+			mesh->vertices = this->backend->createVertexBuffer(vertices.data(), sizeof(TexturedVertex) * vertices.size(), vertex_description);
+			mesh->indices = this->backend->createIndexBuffer(indices.data(), sizeof(uint32_t) * indices.size(), (uint32_t)indices.size());
 		}
 		else
 		{
@@ -181,10 +187,8 @@ void Renderer::loadTexture(string texture_file)
 			return;
 		}
 
-		TextureHandle index = this->backend->createTexture(vector2U((uint32_t)width, (uint32_t)height));
-		this->backend->fillTexture(index, (void*)data, data_size);
+		TextureHandle index = this->backend->createTexture(vector2U((uint32_t)width, (uint32_t)height), (void*)data, data_size);
 		stbi_image_free(data);
-
 		this->loaded_textures[texture_file] = index;
 	}
 	else

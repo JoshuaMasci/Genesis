@@ -1,10 +1,6 @@
 [submodule "lib/entt"]
 	path = submodules/entt
 	url = https://github.com/skypjack/entt.git
-[submodule "lib/bullet_physics"]
-	path = submodules/bullet_physics
-	url = https://github.com/Iamshortman/bullet3.git
-	ignore = untracked
 [submodule "lib/glm"]
 	path = submodules/glm
 	url = https://github.com/g-truc/glm.git

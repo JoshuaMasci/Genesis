@@ -2,6 +2,8 @@
 
 #include "Sandbox/SandboxApplication.hpp"
 
+#include "Genesis/Core/Types.hpp"
+
 int main(int argc, char** argv)
 {
 	//ALPHA

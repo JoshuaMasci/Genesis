@@ -49,9 +49,8 @@ namespace Genesis
 
 	struct Mesh
 	{
-		BufferHandle vertices = nullptr;
-		BufferHandle indices = nullptr;
-		uint32_t indices_count = 0;
+		VertexBufferHandle vertices = nullptr;
+		IndexBufferHandle indices = nullptr;
 	};
 
 	class Renderer

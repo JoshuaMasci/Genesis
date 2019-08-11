@@ -20,12 +20,24 @@ VkShaderModule VulkanShader::createShaderModule(string shader_code)
 	return shaderModule;
 }
 
-void VulkanShader::extractLayout(string shader_code, VulkanDescriptorSetLayouts* layouts)
+vector<VulkanShader::DescriptorIndex> VulkanShader::extractLayout(string shader_code, VulkanDescriptorSetLayouts* layouts)
 {
 	SpvReflectShaderModule module;
 	SpvReflectResult result = spvReflectCreateShaderModule(shader_code.length(), (uint32_t*)shader_code.data(), &module);
 
 	VkShaderStageFlags shader_stage = (VkShaderStageFlagBits)module.shader_stage;
+
+	//Push Constants
+	{
+		uint32_t push_constant_count = 0;
+		spvReflectEnumeratePushConstantBlocks(&module, &push_constant_count, NULL);
+		if (push_constant_count > 0)
+		{
+			//Push Constants not supported
+		}
+	}
+
+	vector<VulkanShader::DescriptorIndex> descriptors;
 
 	//Descriptor Sets
 	{
@@ -44,6 +56,7 @@ void VulkanShader::extractLayout(string shader_code, VulkanDescriptorSetLayouts*
 
 			string set_name = descriptor_set->bindings[0]->name;
 
+			//TODO merge duplicates in diffrent stages
 			if (this->descriptor_map.find(set_name) != this->descriptor_map.end())
 			{
 				//Already exists
@@ -57,30 +70,18 @@ void VulkanShader::extractLayout(string shader_code, VulkanDescriptorSetLayouts*
 			info.size = descriptor_set->bindings[0]->block.size;
 			info.shader_stage = shader_stage;
 
-
-			VkDescriptorSetLayout descriptor_set_layout = layouts->getDescriptorSetLayout(info.type, shader_stage);
-			this->descriptor_set_layouts.push_back(descriptor_set_layout);
-		}
-	}
-
-	//Push Constants
-	{
-		uint32_t push_constant_count = 0;
-		spvReflectEnumeratePushConstantBlocks(&module, &push_constant_count, NULL);
-		if (push_constant_count > 0)
-		{
-			//Push Constants not supported
+			VkDescriptorSetLayout descriptor_set_layout = layouts->getDescriptorSetLayout(info.type);
+			descriptors.push_back({info.index, descriptor_set_layout});
 		}
 	}
 
 	spvReflectDestroyShaderModule(&module);
+
+	return descriptors;
 }
 
 VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data, VulkanDescriptorSetLayouts* layouts)
 {
-	size_t sz = sizeof(VkExtent2D);
-
-
 	this->device = device;
 
 	this->vertShaderModule = createShaderModule(vert_data);
@@ -106,21 +107,35 @@ VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data, 
 		this->shader_stages.push_back(fragShaderStageInfo);
 	}
 
+	vector<VulkanShader::DescriptorIndex> vert_descriptors;
+	vector<VulkanShader::DescriptorIndex> frag_descriptors;
+
 	//Pipeline Layout Creation
-	this->extractLayout(vert_data, layouts);
+	vert_descriptors = this->extractLayout(vert_data, layouts);
 
 	if (frag_data != "")
 	{
-		this->extractLayout(frag_data, layouts);
+		frag_descriptors = this->extractLayout(frag_data, layouts);
+	}
+
+	Array<VkDescriptorSetLayout> descriptor_set_layouts(vert_descriptors.size() + frag_descriptors.size());
+	for (int i = 0; i < vert_descriptors.size(); i++)
+	{
+		VulkanShader::DescriptorIndex descriptor = vert_descriptors[i];
+		descriptor_set_layouts[descriptor.index] = descriptor.layout;
+	}
+
+	for (int i = 0; i < frag_descriptors.size(); i++)
+	{
+		VulkanShader::DescriptorIndex descriptor = frag_descriptors[i];
+		descriptor_set_layouts[descriptor.index] = descriptor.layout;
 	}
 
 	VkPipelineLayoutCreateInfo pipeline_layout_info = {};
 	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-
-	pipeline_layout_info.setLayoutCount = (uint32_t)this->descriptor_set_layouts.size();
-	pipeline_layout_info.pSetLayouts = this->descriptor_set_layouts.data();
-
 	pipeline_layout_info.pushConstantRangeCount = 0;
+	pipeline_layout_info.setLayoutCount = (uint32_t)descriptor_set_layouts.size();
+	pipeline_layout_info.pSetLayouts = descriptor_set_layouts.data();
 
 	if (vkCreatePipelineLayout(this->device, &pipeline_layout_info, nullptr, &this->pipeline_layout) != VK_SUCCESS)
 	{
@@ -138,4 +153,19 @@ VulkanShader::~VulkanShader()
 	{
 		vkDestroyShaderModule(this->device, this->fragShaderModule, nullptr);
 	}
+}
+
+bool Genesis::VulkanShader::hasDescriptorSetInfo(string uniform_name)
+{
+	if (this->descriptor_map.find(uniform_name) != this->descriptor_map.end())
+	{
+		return true;
+	}
+
+	return false;
+}
+
+VulkanShader::DescriptorSetInfo VulkanShader::getDescriptorSetInfo(string uniform_name)
+{
+	return this->descriptor_map[uniform_name];
 }

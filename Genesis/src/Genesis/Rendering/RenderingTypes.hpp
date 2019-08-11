@@ -10,21 +10,17 @@ namespace Genesis
 		CPU_Visable
 	};
 
-	enum class BufferType
-	{
-		Uniform,
-		Index,
-		Vertex
-	};
-
 	enum class ViewType
 	{
 		FrameBuffer,
 		ShadowMap
 	};
 
-	typedef void* BufferHandle;
+	typedef void* VertexBufferHandle;
+	typedef void* IndexBufferHandle;
+	typedef void* UniformBufferHandle;
 	typedef void* TextureHandle;
-	typedef void* ViewHandle;
 	typedef void* ShaderHandle;
+
+	typedef void* ViewHandle;
 }

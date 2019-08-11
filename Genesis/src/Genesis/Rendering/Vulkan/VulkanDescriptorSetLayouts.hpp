@@ -11,11 +11,11 @@ namespace Genesis
 		VulkanDescriptorSetLayouts(VkDevice device);
 		~VulkanDescriptorSetLayouts();
 
-		VkDescriptorSetLayout getDescriptorSetLayout(VkDescriptorType type, VkShaderStageFlags stage);
+		VkDescriptorSetLayout getDescriptorSetLayout(VkDescriptorType type);
 
 	private:
 		VkDevice device;
 
-		map<VkDescriptorType, map<VkShaderStageFlags, VkDescriptorSetLayout>> layouts;
+		map<VkDescriptorType, VkDescriptorSetLayout> layouts;
 	};
 }

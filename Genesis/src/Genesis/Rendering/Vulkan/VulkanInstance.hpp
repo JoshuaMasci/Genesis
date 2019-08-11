@@ -23,7 +23,6 @@
 
 namespace Genesis
 {
-	const uint32_t NUM_OF_FRAMES = 3;
 	struct VulkanFrame
 	{
 		VkSemaphore image_available_semaphore = VK_NULL_HANDLE;
@@ -76,6 +75,7 @@ namespace Genesis
 		//Resource Stuff
 		void cycleResourceDeleters();
 		DelayedResourceDeleter<VulkanBuffer>* buffer_deleter = nullptr;
+		DelayedResourceDeleter<VulkanUniformBuffer>* uniform_deleter = nullptr;
 		DelayedResourceDeleter<VulkanTexture>* texture_deleter = nullptr;
 		DelayedResourceDeleter<VulkanView>* view_deleter = nullptr;
 		DelayedResourceDeleter<VulkanShader>* shader_deleter = nullptr;

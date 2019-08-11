@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Genesis/Job/Job.hpp"
-#include "Genesis/Physics/PhysicsWorld.hpp"
 
 namespace Genesis
 {
+	//TEMP
+	class PhysicsWorld {};
+
 	class PhysicsUpdateJob : public Job
 	{
 	public:

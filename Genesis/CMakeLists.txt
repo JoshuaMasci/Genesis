@@ -48,14 +48,6 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/include/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 target_link_libraries(Genesis PRIVATE SDL2)
 
-#Bullet
-include_directories(${CMAKE_SOURCE_DIR}/submodules/bullet_physics/src/)
-link_directories(${CMAKE_SOURCE_DIR}/submodules/bullet_physics/lib/)
-target_link_libraries(Genesis PRIVATE debug BulletCollision_Debug optimized BulletCollision)
-target_link_libraries(Genesis PRIVATE debug BulletDynamics_Debug optimized BulletDynamics)
-target_link_libraries(Genesis PRIVATE debug LinearMath_Debug optimized LinearMath)
-target_compile_definitions(Genesis PUBLIC BT_USE_DOUBLE_PRECISION)
-
 #ENTT
 include_directories(${CMAKE_SOURCE_DIR}/submodules/entt/src/)
 

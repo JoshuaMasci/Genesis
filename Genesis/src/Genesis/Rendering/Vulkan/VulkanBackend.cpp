@@ -9,20 +9,6 @@
 
 using namespace Genesis;
 
-VkBufferUsageFlags getBufferUsage(BufferType usage)
-{
-	switch (usage)
-	{
-	case BufferType::Uniform:
-		return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT; //Probably won't be held in GPU_Only space, copy bit not needed for now
-	case BufferType::Index:
-		return VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT; //Likely going to need to copy into the buffer
-	case BufferType::Vertex:
-		return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT; //Likely going to need to copy into the buffer
-	}
-	return 0;
-}
-
 VmaMemoryUsage getMemoryUsage(MemoryUsage memory_usage)
 {
 	switch (memory_usage)
@@ -38,28 +24,6 @@ VmaMemoryUsage getMemoryUsage(MemoryUsage memory_usage)
 VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 {
 	this->vulkan = new VulkanInstance(window, number_of_threads);
-
-	/*VkRenderPass renderpass = this->vulkan->screen_layout->getRenderPass();
-	PipelineSettings settings;
-	VertexInputDescription vertex_description
-	({
-		{"in_position", VertexElementType::float_3},
-		{"in_normal", VertexElementType::float_3},
-		{"in_uv", VertexElementType::float_2}
-		});
-
-	VkExtent2D extent = this->vulkan->swapchain->getSwapchainExtent();
-
-
-	MurmurHash2 murmur_hash;
-	murmur_hash.begin();
-	murmur_hash.add(renderpass);
-	murmur_hash.add(settings.getHash());
-	murmur_hash.add(extent);
-	murmur_hash.add(vertex_description.getHash());
-	uint32_t pipeline_hash = murmur_hash.end();
-
-	printf("pipeline_hash: %d\n", pipeline_hash);*/
 }
 
 VulkanBackend::~VulkanBackend()
@@ -158,50 +122,84 @@ void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
 	this->vulkan->cycleResourceDeleters();
 }
 
-ShaderHandle VulkanBackend::createShader(string vert_data, string frag_data)
+VertexBufferHandle VulkanBackend::createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description)
 {
-	VulkanShader* shader = new VulkanShader(this->vulkan->device->get(), vert_data, frag_data, this->vulkan->descriptor_layouts);
-	return shader;
+	return (VertexBufferHandle) new VulkanVertexBuffer(this->vulkan->allocator, this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), data, data_size, vertex_input_description);
 }
 
-void VulkanBackend::destroyShader(ShaderHandle shader_handle)
+void VulkanBackend::destroyVertexBuffer(VertexBufferHandle vertex_buffer_index)
 {
-	//TEMP
-	delete (VulkanShader*)shader_handle;
+	this->vulkan->buffer_deleter->addToQueue((VulkanBuffer*)vertex_buffer_index);
 }
 
-BufferHandle VulkanBackend::createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage)
+IndexBufferHandle VulkanBackend::createIndexBuffer(void* data, uint64_t data_size, uint32_t indices_count)
 {
-	VulkanBuffer* buffer = new VulkanBuffer(this->vulkan->allocator, size_bytes, getBufferUsage(type), getMemoryUsage(memory_usage));
-	return (BufferHandle)buffer;
+	return (IndexBufferHandle) new VulkanIndexBuffer(this->vulkan->allocator, this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), data, data_size, indices_count);
 }
 
-void VulkanBackend::fillBuffer(BufferHandle buffer_handle, void* data, uint64_t data_size)
+void VulkanBackend::destroyIndexBuffer(IndexBufferHandle index_buffer_index)
 {
-	VulkanBuffer* buffer = (VulkanBuffer*)buffer_handle;
-	buffer->fillBuffer(this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), data, data_size);
+	this->vulkan->buffer_deleter->addToQueue((VulkanBuffer*)index_buffer_index);
 }
 
-void VulkanBackend::destroyBuffer(BufferHandle buffer_handle)
+UniformBufferHandle VulkanBackend::createUniformBuffer(ShaderHandle shader_handle, string uniform_name)
 {
-	this->vulkan->buffer_deleter->addToQueue((VulkanBuffer*)buffer_handle);
+	VulkanShader* shader = (VulkanShader*)shader_handle;
+
+	if (!shader->hasDescriptorSetInfo(uniform_name))
+	{
+		throw std::runtime_error("uniform not found");
+	}
+
+	VulkanShader::DescriptorSetInfo info = shader->getDescriptorSetInfo(uniform_name);
+
+	return (UniformBufferHandle) new VulkanUniformBuffer(this->vulkan->device->get(), this->vulkan->allocator, this->vulkan->uniform_descriptor_pool, this->vulkan->descriptor_layouts, info.size, (uint32_t)this->vulkan->frames_in_flight.size());
 }
 
-TextureHandle VulkanBackend::createTexture(vector2U size)
+void VulkanBackend::fillUniformBuffer(UniformBufferHandle uniform_buffer_index, void* data, uint64_t data_size)
+{
+	((VulkanUniformBuffer*)uniform_buffer_index)->setData(data, data_size);
+}
+
+void VulkanBackend::destroyUniformBuffer(UniformBufferHandle uniform_buffer_index)
+{
+	this->vulkan->uniform_deleter->addToQueue((VulkanUniformBuffer*)uniform_buffer_index);
+}
+
+TextureHandle VulkanBackend::createTexture(vector2U size, void* data, uint64_t data_size)
 {
 	VulkanTexture* texture = new VulkanTexture(this->vulkan->device, this->vulkan->allocator, {size.x, size.y}, getMemoryUsage(MemoryUsage::GPU_Only), this->vulkan->linear_sampler);
-	return (TextureHandle)texture;
-}
-
-void VulkanBackend::fillTexture(TextureHandle texture_handle, void* data, uint64_t data_size)
-{
-	VulkanTexture* texture = (VulkanTexture*)texture_handle;
 	texture->fillTexture(this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), data, data_size);
+	return (TextureHandle)texture;
 }
 
 void VulkanBackend::destroyTexture(TextureHandle texture_handle)
 {
 	this->vulkan->texture_deleter->addToQueue((VulkanTexture*)texture_handle);
+}
+
+ShaderHandle VulkanBackend::createShader(string vert_data, string frag_data)
+{
+	VulkanShader* shader = new VulkanShader(this->vulkan->device->get(), vert_data, frag_data, this->vulkan->descriptor_layouts);
+
+	/*VkRenderPass renderpass = this->vulkan->screen_layout->getRenderPass();
+	PipelineSettings settings;
+	VertexInputDescription vertex_description
+	({
+	{"in_position", VertexElementType::float_3},
+	{"in_normal", VertexElementType::float_3},
+	{"in_uv", VertexElementType::float_2}
+	});
+	VkExtent2D extent = this->vulkan->swapchain->getSwapchainExtent();
+
+	this->vulkan->pipeline_manager->getPipeline(shader, this->vulkan->screen_layout->getRenderPass(), PipelineSettings(), vertex_description, extent);*/
+
+	return shader;
+}
+
+void VulkanBackend::destroyShader(ShaderHandle shader_handle)
+{
+	this->vulkan->shader_deleter->addToQueue((VulkanShader*)shader_handle);
 }
 
 ViewHandle VulkanBackend::createView(ViewType type, vector2U size)

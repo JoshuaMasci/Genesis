@@ -18,16 +18,21 @@ namespace Genesis
 		virtual void endFrame() override;
 		virtual void submitFrame(vector<ViewHandle> sub_views) override;
 
+		virtual VertexBufferHandle createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description) override;
+		virtual void destroyVertexBuffer(VertexBufferHandle vertex_buffer_index) override;
+
+		virtual IndexBufferHandle createIndexBuffer(void* data, uint64_t data_size, uint32_t indices_count) override;
+		virtual void destroyIndexBuffer(IndexBufferHandle index_buffer_index) override;
+
+		virtual UniformBufferHandle createUniformBuffer(ShaderHandle shader_handle, string uniform_name) override;
+		virtual void fillUniformBuffer(UniformBufferHandle uniform_buffer_index, void* data, uint64_t data_size) override;
+		virtual void destroyUniformBuffer(UniformBufferHandle uniform_buffer_index) override;
+
+		virtual TextureHandle createTexture(vector2U size, void* data, uint64_t data_size) override;
+		virtual void destroyTexture(TextureHandle texture_handle) override;
+
 		virtual ShaderHandle createShader(string vert_data, string frag_data) override;
 		virtual void destroyShader(ShaderHandle shader_handle) override;
-
-		virtual BufferHandle createBuffer(uint64_t size_bytes, BufferType type, MemoryUsage memory_usage) override;
-		virtual void fillBuffer(BufferHandle buffer_handle, void* data, uint64_t data_size) override;
-		virtual void destroyBuffer(BufferHandle buffer_handle) override;
-
-		virtual TextureHandle createTexture(vector2U size) override;
-		virtual void fillTexture(TextureHandle texture_handle, void* data, uint64_t data_size) override;
-		virtual void destroyTexture(TextureHandle texture_handle) override;
 
 		virtual ViewHandle createView(ViewType type, vector2U size) override;
 		virtual void destroyView(ViewHandle index) override;

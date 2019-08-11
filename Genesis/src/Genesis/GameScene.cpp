@@ -3,7 +3,6 @@
 #include "Genesis/Application.hpp"
 
 #include "Genesis/WorldTransform.hpp"
-#include "Genesis/Physics/RigidBody.hpp"
 
 #include "Genesis/Rendering/Renderer.hpp"
 
@@ -45,7 +44,7 @@ GameScene::~GameScene()
 
 void GameScene::runSimulation(double delta_time)
 {
-	this->physics_system.runSimulation(this->entity_registry, this->application->job_system, delta_time);
+	//this->physics_system.runSimulation(this->entity_registry, this->application->job_system, delta_time);
 	DebugCamera::update(&this->application->input_manager, &this->entity_registry.get<DebugCamera>(this->camera), &this->entity_registry.get<WorldTransform>(this->camera), delta_time);
 }
 

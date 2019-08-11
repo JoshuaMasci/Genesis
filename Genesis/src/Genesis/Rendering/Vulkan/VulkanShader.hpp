@@ -8,33 +8,40 @@
 
 namespace Genesis
 {
-	struct DescriptorSetInfo
-	{
-		uint32_t index;
-		VkDescriptorType type;
-		uint32_t size = 0; //For buffers only
-		VkPipelineStageFlags shader_stage;
-	};
-
 	class VulkanShader
 	{
 	public:
+		struct DescriptorSetInfo
+		{
+			uint32_t index;
+			VkDescriptorType type;
+			uint32_t size = 0; //For buffers only
+			VkPipelineStageFlags shader_stage;
+		};
+
 		VulkanShader(VkDevice device, string vert_data, string frag_data, VulkanDescriptorSetLayouts* layouts);
 		~VulkanShader();
 
 		inline vector<VkPipelineShaderStageCreateInfo> getShaderStages() { return this->shader_stages; };
 		inline VkPipelineLayout getPipelineLayout() { return this->pipeline_layout; };
 
+		bool hasDescriptorSetInfo(string uniform_name);
+		DescriptorSetInfo getDescriptorSetInfo(string uniform_name);
+
 	private:
+		struct DescriptorIndex
+		{
+			uint32_t index;
+			VkDescriptorSetLayout layout;
+		};
+
 		VkDevice device;
 		VkShaderModule createShaderModule(string shader_code);
-		void extractLayout(string shader_code, VulkanDescriptorSetLayouts* layouts);
+		vector<DescriptorIndex> extractLayout(string shader_code, VulkanDescriptorSetLayouts* layouts);
 
 		map<string, DescriptorSetInfo> descriptor_map;
 
-		vector<VkDescriptorSetLayout> descriptor_set_layouts;
 		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
-
 		VkShaderModule vertShaderModule = VK_NULL_HANDLE;
 		VkShaderModule fragShaderModule = VK_NULL_HANDLE;
 

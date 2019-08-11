@@ -2,8 +2,6 @@
 
 #include "Genesis/Entity.hpp"
 
-#include "Genesis/Physics/PhysicsSystem.hpp"
-
 #include "Genesis/Rendering/Renderer.hpp"
 
 namespace Genesis
@@ -29,7 +27,7 @@ namespace Genesis
 		EntityRegistry entity_registry;
 		
 		//Physics
-		PhysicsSystem physics_system;
+		//PhysicsSystem physics_system;
 
 		//Rendering
 		Renderer* renderer = nullptr;

@@ -9,29 +9,23 @@ VulkanDescriptorSetLayouts::VulkanDescriptorSetLayouts(VkDevice device)
 
 VulkanDescriptorSetLayouts::~VulkanDescriptorSetLayouts()
 {
-	for (auto sub_map : this->layouts)
+	for (auto layout : this->layouts)
 	{
-		for (auto layout : sub_map.second)
-		{
-			vkDestroyDescriptorSetLayout(this->device, layout.second, nullptr);
-		}
+		vkDestroyDescriptorSetLayout(this->device, layout.second, nullptr);
 	}
 }
 
-VkDescriptorSetLayout VulkanDescriptorSetLayouts::getDescriptorSetLayout(VkDescriptorType type, VkShaderStageFlags stage)
+VkDescriptorSetLayout VulkanDescriptorSetLayouts::getDescriptorSetLayout(VkDescriptorType type)
 {
+	//Ignore shader stage for the moment
+
 	//If already exits
 	if (this->layouts.find(type) != this->layouts.end())
 	{
-		map<VkShaderStageFlags, VkDescriptorSetLayout>& sub_map = this->layouts[type];
-		if (sub_map.find(stage) != sub_map.end())
-		{
-			return sub_map[stage];
-		}
+		return this->layouts[type];
 	}
 
 	//else create new one
-
 	VkDescriptorSetLayout layout;
 
 	VkDescriptorSetLayoutBinding layout_binding = {};
@@ -39,7 +33,7 @@ VkDescriptorSetLayout VulkanDescriptorSetLayouts::getDescriptorSetLayout(VkDescr
 	layout_binding.descriptorCount = 1;
 	layout_binding.descriptorType = type;
 	layout_binding.pImmutableSamplers = nullptr;
-	layout_binding.stageFlags = stage;
+	layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
 
 	VkDescriptorSetLayoutCreateInfo layout_info = {};
 	layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -52,7 +46,7 @@ VkDescriptorSetLayout VulkanDescriptorSetLayouts::getDescriptorSetLayout(VkDescr
 	}
 
 	//Add to list
-	layouts[type][stage] = layout;
+	this->layouts[type] = layout;
 
 	return layout;
 }
