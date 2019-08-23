@@ -2,49 +2,43 @@
 
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanDescriptorSetLayouts.hpp"
-
-#include "spirv_reflect.h"
 
 namespace Genesis
 {
+	class VulkanShaderModule
+	{
+	public:
+		VulkanShaderModule(VkDevice device, string shader_data);
+		~VulkanShaderModule();
+
+		VkPipelineShaderStageCreateInfo getStageInfo();
+
+		VkShaderModule shader_module;
+		Array<VkDescriptorSetLayoutBinding> bindings;
+		VkShaderStageFlagBits shader_stage;
+
+	protected:
+		VkDevice device;
+	};
+
+
 	class VulkanShader
 	{
 	public:
-		struct DescriptorSetInfo
-		{
-			uint32_t index;
-			VkDescriptorType type;
-			uint32_t size = 0; //For buffers only
-			VkPipelineStageFlags shader_stage;
-		};
-
-		VulkanShader(VkDevice device, string vert_data, string frag_data, VulkanDescriptorSetLayouts* layouts);
+		VulkanShader(VkDevice device, string vert_data, string frag_data);
 		~VulkanShader();
 
 		inline vector<VkPipelineShaderStageCreateInfo> getShaderStages() { return this->shader_stages; };
 		inline VkPipelineLayout getPipelineLayout() { return this->pipeline_layout; };
 
-		bool hasDescriptorSetInfo(string uniform_name);
-		DescriptorSetInfo getDescriptorSetInfo(string uniform_name);
-
 	private:
-		struct DescriptorIndex
-		{
-			uint32_t index;
-			VkDescriptorSetLayout layout;
-		};
-
 		VkDevice device;
-		VkShaderModule createShaderModule(string shader_code);
-		vector<DescriptorIndex> extractLayout(string shader_code, VulkanDescriptorSetLayouts* layouts);
 
-		map<string, DescriptorSetInfo> descriptor_map;
+		VulkanShaderModule* vert_module = nullptr;
+		VulkanShaderModule* frag_module = nullptr;
 
+		VkDescriptorSetLayout descriptor_layout = VK_NULL_HANDLE;
 		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
-		VkShaderModule vertShaderModule = VK_NULL_HANDLE;
-		VkShaderModule fragShaderModule = VK_NULL_HANDLE;
-
 		vector<VkPipelineShaderStageCreateInfo> shader_stages;
 	};
 }

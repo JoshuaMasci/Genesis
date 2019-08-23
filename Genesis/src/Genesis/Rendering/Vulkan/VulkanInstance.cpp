@@ -70,14 +70,25 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 
 	this->descriptor_layouts = new VulkanDescriptorSetLayouts(this->device->get());
 
-	this->image_descriptor_pool = new VulkanDescriptorPool(this->device->get(), VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8000);
-	this->uniform_descriptor_pool = new VulkanDescriptorPool(this->device->get(), VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000);
+	this->descriptor_pool = new VulkanDescriptorPool(this->device->get(), 800000,
+		{
+			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000},
+			{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8000}
+		});
 
 	this->shadow_pass_layout = new VulkanFramebufferLayout(this->device->get(), Array<VkFormat>(), this->swapchain->getSwapchainDepthFormat());
 
 	Array<VkFormat> screen_color(1);
 	screen_color[0] = this->swapchain->getSwapchainFormat();
 	this->color_pass_layout = new VulkanFramebufferLayout(this->device->get(), screen_color, this->swapchain->getSwapchainDepthFormat());
+
+	vector<uint8_t> empty_vector(64, 0);
+	this->empty_buffer = new VulkanBuffer(this->allocator, 64, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+	this->empty_buffer->fillBuffer(this->graphics_command_pool_set->getPrimaryCommandPool(), this->device->getGraphicsQueue(), empty_vector.data(), empty_vector.size());
+
+	this->empty_texture = new VulkanTexture(this->device, this->allocator, { 16, 16 }, VMA_MEMORY_USAGE_GPU_ONLY, this->linear_sampler);
+	vector<glm::u8vec4> pink_texture(16 * 16, glm::u8vec4(255, 20, 147, 255));
+	this->empty_texture->fillTexture(this->graphics_command_pool_set->getPrimaryCommandPool(), this->device->getGraphicsQueue(), pink_texture.data(), pink_texture.size() * sizeof(glm::u8vec4));
 
 	//Resource Deleters
 	//Add 1 to the delete delay just to make sure it's totaly out of the pipeline
@@ -98,6 +109,9 @@ VulkanInstance::~VulkanInstance()
 	delete this->view_deleter;
 	delete this->shader_deleter;
 
+	delete this->empty_buffer;
+	delete this->empty_texture;
+
 	vkDeviceWaitIdle(this->device->get());
 
 	vkDestroySampler(this->device->get(), this->linear_sampler, nullptr);
@@ -107,8 +121,7 @@ VulkanInstance::~VulkanInstance()
 
 	delete this->screen_layout;
 
-	delete this->image_descriptor_pool;
-	delete this->uniform_descriptor_pool;
+	delete this->descriptor_pool;
 
 	delete this->descriptor_layouts;
 

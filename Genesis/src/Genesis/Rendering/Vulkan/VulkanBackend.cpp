@@ -142,18 +142,9 @@ void VulkanBackend::destroyIndexBuffer(IndexBufferHandle index_buffer_index)
 	this->vulkan->buffer_deleter->addToQueue((VulkanBuffer*)index_buffer_index);
 }
 
-UniformBufferHandle VulkanBackend::createUniformBuffer(ShaderHandle shader_handle, string uniform_name)
+UniformBufferHandle VulkanBackend::createUniformBuffer(string uniform_name, uint64_t uniform_bytes)
 {
-	VulkanShader* shader = (VulkanShader*)shader_handle;
-
-	if (!shader->hasDescriptorSetInfo(uniform_name))
-	{
-		throw std::runtime_error("uniform not found");
-	}
-
-	VulkanShader::DescriptorSetInfo info = shader->getDescriptorSetInfo(uniform_name);
-
-	return (UniformBufferHandle) new VulkanUniformBuffer(this->vulkan->device->get(), this->vulkan->allocator, this->vulkan->uniform_descriptor_pool, this->vulkan->descriptor_layouts, info.size, (uint32_t)this->vulkan->frames_in_flight.size());
+	return (UniformBufferHandle) new VulkanUniformBuffer(this->vulkan->device->get(), this->vulkan->allocator, uniform_name, uniform_bytes, (uint32_t)this->vulkan->frames_in_flight.size());
 }
 
 void VulkanBackend::fillUniformBuffer(UniformBufferHandle uniform_buffer_index, void* data, uint64_t data_size)
@@ -180,9 +171,9 @@ void VulkanBackend::destroyTexture(TextureHandle texture_handle)
 
 ShaderHandle VulkanBackend::createShader(string vert_data, string frag_data)
 {
-	VulkanShader* shader = new VulkanShader(this->vulkan->device->get(), vert_data, frag_data, this->vulkan->descriptor_layouts);
+	VulkanShader* shader = new VulkanShader(this->vulkan->device->get(), vert_data, frag_data);
 
-	/*VkRenderPass renderpass = this->vulkan->screen_layout->getRenderPass();
+	VkRenderPass renderpass = this->vulkan->screen_layout->getRenderPass();
 	PipelineSettings settings;
 	VertexInputDescription vertex_description
 	({
@@ -192,7 +183,7 @@ ShaderHandle VulkanBackend::createShader(string vert_data, string frag_data)
 	});
 	VkExtent2D extent = this->vulkan->swapchain->getSwapchainExtent();
 
-	this->vulkan->pipeline_manager->getPipeline(shader, this->vulkan->screen_layout->getRenderPass(), PipelineSettings(), vertex_description, extent);*/
+	this->vulkan->pipeline_manager->getPipeline(shader, this->vulkan->screen_layout->getRenderPass(), PipelineSettings(), vertex_description, extent);
 
 	return shader;
 }
@@ -249,6 +240,28 @@ void VulkanBackend::sumbitView(ViewHandle index)
 {
 	VulkanView* view = (VulkanView*)index;
 	view->submitView(this->frame_index, vector<VulkanView*>(), VK_NULL_HANDLE);
+}
+
+void VulkanBackend::tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, TextureHandle texture_handle, ShaderHandle shader_handle, UniformBufferHandle mvp_uniform_handle)
+{
+	VulkanVertexBuffer* vertices = (VulkanVertexBuffer*)vertices_handle;
+	VulkanIndexBuffer* indices = (VulkanIndexBuffer*)indices_handle;
+	VulkanTexture* texture = (VulkanTexture*)texture_handle;
+	VulkanShader* shader = (VulkanShader*)shader_handle;
+	VulkanUniformBuffer* mvp_uniform = (VulkanUniformBuffer*)mvp_uniform_handle;
+
+	uint32_t thread_index = 0;//Hardcoded for the moment;
+	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
+	VkCommandBuffer buffer = frame->command_buffer->getSecondaryCommandBuffer(thread_index);
+
+	VulkanPipline* pipeline = this->vulkan->pipeline_manager->getPipeline(shader, this->vulkan->screen_layout->getRenderPass(), PipelineSettings(), vertices->getVertexDescription(), this->vulkan->swapchain->getSwapchainExtent());
+	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipeline());
+
+	VkBuffer vertex_buffer = vertices->get();
+	VkDeviceSize offset = 0;
+	vkCmdBindVertexBuffers(buffer, 0, 1, &vertex_buffer, &offset);
+	vkCmdBindIndexBuffer(buffer, indices->get(), 0, VK_INDEX_TYPE_UINT32);
+	vkCmdDrawIndexed(buffer, indices->getIndicesCount(), 1, 0, 0, 0);
 }
 
 matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, float aspect_ratio)

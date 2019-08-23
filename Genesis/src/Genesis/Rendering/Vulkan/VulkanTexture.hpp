@@ -16,6 +16,7 @@ namespace Genesis
 		void fillTexture(VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size);
 
 		inline VkImage get() { return this->image; };
+
 	private:
 		VkDevice device;
 		VulkanAllocator* allocator = nullptr;

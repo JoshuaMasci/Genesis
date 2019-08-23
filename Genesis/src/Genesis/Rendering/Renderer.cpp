@@ -12,32 +12,29 @@ using namespace Genesis;
 Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
-
-	ShaderHandle shader = this->loadShaderSingle("resources/shaders/Vulkan/texture");
-	UniformBufferHandle uniform = this->backend->createUniformBuffer(shader, "matrices");
-
-	this->backend->destroyUniformBuffer(uniform);
-	this->backend->destroyShader(shader);
 }
 
 Renderer::~Renderer()
 {
-	for (auto textures : this->loaded_textures)
-	{
-		this->backend->destroyTexture(textures.second);
-	}
-
 	for (auto mesh : this->loaded_meshes)
 	{
 		this->backend->destroyVertexBuffer(mesh.second.vertices);
 		this->backend->destroyIndexBuffer(mesh.second.indices);
 	}
+
+	for (auto texture : this->loaded_textures)
+	{
+		this->backend->destroyTexture(texture.second);
+	}
+
+	for (auto shader : this->loaded_shaders)
+	{
+		this->backend->destroyShader(shader.second);
+	}
 }
 
 void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity)
 {
-	PipelineSettings base_pipeline = {};
-
 	if (!entity_registry.has<WorldTransform>(camera_entity) || !entity_registry.has<Camera>(camera_entity))
 	{
 		//No camera
@@ -59,45 +56,23 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 		matrix4F proj = this->backend->getPerspectiveMatrix(&camera, aspect_ratio);
 		matrix4F mv = proj * view;
 
-		vector<ViewHandle> sub_views;
-
-		auto entity_view = entity_registry.view<ViewModel, WorldTransform>();
-		for (auto entity : entity_view)
-		{
-			auto &view_model = entity_view.get<ViewModel>(entity);
-			if (view_model.view != nullptr)
-			{
-				this->drawView(entity_registry, view_model.camera_entity, view_model.view);
-				sub_views.push_back(view_model.view);
-			}
-
-			Mesh* mesh = &this->loaded_meshes[view_model.mesh];
-			auto &transform = entity_view.get<WorldTransform>(entity);
-
-			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
-			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
-			matrix4F mvp = mv * (translation * orientation);
-
-			//this->backend->drawMeshScreenViewTextured(0, mesh->vertices, mesh->indices, mesh->indices_count, view_model.view, mvp);
-		}
-
 		auto entity_model = entity_registry.view<Model, WorldTransform>();
 		for (auto entity : entity_model)
 		{
 			auto &model = entity_model.get<Model>(entity);
 			auto &transform = entity_model.get<WorldTransform>(entity);
-			
-			Mesh* mesh = &this->loaded_meshes[model.mesh];
-			TextureHandle texture = this->loaded_textures[model.texture];
 
 			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
 			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 			matrix4F mvp = mv * (translation * orientation);
-			//this->backend->drawMeshScreen(0, mesh->vertices, mesh->indices, mesh->indices_count, texture, mvp);
+
+			this->backend->fillUniformBuffer(model.matrix, &mvp, sizeof(matrix4F));
+
+			//this->backend->tempDrawScreen(model.vertices, model.indices, model.texture, model.shader, model.matrix);
 		}
 
 		this->backend->endFrame();
-
+		vector<ViewHandle> sub_views;
 		this->backend->submitFrame(sub_views);
 	}
 }
@@ -176,9 +151,8 @@ void Renderer::loadTexture(string texture_file)
 {
 	if (this->loaded_textures.find(texture_file) == this->loaded_textures.end())
 	{
-
 		int width, height, tex_channels;
-		unsigned char* data = stbi_load((texture_file).c_str(), &width, &height, &tex_channels, STBI_rgb_alpha);
+		uint8_t* data = stbi_load((texture_file).c_str(), &width, &height, &tex_channels, STBI_rgb_alpha);
 		uint64_t data_size = width * height * STBI_rgb_alpha;
 
 		if (data == NULL)
@@ -197,66 +171,77 @@ void Renderer::loadTexture(string texture_file)
 	}
 }
 
-ShaderHandle Renderer::loadShader(string shader_vert_file, string shader_frag_file)
+void Renderer::loadShader(string shader_file_base)
 {
-	string vert_data = "";
-	string frag_data = "";
-
-	std::ifstream vert_file(shader_vert_file, std::ios::ate | std::ios::binary);
-	if (vert_file.is_open())
+	if (this->loaded_shaders.find(shader_file_base) == this->loaded_shaders.end())
 	{
-		size_t fileSize = (size_t)vert_file.tellg();
-		vert_file.seekg(0);
-		vert_data.resize(fileSize);
-		vert_file.read(vert_data.data(), vert_data.size());
-		vert_file.close();
-	}
-		
-	std::ifstream frag_file(shader_frag_file, std::ios::ate | std::ios::binary);
-	if (frag_file.is_open())
-	{
-		size_t fileSize = (size_t)frag_file.tellg();
-		frag_file.seekg(0);
-		frag_data.resize(fileSize);
-		frag_file.read(frag_data.data(), frag_data.size());
-		frag_file.close();
-	}
+		string vert_data = "";
+		string frag_data = "";
 
-	return this->backend->createShader(vert_data, frag_data);
+		std::ifstream vert_file(shader_file_base + ".vert.spv", std::ios::ate | std::ios::binary);
+		if (vert_file.is_open())
+		{
+			size_t fileSize = (size_t)vert_file.tellg();
+			vert_file.seekg(0);
+			vert_data.resize(fileSize);
+			vert_file.read(vert_data.data(), vert_data.size());
+			vert_file.close();
+		}
+
+		std::ifstream frag_file(shader_file_base + ".frag.spv", std::ios::ate | std::ios::binary);
+		if (frag_file.is_open())
+		{
+			size_t fileSize = (size_t)frag_file.tellg();
+			frag_file.seekg(0);
+			frag_data.resize(fileSize);
+			frag_file.read(frag_data.data(), frag_data.size());
+			frag_file.close();
+		}
+
+		this->loaded_shaders[shader_file_base] = this->backend->createShader(vert_data, frag_data);
+	}
+	else
+	{
+		printf("Error: Already loaded Shader: %s\n", shader_file_base.c_str());
+	}
 }
 
-ShaderHandle Renderer::loadShaderSingle(string shader_file_base)
+Model Renderer::createModel(string mesh, string texture, string shader)
 {
-	return this->loadShader(shader_file_base + ".vert.spv", shader_file_base + ".frag.spv");
-}
-
-void Renderer::drawView(EntityRegistry & entity_registry, EntityId camera_entity, ViewHandle view_handle)
-{
-	this->backend->startView(view_handle);
-
-	auto& camera = entity_registry.get<Camera>(camera_entity);
-	auto& transform = entity_registry.get<WorldTransform>(camera_entity);
-	Transform& current = transform.current_transform;
-
-	matrix4F view = glm::lookAt(current.getPosition(), current.getPosition() + current.getForward(), current.getUp());
-	matrix4F proj = this->backend->getPerspectiveMatrix(&camera, view_handle);
-	matrix4F mv = proj * view;
-
-	auto entity_model = entity_registry.view<Model, WorldTransform>();
-	for (auto entity : entity_model)
+	Model model = {};
+	
+	//TODO keep count of using
+	if (this->loaded_meshes.find(mesh) == this->loaded_meshes.end())
 	{
-		auto &model = entity_model.get<Model>(entity);
-		auto &transform = entity_model.get<WorldTransform>(entity);
-
-		Mesh* mesh = &this->loaded_meshes[model.mesh];
-		TextureHandle texture = this->loaded_textures[model.texture];
-
-		matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
-		matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
-		matrix4F mvp = mv * (translation * orientation);
-		//this->backend->drawMeshView(view_handle, 0, mesh->vertices, mesh->indices, mesh->indices_count, texture, mvp);
+		this->loadMesh(mesh);
 	}
 
-	this->backend->endView(view_handle);
-	this->backend->sumbitView(view_handle);
+	if (this->loaded_textures.find(texture) == this->loaded_textures.end())
+	{
+		this->loadTexture(texture);
+	}
+
+	if (this->loaded_shaders.find(shader) == this->loaded_shaders.end())
+	{
+		this->loadShader(shader);
+	}
+
+	model.vertices = this->loaded_meshes[mesh].vertices;
+	model.indices = this->loaded_meshes[mesh].indices;
+	model.texture = this->loaded_textures[texture];
+	model.shader = this->loaded_shaders[shader];
+
+	model.matrix = this->backend->createUniformBuffer("matrices", sizeof(matrix4F));
+
+	return model;
+}
+
+void Renderer::destroyModel(Model& model)
+{
+	model.vertices = nullptr;
+	model.indices = nullptr;
+	model.texture = nullptr;
+	model.shader = nullptr;
+
+	this->backend->destroyUniformBuffer(model.matrix);
 }

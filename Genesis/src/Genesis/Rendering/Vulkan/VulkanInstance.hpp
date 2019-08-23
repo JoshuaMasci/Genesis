@@ -57,8 +57,7 @@ namespace Genesis
 
 		VulkanDescriptorSetLayouts* descriptor_layouts = nullptr;
 
-		VulkanDescriptorPool* image_descriptor_pool = nullptr;
-		VulkanDescriptorPool* uniform_descriptor_pool = nullptr;
+		VulkanDescriptorPool* descriptor_pool = nullptr;
 
 		VulkanFramebufferLayout* screen_layout = nullptr;
 
@@ -71,6 +70,9 @@ namespace Genesis
 		vector<const char*> getLayers();
 
 		VkSampler linear_sampler;
+
+		VulkanTexture* empty_texture = nullptr;
+		VulkanBuffer* empty_buffer = nullptr;
 
 		//Resource Stuff
 		void cycleResourceDeleters();

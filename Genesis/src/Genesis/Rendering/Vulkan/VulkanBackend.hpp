@@ -24,7 +24,7 @@ namespace Genesis
 		virtual IndexBufferHandle createIndexBuffer(void* data, uint64_t data_size, uint32_t indices_count) override;
 		virtual void destroyIndexBuffer(IndexBufferHandle index_buffer_index) override;
 
-		virtual UniformBufferHandle createUniformBuffer(ShaderHandle shader_handle, string uniform_name) override;
+		virtual UniformBufferHandle createUniformBuffer(string uniform_name, uint64_t uniform_bytes) override;
 		virtual void fillUniformBuffer(UniformBufferHandle uniform_buffer_index, void* data, uint64_t data_size) override;
 		virtual void destroyUniformBuffer(UniformBufferHandle uniform_buffer_index) override;
 
@@ -40,6 +40,8 @@ namespace Genesis
 		virtual void startView(ViewHandle index) override;
 		virtual void endView(ViewHandle index) override;
 		virtual void sumbitView(ViewHandle index) override;
+
+		virtual void tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, TextureHandle texture_handle, ShaderHandle shader_handle, UniformBufferHandle mvp_uniform_handle) override;
 
 		//Utils
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) override;

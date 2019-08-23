@@ -7,34 +7,15 @@
 
 namespace Genesis
 {
-	//TEMP
-	struct ViewModel
-	{
-		ViewModel(string mesh, EntityId camera, vector2U view_size)
-		{
-			this->mesh = mesh;
-			this->camera_entity = camera;
-			this->view_size = view_size;
-		};
-
-		string mesh;
-		EntityId camera_entity;
-		vector2U view_size;
-
-		ViewHandle view = nullptr;
-	};
-
 	struct Model
 	{
-		Model(string mesh, string texture)
-		{
-			this->mesh = mesh;
-			this->texture = texture;
-		};
-		string mesh;
-		string texture;
+		VertexBufferHandle vertices = nullptr;
+		IndexBufferHandle indices = nullptr;
+		TextureHandle texture = nullptr;
+		ShaderHandle shader = nullptr;
+		UniformBufferHandle matrix = nullptr;
 	};
-	
+
 	struct TexturedVertex
 	{
 		vector3F pos;
@@ -64,19 +45,19 @@ namespace Genesis
 		//Temp resource stuff
 		void loadMesh(string mesh_file);
 		void loadTexture(string texture_file);
+		void loadShader(string shader_file_base);
 
-		ShaderHandle loadShader(string shader_vert_file, string shader_frag_file);
-		ShaderHandle loadShaderSingle(string shader_file_base);
+		Model createModel(string mesh, string texture, string shader);
+		void destroyModel(Model& model);
 
 	private:
-		void drawView(EntityRegistry& entity_registry, EntityId camera_entity, ViewHandle view);
-
 		//Lifetime of the Backend is longer than the Renderer
-		//No deleteing please
+		//No deleting please
 		RenderingBackend* backend;
 
 		//Resources
 		map<string, Mesh> loaded_meshes;
 		map<string, TextureHandle> loaded_textures;
+		map<string, ShaderHandle> loaded_shaders;
 	};
 }

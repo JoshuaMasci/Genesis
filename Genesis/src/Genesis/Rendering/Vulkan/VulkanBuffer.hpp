@@ -28,7 +28,7 @@ namespace Genesis
 		VmaAllocationInfo buffer_memory_info;
 	};
 
-	class VulkanVertexBuffer : VulkanBuffer
+	class VulkanVertexBuffer : public VulkanBuffer
 	{
 	public:
 		VulkanVertexBuffer(VulkanAllocator* allocator, VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size, VertexInputDescription& vertex_input_description);
@@ -39,7 +39,7 @@ namespace Genesis
 		VertexInputDescription vertex_description;
 	};
 
-	class VulkanIndexBuffer : VulkanBuffer
+	class VulkanIndexBuffer : public VulkanBuffer
 	{
 	public:
 		VulkanIndexBuffer(VulkanAllocator* allocator, VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size, uint32_t indices_count);
@@ -54,28 +54,29 @@ namespace Genesis
 	class VulkanUniformBuffer
 	{
 	public:
-		VulkanUniformBuffer(VkDevice device, VulkanAllocator* allocator, VulkanDescriptorPool* descriptor_pool, VulkanDescriptorSetLayouts* descriptor_layouts, uint64_t size_bytes, uint32_t frames_in_flight);
+		VulkanUniformBuffer(VkDevice device, VulkanAllocator* allocator, string name, uint64_t size_bytes, uint32_t frames_in_flight);
 		~VulkanUniformBuffer();
 
 		void setData(void* data, uint64_t data_size);
 
 		void updateBuffer(uint32_t frame_index);
 
-		inline VkDescriptorSet getDescriptorSet(uint32_t frame_index) { return this->buffers[frame_index].buffer_descriotor_set; };
+		inline string getName() { return this->name; };
 
 	private:
 		VkDevice device;
 		VulkanAllocator* allocator = nullptr;
-		VulkanDescriptorPool* descriptor_pool = nullptr;
 
+		//Local copy of data
 		Array<uint8_t> data_local;
 
+		string name;
+		uint64_t size_bytes;
 		struct UniformBuffer
 		{
 			VkBuffer buffer;
 			VmaAllocation buffer_memory;
 			VmaAllocationInfo buffer_memory_info;
-			VkDescriptorSet buffer_descriotor_set;
 		};
 		Array<UniformBuffer> buffers;
 	};

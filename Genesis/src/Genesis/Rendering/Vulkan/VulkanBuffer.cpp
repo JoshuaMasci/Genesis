@@ -79,45 +79,28 @@ VulkanVertexBuffer::VulkanVertexBuffer(VulkanAllocator* allocator, VulkanCommand
 }
 
 VulkanIndexBuffer::VulkanIndexBuffer(VulkanAllocator* allocator, VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size, uint32_t indices_count)
-	:VulkanBuffer(allocator, data_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY),
+	:VulkanBuffer(allocator, data_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY),
 	indices_count(indices_count)
 {
 	this->fillBuffer(transfer_pool, transfer_queue, data, data_size);
 }
 
-VulkanUniformBuffer::VulkanUniformBuffer(VkDevice device, VulkanAllocator* allocator, VulkanDescriptorPool* descriptor_pool, VulkanDescriptorSetLayouts* descriptor_layouts, uint64_t size_bytes, uint32_t frames_in_flight)
+VulkanUniformBuffer::VulkanUniformBuffer(VkDevice device, VulkanAllocator* allocator, string name, uint64_t size_bytes, uint32_t frames_in_flight)
 {
 	this->device = device;
 	this->allocator = allocator;
-	this->descriptor_pool = descriptor_pool;
+
+	this->name = name;
+	this->size_bytes = size_bytes;
 
 	VkBufferCreateInfo buffer_info = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	buffer_info.size = size_bytes;
 	buffer_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
-	VkDescriptorSetLayout layout = descriptor_layouts->getDescriptorSetLayout(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-
 	this->buffers.resize(frames_in_flight);
 	for (size_t i = 0; i < this->buffers.size(); i++)
 	{
 		this->allocator->createBuffer(&buffer_info, VMA_MEMORY_USAGE_CPU_TO_GPU, &this->buffers[i].buffer, &this->buffers[i].buffer_memory, &this->buffers[i].buffer_memory_info);
-
-		this->buffers[i].buffer_descriotor_set = this->descriptor_pool->getDescriptorSet(layout);
-		VkDescriptorBufferInfo bufferInfo = {};
-		bufferInfo.buffer = this->buffers[i].buffer;
-		bufferInfo.offset = 0;
-		bufferInfo.range = size_bytes;
-
-		VkWriteDescriptorSet descriptorWrite = {};
-		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = this->buffers[i].buffer_descriotor_set;
-		descriptorWrite.dstBinding = 0;
-		descriptorWrite.dstArrayElement = 0;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = &bufferInfo;
-
-		vkUpdateDescriptorSets(this->device, 1, &descriptorWrite, 0, nullptr);
 	}
 }
 
@@ -126,7 +109,6 @@ VulkanUniformBuffer::~VulkanUniformBuffer()
 	for (size_t i = 0; i < this->buffers.size(); i++)
 	{
 		this->allocator->destroyBuffer(this->buffers[i].buffer, this->buffers[i].buffer_memory);
-		this->descriptor_pool->freeDescriptorSet(this->buffers[i].buffer_descriotor_set);
 	}
 }
 

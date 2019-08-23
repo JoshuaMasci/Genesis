@@ -27,6 +27,23 @@ VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, VkDescriptorType typ
 	}
 }
 
+VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, uint32_t max_sets, vector<VkDescriptorPoolSize> types)
+{
+	this->device = device;
+
+	VkDescriptorPoolCreateInfo pool_info = {};
+	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	pool_info.poolSizeCount = (uint32_t)types.size();
+	pool_info.pPoolSizes = types.data();
+	pool_info.maxSets = max_sets;
+	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+
+	if (vkCreateDescriptorPool(this->device, &pool_info, nullptr, &this->pool) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create descriptor pool!");
+	}
+}
+
 VulkanDescriptorPool::~VulkanDescriptorPool()
 {
 	vkDestroyDescriptorPool(this->device, this->pool, nullptr);

@@ -15,27 +15,23 @@ using namespace Genesis;
 GameScene::GameScene(Application* app)
 {
 	this->application = app;
+	this->renderer = new Renderer(this->application->rendering_backend);
 
 	this->temp = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->temp, vector3D(0.0, 0.0, 0.0), glm::angleAxis(3.1415926/2.0, vector3D(0.0, 1.0, 0.0)));
-	this->entity_registry.assign<Model>(this->temp, "resources/meshes/cube1.obj", "resources/textures/1k_Grid.png");
+	this->entity_registry.assign<Model>(this->temp);
+	this->entity_registry.get<Model>(this->temp) = this->renderer->createModel("resources/meshes/cube.obj", "resources/textures/Red.png", "resources/shaders/Vulkan/texture");
 
 	this->camera = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->camera, vector3D(0.0, 0.75, -2.5));
 	this->entity_registry.assign<Camera>(this->camera, 75.0f);
 	this->entity_registry.assign<DebugCamera>(this->camera, 0.5, 0.2);
-
-	this->renderer = new Renderer(this->application->rendering_backend);
-	this->renderer->loadMesh("resources/meshes/cube1.obj");
-	this->renderer->loadTexture("resources/textures/1k_Grid.png");
-	/*this->renderer->loadTexture("resources/textures/4k_Grid.png");
-	this->renderer->loadTexture("resources/textures/Red.png");
-	this->renderer->loadTexture("resources/textures/Blue.png");
-	this->renderer->loadTexture("resources/textures/Green.png");*/
 }
 
 GameScene::~GameScene()
 {
+	this->renderer->destroyModel(this->entity_registry.get<Model>(this->temp));
+
 	if (this->renderer != nullptr)
 	{
 		delete this->renderer;
