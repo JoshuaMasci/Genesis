@@ -41,7 +41,7 @@ namespace Genesis
 		virtual void endView(ViewHandle index) override;
 		virtual void sumbitView(ViewHandle index) override;
 
-		virtual void tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, TextureHandle texture_handle, ShaderHandle shader_handle, UniformBufferHandle mvp_uniform_handle) override;
+		virtual void tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, UniformBufferHandle uniform_handle) override;
 
 		//Utils
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) override;

@@ -6,6 +6,12 @@ using namespace Genesis;
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
+	if (strcmp(pCallbackData->pMessageIdName, "UNASSIGNED-CoreValidation-DrawState-InvalidImageLayout") == 0)
+	{
+		//Ignore this warning for now
+		return VK_FALSE;
+	}
+
 	//TODO LOGGING
 	printf("Vulkan Validation Layer: %s\n", pCallbackData->pMessage);
 	return VK_FALSE;

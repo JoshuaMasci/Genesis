@@ -17,6 +17,8 @@ namespace Genesis
 		Array<VkDescriptorSetLayoutBinding> bindings;
 		VkShaderStageFlagBits shader_stage;
 
+
+
 	protected:
 		VkDevice device;
 	};
@@ -29,6 +31,7 @@ namespace Genesis
 		~VulkanShader();
 
 		inline vector<VkPipelineShaderStageCreateInfo> getShaderStages() { return this->shader_stages; };
+		inline VkDescriptorSetLayout getDescriptorSetLayout() { return this->descriptor_layout; };
 		inline VkPipelineLayout getPipelineLayout() { return this->pipeline_layout; };
 
 	private:

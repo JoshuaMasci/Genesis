@@ -68,7 +68,7 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 
 			this->backend->fillUniformBuffer(model.matrix, &mvp, sizeof(matrix4F));
 
-			//this->backend->tempDrawScreen(model.vertices, model.indices, model.texture, model.shader, model.matrix);
+			this->backend->tempDrawScreen(model.vertices, model.indices, model.shader, model.texture, model.matrix);
 		}
 
 		this->backend->endFrame();

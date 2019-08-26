@@ -8,7 +8,7 @@
 SandboxApplication::SandboxApplication()
 {
 	this->platform = new Genesis::SDL2_Platform(this);
-	this->window = new Genesis::SDL2_Window(Genesis::vector2U(2560, 1440), "Sandbox: ");
+	this->window = new Genesis::SDL2_Window(Genesis::vector2U(1600, 900), "Sandbox: ");
 	this->rendering_backend = new Genesis::VulkanBackend(this->window, this->job_system.getNumberOfJobThreads());
 
 	this->scene = new Genesis::GameScene(this);

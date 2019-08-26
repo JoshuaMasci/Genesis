@@ -242,13 +242,14 @@ void VulkanBackend::sumbitView(ViewHandle index)
 	view->submitView(this->frame_index, vector<VulkanView*>(), VK_NULL_HANDLE);
 }
 
-void VulkanBackend::tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, TextureHandle texture_handle, ShaderHandle shader_handle, UniformBufferHandle mvp_uniform_handle)
+void VulkanBackend::tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, UniformBufferHandle uniform_handle)
 {
 	VulkanVertexBuffer* vertices = (VulkanVertexBuffer*)vertices_handle;
 	VulkanIndexBuffer* indices = (VulkanIndexBuffer*)indices_handle;
-	VulkanTexture* texture = (VulkanTexture*)texture_handle;
 	VulkanShader* shader = (VulkanShader*)shader_handle;
-	VulkanUniformBuffer* mvp_uniform = (VulkanUniformBuffer*)mvp_uniform_handle;
+
+	VulkanTexture* texture = (VulkanTexture*)texture_handle;
+	VulkanUniformBuffer* uniform = (VulkanUniformBuffer*)uniform_handle;
 
 	uint32_t thread_index = 0;//Hardcoded for the moment;
 	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
@@ -256,6 +257,43 @@ void VulkanBackend::tempDrawScreen(VertexBufferHandle vertices_handle, IndexBuff
 
 	VulkanPipline* pipeline = this->vulkan->pipeline_manager->getPipeline(shader, this->vulkan->screen_layout->getRenderPass(), PipelineSettings(), vertices->getVertexDescription(), this->vulkan->swapchain->getSwapchainExtent());
 	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipeline());
+
+	VkDescriptorSet descriptor_set = this->vulkan->descriptor_pool->getDescriptorSet(shader->getDescriptorSetLayout());
+
+	VkDescriptorBufferInfo buffer_info = {};
+	buffer_info.buffer = uniform->getBuffer(this->frame_index);
+	buffer_info.offset = 0;
+	buffer_info.range = uniform->getSize();
+
+	uniform->updateBuffer(this->frame_index);
+
+	VkDescriptorImageInfo image_info = {};
+	image_info.imageView = texture->getImageView();
+	image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	image_info.sampler = this->vulkan->linear_sampler;
+
+	Array<VkWriteDescriptorSet> descriptor_set_writes(2);
+	descriptor_set_writes[0] = {};
+	descriptor_set_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	descriptor_set_writes[0].dstSet = descriptor_set;
+	descriptor_set_writes[0].dstBinding = 0;
+	descriptor_set_writes[0].dstArrayElement = 0;
+	descriptor_set_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	descriptor_set_writes[0].descriptorCount = 1;
+	descriptor_set_writes[0].pBufferInfo = &buffer_info;
+
+	descriptor_set_writes[1] = {};
+	descriptor_set_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	descriptor_set_writes[1].dstSet = descriptor_set;
+	descriptor_set_writes[1].dstBinding = 1;
+	descriptor_set_writes[1].dstArrayElement = 0;
+	descriptor_set_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	descriptor_set_writes[1].descriptorCount = 1;
+	descriptor_set_writes[1].pImageInfo = &image_info;
+
+	vkUpdateDescriptorSets(this->vulkan->device->get(), (uint32_t)descriptor_set_writes.size(), descriptor_set_writes.data(), 0, nullptr);
+
+	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shader->getPipelineLayout(), 0, 1, &descriptor_set, 0, nullptr);
 
 	VkBuffer vertex_buffer = vertices->get();
 	VkDeviceSize offset = 0;

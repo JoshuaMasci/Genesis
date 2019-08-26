@@ -5,6 +5,7 @@ using namespace Genesis;
 VulkanBuffer::VulkanBuffer(VulkanAllocator* allocator, uint64_t size_bytes, VkBufferUsageFlags type, VmaMemoryUsage memory_usage)
 {
 	this->allocator = allocator;
+	this->size = size_bytes;
 
 	VkBufferCreateInfo buffer_info = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	buffer_info.size = size_bytes;
@@ -93,6 +94,8 @@ VulkanUniformBuffer::VulkanUniformBuffer(VkDevice device, VulkanAllocator* alloc
 	this->name = name;
 	this->size_bytes = size_bytes;
 
+	this->data_local = malloc(this->size_bytes);
+
 	VkBufferCreateInfo buffer_info = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	buffer_info.size = size_bytes;
 	buffer_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
@@ -106,6 +109,8 @@ VulkanUniformBuffer::VulkanUniformBuffer(VkDevice device, VulkanAllocator* alloc
 
 VulkanUniformBuffer::~VulkanUniformBuffer()
 {
+	free(this->data_local);
+
 	for (size_t i = 0; i < this->buffers.size(); i++)
 	{
 		this->allocator->destroyBuffer(this->buffers[i].buffer, this->buffers[i].buffer_memory);
@@ -114,14 +119,13 @@ VulkanUniformBuffer::~VulkanUniformBuffer()
 
 void VulkanUniformBuffer::setData(void* data, uint64_t data_size)
 {
-	this->data_local = Array<uint8_t>(data_size);
-	memcpy(this->data_local.data(), data, data_size);
+	memcpy(this->data_local, data, data_size);
 }
 
 void VulkanUniformBuffer::updateBuffer(uint32_t frame_index)
 {
 	void* mapped_data;
 	this->allocator->mapMemory(this->buffers[frame_index].buffer_memory, &mapped_data);
-	memcpy(mapped_data, this->data_local.data(), this->data_local.size());
+	memcpy(mapped_data, this->data_local, this->size_bytes);
 	this->allocator->unmapMemory(this->buffers[frame_index].buffer_memory);
 }

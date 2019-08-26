@@ -39,7 +39,7 @@ namespace Genesis
 		virtual void endView(ViewHandle index) = 0;
 		virtual void sumbitView(ViewHandle index) = 0;
 
-		virtual void tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, TextureHandle texture_handle, ShaderHandle shader_handle, UniformBufferHandle mvp_uniform_handle) = 0;
+		virtual void tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, UniformBufferHandle uniform_handle) = 0;
 
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) = 0;
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, ViewHandle view) = 0;

@@ -19,6 +19,7 @@ namespace Genesis
 		void fillBuffer(VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size);
 
 		inline VkBuffer get() { return this->buffer; };
+		inline uint64_t getSize() { return this->size; };
 
 	protected:
 		VulkanAllocator* allocator = nullptr;
@@ -26,6 +27,7 @@ namespace Genesis
 		VkBuffer buffer;
 		VmaAllocation buffer_memory;
 		VmaAllocationInfo buffer_memory_info;
+		uint64_t size;
 	};
 
 	class VulkanVertexBuffer : public VulkanBuffer
@@ -63,12 +65,15 @@ namespace Genesis
 
 		inline string getName() { return this->name; };
 
+		inline VkBuffer getBuffer(uint32_t frame) { return this->buffers[frame].buffer; };
+		inline uint64_t getSize() { return this->size_bytes; };
+
 	private:
 		VkDevice device;
 		VulkanAllocator* allocator = nullptr;
 
 		//Local copy of data
-		Array<uint8_t> data_local;
+		void* data_local;
 
 		string name;
 		uint64_t size_bytes;

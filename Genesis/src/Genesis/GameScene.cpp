@@ -23,7 +23,7 @@ GameScene::GameScene(Application* app)
 	this->entity_registry.get<Model>(this->temp) = this->renderer->createModel("resources/meshes/cube.obj", "resources/textures/Red.png", "resources/shaders/Vulkan/texture");
 
 	this->camera = this->entity_registry.create();
-	this->entity_registry.assign<WorldTransform>(this->camera, vector3D(0.0, 0.75, -2.5));
+	this->entity_registry.assign<WorldTransform>(this->camera, vector3D(0.0, 0.75, -5));
 	this->entity_registry.assign<Camera>(this->camera, 75.0f);
 	this->entity_registry.assign<DebugCamera>(this->camera, 0.5, 0.2);
 }

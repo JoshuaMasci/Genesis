@@ -37,7 +37,7 @@ VulkanPipline* VulkanPipelineManager::getPipeline(VulkanShader* shader, VkRender
 		}
 	}
 
-	printf("Building new pipeline with hash: %d\n", pipeline_hash);
+	printf("Building new pipeline with hash: %u\n", pipeline_hash);
 
 	VulkanPipline* new_pipeline = new VulkanPipline(this->device, (*shader), renderpass, settings, vertex_description, extent);
 
