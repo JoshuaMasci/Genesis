@@ -96,7 +96,8 @@ VulkanPipline::VulkanPipline(VkDevice device, VulkanShader& shader, VkRenderPass
 		rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
 		break;
 	case CullMode::Back:
-		rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
+		rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+		break;
 	case CullMode::All:
 		rasterizer.cullMode = VK_CULL_MODE_FRONT_AND_BACK;
 		break;

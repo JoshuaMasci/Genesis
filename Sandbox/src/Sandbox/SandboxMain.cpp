@@ -6,6 +6,12 @@
 
 int main(int argc, char** argv)
 {
+	bool temp = true;
+	while (!temp)
+	{
+		int i = 1 + 2;
+	}
+
 	//ALPHA
 	SandboxApplication* sandbox = new SandboxApplication();
 

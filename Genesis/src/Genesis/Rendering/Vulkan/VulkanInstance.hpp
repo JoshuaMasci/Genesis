@@ -83,7 +83,7 @@ namespace Genesis
 		DelayedResourceDeleter<VulkanShader>* shader_deleter = nullptr;
 
 	private:
-		bool use_debug_layers = true;
+		bool use_debug_layers = false;
 
 		//Instance
 		void create_instance(const char* app_name, uint32_t app_version);
