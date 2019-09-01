@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Genesis/Rendering/FramebufferLayout.hpp"
+
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanAllocator.hpp"
@@ -12,7 +14,7 @@ namespace Genesis
 	class VulkanView
 	{
 	public:
-		VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VulkanCommandPoolSet* command_pool_set, VkExtent2D size, VulkanFramebufferLayout* layout);
+		VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VulkanCommandPoolSet* command_pool_set, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass);
 		~VulkanView();
 
 		void startView(uint32_t frame);
@@ -36,15 +38,5 @@ namespace Genesis
 		Array<VulkanFramebuffer*> framebuffers;
 
 		Array<VkClearValue> clear_values;
-	};
-
-	class VulkanScreenView : public VulkanView
-	{
-
-	};
-
-	class VulkanOffscreenView : public VulkanView
-	{
-
 	};
 }

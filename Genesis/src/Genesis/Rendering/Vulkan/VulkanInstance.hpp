@@ -16,8 +16,8 @@
 #include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanTexture.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanView.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanDescriptorSetLayouts.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanRenderPassManager.hpp"
 
 #include "Genesis/Rendering/DelayedResourceDeleter.hpp"
 
@@ -34,11 +34,13 @@ namespace Genesis
 	class VulkanInstance
 	{
 	public:
-		VulkanInstance(Window* window, uint32_t number_of_threads);
+		VulkanInstance(Window* window, uint32_t thread_count, uint32_t FRAME_COUNT);
 		~VulkanInstance();
 
 		bool acquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore);
 		
+		const uint32_t FRAME_COUNT; //number of frames in pipeline at once
+
 		Window* window = nullptr;
 		VkInstance instance;
 		VkSurfaceKHR surface;
@@ -53,16 +55,12 @@ namespace Genesis
 
 		Array<VulkanFrame> frames_in_flight;
 
+		VulkanRenderPassManager* render_pass_manager = nullptr;
 		VulkanPipelineManager* pipeline_manager = nullptr;
-
-		VulkanDescriptorSetLayouts* descriptor_layouts = nullptr;
 
 		VulkanDescriptorPool* descriptor_pool = nullptr;
 
 		VulkanFramebufferLayout* screen_layout = nullptr;
-
-		VulkanFramebufferLayout* shadow_pass_layout = nullptr;
-		VulkanFramebufferLayout* color_pass_layout = nullptr;
 
 		//Extensions and Layers
 		vector<const char*> getExtensions();
@@ -83,7 +81,7 @@ namespace Genesis
 		DelayedResourceDeleter<VulkanShader>* shader_deleter = nullptr;
 
 	private:
-		bool use_debug_layers = false;
+		bool use_debug_layers = true;
 
 		//Instance
 		void create_instance(const char* app_name, uint32_t app_version);

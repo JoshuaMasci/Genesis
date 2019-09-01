@@ -4,7 +4,6 @@
 #include "Genesis/Rendering/Vulkan/VulkanAllocator.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanDescriptorSetLayouts.hpp"
 
 #include "Genesis/Rendering/VertexInputDescription.hpp"
 

@@ -4,6 +4,7 @@
 #include "Genesis/Rendering/RenderingTypes.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/VertexInputDescription.hpp"
+#include "Genesis/Rendering/FramebufferLayout.hpp"
 
 namespace Genesis
 {
@@ -32,7 +33,7 @@ namespace Genesis
 		virtual ShaderHandle createShader(string vert_data, string frag_data) = 0;
 		virtual void destroyShader(ShaderHandle shader_handle) = 0;
 
-		virtual ViewHandle createView(ViewType type, vector2U size) = 0;
+		virtual ViewHandle createView(vector2U size, FramebufferLayout& layout) = 0;
 		virtual void destroyView(ViewHandle index) = 0;
 
 		virtual void startView(ViewHandle index) = 0;

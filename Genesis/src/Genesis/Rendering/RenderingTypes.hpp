@@ -10,10 +10,21 @@ namespace Genesis
 		CPU_Visable
 	};
 
-	enum class ViewType
+	enum class ImageFormat
 	{
-		FrameBuffer,
-		ShadowMap
+		Invalid,
+
+		RGBA_8_UNorm,
+
+		R_16_Float,
+		RG_16_Float,
+		RGB_16_Float,
+		RGBA_16_Float,
+
+		R_32_Float,
+		RG_32_Float,
+		RGB_32_Float,
+		RGBA_32_Float,
 	};
 
 	typedef void* VertexBufferHandle;
@@ -23,4 +34,5 @@ namespace Genesis
 	typedef void* ShaderHandle;
 
 	typedef void* ViewHandle;
+	typedef void* CommandBufferHandle;
 }

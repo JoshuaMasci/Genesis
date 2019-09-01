@@ -36,7 +36,6 @@ namespace Genesis
 		VkExtent2D size;
 		VkRenderPass render_pass;
 
-		//TODO ARRAY
 		Array<VulkanFramebufferImage> images;
 		VulkanFramebufferImage depth_image;
 		VkFramebuffer framebuffer;

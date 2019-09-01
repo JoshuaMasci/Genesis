@@ -76,3 +76,7 @@ include_directories(${CMAKE_SOURCE_DIR}/submodules/stb/)
 
 #TINYOBJ
 include_directories(${CMAKE_SOURCE_DIR}/submodules/tinyobj/)
+
+#ImGUI
+include_directories(${CMAKE_SOURCE_DIR}/submodules/imgui/)
+

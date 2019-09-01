@@ -3,6 +3,7 @@
 #include "Genesis/Entity.hpp"
 
 #include "Genesis/Rendering/Renderer.hpp"
+#include "Genesis/Rendering/ImGuiRenderer.hpp"
 
 namespace Genesis
 {
@@ -31,6 +32,7 @@ namespace Genesis
 
 		//Rendering
 		Renderer* renderer = nullptr;
+		ImGuiRenderer* ui_renderer = nullptr;
 
 		//Temp stuff
 		EntityId temp;

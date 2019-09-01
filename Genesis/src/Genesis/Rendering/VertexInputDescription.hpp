@@ -55,7 +55,7 @@ namespace Genesis
 			this->hash_value = hash.end();
 		};
 
-		inline size_t getNumberOfElements() { return this->elements.size(); };
+		inline size_t getElementCount() { return this->elements.size(); };
 		inline string getElementName(size_t i) { return this->elements[i].name; };
 		inline VertexElementType getElementType(size_t i) { return this->elements[i].type; };
 		inline uint32_t getElementSize(size_t i) { return this->elements[i].size; };

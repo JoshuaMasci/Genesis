@@ -34,7 +34,7 @@ namespace Genesis
 		virtual ShaderHandle createShader(string vert_data, string frag_data) override;
 		virtual void destroyShader(ShaderHandle shader_handle) override;
 
-		virtual ViewHandle createView(ViewType type, vector2U size) override;
+		virtual ViewHandle createView(vector2U size, FramebufferLayout& layout) override;
 		virtual void destroyView(ViewHandle index) override;
 
 		virtual void startView(ViewHandle index) override;

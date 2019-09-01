@@ -6,10 +6,9 @@
 
 using namespace Genesis;
 
-VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
+VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t FRAME_COUNT)
+	:FRAME_COUNT(FRAME_COUNT)
 {
-	const uint32_t NUM_OF_FRAMES = 3;
-
 	this->window = window;
 
 	this->create_instance("Sandbox", VK_MAKE_VERSION(0, 0, 1));
@@ -24,9 +23,9 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 
 	this->swapchain = new VulkanSwapchain(this->device, window, this->surface);
 
-	this->graphics_command_pool_set = new VulkanCommandPoolSet(this->device, this->device->getGraphicsFamilyIndex(), number_of_threads);
+	this->graphics_command_pool_set = new VulkanCommandPoolSet(this->device, this->device->getGraphicsFamilyIndex(), thread_count);
 
-	this->frames_in_flight = Array<VulkanFrame>(NUM_OF_FRAMES);
+	this->frames_in_flight = Array<VulkanFrame>(this->FRAME_COUNT);
 	for (int i = 0; i < this->frames_in_flight.size(); i++)
 	{
 		VulkanFrame* frame = &this->frames_in_flight[i];
@@ -38,6 +37,7 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 	}
 
 	this->pipeline_manager = new VulkanPipelineManager(this->device->get());
+	this->render_pass_manager = new VulkanRenderPassManager(this->device->get());
 
 	Array<VkFormat> color(1);
 	color[0] = this->swapchain->getSwapchainFormat();
@@ -68,31 +68,23 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t number_of_threads)
 		}
 	}
 
-	this->descriptor_layouts = new VulkanDescriptorSetLayouts(this->device->get());
-
 	this->descriptor_pool = new VulkanDescriptorPool(this->device->get(), 800000,
 		{
 			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000},
 			{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8000}
 		});
 
-	this->shadow_pass_layout = new VulkanFramebufferLayout(this->device->get(), Array<VkFormat>(), this->swapchain->getSwapchainDepthFormat());
-
-	Array<VkFormat> screen_color(1);
-	screen_color[0] = this->swapchain->getSwapchainFormat();
-	this->color_pass_layout = new VulkanFramebufferLayout(this->device->get(), screen_color, this->swapchain->getSwapchainDepthFormat());
-
-	vector<uint8_t> empty_vector(64, 0);
+	vector<uint8_t> empty_vector(256, 0);
 	this->empty_buffer = new VulkanBuffer(this->allocator, 64, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
 	this->empty_buffer->fillBuffer(this->graphics_command_pool_set->getPrimaryCommandPool(), this->device->getGraphicsQueue(), empty_vector.data(), empty_vector.size());
 
 	this->empty_texture = new VulkanTexture(this->device, this->allocator, { 16, 16 }, VMA_MEMORY_USAGE_GPU_ONLY, this->linear_sampler);
-	vector<glm::u8vec4> pink_texture(16 * 16, glm::u8vec4(255, 20, 147, 255));
+	vector<glm::u8vec4> pink_texture(16 * 16, glm::u8vec4(255, 20, 147, 255));//Pink color
 	this->empty_texture->fillTexture(this->graphics_command_pool_set->getPrimaryCommandPool(), this->device->getGraphicsQueue(), pink_texture.data(), pink_texture.size() * sizeof(glm::u8vec4));
 
 	//Resource Deleters
 	//Add 1 to the delete delay just to make sure it's totaly out of the pipeline
-	uint8_t delay_cycles = (uint8_t) this->frames_in_flight.size() + 1;
+	uint8_t delay_cycles = (uint8_t) this->FRAME_COUNT + 1;
 	this->buffer_deleter = new DelayedResourceDeleter<VulkanBuffer>(delay_cycles);
 	this->uniform_deleter = new DelayedResourceDeleter<VulkanUniformBuffer>(delay_cycles);
 	this->texture_deleter = new DelayedResourceDeleter<VulkanTexture>(delay_cycles);
@@ -116,14 +108,9 @@ VulkanInstance::~VulkanInstance()
 
 	vkDestroySampler(this->device->get(), this->linear_sampler, nullptr);
 
-	delete this->shadow_pass_layout;
-	delete this->color_pass_layout;
-
 	delete this->screen_layout;
 
 	delete this->descriptor_pool;
-
-	delete this->descriptor_layouts;
 
 	if (this->swapchain_framebuffers != nullptr)
 	{
@@ -131,6 +118,7 @@ VulkanInstance::~VulkanInstance()
 	}
 
 	delete this->pipeline_manager;
+	delete this->render_pass_manager;
 
 	for (int i = 0; i < this->frames_in_flight.size(); i++)
 	{

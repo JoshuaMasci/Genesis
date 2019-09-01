@@ -21,9 +21,44 @@ VmaMemoryUsage getMemoryUsage(MemoryUsage memory_usage)
 	return VMA_MEMORY_USAGE_UNKNOWN;
 }
 
+VkFormat getImageFormat(ImageFormat format)
+{
+	switch (format)
+	{
+	case ImageFormat::RGBA_8_UNorm:
+		return VK_FORMAT_R8G8B8A8_UNORM;
+		break;
+	case ImageFormat::R_16_Float:
+		return VK_FORMAT_R16_SFLOAT;
+		break;
+	case ImageFormat::RG_16_Float:
+		return VK_FORMAT_R16G16_SFLOAT;
+		break;
+	case ImageFormat::RGB_16_Float:
+		return VK_FORMAT_R16G16B16_SFLOAT;
+		break;
+	case ImageFormat::RGBA_16_Float:
+		return VK_FORMAT_R16G16B16A16_SFLOAT;
+		break;
+	case ImageFormat::R_32_Float:
+		return VK_FORMAT_R32_SFLOAT;
+		break;
+	case ImageFormat::RG_32_Float:
+		return VK_FORMAT_R32G32_SFLOAT;
+		break;
+	case ImageFormat::RGB_32_Float:
+		return VK_FORMAT_R32G32B32_SFLOAT;
+		break;
+	case ImageFormat::RGBA_32_Float:
+		return VK_FORMAT_R32G32B32A32_SFLOAT;
+		break;
+	}
+	return VK_FORMAT_UNDEFINED;
+}
+
 VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 {
-	this->vulkan = new VulkanInstance(window, number_of_threads);
+	this->vulkan = new VulkanInstance(window, number_of_threads, 3);
 }
 
 VulkanBackend::~VulkanBackend()
@@ -116,7 +151,7 @@ void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
 
 	VkResult result = vkQueuePresentKHR(this->vulkan->device->getPresentQueue(), &presentInfo);
 
-	this->frame_index = (this->frame_index + 1) % this->vulkan->frames_in_flight.size();
+	this->frame_index = (this->frame_index + 1) % this->vulkan->FRAME_COUNT;
 
 	//Cleanup Resources
 	this->vulkan->cycleResourceDeleters();
@@ -144,7 +179,7 @@ void VulkanBackend::destroyIndexBuffer(IndexBufferHandle index_buffer_index)
 
 UniformBufferHandle VulkanBackend::createUniformBuffer(string uniform_name, uint64_t uniform_bytes)
 {
-	return (UniformBufferHandle) new VulkanUniformBuffer(this->vulkan->device->get(), this->vulkan->allocator, uniform_name, uniform_bytes, (uint32_t)this->vulkan->frames_in_flight.size());
+	return (UniformBufferHandle) new VulkanUniformBuffer(this->vulkan->device->get(), this->vulkan->allocator, uniform_name, uniform_bytes, (uint32_t)this->vulkan->FRAME_COUNT);
 }
 
 void VulkanBackend::fillUniformBuffer(UniformBufferHandle uniform_buffer_index, void* data, uint64_t data_size)
@@ -172,19 +207,6 @@ void VulkanBackend::destroyTexture(TextureHandle texture_handle)
 ShaderHandle VulkanBackend::createShader(string vert_data, string frag_data)
 {
 	VulkanShader* shader = new VulkanShader(this->vulkan->device->get(), vert_data, frag_data);
-
-	VkRenderPass renderpass = this->vulkan->screen_layout->getRenderPass();
-	PipelineSettings settings;
-	VertexInputDescription vertex_description
-	({
-	{"in_position", VertexElementType::float_3},
-	{"in_normal", VertexElementType::float_3},
-	{"in_uv", VertexElementType::float_2}
-	});
-	VkExtent2D extent = this->vulkan->swapchain->getSwapchainExtent();
-
-	this->vulkan->pipeline_manager->getPipeline(shader, this->vulkan->screen_layout->getRenderPass(), PipelineSettings(), vertex_description, extent);
-
 	return shader;
 }
 
@@ -193,28 +215,27 @@ void VulkanBackend::destroyShader(ShaderHandle shader_handle)
 	this->vulkan->shader_deleter->addToQueue((VulkanShader*)shader_handle);
 }
 
-ViewHandle VulkanBackend::createView(ViewType type, vector2U size)
+ViewHandle VulkanBackend::createView(vector2U size, FramebufferLayout& layout)
 {
+	uint32_t frames_in_flight = (uint32_t)this->vulkan->FRAME_COUNT;
 	VkExtent2D vk_size = {size.x, size.y};
 
-	uint32_t frames_in_flight = (uint32_t)this->vulkan->frames_in_flight.size();
-
-	VulkanFramebufferLayout* layout = nullptr;
-	if (type == ViewType::FrameBuffer)
+	Array<VkFormat> color(layout.getColorCount());
+	for (size_t i = 0; i < color.size(); i++)
 	{
-		layout = this->vulkan->color_pass_layout;
-	}
-	else if (type == ViewType::ShadowMap)
-	{
-		layout = this->vulkan->shadow_pass_layout;
+		color[i] = getImageFormat(layout.getColor(i));
 	}
 
-	VulkanView* view = new VulkanView(this->vulkan->device, this->vulkan->allocator, frames_in_flight, this->vulkan->graphics_command_pool_set, vk_size, layout);
+	VkFormat depth = getImageFormat(layout.getDepth());
 
-	Array<VkClearValue> clear_values(2);
+	VkRenderPass render_pass = this->vulkan->render_pass_manager->getRenderPass(layout.getHash(), color, depth);
+
+	VulkanView* view = new VulkanView(this->vulkan->device, this->vulkan->allocator, frames_in_flight, this->vulkan->graphics_command_pool_set, vk_size, color, depth, render_pass);
+
+	/*Array<VkClearValue> clear_values(2);
 	clear_values[0].color = { 0.8f, 0.0f, 0.8f, 1.0f };
 	clear_values[1].depthStencil = { 1.0f, 0 };
-	view->setClearValues(clear_values);
+	view->setClearValues(clear_values);*/
 
 	return (ViewHandle)view;
 }

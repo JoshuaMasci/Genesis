@@ -16,6 +16,7 @@ GameScene::GameScene(Application* app)
 {
 	this->application = app;
 	this->renderer = new Renderer(this->application->rendering_backend);
+	this->ui_renderer = new ImGuiRenderer(this->application->rendering_backend);
 
 	this->temp = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->temp, vector3D(0.0, 0.0, 0.0), glm::angleAxis(3.1415926/2.0, vector3D(0.0, 1.0, 0.0)));
@@ -30,11 +31,15 @@ GameScene::GameScene(Application* app)
 
 GameScene::~GameScene()
 {
-	this->renderer->destroyModel(this->entity_registry.get<Model>(this->temp));
-
 	if (this->renderer != nullptr)
 	{
+		this->renderer->destroyModel(this->entity_registry.get<Model>(this->temp));
 		delete this->renderer;
+	}
+
+	if (this->ui_renderer != nullptr)
+	{
+		delete this->ui_renderer;
 	}
 }
 
@@ -46,5 +51,8 @@ void GameScene::runSimulation(double delta_time)
 
 void GameScene::drawFrame(double delta_time)
 {
+	this->ui_renderer->startFrame();
+	this->ui_renderer->endFrame();
+
 	this->renderer->drawFrame(this->entity_registry, this->camera);
 }

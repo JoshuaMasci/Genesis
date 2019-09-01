@@ -38,7 +38,7 @@ VulkanPipline::VulkanPipline(VkDevice device, VulkanShader& shader, VkRenderPass
 	binding_description.stride = vertex_description.getSize();
 	binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	Array<VkVertexInputAttributeDescription> attribute_descriptions(vertex_description.getNumberOfElements());
+	Array<VkVertexInputAttributeDescription> attribute_descriptions(vertex_description.getElementCount());
 	for (size_t i = 0; i < attribute_descriptions.size(); i++)
 	{
 		attribute_descriptions[i].binding = 0;
