@@ -1,11 +1,10 @@
 #include "VulkanDevice.hpp"
 
 #include "Genesis/Rendering/Vulkan/VulkanQueueFamily.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanInstance.hpp"
 
 using namespace Genesis;
 
-VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VulkanInstance* instance)
+VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VkSurfaceKHR surface, vector<const char*>& extensions, vector<const char*>& layers)
 {
 	this->physical_device = chosen_device;
 	vkGetPhysicalDeviceProperties(this->physical_device, &this->properties);
@@ -15,7 +14,7 @@ VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VulkanInstance* insta
 	printf("GPU INFO:\n");
 	printf("Device: %s\n", this->properties.deviceName);
 
-	VulkanQueueFamilyAllocator queue_allocator(this->physical_device, instance->surface);
+	VulkanQueueFamilyAllocator queue_allocator(this->physical_device, surface);
 	vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 
 	//Fill queue priorities with the required number of 1.0fs
@@ -57,7 +56,6 @@ VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VulkanInstance* insta
 
 	create_info.enabledExtensionCount = 0;
 
-	vector<const char*> extensions = instance->getDeviceExtensions();
 	if (extensions.size() > 0)
 	{
 		create_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
@@ -67,8 +65,6 @@ VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VulkanInstance* insta
 	{
 		create_info.enabledExtensionCount = 0;
 	}
-
-	vector<const char*> layers = instance->getLayers();
 	if (layers.size() > 0)
 	{
 		create_info.enabledLayerCount = static_cast<uint32_t>(layers.size());

@@ -279,7 +279,7 @@ void VulkanBackend::tempDrawScreen(VertexBufferHandle vertices_handle, IndexBuff
 	PipelineSettings settings;
 	settings.cull_mode = CullMode::Back;
 
-	VulkanPipline* pipeline = this->vulkan->pipeline_manager->getPipeline(shader, this->vulkan->screen_layout->getRenderPass(), settings, vertices->getVertexDescription(), this->vulkan->swapchain->getSwapchainExtent());
+	VulkanPipline* pipeline = this->vulkan->pipeline_manager->getPipeline(shader, this->vulkan->surface->getRenderPass(), settings, vertices->getVertexDescription(), this->vulkan->swapchain->getSwapchainExtent());
 	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipeline());
 
 	VkDescriptorSet descriptor_set = this->vulkan->descriptor_pool->getDescriptorSet(shader->getDescriptorSetLayout());

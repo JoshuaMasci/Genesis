@@ -1,17 +1,16 @@
 #pragma once
 
+#include "Genesis/Core/Types.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 
 namespace Genesis
 {
-	class VulkanInstance;
-
 	class VulkanDevice
 	{
 	public:
-		VulkanDevice(VkPhysicalDevice chosen_device, VulkanInstance* instance);
+		VulkanDevice(VkPhysicalDevice chosen_device, VkSurfaceKHR surface, vector<const char*>& extensions, vector<const char*>& layers);
 		~VulkanDevice();
-		
+
 		inline VkDevice get() { return this->logical_device; };
 		inline VkPhysicalDevice getPhysicalDevice() { return this->physical_device; };
 

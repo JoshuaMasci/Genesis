@@ -5,6 +5,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDebugLayer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanSurface.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanAllocator.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanSwapchain.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanSwapchainFramebuffers.hpp"
@@ -43,7 +44,8 @@ namespace Genesis
 
 		Window* window = nullptr;
 		VkInstance instance;
-		VkSurfaceKHR surface;
+
+		VulkanSurface* surface;
 
 		VulkanDebugLayer* debug_layer = nullptr;
 		VulkanDevice* device = nullptr;
@@ -59,8 +61,6 @@ namespace Genesis
 		VulkanPipelineManager* pipeline_manager = nullptr;
 
 		VulkanDescriptorPool* descriptor_pool = nullptr;
-
-		VulkanFramebufferLayout* screen_layout = nullptr;
 
 		//Extensions and Layers
 		vector<const char*> getExtensions();
@@ -86,9 +86,5 @@ namespace Genesis
 		//Instance
 		void create_instance(const char* app_name, uint32_t app_version);
 		void delete_instance();
-
-		//Surface
-		void create_surface(Window* window);
-		void delete_surface();
 	};
 }

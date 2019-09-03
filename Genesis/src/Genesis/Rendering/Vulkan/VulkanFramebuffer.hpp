@@ -42,22 +42,4 @@ namespace Genesis
 		
 		VulkanAllocator* allocator = nullptr;
 	};
-
-	class VulkanFramebufferLayout
-	{
-	public:
-		VulkanFramebufferLayout(VkDevice device, Array<VkFormat>& color_formats, VkFormat depth_format);
-		~VulkanFramebufferLayout();
-
-		inline VkRenderPass getRenderPass() { return this->render_pass; };
-
-		VulkanFramebuffer* createFramebuffer(VkExtent2D size, VulkanAllocator* allocator);
-
-	private:
-		VkDevice device;
-		VkRenderPass render_pass;
-
-		Array<VkFormat> color_formats;
-		VkFormat depth_format;
-	};
 }

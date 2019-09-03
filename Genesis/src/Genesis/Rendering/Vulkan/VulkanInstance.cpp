@@ -6,6 +6,28 @@
 
 using namespace Genesis;
 
+VkSurfaceKHR create_surface(VkInstance instance, Window* window)
+{
+	VkResult result = (VkResult)1;//Not Success
+	VkSurfaceKHR surface = VK_NULL_HANDLE;
+
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
+
+	surfaceCreateInfo.hinstance = GetModuleHandle(0);
+	surfaceCreateInfo.hwnd = (HWND)window->getNativeWindowHandle();
+
+	result = vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, NULL, &surface);
+#endif
+
+	if (result != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to attach to surface");
+	}
+
+	return surface;
+}
+
 VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t FRAME_COUNT)
 	:FRAME_COUNT(FRAME_COUNT)
 {
@@ -16,12 +38,20 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 	{
 		this->debug_layer = new VulkanDebugLayer(this->instance);
 	}
-	this->create_surface(window);
 
-	this->device = new VulkanDevice(VulkanPhysicalDevicePicker::pickDevice(this->instance, this->surface), this);
+	VkSurfaceKHR surface = create_surface(this->instance, this->window);
+
+	vector<const char*> device_extensions = this->getDeviceExtensions();
+	vector<const char*> layers = this->getLayers();
+	this->device = new VulkanDevice(VulkanPhysicalDevicePicker::pickDevice(this->instance, surface), surface, device_extensions, layers);
+
+	this->surface = new VulkanSurface(this->instance, this->device, surface);
+
 	this->allocator = new VulkanAllocator(this->device);
 
-	this->swapchain = new VulkanSwapchain(this->device, window, this->surface);
+	vector2U window_size = window->getWindowSize();
+	VkExtent2D surface_size = { window_size.x, window_size.y };
+	this->swapchain = new VulkanSwapchain(this->device, surface_size, this->surface);
 
 	this->graphics_command_pool_set = new VulkanCommandPoolSet(this->device, this->device->getGraphicsFamilyIndex(), thread_count);
 
@@ -39,12 +69,8 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 	this->pipeline_manager = new VulkanPipelineManager(this->device->get());
 	this->render_pass_manager = new VulkanRenderPassManager(this->device->get());
 
-	Array<VkFormat> color(1);
-	color[0] = this->swapchain->getSwapchainFormat();
-	this->screen_layout = new VulkanFramebufferLayout(this->device->get(), color, this->swapchain->getSwapchainDepthFormat());
-
 	//Framebuffers
-	this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator);
+	this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->surface, this->allocator);
 
 	{
 		VkSamplerCreateInfo samplerInfo = {};
@@ -108,8 +134,6 @@ VulkanInstance::~VulkanInstance()
 
 	vkDestroySampler(this->device->get(), this->linear_sampler, nullptr);
 
-	delete this->screen_layout;
-
 	delete this->descriptor_pool;
 
 	if (this->swapchain_framebuffers != nullptr)
@@ -140,7 +164,7 @@ VulkanInstance::~VulkanInstance()
 
 	delete this->device;
 
-	this->delete_surface();
+	delete this->surface;
 
 	if (this->debug_layer != nullptr)
 	{
@@ -156,15 +180,18 @@ bool VulkanInstance::acquireSwapchainImage(uint32_t& image_index, VkSemaphore si
 	{
 		//Checks if the swapchain can be created
 		VkSurfaceCapabilitiesKHR capabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this->device->getPhysicalDevice(), this->surface, &capabilities);
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this->device->getPhysicalDevice(), this->surface->get(), &capabilities);
 		if (capabilities.maxImageExtent.width <= 1, capabilities.maxImageExtent.height <= 1)
 		{
 			return false;
 		}
 
 		//Creates swapchain
-		this->swapchain = new VulkanSwapchain(this->device, this->window, this->surface);
-		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator);
+		vector2U window_size = window->getWindowSize();
+		VkExtent2D surface_size = { window_size.x, window_size.y };
+		this->swapchain = new VulkanSwapchain(this->device, surface_size, this->surface);
+
+		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->surface, this->allocator);
 	}
 
 	VkResult result = vkAcquireNextImageKHR(this->device->get(), this->swapchain->get(), std::numeric_limits<uint64_t>::max(), signal_semaphore, VK_NULL_HANDLE, &image_index);
@@ -190,15 +217,17 @@ bool VulkanInstance::acquireSwapchainImage(uint32_t& image_index, VkSemaphore si
 
 		//Checks if the swapchain can be created
 		VkSurfaceCapabilitiesKHR capabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this->device->getPhysicalDevice(), this->surface, &capabilities);
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this->device->getPhysicalDevice(), this->surface->get(), &capabilities);
 		if (capabilities.maxImageExtent.width <= 1, capabilities.maxImageExtent.height <= 1)
 		{
 			return false;
 		}
 
 		//Creates swapchain
-		this->swapchain = new VulkanSwapchain(this->device, this->window, this->surface);
-		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->allocator);
+		vector2U window_size = window->getWindowSize();
+		VkExtent2D surface_size = { window_size.x, window_size.y };
+		this->swapchain = new VulkanSwapchain(this->device, surface_size, this->surface);
+		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->surface, this->allocator);
 
 		VkResult result = vkAcquireNextImageKHR(this->device->get(), this->swapchain->get(), std::numeric_limits<uint64_t>::max(), signal_semaphore, VK_NULL_HANDLE, &image_index);
 	}
@@ -302,28 +331,4 @@ void VulkanInstance::create_instance(const char* app_name, uint32_t app_version)
 void VulkanInstance::delete_instance()
 {
 	vkDestroyInstance(this->instance, nullptr);
-}
-
-void VulkanInstance::create_surface(Window* window)
-{
-	VkResult result = (VkResult)1;//Not Success
-
-#ifdef VK_USE_PLATFORM_WIN32_KHR
-	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = { VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
-
-	surfaceCreateInfo.hinstance = GetModuleHandle(0);
-	surfaceCreateInfo.hwnd = (HWND)window->getNativeWindowHandle();
-
-	result = vkCreateWin32SurfaceKHR(this->instance, &surfaceCreateInfo, NULL, &this->surface);
-#endif
-
-	if (result != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to attach to surface");
-	}
-}
-
-void VulkanInstance::delete_surface()
-{
-	vkDestroySurfaceKHR(this->instance, this->surface, nullptr);
 }

@@ -4,13 +4,14 @@
 #include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanSwapchain.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanAllocator.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanSurface.hpp"
 
 namespace Genesis
 {
 	class VulkanSwapchainFramebuffers
 	{
 	public:
-		VulkanSwapchainFramebuffers(VulkanDevice* device, VulkanSwapchain* swapchain, VulkanAllocator* allocator);
+		VulkanSwapchainFramebuffers(VulkanDevice* device, VulkanSwapchain* swapchain, VulkanSurface* surface, VulkanAllocator* allocator);
 		~VulkanSwapchainFramebuffers();
 
 		inline VkFramebuffer getSwapchainFramebuffer(int index) { return this->swapchain_framebuffers[index]; };
