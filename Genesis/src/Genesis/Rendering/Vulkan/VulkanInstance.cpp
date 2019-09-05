@@ -112,7 +112,6 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 	//Add 1 to the delete delay just to make sure it's totaly out of the pipeline
 	uint8_t delay_cycles = (uint8_t) this->FRAME_COUNT + 1;
 	this->buffer_deleter = new DelayedResourceDeleter<VulkanBuffer>(delay_cycles);
-	this->uniform_deleter = new DelayedResourceDeleter<VulkanUniformBuffer>(delay_cycles);
 	this->texture_deleter = new DelayedResourceDeleter<VulkanTexture>(delay_cycles);
 	this->view_deleter = new DelayedResourceDeleter<VulkanView>(delay_cycles);
 	this->shader_deleter = new DelayedResourceDeleter<VulkanShader>(delay_cycles);
@@ -122,7 +121,6 @@ VulkanInstance::~VulkanInstance()
 {
 	//Resource Deleters
 	delete this->buffer_deleter;
-	delete this->uniform_deleter;
 	delete this->texture_deleter;
 	delete this->view_deleter;
 	delete this->shader_deleter;
@@ -238,7 +236,6 @@ bool VulkanInstance::acquireSwapchainImage(uint32_t& image_index, VkSemaphore si
 void VulkanInstance::cycleResourceDeleters()
 {
 	this->buffer_deleter->cycle();
-	this->uniform_deleter->cycle();
 	this->texture_deleter->cycle();
 	this->view_deleter->cycle();
 	this->shader_deleter->cycle();

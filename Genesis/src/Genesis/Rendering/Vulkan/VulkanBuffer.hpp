@@ -52,38 +52,4 @@ namespace Genesis
 		const IndexType indices_type;
 		const uint32_t indices_count;
 	};
-
-
-	class VulkanUniformBuffer
-	{
-	public:
-		VulkanUniformBuffer(VkDevice device, VulkanAllocator* allocator, string name, uint64_t size_bytes, uint32_t frames_in_flight);
-		~VulkanUniformBuffer();
-
-		void setData(void* data, uint64_t data_size);
-
-		void updateBuffer(uint32_t frame_index);
-
-		inline string getName() { return this->name; };
-
-		inline VkBuffer getBuffer(uint32_t frame) { return this->buffers[frame].buffer; };
-		inline uint64_t getSize() { return this->size_bytes; };
-
-	private:
-		VkDevice device;
-		VulkanAllocator* allocator = nullptr;
-
-		//Local copy of data
-		void* data_local;
-
-		string name;
-		uint64_t size_bytes;
-		struct UniformBuffer
-		{
-			VkBuffer buffer;
-			VmaAllocation buffer_memory;
-			VmaAllocationInfo buffer_memory_info;
-		};
-		Array<UniformBuffer> buffers;
-	};
 }

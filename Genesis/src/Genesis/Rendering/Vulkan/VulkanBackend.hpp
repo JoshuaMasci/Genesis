@@ -24,10 +24,6 @@ namespace Genesis
 		virtual IndexBufferHandle createIndexBuffer(void* indices, uint32_t indices_count, IndexType type, MemoryUsage memory_usage = MemoryUsage::GPU_Only) override;
 		virtual void destroyIndexBuffer(IndexBufferHandle index_buffer_index) override;
 
-		virtual UniformBufferHandle createUniformBuffer(string uniform_name, uint64_t uniform_bytes) override;
-		virtual void fillUniformBuffer(UniformBufferHandle uniform_buffer_index, void* data, uint64_t data_size) override;
-		virtual void destroyUniformBuffer(UniformBufferHandle uniform_buffer_index) override;
-
 		virtual TextureHandle createTexture(vector2U size, void* data, uint64_t data_size) override;
 		virtual void destroyTexture(TextureHandle texture_handle) override;
 

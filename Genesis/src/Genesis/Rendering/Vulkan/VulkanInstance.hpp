@@ -32,6 +32,12 @@ namespace Genesis
 		VkFence command_buffer_done_fence = VK_NULL_HANDLE;
 	};
 
+	struct VulkanThread
+	{
+		VulkanDescriptorPool* descriptor_pool = nullptr;
+		//VulkanUniformPool
+	};
+
 	class VulkanInstance
 	{
 	public:
@@ -75,7 +81,6 @@ namespace Genesis
 		//Resource Stuff
 		void cycleResourceDeleters();
 		DelayedResourceDeleter<VulkanBuffer>* buffer_deleter = nullptr;
-		DelayedResourceDeleter<VulkanUniformBuffer>* uniform_deleter = nullptr;
 		DelayedResourceDeleter<VulkanTexture>* texture_deleter = nullptr;
 		DelayedResourceDeleter<VulkanView>* view_deleter = nullptr;
 		DelayedResourceDeleter<VulkanShader>* shader_deleter = nullptr;

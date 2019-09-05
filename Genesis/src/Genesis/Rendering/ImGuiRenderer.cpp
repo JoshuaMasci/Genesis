@@ -116,7 +116,7 @@ void ImGuiRenderer::endFrame()
 			else
 			{
 				//TODO Scissor
-				this->backend->tempDrawView(this->view, vertex_buffer, index_buffer, this->shader, (TextureHandle) pcmd->TextureId, pcmd->IdxOffset, pcmd->ElemCount, vector2I(0.0), vector2U(0.0));
+				//this->backend->tempDrawView(this->view, vertex_buffer, index_buffer, this->shader, (TextureHandle) pcmd->TextureId, pcmd->IdxOffset, pcmd->ElemCount, vector2I(0.0), vector2U(0.0));
 			}
 		}
 		this->backend->destroyVertexBuffer(vertex_buffer);

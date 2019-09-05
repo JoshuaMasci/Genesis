@@ -66,9 +66,8 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 			matrix4F mvp = mv * (translation * orientation);
 
-			this->backend->fillUniformBuffer(model.matrix, &mvp, sizeof(matrix4F));
-
-			this->backend->tempDrawScreen(model.vertices, model.indices, model.shader, model.texture, model.matrix);
+			//this->backend->fillUniformBuffer(model.matrix, &mvp, sizeof(matrix4F));
+			//this->backend->tempDrawScreen(model.vertices, model.indices, model.shader, model.texture, model.matrix);
 		}
 	}
 }
@@ -233,9 +232,6 @@ Model Renderer::createModel(string mesh, string texture, string shader)
 	model.indices = this->loaded_meshes[mesh].indices;
 	model.texture = this->loaded_textures[texture];
 	model.shader = this->loaded_shaders[shader];
-
-	model.matrix = this->backend->createUniformBuffer("matrices", sizeof(matrix4F));
-
 	return model;
 }
 
@@ -245,6 +241,4 @@ void Renderer::destroyModel(Model& model)
 	model.indices = nullptr;
 	model.texture = nullptr;
 	model.shader = nullptr;
-
-	this->backend->destroyUniformBuffer(model.matrix);
 }

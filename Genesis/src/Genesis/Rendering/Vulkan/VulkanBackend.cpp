@@ -177,21 +177,6 @@ void VulkanBackend::destroyIndexBuffer(IndexBufferHandle index_buffer_index)
 	this->vulkan->buffer_deleter->addToQueue((VulkanBuffer*)index_buffer_index);
 }
 
-UniformBufferHandle VulkanBackend::createUniformBuffer(string uniform_name, uint64_t uniform_bytes)
-{
-	return (UniformBufferHandle) new VulkanUniformBuffer(this->vulkan->device->get(), this->vulkan->allocator, uniform_name, uniform_bytes, (uint32_t)this->vulkan->FRAME_COUNT);
-}
-
-void VulkanBackend::fillUniformBuffer(UniformBufferHandle uniform_buffer_index, void* data, uint64_t data_size)
-{
-	((VulkanUniformBuffer*)uniform_buffer_index)->setData(data, data_size);
-}
-
-void VulkanBackend::destroyUniformBuffer(UniformBufferHandle uniform_buffer_index)
-{
-	this->vulkan->uniform_deleter->addToQueue((VulkanUniformBuffer*)uniform_buffer_index);
-}
-
 TextureHandle VulkanBackend::createTexture(vector2U size, void* data, uint64_t data_size)
 {
 	VulkanTexture* texture = new VulkanTexture(this->vulkan->device, this->vulkan->allocator, {size.x, size.y}, getMemoryUsage(MemoryUsage::GPU_Only), this->vulkan->linear_sampler);
@@ -364,7 +349,7 @@ void VulkanBackend::tempDrawView(ViewHandle view_handle, VertexBufferHandle vert
 
 	vkUpdateDescriptorSets(this->vulkan->device->get(), (uint32_t)descriptor_set_writes.size(), descriptor_set_writes.data(), 0, nullptr);
 
-	//VkRect2D scissor = { {scissor_offest.x, scissor_offest.y}, {scissor_extent.x, scissor_extent.y}};
+	VkRect2D scissor = { {scissor_offest.x, scissor_offest.y}, {scissor_extent.x, scissor_extent.y}};
 	//vkCmdSetScissor(buffer, 0, 1, &scissor);
 
 	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shader->getPipelineLayout(), 0, 1, &descriptor_set, 0, nullptr);
