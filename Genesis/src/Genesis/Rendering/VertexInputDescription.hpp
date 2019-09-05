@@ -14,11 +14,29 @@ namespace Genesis
 		float_3,
 		float_4,
 
+		//unorm8
+		unorm8_1,
+		unorm8_2,
+		unorm8_3,
+		unorm8_4,
+
+		//uint8
+		uint8_1,
+		uint8_2,
+		uint8_3,
+		uint8_4,
+
 		//uint16
 		uint16_1,
 		uint16_2,
 		uint16_3,
 		uint16_4,
+
+		//uint32
+		uint32_1,
+		uint32_2,
+		uint32_3,
+		uint32_4,
 	};
 
 	struct InputElement
@@ -30,6 +48,13 @@ namespace Genesis
 	class VertexInputDescription
 	{
 	public:
+		VertexInputDescription()
+		{
+			//Invalid
+			this->hash_value = 0;
+			this->total_size = 0;
+		};
+
 		VertexInputDescription(vector<InputElement> input_elements)
 		{
 			uint32_t offset = 0;
@@ -76,6 +101,22 @@ namespace Genesis
 				return sizeof(float) * 3;
 			case VertexElementType::float_4:
 				return sizeof(float) * 4;
+			case VertexElementType::unorm8_1:
+				return sizeof(uint8_t);
+			case VertexElementType::unorm8_2:
+				return sizeof(uint8_t) * 2;
+			case VertexElementType::unorm8_3:
+				return sizeof(uint8_t) * 3;
+			case VertexElementType::unorm8_4:
+				return sizeof(uint8_t) * 4;
+			case VertexElementType::uint8_1:
+				return sizeof(uint8_t);
+			case VertexElementType::uint8_2:
+				return sizeof(uint8_t) * 2;
+			case VertexElementType::uint8_3:
+				return sizeof(uint8_t) * 3;
+			case VertexElementType::uint8_4:
+				return sizeof(uint8_t) * 4;
 			case VertexElementType::uint16_1:
 				return sizeof(uint16_t);
 			case VertexElementType::uint16_2:
@@ -84,6 +125,14 @@ namespace Genesis
 				return sizeof(uint16_t) * 3;
 			case VertexElementType::uint16_4:
 				return sizeof(uint16_t) * 4;
+			case VertexElementType::uint32_1:
+				return sizeof(uint32_t);
+			case VertexElementType::uint32_2:
+				return sizeof(uint32_t) * 2;
+			case VertexElementType::uint32_3:
+				return sizeof(uint32_t) * 3;
+			case VertexElementType::uint32_4:
+				return sizeof(uint32_t) * 4;
 			}
 
 			printf("Error: invalid input type\n");

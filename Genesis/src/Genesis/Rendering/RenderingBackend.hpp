@@ -17,10 +17,10 @@ namespace Genesis
 		virtual void endFrame() = 0;
 		virtual void submitFrame(vector<ViewHandle> sub_views) = 0;
 
-		virtual VertexBufferHandle createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description) = 0;
+		virtual VertexBufferHandle createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage = MemoryUsage::GPU_Only) = 0;
 		virtual void destroyVertexBuffer(VertexBufferHandle vertex_buffer_index) = 0;
 
-		virtual IndexBufferHandle createIndexBuffer(void* data, uint64_t data_size, uint32_t indices_count) = 0;
+		virtual IndexBufferHandle createIndexBuffer(void* indices, uint32_t indices_count, IndexType type, MemoryUsage memory_usage = MemoryUsage::GPU_Only) = 0;
 		virtual void destroyIndexBuffer(IndexBufferHandle index_buffer_index) = 0;
 
 		virtual UniformBufferHandle createUniformBuffer(string uniform_name, uint64_t size_bytes) = 0;
@@ -41,6 +41,9 @@ namespace Genesis
 		virtual void sumbitView(ViewHandle index) = 0;
 
 		virtual void tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, UniformBufferHandle uniform_handle) = 0;
+		
+		//IMGUI TEMP
+		virtual void tempDrawView(ViewHandle view_handle, VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, uint32_t index_offset, uint32_t index_count, vector2I scissor_offest, vector2U scissor_extent) = 0;
 
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) = 0;
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, ViewHandle view) = 0;

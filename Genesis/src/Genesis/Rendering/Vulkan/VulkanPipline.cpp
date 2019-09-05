@@ -16,6 +16,22 @@ VkFormat getVulkanType(VertexElementType type)
 		return VK_FORMAT_R32G32B32_SFLOAT;
 	case VertexElementType::float_4:
 		return VK_FORMAT_R32G32B32A32_SFLOAT;
+	case VertexElementType::unorm8_1:
+		return VK_FORMAT_R8_UNORM;
+	case VertexElementType::unorm8_2:
+		return VK_FORMAT_R8G8_UNORM;
+	case VertexElementType::unorm8_3:
+		return VK_FORMAT_R8G8B8_UNORM;
+	case VertexElementType::unorm8_4:
+		return VK_FORMAT_R8G8B8A8_UNORM;
+	case VertexElementType::uint8_1:
+		return VK_FORMAT_R8_UINT;
+	case VertexElementType::uint8_2:
+		return VK_FORMAT_R8G8_UINT;
+	case VertexElementType::uint8_3:
+		return VK_FORMAT_R8G8B8_UINT;
+	case VertexElementType::uint8_4:
+		return VK_FORMAT_R8G8B8A8_UINT;
 	case VertexElementType::uint16_1:
 		return VK_FORMAT_R16_UINT;
 	case VertexElementType::uint16_2:
@@ -24,6 +40,14 @@ VkFormat getVulkanType(VertexElementType type)
 		return VK_FORMAT_R16G16B16_UINT;
 	case VertexElementType::uint16_4:
 		return VK_FORMAT_R16G16B16A16_UINT;
+	case VertexElementType::uint32_1:
+		return VK_FORMAT_R32_UINT;
+	case VertexElementType::uint32_2:
+		return VK_FORMAT_R32G32_UINT;
+	case VertexElementType::uint32_3:
+		return VK_FORMAT_R32G32B32_UINT;
+	case VertexElementType::uint32_4:
+		return VK_FORMAT_R32G32B32A32_UINT;
 	default:
 		return VK_FORMAT_UNDEFINED;
 	}

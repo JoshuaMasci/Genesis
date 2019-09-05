@@ -20,8 +20,12 @@ namespace Genesis
 		RenderingBackend* backend;
 
 		FramebufferLayout layout;
-		ViewHandle view = nullptr;
 
-		TextureHandle fonts = nullptr;
+		ViewHandle view = nullptr;
+		TextureHandle texture_atlas = nullptr;
+		ShaderHandle shader = nullptr;
+
+
+		VertexInputDescription vertex_input;
 	};
 }

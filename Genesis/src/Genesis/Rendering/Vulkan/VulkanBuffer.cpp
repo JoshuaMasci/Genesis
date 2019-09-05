@@ -72,15 +72,16 @@ void VulkanBuffer::fillBuffer(VulkanCommandPool* transfer_pool, VkQueue transfer
 	}
 }
 
-VulkanVertexBuffer::VulkanVertexBuffer(VulkanAllocator* allocator, VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size, VertexInputDescription& vertex_input_description)
-	:VulkanBuffer(allocator, data_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY),
+VulkanVertexBuffer::VulkanVertexBuffer(VulkanAllocator* allocator, VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size, VmaMemoryUsage memory_usage, VertexInputDescription& vertex_input_description)
+	:VulkanBuffer(allocator, data_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, memory_usage),
 	 vertex_description(vertex_input_description)
 {
 	this->fillBuffer(transfer_pool, transfer_queue, data, data_size);
 }
 
-VulkanIndexBuffer::VulkanIndexBuffer(VulkanAllocator* allocator, VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size, uint32_t indices_count)
-	:VulkanBuffer(allocator, data_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY),
+VulkanIndexBuffer::VulkanIndexBuffer(VulkanAllocator* allocator, VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size, VmaMemoryUsage memory_usage, uint32_t indices_count, IndexType type)
+	:VulkanBuffer(allocator, data_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, memory_usage),
+	indices_type(type),
 	indices_count(indices_count)
 {
 	this->fillBuffer(transfer_pool, transfer_queue, data, data_size);

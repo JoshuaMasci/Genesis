@@ -41,6 +41,7 @@ namespace Genesis
 		~Renderer();
 
 		void drawFrame(EntityRegistry& entity_registry, EntityId camera_entity);
+		void endFrame();
 
 		//Temp resource stuff
 		void loadMesh(string mesh_file);

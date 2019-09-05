@@ -32,7 +32,7 @@ namespace Genesis
 	class VulkanVertexBuffer : public VulkanBuffer
 	{
 	public:
-		VulkanVertexBuffer(VulkanAllocator* allocator, VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size, VertexInputDescription& vertex_input_description);
+		VulkanVertexBuffer(VulkanAllocator* allocator, VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size, VmaMemoryUsage memory_usage, VertexInputDescription& vertex_input_description);
 
 		inline VertexInputDescription& getVertexDescription() { return this->vertex_description; };
 
@@ -43,11 +43,13 @@ namespace Genesis
 	class VulkanIndexBuffer : public VulkanBuffer
 	{
 	public:
-		VulkanIndexBuffer(VulkanAllocator* allocator, VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size, uint32_t indices_count);
+		VulkanIndexBuffer(VulkanAllocator* allocator, VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size, VmaMemoryUsage memory_usage, uint32_t indices_count, IndexType type);
 
+		inline IndexType getIndicesType() { return this->indices_type; };
 		inline uint32_t getIndicesCount() { return this->indices_count; };
 
 	private:
+		const IndexType indices_type;
 		const uint32_t indices_count;
 	};
 

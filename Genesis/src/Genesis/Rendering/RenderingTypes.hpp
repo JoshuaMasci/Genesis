@@ -10,6 +10,12 @@ namespace Genesis
 		CPU_Visable
 	};
 
+	enum class IndexType
+	{
+		uint16,
+		uint32
+	};
+
 	enum class ImageFormat
 	{
 		Invalid,

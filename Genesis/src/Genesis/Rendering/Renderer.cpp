@@ -70,11 +70,14 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 
 			this->backend->tempDrawScreen(model.vertices, model.indices, model.shader, model.texture, model.matrix);
 		}
-
-		this->backend->endFrame();
-		vector<ViewHandle> sub_views;
-		this->backend->submitFrame(sub_views);
 	}
+}
+
+void Renderer::endFrame()
+{
+	this->backend->endFrame();
+	vector<ViewHandle> sub_views;
+	this->backend->submitFrame(sub_views);
 }
 
 //Temp resource stuff
@@ -130,7 +133,7 @@ void Renderer::loadMesh(string mesh_file)
 			Mesh* mesh = &this->loaded_meshes[mesh_file];
 
 			mesh->vertices = this->backend->createVertexBuffer(vertices.data(), sizeof(TexturedVertex) * vertices.size(), vertex_description);
-			mesh->indices = this->backend->createIndexBuffer(indices.data(), sizeof(uint32_t) * indices.size(), (uint32_t)indices.size());
+			mesh->indices = this->backend->createIndexBuffer(indices.data(), (uint32_t)indices.size(), IndexType::uint32);
 		}
 		else
 		{

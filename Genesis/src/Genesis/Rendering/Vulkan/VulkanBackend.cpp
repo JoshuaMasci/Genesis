@@ -157,9 +157,9 @@ void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
 	this->vulkan->cycleResourceDeleters();
 }
 
-VertexBufferHandle VulkanBackend::createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description)
+VertexBufferHandle VulkanBackend::createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage)
 {
-	return (VertexBufferHandle) new VulkanVertexBuffer(this->vulkan->allocator, this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), data, data_size, vertex_input_description);
+	return (VertexBufferHandle) new VulkanVertexBuffer(this->vulkan->allocator, this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), data, data_size, getMemoryUsage(memory_usage), vertex_input_description);
 }
 
 void VulkanBackend::destroyVertexBuffer(VertexBufferHandle vertex_buffer_index)
@@ -167,9 +167,9 @@ void VulkanBackend::destroyVertexBuffer(VertexBufferHandle vertex_buffer_index)
 	this->vulkan->buffer_deleter->addToQueue((VulkanBuffer*)vertex_buffer_index);
 }
 
-IndexBufferHandle VulkanBackend::createIndexBuffer(void* data, uint64_t data_size, uint32_t indices_count)
+IndexBufferHandle VulkanBackend::createIndexBuffer(void* indices, uint32_t indices_count, IndexType type, MemoryUsage memory_usage)
 {
-	return (IndexBufferHandle) new VulkanIndexBuffer(this->vulkan->allocator, this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), data, data_size, indices_count);
+	return (IndexBufferHandle) new VulkanIndexBuffer(this->vulkan->allocator, this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), indices, (indices_count * (type == IndexType::uint16 ? sizeof(uint16_t) : sizeof(uint32_t))), getMemoryUsage(memory_usage), indices_count, type);
 }
 
 void VulkanBackend::destroyIndexBuffer(IndexBufferHandle index_buffer_index)
@@ -277,7 +277,6 @@ void VulkanBackend::tempDrawScreen(VertexBufferHandle vertices_handle, IndexBuff
 	VkCommandBuffer buffer = frame->command_buffer->getSecondaryCommandBuffer(thread_index);
 
 	PipelineSettings settings;
-	settings.cull_mode = CullMode::Back;
 
 	VulkanPipline* pipeline = this->vulkan->pipeline_manager->getPipeline(shader, this->vulkan->surface->getRenderPass(), settings, vertices->getVertexDescription(), this->vulkan->swapchain->getSwapchainExtent());
 	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipeline());
@@ -322,8 +321,60 @@ void VulkanBackend::tempDrawScreen(VertexBufferHandle vertices_handle, IndexBuff
 	VkBuffer vertex_buffer = vertices->get();
 	VkDeviceSize offset = 0;
 	vkCmdBindVertexBuffers(buffer, 0, 1, &vertex_buffer, &offset);
-	vkCmdBindIndexBuffer(buffer, indices->get(), 0, VK_INDEX_TYPE_UINT32);
+	vkCmdBindIndexBuffer(buffer, indices->get(), 0, ((indices->getIndicesType() == IndexType::uint16 ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32)));
 	vkCmdDrawIndexed(buffer, indices->getIndicesCount(), 1, 0, 0, 0);
+}
+
+void VulkanBackend::tempDrawView(ViewHandle view_handle, VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, uint32_t index_offset, uint32_t index_count, vector2I scissor_offest, vector2U scissor_extent)
+{
+	VulkanView* view = (VulkanView*)view_handle;
+	VulkanVertexBuffer* vertices = (VulkanVertexBuffer*)vertices_handle;
+	VulkanIndexBuffer* indices = (VulkanIndexBuffer*)indices_handle;
+	VulkanShader* shader = (VulkanShader*)shader_handle;
+	VulkanTexture* texture = (VulkanTexture*)texture_handle;
+
+	uint32_t thread_index = 0;//Hardcoded for the moment;
+	//VkCommandBuffer buffer = view->getCommandBuffer(this->frame_index)->getSecondaryCommandBuffer(thread_index);
+	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
+	VkCommandBuffer buffer = frame->command_buffer->getSecondaryCommandBuffer(thread_index);
+
+	PipelineSettings settings;
+	settings.depth_test = DepthTest::None;
+	settings.cull_mode = CullMode::None;
+
+	VulkanPipline* pipeline = this->vulkan->pipeline_manager->getPipeline(shader, this->vulkan->surface->getRenderPass(), settings, vertices->getVertexDescription(), this->vulkan->swapchain->getSwapchainExtent());
+	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getPipeline());
+
+	VkDescriptorSet descriptor_set = this->vulkan->descriptor_pool->getDescriptorSet(shader->getDescriptorSetLayout());
+
+	VkDescriptorImageInfo image_info = {};
+	image_info.imageView = texture->getImageView();
+	image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	image_info.sampler = this->vulkan->linear_sampler;
+
+	Array<VkWriteDescriptorSet> descriptor_set_writes(1);
+	descriptor_set_writes[0] = {};
+	descriptor_set_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	descriptor_set_writes[0].dstSet = descriptor_set;
+	descriptor_set_writes[0].dstBinding = 0;
+	descriptor_set_writes[0].dstArrayElement = 0;
+	descriptor_set_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	descriptor_set_writes[0].descriptorCount = 1;
+	descriptor_set_writes[0].pImageInfo = &image_info;
+
+	vkUpdateDescriptorSets(this->vulkan->device->get(), (uint32_t)descriptor_set_writes.size(), descriptor_set_writes.data(), 0, nullptr);
+
+	//VkRect2D scissor = { {scissor_offest.x, scissor_offest.y}, {scissor_extent.x, scissor_extent.y}};
+	//vkCmdSetScissor(buffer, 0, 1, &scissor);
+
+	vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shader->getPipelineLayout(), 0, 1, &descriptor_set, 0, nullptr);
+
+	VkBuffer vertex_buffer = vertices->get();
+	VkDeviceSize offset = 0;
+	vkCmdBindVertexBuffers(buffer, 0, 1, &vertex_buffer, &offset);
+	vkCmdBindIndexBuffer(buffer, indices->get(), 0, VK_INDEX_TYPE_UINT16);
+	vkCmdDrawIndexed(buffer, index_count, 1, index_offset, 0, 0);
+
 }
 
 matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, float aspect_ratio)

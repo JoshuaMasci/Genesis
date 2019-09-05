@@ -149,7 +149,7 @@ namespace Genesis
 				renderPassInfo.dependencyCount = 1;
 				renderPassInfo.pDependencies = &dependency;
 
-				if (vkCreateRenderPass(device->get(), &renderPassInfo, nullptr, &this->screen_render_pass) != VK_SUCCESS)
+				if (vkCreateRenderPass(this->device->get(), &renderPassInfo, nullptr, &this->screen_render_pass) != VK_SUCCESS)
 				{
 					throw std::runtime_error("failed to create screen render pass!");
 				}
@@ -158,7 +158,9 @@ namespace Genesis
 
 		~VulkanSurface()
 		{
-			vkDestroyRenderPass(this->device->get(), this->screen_render_pass, nullptr);
+			//Don't bother destroying it, It will be destroyed when the device is destroyed
+			//It will crash if destroy is called since device will already be destroyed by this point
+			//vkDestroyRenderPass(this->device->get(), this->screen_render_pass, nullptr);
 			vkDestroySurfaceKHR(this->instance, this->surface, nullptr);
 		};
 
