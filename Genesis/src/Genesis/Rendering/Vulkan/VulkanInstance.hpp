@@ -12,6 +12,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanMultithreadCommandBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanUniformPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanShader.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
@@ -35,13 +36,12 @@ namespace Genesis
 	struct VulkanThread
 	{
 		VulkanDescriptorPool* descriptor_pool = nullptr;
-		//VulkanUniformPool
 	};
 
 	class VulkanInstance
 	{
 	public:
-		VulkanInstance(Window* window, uint32_t thread_count, uint32_t FRAME_COUNT);
+		VulkanInstance(Window* window, uint32_t thread_count, uint32_t frame_count);
 		~VulkanInstance();
 
 		bool acquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore);
@@ -62,11 +62,13 @@ namespace Genesis
 		VulkanCommandPoolSet* graphics_command_pool_set = nullptr;
 
 		Array<VulkanFrame> frames_in_flight;
+		Array<VulkanThread> threads;
 
 		VulkanRenderPassManager* render_pass_manager = nullptr;
 		VulkanPipelineManager* pipeline_manager = nullptr;
 
 		VulkanDescriptorPool* descriptor_pool = nullptr;
+		VulkanUniformPool* uniform_pool = nullptr;
 
 		//Extensions and Layers
 		vector<const char*> getExtensions();

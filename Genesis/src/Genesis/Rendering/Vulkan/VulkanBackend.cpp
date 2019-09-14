@@ -79,6 +79,8 @@ bool VulkanBackend::beginFrame()
 	vkWaitForFences(this->vulkan->device->get(), 1, &frame->command_buffer_done_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
 	vkResetFences(this->vulkan->device->get(), 1, &frame->command_buffer_done_fence);
 
+	this->vulkan->descriptor_pool->resetFrame(this->frame_index);
+
 	VkRenderPassBeginInfo renderPassInfo = {};
 	{
 		VkExtent2D swapchain_extent = this->vulkan->swapchain->getSwapchainExtent();
@@ -250,12 +252,11 @@ void VulkanBackend::sumbitView(ViewHandle index)
 
 void VulkanBackend::tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, UniformBufferHandle uniform_handle)
 {
-	VulkanVertexBuffer* vertices = (VulkanVertexBuffer*)vertices_handle;
+	/*VulkanVertexBuffer* vertices = (VulkanVertexBuffer*)vertices_handle;
 	VulkanIndexBuffer* indices = (VulkanIndexBuffer*)indices_handle;
 	VulkanShader* shader = (VulkanShader*)shader_handle;
 
 	VulkanTexture* texture = (VulkanTexture*)texture_handle;
-	VulkanUniformBuffer* uniform = (VulkanUniformBuffer*)uniform_handle;
 
 	uint32_t thread_index = 0;//Hardcoded for the moment;
 	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
@@ -307,12 +308,12 @@ void VulkanBackend::tempDrawScreen(VertexBufferHandle vertices_handle, IndexBuff
 	VkDeviceSize offset = 0;
 	vkCmdBindVertexBuffers(buffer, 0, 1, &vertex_buffer, &offset);
 	vkCmdBindIndexBuffer(buffer, indices->get(), 0, ((indices->getIndicesType() == IndexType::uint16 ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32)));
-	vkCmdDrawIndexed(buffer, indices->getIndicesCount(), 1, 0, 0, 0);
+	vkCmdDrawIndexed(buffer, indices->getIndicesCount(), 1, 0, 0, 0);*/
 }
 
 void VulkanBackend::tempDrawView(ViewHandle view_handle, VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, uint32_t index_offset, uint32_t index_count, vector2I scissor_offest, vector2U scissor_extent)
 {
-	VulkanView* view = (VulkanView*)view_handle;
+	/*VulkanView* view = (VulkanView*)view_handle;
 	VulkanVertexBuffer* vertices = (VulkanVertexBuffer*)vertices_handle;
 	VulkanIndexBuffer* indices = (VulkanIndexBuffer*)indices_handle;
 	VulkanShader* shader = (VulkanShader*)shader_handle;
@@ -358,7 +359,7 @@ void VulkanBackend::tempDrawView(ViewHandle view_handle, VertexBufferHandle vert
 	VkDeviceSize offset = 0;
 	vkCmdBindVertexBuffers(buffer, 0, 1, &vertex_buffer, &offset);
 	vkCmdBindIndexBuffer(buffer, indices->get(), 0, VK_INDEX_TYPE_UINT16);
-	vkCmdDrawIndexed(buffer, index_count, 1, index_offset, 0, 0);
+	vkCmdDrawIndexed(buffer, index_count, 1, index_offset, 0, 0);*/
 
 }
 

@@ -6,28 +6,7 @@
 
 using namespace Genesis;
 
-VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, VkDescriptorType type, uint32_t max_number)
-{
-	this->device = device;
-
-	Array<VkDescriptorPoolSize> pool_sizes(1);
-	pool_sizes[0].type = type;
-	pool_sizes[0].descriptorCount = max_number;
-
-	VkDescriptorPoolCreateInfo pool_info = {};
-	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
-	pool_info.pPoolSizes = pool_sizes.data();
-	pool_info.maxSets = max_number;
-	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-
-	if (vkCreateDescriptorPool(this->device, &pool_info, nullptr, &this->pool) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create descriptor pool!");
-	}
-}
-
-VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, uint32_t max_sets, vector<VkDescriptorPoolSize> types)
+VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, uint32_t frame_count, uint32_t max_sets, vector<VkDescriptorPoolSize> types)
 {
 	this->device = device;
 
@@ -42,6 +21,12 @@ VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, uint32_t max_sets, v
 	{
 		throw std::runtime_error("failed to create descriptor pool!");
 	}
+
+	this->frame_data = Array<FrameData>(frame_count);
+	for (size_t i = 0; i < this->frame_data.size(); i++)
+	{
+		this->frame_data[i].used_descriptor_set = Array<VkDescriptorSet>(MAX_PER_FRAME_DESCRIPTOR_SETS);
+	}
 }
 
 VulkanDescriptorPool::~VulkanDescriptorPool()
@@ -49,7 +34,8 @@ VulkanDescriptorPool::~VulkanDescriptorPool()
 	vkDestroyDescriptorPool(this->device, this->pool, nullptr);
 }
 
-VkDescriptorSet VulkanDescriptorPool::getDescriptorSet(VkDescriptorSetLayout layout)
+
+VkDescriptorSet VulkanDescriptorPool::getDescriptorSet(VkDescriptorSetLayout layout, uint32_t frame_index)
 {
 	VkDescriptorSet descriptor_set;
 
@@ -64,10 +50,24 @@ VkDescriptorSet VulkanDescriptorPool::getDescriptorSet(VkDescriptorSetLayout lay
 		throw std::runtime_error("failed to allocate descriptor sets!");
 	}
 
+	//TODO: bounds check and grow array if needed
+	FrameData* frame = &this->frame_data[frame_index];
+	frame->used_descriptor_set[frame->descriptor_set_count] = descriptor_set;
+	frame->descriptor_set_count++;
+
 	return descriptor_set;
 }
 
-void VulkanDescriptorPool::freeDescriptorSet(VkDescriptorSet descriptor_set)
+void VulkanDescriptorPool::resetFrame(uint32_t frame_index)
 {
-	vkFreeDescriptorSets(this->device, this->pool, 1, &descriptor_set);
+	FrameData* frame = &this->frame_data[frame_index];
+
+	if (frame->descriptor_set_count == 0)
+	{
+		return;
+	}
+
+	vkFreeDescriptorSets(this->device, this->pool, frame->descriptor_set_count, frame->used_descriptor_set.data());
+	frame->descriptor_set_count = 0;
 }
+

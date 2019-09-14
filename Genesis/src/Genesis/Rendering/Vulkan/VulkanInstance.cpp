@@ -56,7 +56,7 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 	this->graphics_command_pool_set = new VulkanCommandPoolSet(this->device, this->device->getGraphicsFamilyIndex(), thread_count);
 
 	this->frames_in_flight = Array<VulkanFrame>(this->FRAME_COUNT);
-	for (int i = 0; i < this->frames_in_flight.size(); i++)
+	for (size_t i = 0; i < this->frames_in_flight.size(); i++)
 	{
 		VulkanFrame* frame = &this->frames_in_flight[i];
 		frame->command_buffer = this->graphics_command_pool_set->createCommandBuffer();
@@ -64,6 +64,16 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 		frame->image_available_semaphore = this->device->createSemaphore();
 		frame->command_buffer_done_fence = this->device->createFence();
 		frame->command_buffer_done_semaphore = this->device->createSemaphore();
+	}
+
+	this->threads.resize(thread_count);
+	for (size_t i = 0; i < thread_count; i++)
+	{
+		this->threads[i].descriptor_pool = new VulkanDescriptorPool(this->device->get(), this->FRAME_COUNT, 800000,
+			{
+				{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000},
+				{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8000}
+			});
 	}
 
 	this->pipeline_manager = new VulkanPipelineManager(this->device->get());
@@ -94,11 +104,13 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 		}
 	}
 
-	this->descriptor_pool = new VulkanDescriptorPool(this->device->get(), 800000,
+	this->descriptor_pool = new VulkanDescriptorPool(this->device->get(), this->FRAME_COUNT, 800000,
 		{
 			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000},
 			{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8000}
 		});
+
+	this->uniform_pool = new VulkanUniformPool(this->allocator, this->FRAME_COUNT);
 
 	vector<uint8_t> empty_vector(256, 0);
 	this->empty_buffer = new VulkanBuffer(this->allocator, 64, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
@@ -133,6 +145,12 @@ VulkanInstance::~VulkanInstance()
 	vkDestroySampler(this->device->get(), this->linear_sampler, nullptr);
 
 	delete this->descriptor_pool;
+	delete this->uniform_pool;
+	
+	for (size_t i = 0; i < this->threads.size(); i++)
+	{
+		delete this->threads[i].descriptor_pool;
+	}
 
 	if (this->swapchain_framebuffers != nullptr)
 	{
@@ -142,7 +160,7 @@ VulkanInstance::~VulkanInstance()
 	delete this->pipeline_manager;
 	delete this->render_pass_manager;
 
-	for (int i = 0; i < this->frames_in_flight.size(); i++)
+	for (size_t i = 0; i < this->frames_in_flight.size(); i++)
 	{
 		VulkanFrame* frame = &this->frames_in_flight[i];
 		delete frame->command_buffer;

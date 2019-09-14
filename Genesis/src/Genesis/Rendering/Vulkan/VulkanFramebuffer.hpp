@@ -27,6 +27,8 @@ namespace Genesis
 		inline VkExtent2D getSize() { return this->size; };
 		inline VkRenderPass getRenderPass() { return this->render_pass; };
 		inline VkFramebuffer get() { return this->framebuffer; };
+		inline VkImageView getImageView(uint16_t image_index) { return this->images[image_index].image_view; };
+
 
 		//TEMP
 		//inline VkImageView getImageView(uint16_t i) { return this->images[i].image_view; };
