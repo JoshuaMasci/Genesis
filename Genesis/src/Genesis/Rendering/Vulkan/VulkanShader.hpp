@@ -5,6 +5,36 @@
 
 namespace Genesis
 {
+	struct ShaderBindingVariable
+	{
+		string name;
+		uint32_t offset;
+		uint32_t size;
+		uint32_t padded_size;
+	};
+
+	struct ShaderBinding
+	{
+		string name;
+		uint32_t binding_location;
+		VkDescriptorType type;
+		VkShaderStageFlagBits shader_stage;
+
+		//buffer info
+		uint32_t total_size;
+		Array<ShaderBindingVariable> variables;
+
+		//Other
+		uint32_t array_count;
+	};
+
+	struct ShaderBindingVariableLocation
+	{
+		uint32_t binding;
+		uint32_t variable_size;
+		uint32_t variable_offset;
+	};
+
 	class VulkanShaderModule
 	{
 	public:
@@ -14,15 +44,12 @@ namespace Genesis
 		VkPipelineShaderStageCreateInfo getStageInfo();
 
 		VkShaderModule shader_module;
-		Array<VkDescriptorSetLayoutBinding> bindings;
+		Array<ShaderBinding> shader_bindings;
 		VkShaderStageFlagBits shader_stage;
-
-
 
 	protected:
 		VkDevice device;
 	};
-
 
 	class VulkanShader
 	{
@@ -34,6 +61,10 @@ namespace Genesis
 		inline VkDescriptorSetLayout getDescriptorSetLayout() { return this->descriptor_layout; };
 		inline VkPipelineLayout getPipelineLayout() { return this->pipeline_layout; };
 
+		ShaderBindingVariableLocation getVariableLocation(string name);
+
+		map<string, ShaderBinding*> name_bindings;
+
 	private:
 		VkDevice device;
 
@@ -43,5 +74,7 @@ namespace Genesis
 		VkDescriptorSetLayout descriptor_layout = VK_NULL_HANDLE;
 		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
 		vector<VkPipelineShaderStageCreateInfo> shader_stages;
+
+		map<string, ShaderBindingVariableLocation> name_location_cache;
 	};
 }

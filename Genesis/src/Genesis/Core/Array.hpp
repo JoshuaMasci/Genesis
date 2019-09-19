@@ -26,7 +26,7 @@ namespace Genesis
 			this->array_size = source.array_size;
 			this->array_data = new T[this->array_size];
 
-			for (int i = 0; i < this->array_size; i++)
+			for (size_t i = 0; i < this->array_size; i++)
 			{
 				this->array_data[i] = source.array_data[i];
 			}
@@ -57,12 +57,15 @@ namespace Genesis
 		{
 			if (&right != this)
 			{
-				delete this->array_data;
+				if (this->array_data != nullptr)
+				{
+					delete[] this->array_data;
+				}
 
 				this->array_size = right.array_size;
 				this->array_data = new T[this->array_size];
 
-				for (int i = 0; i < this->array_size; i++)
+				for (size_t i = 0; i < this->array_size; i++)
 				{
 					this->array_data[i] = right.array_data[i];
 				}
@@ -85,14 +88,14 @@ namespace Genesis
 
 			if (new_size >= this->array_size)
 			{
-				for (int i = 0; i < this->array_size; i++)
+				for (size_t i = 0; i < this->array_size; i++)
 				{
 					new_array[i] = this->array_data[i];
 				}
 			}
 			else
 			{
-				for (int i = 0; i < new_size; i++)
+				for (size_t i = 0; i < new_size; i++)
 				{
 					new_array[i] = this->array_data[i];
 				}

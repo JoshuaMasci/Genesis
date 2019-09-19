@@ -20,7 +20,7 @@ VulkanSupportedQueues::VulkanSupportedQueues(VkPhysicalDevice device, VkSurfaceK
 			this->flags[(uint32_t)QueueFlags::Graphics] = true;
 		}
 
-		if (surface != nullptr)
+		if (surface != VK_NULL_HANDLE)
 		{
 			VkBool32 presentSupport = false;
 			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);

@@ -43,6 +43,8 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 
 	bool result = this->backend->beginFrame();
 
+	CommandBuffer* command_buffer = this->backend->getScreenCommandBuffer();
+
 	if (result)
 	{
 		vector2U screen_size = this->backend->getScreenSize();
@@ -66,6 +68,10 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 			matrix4F mvp = mv * (translation * orientation);
 
+			command_buffer->setShader(model.shader);
+			command_buffer->setUniformTexture("albedo_texture", model.texture);
+			command_buffer->setUniformMat4("matrices.mvp", mvp);
+			//command_buffer->drawIndexed(model.vertices, model.indices);
 			//this->backend->fillUniformBuffer(model.matrix, &mvp, sizeof(matrix4F));
 			//this->backend->tempDrawScreen(model.vertices, model.indices, model.shader, model.texture, model.matrix);
 		}

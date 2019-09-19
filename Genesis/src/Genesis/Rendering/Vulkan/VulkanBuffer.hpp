@@ -16,6 +16,7 @@ namespace Genesis
 		virtual ~VulkanBuffer();
 
 		void fillBuffer(VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size);
+		void fillBufferHostVisable(void* data, uint64_t data_size);
 
 		inline VkBuffer get() { return this->buffer; };
 		inline uint64_t getSize() { return this->size; };

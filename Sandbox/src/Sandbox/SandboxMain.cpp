@@ -6,6 +6,7 @@
 
 int main(int argc, char** argv)
 {
+	//Used for debugging
 	bool temp = true;
 	while (!temp)
 	{

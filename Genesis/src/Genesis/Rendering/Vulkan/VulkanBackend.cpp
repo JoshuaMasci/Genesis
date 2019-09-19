@@ -80,6 +80,7 @@ bool VulkanBackend::beginFrame()
 	vkResetFences(this->vulkan->device->get(), 1, &frame->command_buffer_done_fence);
 
 	this->vulkan->descriptor_pool->resetFrame(this->frame_index);
+	this->vulkan->uniform_pool->resetFrame(this->frame_index);
 
 	VkRenderPassBeginInfo renderPassInfo = {};
 	{
@@ -95,7 +96,8 @@ bool VulkanBackend::beginFrame()
 		renderPassInfo.clearValueCount = 2;
 		renderPassInfo.pClearValues = clearValues;
 	}
-	frame->command_buffer->beginCommandBuffer(renderPassInfo);
+	//frame->command_buffer->beginCommandBuffer(renderPassInfo);
+	frame->command_buffer_temp->beginCommandBuffer(renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 	return true;
 }
@@ -109,7 +111,8 @@ void VulkanBackend::endFrame()
 
 	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
 
-	frame->command_buffer->endCommandBuffer();
+	//frame->command_buffer->endCommandBuffer();
+	frame->command_buffer_temp->endCommandBuffer();
 }
 
 void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
@@ -137,7 +140,7 @@ void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
 	Array<VkSemaphore> signal_semaphores(1);
 	signal_semaphores[0] = frame->command_buffer_done_semaphore;
 
-	frame->command_buffer->submitCommandBuffer(this->vulkan->device->getGraphicsQueue(), wait_semaphores, wait_states, signal_semaphores, frame->command_buffer_done_fence);
+	frame->command_buffer_temp->submitCommandBuffer(this->vulkan->device->getGraphicsQueue(), wait_semaphores, wait_states, signal_semaphores, frame->command_buffer_done_fence);
 
 	//Present the image to the screen
 	VkPresentInfoKHR presentInfo = {};
@@ -248,6 +251,11 @@ void VulkanBackend::sumbitView(ViewHandle index)
 {
 	VulkanView* view = (VulkanView*)index;
 	view->submitView(this->frame_index, vector<VulkanView*>(), VK_NULL_HANDLE);
+}
+
+CommandBuffer* VulkanBackend::getScreenCommandBuffer()
+{
+	return (CommandBuffer*)this->vulkan->frames_in_flight[this->frame_index].command_buffer_temp;
 }
 
 void VulkanBackend::tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, UniformBufferHandle uniform_handle)

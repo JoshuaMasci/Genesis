@@ -53,8 +53,8 @@ void GameScene::drawFrame(double delta_time)
 {
 	this->renderer->drawFrame(this->entity_registry, this->camera);
 
-	this->ui_renderer->startFrame();
-	this->ui_renderer->endFrame();
+	//this->ui_renderer->startFrame();
+	//this->ui_renderer->endFrame();
 
 	this->renderer->endFrame();
 }

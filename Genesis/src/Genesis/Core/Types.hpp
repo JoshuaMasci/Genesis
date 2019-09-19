@@ -13,6 +13,8 @@
 #include <map>
 #include <unordered_map>
 
+#define has_value(list, value) (list.find(value) != list.end())
+
 namespace Genesis
 {
 	//Puts string in the Genesis namespace

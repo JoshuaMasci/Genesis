@@ -20,6 +20,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanView.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanRenderPassManager.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanCommandBuffer.hpp"
 
 #include "Genesis/Rendering/DelayedResourceDeleter.hpp"
 
@@ -31,6 +32,8 @@ namespace Genesis
 		VulkanMultithreadCommandBuffer* command_buffer = nullptr;
 		VkSemaphore command_buffer_done_semaphore = VK_NULL_HANDLE;
 		VkFence command_buffer_done_fence = VK_NULL_HANDLE;
+
+		VulkanCommandBuffer* command_buffer_temp = nullptr;
 	};
 
 	struct VulkanThread
@@ -76,9 +79,6 @@ namespace Genesis
 		vector<const char*> getLayers();
 
 		VkSampler linear_sampler;
-
-		VulkanTexture* empty_texture = nullptr;
-		VulkanBuffer* empty_buffer = nullptr;
 
 		//Resource Stuff
 		void cycleResourceDeleters();

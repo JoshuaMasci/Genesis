@@ -7,6 +7,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanPipline.hpp"
 
+#include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanUniformPool.hpp"
 
@@ -15,12 +16,13 @@ namespace Genesis
 	class VulkanCommandBuffer : public CommandBuffer
 	{
 	public:
-		VulkanCommandBuffer(uint32_t thread_index, uint32_t frame_index, VulkanCommandPool* command_pool);
+		VulkanCommandBuffer(uint32_t thread_index, uint32_t frame_index, VkDevice device, VulkanCommandPool* command_pool, VulkanPipelineManager* pipeline_manager, VulkanDescriptorPool* descriptor_pool, VulkanUniformPool* uniform_pool, VkSampler temp_sampler);
 		~VulkanCommandBuffer();
 
 		void beginCommandBuffer(VkRenderPassBeginInfo& render_pass_info, VkSubpassContents mode);
 		void endCommandBuffer();
 		void submitCommandBuffer(VkQueue queue, Array<VkSemaphore>& wait_semaphores, Array<VkPipelineStageFlags>& wait_states, Array<VkSemaphore>& signal_semaphores, VkFence trigger_fence);
+		void setUniform(string name, void* data, uint32_t data_size);
 
 		//Public functions begin
 		virtual void setShader(ShaderHandle shader) override;
@@ -43,37 +45,26 @@ namespace Genesis
 		const uint32_t thread_index;
 		const uint32_t frame_index;
 
+		VkDevice device;
 		VkCommandBuffer command_buffer;
 		VulkanCommandPool* command_pool = nullptr;
 
 		//Utils
+		VulkanPipelineManager* pipeline_manager;
 		VulkanDescriptorPool* descriptor_pool = nullptr;
 		VulkanUniformPool* uniform_pool = nullptr;
+		VkSampler sampler; //TODO sampler system;
+
 
 		//Render State Info
 		VkRenderPass render_pass;
+		VkExtent2D size;
 		VulkanShader* current_shader = nullptr;
 		PipelineSettings current_settings;
 		VulkanPipline* current_pipeline = nullptr;
 
-		//Uniform
-		struct UniformData
-		{
-			enum
-			{
-				Float,
-				Vector4,
-				Matrix4,
-				Image,
-			} type;
-
-			union
-			{
-				vector4F scalar;
-				matrix4F matrix;
-				VkImageView image;
-			} data;
-		};
-		map<string, UniformData> uniforms;
+		//Bindings
+		map<uint32_t, Array<uint8_t>> binding_uniform_buffers;
+		map<uint32_t, VkImageView> binding_image;
 	};
 }

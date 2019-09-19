@@ -5,6 +5,7 @@
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/VertexInputDescription.hpp"
 #include "Genesis/Rendering/FramebufferLayout.hpp"
+#include "Genesis/Rendering/CommandBuffer.hpp"
 
 namespace Genesis
 {
@@ -35,6 +36,10 @@ namespace Genesis
 		virtual void startView(ViewHandle index) = 0;
 		virtual void endView(ViewHandle index) = 0;
 		virtual void sumbitView(ViewHandle index) = 0;
+
+
+		//TEMP
+		virtual CommandBuffer* getScreenCommandBuffer() = 0;
 
 		virtual void tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, UniformBufferHandle uniform_handle) = 0;
 		

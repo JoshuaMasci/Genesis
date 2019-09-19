@@ -97,6 +97,9 @@ void ImGuiRenderer::endFrame()
 	ImDrawData* draw_data = ImGui::GetDrawData();
 
 	//this->backend->startView(this->view);
+	CommandBuffer* command_buffer = this->backend->getScreenCommandBuffer();
+
+	command_buffer->setShader(this->shader);
 
 	for (int n = 0; n < draw_data->CmdListsCount; n++)
 	{
@@ -116,6 +119,10 @@ void ImGuiRenderer::endFrame()
 			else
 			{
 				//TODO Scissor
+				//command_buffer->setScissor
+
+				command_buffer->setUniformTexture("texture_atlas", (TextureHandle)pcmd->TextureId);
+				command_buffer->drawIndexedOffset(vertex_buffer, index_buffer, pcmd->IdxOffset, pcmd->ElemCount);
 				//this->backend->tempDrawView(this->view, vertex_buffer, index_buffer, this->shader, (TextureHandle) pcmd->TextureId, pcmd->IdxOffset, pcmd->ElemCount, vector2I(0.0), vector2U(0.0));
 			}
 		}

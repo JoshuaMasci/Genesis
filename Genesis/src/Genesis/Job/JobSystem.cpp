@@ -42,12 +42,12 @@ JobSystem::~JobSystem()
 {
 	should_threads_run = false;
 
-	for (int i = 0; i < this->threads.size(); i++)
+	for (uint32_t i = 0; i < this->threads.size(); i++)
 	{
 		this->job_queue.enqueue(nullptr);//Push empty jobs to trigger exiting
 	}
 
-	for (int i = 0; i < this->threads.size(); i++)
+	for (uint32_t i = 0; i < this->threads.size(); i++)
 	{
 		this->threads[i].join();
 	}

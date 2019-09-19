@@ -6,6 +6,8 @@
 
 #include <concurrentqueue.h> 
 
+#define BUFFER_SIZES {16,32,64,128,256,512,1024,2048,4096}
+
 namespace Genesis
 {
 	class VulkanUniformPool
@@ -21,7 +23,13 @@ namespace Genesis
 	private:
 		VulkanAllocator* allocator;
 
-		moodycamel::ConcurrentQueue<VulkanBuffer*> main_queue;
-		vector<moodycamel::ConcurrentQueue<VulkanBuffer*>> frame_queues;
+		struct VulkanUniformPoolSet
+		{
+			uint16_t size;
+			moodycamel::ConcurrentQueue<VulkanBuffer*> main_queue;
+			vector<moodycamel::ConcurrentQueue<VulkanBuffer*>> frame_queues;
+		};
+
+		vector<VulkanUniformPoolSet> pools;
 	};
 }

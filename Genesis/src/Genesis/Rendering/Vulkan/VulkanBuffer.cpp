@@ -25,10 +25,7 @@ void VulkanBuffer::fillBuffer(VulkanCommandPool* transfer_pool, VkQueue transfer
 
 	if (this->allocator->isMemoryHostVisible(this->buffer_memory_info))
 	{
-		void* mapped_data;
-		this->allocator->mapMemory(this->buffer_memory, &mapped_data);
-		memcpy(mapped_data, data, data_size);
-		this->allocator->unmapMemory(this->buffer_memory);
+		this->fillBufferHostVisable(data, data_size);
 	}
 	else
 	{
@@ -70,6 +67,16 @@ void VulkanBuffer::fillBuffer(VulkanCommandPool* transfer_pool, VkQueue transfer
 
 		this->allocator->destroyBuffer(staging_buffer, staging_buffer_memory);
 	}
+}
+
+void VulkanBuffer::fillBufferHostVisable(void* data, uint64_t data_size)
+{
+	assert(this->allocator->isMemoryHostVisible(this->buffer_memory_info));
+
+	void* mapped_data;
+	this->allocator->mapMemory(this->buffer_memory, &mapped_data);
+	memcpy_s(mapped_data, this->size, data, data_size);
+	this->allocator->unmapMemory(this->buffer_memory);
 }
 
 VulkanVertexBuffer::VulkanVertexBuffer(VulkanAllocator* allocator, VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size, VmaMemoryUsage memory_usage, VertexInputDescription& vertex_input_description)

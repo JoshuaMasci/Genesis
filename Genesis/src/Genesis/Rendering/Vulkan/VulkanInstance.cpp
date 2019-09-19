@@ -55,17 +55,6 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 
 	this->graphics_command_pool_set = new VulkanCommandPoolSet(this->device, this->device->getGraphicsFamilyIndex(), thread_count);
 
-	this->frames_in_flight = Array<VulkanFrame>(this->FRAME_COUNT);
-	for (size_t i = 0; i < this->frames_in_flight.size(); i++)
-	{
-		VulkanFrame* frame = &this->frames_in_flight[i];
-		frame->command_buffer = this->graphics_command_pool_set->createCommandBuffer();
-
-		frame->image_available_semaphore = this->device->createSemaphore();
-		frame->command_buffer_done_fence = this->device->createFence();
-		frame->command_buffer_done_semaphore = this->device->createSemaphore();
-	}
-
 	this->threads.resize(thread_count);
 	for (size_t i = 0; i < thread_count; i++)
 	{
@@ -77,10 +66,8 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 	}
 
 	this->pipeline_manager = new VulkanPipelineManager(this->device->get());
+	this->uniform_pool = new VulkanUniformPool(this->allocator, this->FRAME_COUNT);
 	this->render_pass_manager = new VulkanRenderPassManager(this->device->get());
-
-	//Framebuffers
-	this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->surface, this->allocator);
 
 	{
 		VkSamplerCreateInfo samplerInfo = {};
@@ -104,21 +91,29 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 		}
 	}
 
+	this->frames_in_flight = Array<VulkanFrame>(this->FRAME_COUNT);
+	for (uint32_t i = 0; i < this->frames_in_flight.size(); i++)
+	{
+		VulkanFrame* frame = &this->frames_in_flight[i];
+		frame->command_buffer = this->graphics_command_pool_set->createCommandBuffer();
+
+		frame->image_available_semaphore = this->device->createSemaphore();
+		frame->command_buffer_done_fence = this->device->createFence();
+		frame->command_buffer_done_semaphore = this->device->createSemaphore();
+
+		frame->command_buffer_temp = new VulkanCommandBuffer(0, i, this->device->get(), this->graphics_command_pool_set->getPrimaryCommandPool(), this->pipeline_manager, this->threads[0].descriptor_pool, this->uniform_pool, this->linear_sampler);
+	}
+
+	//Framebuffers
+	this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->surface, this->allocator);
+
+
+
 	this->descriptor_pool = new VulkanDescriptorPool(this->device->get(), this->FRAME_COUNT, 800000,
 		{
 			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000},
 			{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8000}
 		});
-
-	this->uniform_pool = new VulkanUniformPool(this->allocator, this->FRAME_COUNT);
-
-	vector<uint8_t> empty_vector(256, 0);
-	this->empty_buffer = new VulkanBuffer(this->allocator, 64, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
-	this->empty_buffer->fillBuffer(this->graphics_command_pool_set->getPrimaryCommandPool(), this->device->getGraphicsQueue(), empty_vector.data(), empty_vector.size());
-
-	this->empty_texture = new VulkanTexture(this->device, this->allocator, { 16, 16 }, VMA_MEMORY_USAGE_GPU_ONLY, this->linear_sampler);
-	vector<glm::u8vec4> pink_texture(16 * 16, glm::u8vec4(255, 20, 147, 255));//Pink color
-	this->empty_texture->fillTexture(this->graphics_command_pool_set->getPrimaryCommandPool(), this->device->getGraphicsQueue(), pink_texture.data(), pink_texture.size() * sizeof(glm::u8vec4));
 
 	//Resource Deleters
 	//Add 1 to the delete delay just to make sure it's totaly out of the pipeline
@@ -136,9 +131,6 @@ VulkanInstance::~VulkanInstance()
 	delete this->texture_deleter;
 	delete this->view_deleter;
 	delete this->shader_deleter;
-
-	delete this->empty_buffer;
-	delete this->empty_texture;
 
 	vkDeviceWaitIdle(this->device->get());
 

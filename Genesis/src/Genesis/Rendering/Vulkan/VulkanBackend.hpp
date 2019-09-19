@@ -37,6 +37,8 @@ namespace Genesis
 		virtual void endView(ViewHandle index) override;
 		virtual void sumbitView(ViewHandle index) override;
 
+		virtual CommandBuffer* getScreenCommandBuffer() override;
+
 		virtual void tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, UniformBufferHandle uniform_handle) override;
 		
 		//IMGUI temp
