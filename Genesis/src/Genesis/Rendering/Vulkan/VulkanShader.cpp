@@ -35,10 +35,7 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string shader_data)
 		SpvReflectBlockVariable* push_block;
 
 		spvReflectEnumeratePushConstantBlocks(&module, &push_constant_count, &push_block);
-
-		
-
-		this->push_constant.name = push_block->name;
+		this->push_constant.name = push_block->var_name;
 		this->push_constant.shader_stage = this->shader_stage;
 		this->push_constant.total_size = push_block->size;
 		this->push_constant.variables = push_block->padded_size;
