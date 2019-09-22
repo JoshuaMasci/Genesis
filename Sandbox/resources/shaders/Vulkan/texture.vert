@@ -7,7 +7,7 @@ layout(location = 2) in vec2 in_tex;
 layout(location = 0) out vec3 frag_normal;
 layout(location = 1) out vec2 frag_tex;
 
-layout(binding = 0) uniform Matrices
+layout(push_constant) uniform Matrices
 {
 	mat4 mvp;
 } matrices;

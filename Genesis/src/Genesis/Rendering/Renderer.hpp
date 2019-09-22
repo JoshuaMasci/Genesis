@@ -49,7 +49,6 @@ namespace Genesis
 		void loadShader(string shader_file_base);
 
 		Model createModel(string mesh, string texture, string shader);
-		void destroyModel(Model& model);
 
 	private:
 		//Lifetime of the Backend is longer than the Renderer

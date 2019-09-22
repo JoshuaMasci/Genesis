@@ -43,6 +43,8 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 
 	bool result = this->backend->beginFrame();
 
+	return;
+
 	CommandBuffer* command_buffer = this->backend->getScreenCommandBuffer();
 
 	if (result)
@@ -71,9 +73,7 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 			command_buffer->setShader(model.shader);
 			command_buffer->setUniformTexture("albedo_texture", model.texture);
 			command_buffer->setUniformMat4("matrices.mvp", mvp);
-			//command_buffer->drawIndexed(model.vertices, model.indices);
-			//this->backend->fillUniformBuffer(model.matrix, &mvp, sizeof(matrix4F));
-			//this->backend->tempDrawScreen(model.vertices, model.indices, model.shader, model.texture, model.matrix);
+			command_buffer->drawIndexed(model.vertices, model.indices);
 		}
 	}
 }
@@ -239,12 +239,4 @@ Model Renderer::createModel(string mesh, string texture, string shader)
 	model.texture = this->loaded_textures[texture];
 	model.shader = this->loaded_shaders[shader];
 	return model;
-}
-
-void Renderer::destroyModel(Model& model)
-{
-	model.vertices = nullptr;
-	model.indices = nullptr;
-	model.texture = nullptr;
-	model.shader = nullptr;
 }

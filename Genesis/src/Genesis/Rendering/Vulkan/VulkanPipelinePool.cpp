@@ -1,13 +1,13 @@
-#include "VulkanPipelineManager.hpp"
+#include "VulkanPipelinePool.hpp"
 
 using namespace Genesis;
 
-VulkanPipelineManager::VulkanPipelineManager(VkDevice device)
+VulkanPipelinePool::VulkanPipelinePool(VkDevice device)
 {
 	this->device = device;
 }
 
-VulkanPipelineManager::~VulkanPipelineManager()
+VulkanPipelinePool::~VulkanPipelinePool()
 {
 	for (auto shader_pipelines : this->pipelines)
 	{
@@ -18,7 +18,7 @@ VulkanPipelineManager::~VulkanPipelineManager()
 	}
 }
 
-VulkanPipline* VulkanPipelineManager::getPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription& vertex_description, VkExtent2D extent)
+VulkanPipline* VulkanPipelinePool::getPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription& vertex_description, VkExtent2D extent)
 {
 	MurmurHash2 murmur_hash;
 	murmur_hash.begin();
@@ -37,7 +37,7 @@ VulkanPipline* VulkanPipelineManager::getPipeline(VulkanShader* shader, VkRender
 		}
 	}
 
-	printf("Building new pipeline with hash: %u\n", pipeline_hash);
+	//printf("Building new pipeline with hash: %u\n", pipeline_hash);
 
 	VulkanPipline* new_pipeline = new VulkanPipline(this->device, (*shader), renderpass, settings, vertex_description, extent);
 

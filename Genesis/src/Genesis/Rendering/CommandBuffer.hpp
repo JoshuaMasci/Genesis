@@ -16,8 +16,13 @@ namespace Genesis
 
 		//Uniform
 		virtual void setUniformFloat(string name, float value) = 0;
-		virtual void setUniformVec4(string name, vector4F vector) = 0;
-		virtual void setUniformMat4(string name, matrix4F matrix) = 0;
+		virtual void setUniformVec2(string name, vector2F value) = 0;
+		virtual void setUniformVec3(string name, vector3F value) = 0;
+		virtual void setUniformVec4(string name, vector4F value) = 0;
+
+		virtual void setUniformMat3(string name, matrix3F value) = 0;
+		virtual void setUniformMat4(string name, matrix4F value) = 0;
+		
 		virtual void setUniformTexture(string name, TextureHandle texture) = 0;
 		virtual void setUniformView(string name, ViewHandle view, uint16_t view_image_index) = 0;
 

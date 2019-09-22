@@ -18,8 +18,8 @@
 #include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanTexture.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanView.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanRenderPassManager.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanPipelinePool.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanRenderPassPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanCommandBuffer.hpp"
 
 #include "Genesis/Rendering/DelayedResourceDeleter.hpp"
@@ -67,8 +67,8 @@ namespace Genesis
 		Array<VulkanFrame> frames_in_flight;
 		Array<VulkanThread> threads;
 
-		VulkanRenderPassManager* render_pass_manager = nullptr;
-		VulkanPipelineManager* pipeline_manager = nullptr;
+		VulkanRenderPassPool* render_pass_manager = nullptr;
+		VulkanPipelinePool* pipeline_manager = nullptr;
 
 		VulkanDescriptorPool* descriptor_pool = nullptr;
 		VulkanUniformPool* uniform_pool = nullptr;

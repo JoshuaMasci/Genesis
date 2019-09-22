@@ -1,13 +1,13 @@
-#include "VulkanRenderPassManager.hpp"
+#include "VulkanRenderPassPool.hpp"
 
 using namespace Genesis;
 
-VulkanRenderPassManager::VulkanRenderPassManager(VkDevice device)
+VulkanRenderPassPool::VulkanRenderPassPool(VkDevice device)
 {
 	this->device = device;
 }
 
-VulkanRenderPassManager::~VulkanRenderPassManager()
+VulkanRenderPassPool::~VulkanRenderPassPool()
 {
 	for(auto render_pass : this->render_passes)
 	{
@@ -15,7 +15,7 @@ VulkanRenderPassManager::~VulkanRenderPassManager()
 	}
 }
 
-VkRenderPass VulkanRenderPassManager::getRenderPass(uint32_t hash, Array<VkFormat>& color_formats, VkFormat depth_format)
+VkRenderPass VulkanRenderPassPool::getRenderPass(uint32_t hash, Array<VkFormat>& color_formats, VkFormat depth_format)
 {
 	if (this->render_passes.find(hash) != this->render_passes.end())
 	{

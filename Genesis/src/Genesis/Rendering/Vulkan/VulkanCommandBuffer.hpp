@@ -7,7 +7,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanPipline.hpp"
 
-#include "Genesis/Rendering/Vulkan/VulkanPipelineManager.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanPipelinePool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanUniformPool.hpp"
 
@@ -16,7 +16,7 @@ namespace Genesis
 	class VulkanCommandBuffer : public CommandBuffer
 	{
 	public:
-		VulkanCommandBuffer(uint32_t thread_index, uint32_t frame_index, VkDevice device, VulkanCommandPool* command_pool, VulkanPipelineManager* pipeline_manager, VulkanDescriptorPool* descriptor_pool, VulkanUniformPool* uniform_pool, VkSampler temp_sampler);
+		VulkanCommandBuffer(uint32_t thread_index, uint32_t frame_index, VkDevice device, VulkanCommandPool* command_pool, VulkanPipelinePool* pipeline_manager, VulkanDescriptorPool* descriptor_pool, VulkanUniformPool* uniform_pool, VkSampler temp_sampler);
 		~VulkanCommandBuffer();
 
 		void beginCommandBuffer(VkRenderPassBeginInfo& render_pass_info, VkSubpassContents mode);
@@ -32,7 +32,11 @@ namespace Genesis
 
 		//Uniform
 		virtual void setUniformFloat(string name, float value) override;
+		virtual void setUniformVec2(string name, vector2F value) override;
+		virtual void setUniformVec3(string name, vector3F value) override;
 		virtual void setUniformVec4(string name, vector4F value) override;
+
+		virtual void setUniformMat3(string name, matrix3F value) override;
 		virtual void setUniformMat4(string name, matrix4F value) override;
 		virtual void setUniformTexture(string name, TextureHandle texture) override;
 		virtual void setUniformView(string name, ViewHandle view, uint16_t view_image_index) override;
@@ -50,7 +54,7 @@ namespace Genesis
 		VulkanCommandPool* command_pool = nullptr;
 
 		//Utils
-		VulkanPipelineManager* pipeline_manager;
+		VulkanPipelinePool* pipeline_manager;
 		VulkanDescriptorPool* descriptor_pool = nullptr;
 		VulkanUniformPool* uniform_pool = nullptr;
 		VkSampler sampler; //TODO sampler system;
@@ -63,8 +67,12 @@ namespace Genesis
 		PipelineSettings current_settings;
 		VulkanPipline* current_pipeline = nullptr;
 
+		bool has_descriptor_set_changed = true;
+		VkDescriptorSet last_descriptor_set = VK_NULL_HANDLE;
+
 		//Bindings
 		map<uint32_t, Array<uint8_t>> binding_uniform_buffers;
 		map<uint32_t, VkImageView> binding_image;
+		map<VkShaderStageFlagBits, Array<uint8_t>> push_constant_blocks;
 	};
 }

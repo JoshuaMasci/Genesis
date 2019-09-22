@@ -25,10 +25,39 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string shader_data)
 
 	uint32_t push_constant_count = 0;
 	spvReflectEnumeratePushConstantBlocks(&module, &push_constant_count, NULL);
-	if (push_constant_count > 0)
+	if (push_constant_count == 0)
+	{
+		this->push_constant.name = "";
+		this->push_constant.total_size = 0;
+	}
+	else if (push_constant_count == 1)
+	{
+		SpvReflectBlockVariable* push_block;
+
+		spvReflectEnumeratePushConstantBlocks(&module, &push_constant_count, &push_block);
+
+		
+
+		this->push_constant.name = push_block->name;
+		this->push_constant.shader_stage = this->shader_stage;
+		this->push_constant.total_size = push_block->size;
+		this->push_constant.variables = push_block->padded_size;
+
+		this->push_constant.variables = Array<ShaderBindingVariable>(push_block->member_count);
+		for (uint32_t var_index = 0; var_index < this->push_constant.variables.size(); var_index++)
+		{
+			SpvReflectBlockVariable var = push_block->members[var_index];
+
+			this->push_constant.variables[var_index].name = var.name;
+			this->push_constant.variables[var_index].offset = var.absolute_offset;
+			this->push_constant.variables[var_index].size = var.size;
+			this->push_constant.variables[var_index].padded_size = var.padded_size;
+		}
+	}
+	else if (push_constant_count > 1)
 	{
 		//Push Constants not supported
-		throw std::runtime_error("push constants are supported!");
+		throw std::runtime_error("more than one PushConstant is not supported");
 	}
 
 	uint32_t descriptor_sets_count = 0;
@@ -171,6 +200,10 @@ VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
 				throw std::runtime_error("Duplicate Uniform Name!!!!");
 			}
 		}
+		if (this->vert_module->push_constant.total_size != 0)
+		{
+			this->name_constants[this->vert_module->push_constant.name] = &this->vert_module->push_constant;
+		}
 
 		if (this->frag_module != nullptr)
 		{
@@ -187,6 +220,10 @@ VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
 					throw std::runtime_error("Duplicate Uniform Name!!!!");
 				}
 			}
+			if (this->frag_module->push_constant.total_size != 0)
+			{
+				this->name_constants[this->frag_module->push_constant.name] = &this->frag_module->push_constant;
+			}
 		}
 
 		VkDescriptorSetLayoutCreateInfo descriptor_set_layout_info;
@@ -195,6 +232,7 @@ VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
 		descriptor_set_layout_info.flags = 0;
 		descriptor_set_layout_info.bindingCount = (uint32_t)bindings.size();
 		descriptor_set_layout_info.pBindings = bindings.data();
+
 
 		if (vkCreateDescriptorSetLayout(this->device, &descriptor_set_layout_info, nullptr, &this->descriptor_layout) != VK_SUCCESS)
 		{
@@ -207,6 +245,19 @@ VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
 	pipeline_layout_info.pushConstantRangeCount = 0;
 	pipeline_layout_info.setLayoutCount = ((this->descriptor_layout != VK_NULL_HANDLE) ? 1 : 0);
 	pipeline_layout_info.pSetLayouts = &this->descriptor_layout;
+
+
+	Array<VkPushConstantRange> push_constants(this->name_constants.size());
+	size_t i = 0;
+	for (auto constant : this->name_constants)
+	{
+		push_constants[i].offset = 0;
+		push_constants[i].size = constant.second->total_size;
+		push_constants[i].stageFlags = constant.second->shader_stage;
+		i++;
+	}
+	pipeline_layout_info.pushConstantRangeCount = (uint32_t)push_constants.size();
+	pipeline_layout_info.pPushConstantRanges = push_constants.data();
 
 	if (vkCreatePipelineLayout(this->device, &pipeline_layout_info, nullptr, &this->pipeline_layout) != VK_SUCCESS)
 	{
@@ -234,18 +285,37 @@ VulkanShader::~VulkanShader()
 	}
 }
 
-ShaderBindingVariableLocation VulkanShader::getVariableLocation(string name)
+ShaderVariableType VulkanShader::getVariableType(string name)
 {
-	if (has_value(this->name_location_cache, name))
+	size_t find_loc = name.find_first_of('.');
+	string binding_name = name.substr(0, find_loc);
+
+	if (has_value(this->name_constants, binding_name))
 	{
-		return this->name_location_cache[name];
+		return ShaderVariableType::PushConstant;
+	}
+	else if (has_value(this->name_bindings, binding_name))
+	{
+		return ShaderVariableType::Binding;
+	}
+	else
+	{
+		throw std::runtime_error("Uniform doesn't exsit");
+	}
+}
+
+ShaderBindingVariableLocation VulkanShader::getBindingVariableLocation(string name)
+{
+	if (has_value(this->name_binding_location_cache, name))
+	{
+		return this->name_binding_location_cache[name];
 	}
 
 	ShaderBindingVariableLocation new_loc;
 
 	size_t find_loc = name.find_first_of('.');
-	Genesis::string binding_name = name.substr(0, find_loc);
-	Genesis::string var_name = name.substr(find_loc + 1, (name.size() - (find_loc + 1)));
+	string binding_name = name.substr(0, find_loc);
+	string var_name = name.substr(find_loc + 1, (name.size() - (find_loc + 1)));
 
 	if (!has_value(this->name_bindings, binding_name))
 	{
@@ -282,6 +352,49 @@ ShaderBindingVariableLocation VulkanShader::getVariableLocation(string name)
 		new_loc.variable_offset = binding->variables[var_index].offset;
 	}
 
-	this->name_location_cache[name] = new_loc;
+	this->name_binding_location_cache[name] = new_loc;
+	return new_loc;
+}
+
+ShaderPushConstantVariableLocation VulkanShader::getPushConstantVariableLocation(string name)
+{
+	if (has_value(this->name_constant_loaction_cache, name))
+	{
+		return this->name_constant_loaction_cache[name];
+	}
+
+	ShaderPushConstantVariableLocation new_loc;
+
+	size_t find_loc = name.find_first_of('.');
+	string binding_name = name.substr(0, find_loc);
+	string var_name = name.substr(find_loc + 1, (name.size() - (find_loc + 1)));
+
+	if (!has_value(this->name_constants, binding_name))
+	{
+		throw std::runtime_error("Push Constant doesn't exsit");
+	}
+
+	ShaderPushConstant* constant = this->name_constants[binding_name];
+	new_loc.variable_stage = constant->shader_stage;
+
+	size_t var_index = 0;
+	bool found = false;
+	for (; var_index < constant->variables.size(); var_index++)
+	{
+		if (var_name == constant->variables[var_index].name)
+		{
+			found = true;
+			break; //Found it
+		}
+	}
+
+	if (found != true)
+	{
+		throw std::runtime_error("Uniform Variable doesn't exsit");
+	}
+
+	new_loc.variable_size = constant->variables[var_index].size;
+	new_loc.variable_offset = constant->variables[var_index].offset;
+
 	return new_loc;
 }

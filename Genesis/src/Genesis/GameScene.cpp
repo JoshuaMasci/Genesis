@@ -23,6 +23,14 @@ GameScene::GameScene(Application* app)
 	this->entity_registry.assign<Model>(this->temp);
 	this->entity_registry.get<Model>(this->temp) = this->renderer->createModel("resources/meshes/cube.obj", "resources/textures/1k_grid.png", "resources/shaders/Vulkan/texture");
 
+	for (int i = 1; i <= 100; i++)
+	{
+		EntityId cuber = this->entity_registry.create();
+		this->entity_registry.assign<WorldTransform>(cuber, vector3D(0.0, 0.0, 2.0 * i));
+		this->entity_registry.assign<Model>(cuber);
+		this->entity_registry.get<Model>(cuber) = this->renderer->createModel("resources/meshes/cube.obj", "resources/textures/Red.png", "resources/shaders/Vulkan/texture");
+	}
+
 	this->camera = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->camera, vector3D(0.0, 0.75, -5));
 	this->entity_registry.assign<Camera>(this->camera, 75.0f);
@@ -33,7 +41,6 @@ GameScene::~GameScene()
 {
 	if (this->renderer != nullptr)
 	{
-		this->renderer->destroyModel(this->entity_registry.get<Model>(this->temp));
 		delete this->renderer;
 	}
 
@@ -53,8 +60,8 @@ void GameScene::drawFrame(double delta_time)
 {
 	this->renderer->drawFrame(this->entity_registry, this->camera);
 
-	//this->ui_renderer->startFrame();
-	//this->ui_renderer->endFrame();
+	this->ui_renderer->startFrame();
+	this->ui_renderer->endFrame();
 
 	this->renderer->endFrame();
 }

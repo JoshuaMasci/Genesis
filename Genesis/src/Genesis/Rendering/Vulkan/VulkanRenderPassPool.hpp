@@ -8,11 +8,11 @@
 namespace Genesis
 {
 
-	class VulkanRenderPassManager
+	class VulkanRenderPassPool
 	{
 	public:
-		VulkanRenderPassManager(VkDevice device);
-		~VulkanRenderPassManager();
+		VulkanRenderPassPool(VkDevice device);
+		~VulkanRenderPassPool();
 
 		VkRenderPass getRenderPass(uint32_t hash, Array<VkFormat>& color_formats, VkFormat depth_format);
 

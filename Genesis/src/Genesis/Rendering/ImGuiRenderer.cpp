@@ -15,11 +15,13 @@ ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend)
 {
 	this->backend = backend;
 	
+	vector2U window_size = backend->getScreenSize();
+
 	Array<ImageFormat> color(1);
 	color[0] = ImageFormat::RGBA_8_UNorm;
 	this->layout = FramebufferLayout(color, ImageFormat::Invalid);
 
-	this->view = this->backend->createView(vector2U(1920, 1080), this->layout);
+	this->view = this->backend->createView(window_size, this->layout);
 
 	ImGui::CreateContext();
 
@@ -30,6 +32,9 @@ ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend)
 		io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 		this->texture_atlas = this->backend->createTexture(vector2U(width, height), pixels, (width * height) * 4);
 		io.Fonts->TexID = this->texture_atlas;
+
+		io.DisplaySize.x = (float)window_size.x;
+		io.DisplaySize.y = (float)window_size.y;
 	}
 
 	{
@@ -81,8 +86,8 @@ ImGuiRenderer::~ImGuiRenderer()
 void ImGuiRenderer::startFrame()
 {
 	ImGuiIO& io = ImGui::GetIO();
-	io.DisplaySize.x = 1920.0f;
-	io.DisplaySize.y = 1080.0f;
+
+	//TODO Input
 
 	ImGui::NewFrame();
 
@@ -99,7 +104,22 @@ void ImGuiRenderer::endFrame()
 	//this->backend->startView(this->view);
 	CommandBuffer* command_buffer = this->backend->getScreenCommandBuffer();
 
+	PipelineSettings settings;
+	settings.cull_mode = CullMode::None;
+	settings.depth_test = DepthTest::None;
+	settings.depth_op = DepthOp::Always;
+	command_buffer->setPipelineSettings(settings);
+
 	command_buffer->setShader(this->shader);
+	vector2F scale;
+	scale[0] = 2.0f / draw_data->DisplaySize.x;
+	scale[1] = 2.0f / draw_data->DisplaySize.y;
+	vector2F translate;
+	translate[0] = -1.0f - (draw_data->DisplayPos.x * scale[0]);
+	translate[1] = -1.0f - (draw_data->DisplayPos.y * scale[1]);
+
+	command_buffer->setUniformVec2("offset.uScale", scale);
+	command_buffer->setUniformVec2("offset.uTranslate", translate);
 
 	for (int n = 0; n < draw_data->CmdListsCount; n++)
 	{
@@ -112,6 +132,7 @@ void ImGuiRenderer::endFrame()
 		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
 		{
 			const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
+
 			if (pcmd->UserCallback)
 			{
 				pcmd->UserCallback(cmd_list, pcmd);
@@ -123,7 +144,6 @@ void ImGuiRenderer::endFrame()
 
 				command_buffer->setUniformTexture("texture_atlas", (TextureHandle)pcmd->TextureId);
 				command_buffer->drawIndexedOffset(vertex_buffer, index_buffer, pcmd->IdxOffset, pcmd->ElemCount);
-				//this->backend->tempDrawView(this->view, vertex_buffer, index_buffer, this->shader, (TextureHandle) pcmd->TextureId, pcmd->IdxOffset, pcmd->ElemCount, vector2I(0.0), vector2U(0.0));
 			}
 		}
 		this->backend->destroyVertexBuffer(vertex_buffer);

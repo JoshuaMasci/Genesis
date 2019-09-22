@@ -79,6 +79,11 @@ bool VulkanBackend::beginFrame()
 	vkWaitForFences(this->vulkan->device->get(), 1, &frame->command_buffer_done_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
 	vkResetFences(this->vulkan->device->get(), 1, &frame->command_buffer_done_fence);
 
+	for (uint32_t i = 0; i < (uint32_t)this->vulkan->threads.size(); i++)
+	{
+		this->vulkan->threads[i].descriptor_pool->resetFrame(this->frame_index);
+	}
+
 	this->vulkan->descriptor_pool->resetFrame(this->frame_index);
 	this->vulkan->uniform_pool->resetFrame(this->frame_index);
 

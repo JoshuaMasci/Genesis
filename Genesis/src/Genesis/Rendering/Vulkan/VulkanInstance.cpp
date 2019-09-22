@@ -65,9 +65,9 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 			});
 	}
 
-	this->pipeline_manager = new VulkanPipelineManager(this->device->get());
+	this->pipeline_manager = new VulkanPipelinePool(this->device->get());
 	this->uniform_pool = new VulkanUniformPool(this->allocator, this->FRAME_COUNT);
-	this->render_pass_manager = new VulkanRenderPassManager(this->device->get());
+	this->render_pass_manager = new VulkanRenderPassPool(this->device->get());
 
 	{
 		VkSamplerCreateInfo samplerInfo = {};
@@ -106,7 +106,6 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 
 	//Framebuffers
 	this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->surface, this->allocator);
-
 
 
 	this->descriptor_pool = new VulkanDescriptorPool(this->device->get(), this->FRAME_COUNT, 800000,

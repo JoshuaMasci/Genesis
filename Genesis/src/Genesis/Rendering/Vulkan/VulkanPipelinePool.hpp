@@ -10,11 +10,11 @@ namespace Genesis
 	typedef map<uint32_t, VulkanPipline*> pipeline_map;
 	typedef map<VulkanShader*, pipeline_map> shader_pipeline_map;
 
-	class VulkanPipelineManager
+	class VulkanPipelinePool
 	{
 	public:
-		 VulkanPipelineManager(VkDevice device);
-		~VulkanPipelineManager();
+		 VulkanPipelinePool(VkDevice device);
+		~VulkanPipelinePool();
 
 		VulkanPipline* getPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription& vertex_description, VkExtent2D extent);
 
