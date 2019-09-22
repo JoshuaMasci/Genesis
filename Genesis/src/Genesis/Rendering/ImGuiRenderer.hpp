@@ -2,22 +2,22 @@
 
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Rendering/RenderingBackend.hpp"
+#include "Genesis/Input/InputManager.hpp"
 
 namespace Genesis
 {
 	class ImGuiRenderer
 	{
 	public:
-		ImGuiRenderer(RenderingBackend* backend);
+		ImGuiRenderer(RenderingBackend* backend, InputManager* input_manager);
 		~ImGuiRenderer();
 
 		void startFrame();
 		void endFrame();
 
 	private:
-		//Lifetime of the Backend is longer than the Renderer
-		//No deleting please
 		RenderingBackend* backend;
+		InputManager* input_manager;
 
 		FramebufferLayout layout;
 
@@ -25,7 +25,7 @@ namespace Genesis
 		TextureHandle texture_atlas = nullptr;
 		ShaderHandle shader = nullptr;
 
-
 		VertexInputDescription vertex_input;
+		PipelineSettings settings;
 	};
 }

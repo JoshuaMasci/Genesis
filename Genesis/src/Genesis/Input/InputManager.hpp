@@ -22,7 +22,16 @@ namespace Genesis
 		void addInputDevice(InputDevice* device);
 		void removeInputDevice(InputDevice* device);
 
+
+		//Menu Mode Mouse Functions
+		void setMousePosition(vector2F position);
+		vector2F getMousePosition();
+
 	private:
 		set<InputDevice*> devices;
+
+		//Menu Mode Mouse
+		vector2F current_mouse_position;
+		bool current_mouse_state[5];
 	};
 };

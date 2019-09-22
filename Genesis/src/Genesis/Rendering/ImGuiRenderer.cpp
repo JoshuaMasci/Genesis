@@ -11,10 +11,11 @@ using namespace Genesis;
 
 #include <fstream>
 
-ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend)
+ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* input_manager)
 {
 	this->backend = backend;
-	
+	this->input_manager = input_manager;
+
 	vector2U window_size = backend->getScreenSize();
 
 	Array<ImageFormat> color(1);
@@ -74,6 +75,13 @@ ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend)
 		{"in_uv", VertexElementType::float_2},
 		{"in_color", VertexElementType::unorm8_4}
 	});
+
+	this->settings.cull_mode = CullMode::None;
+	this->settings.depth_test = DepthTest::None;
+	this->settings.depth_op = DepthOp::Always;
+	this->settings.blend_op = BlendOp::Add;
+	this->settings.src_factor = BlendFactor::Alpha_Src;
+	this->settings.dst_factor = BlendFactor::One_Minus_Alpha_Src;
 }
 
 ImGuiRenderer::~ImGuiRenderer()
@@ -88,6 +96,23 @@ void ImGuiRenderer::startFrame()
 	ImGuiIO& io = ImGui::GetIO();
 
 	//TODO Input
+	vector2F mouse_pos = this->input_manager->getMousePosition();
+	io.MousePos = ImVec2(mouse_pos.x, mouse_pos.y);
+
+	io.MouseDown[0] = this->input_manager->getButtonDown("Mouse_Left");
+	io.MouseDown[1] = this->input_manager->getButtonDown("Mouse_Right");
+	io.MouseDown[2] = this->input_manager->getButtonDown("Mouse_Middle");
+	io.MouseDown[3] = this->input_manager->getButtonDown("Mouse_X1");
+	io.MouseDown[4] = this->input_manager->getButtonDown("Mouse_X2");
+
+	if (this->input_manager->getButtonDown("Mouse_ForwardScroll"))
+	{
+		io.MouseWheel += 1;
+	}
+	else if (this->input_manager->getButtonDown("Mouse_BackwardScroll"))
+	{
+		io.MouseWheel -= 1;
+	}
 
 	ImGui::NewFrame();
 
@@ -104,11 +129,7 @@ void ImGuiRenderer::endFrame()
 	//this->backend->startView(this->view);
 	CommandBuffer* command_buffer = this->backend->getScreenCommandBuffer();
 
-	PipelineSettings settings;
-	settings.cull_mode = CullMode::None;
-	settings.depth_test = DepthTest::None;
-	settings.depth_op = DepthOp::Always;
-	command_buffer->setPipelineSettings(settings);
+	command_buffer->setPipelineSettings(this->settings);
 
 	command_buffer->setShader(this->shader);
 	vector2F scale;
@@ -141,6 +162,12 @@ void ImGuiRenderer::endFrame()
 			{
 				//TODO Scissor
 				//command_buffer->setScissor
+				ImVec2 pos = draw_data->DisplayPos;
+				command_buffer->setScissor
+				(
+					{ (uint32_t)(pcmd->ClipRect.x - pos.x), (uint32_t)(pcmd->ClipRect.y - pos.y) },
+					{ (uint32_t)(pcmd->ClipRect.z - pos.x), (uint32_t)(pcmd->ClipRect.w - pos.y) }
+				);
 
 				command_buffer->setUniformTexture("texture_atlas", (TextureHandle)pcmd->TextureId);
 				command_buffer->drawIndexedOffset(vertex_buffer, index_buffer, pcmd->IdxOffset, pcmd->ElemCount);

@@ -53,6 +53,35 @@ VkFormat getVulkanType(VertexElementType type)
 	}
 }
 
+VkBlendFactor getBlendFactor(BlendFactor blend_factor)
+{
+	switch (blend_factor)
+	{
+	case BlendFactor::Zero:
+		return VK_BLEND_FACTOR_ZERO;
+	case BlendFactor::One:
+		return VK_BLEND_FACTOR_ONE;
+	case BlendFactor::Color_Src:
+		return VK_BLEND_FACTOR_SRC_COLOR;
+	case BlendFactor::One_Minus_Color_Src:
+		return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+	case BlendFactor::Color_Dst:
+		return VK_BLEND_FACTOR_DST_COLOR;
+	case BlendFactor::One_Minus_Color_Dst:
+		return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+	case BlendFactor::Alpha_Src:
+		return VK_BLEND_FACTOR_SRC_ALPHA;
+	case BlendFactor::One_Minus_Alpha_Src:
+		return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+	case BlendFactor::Alpha_Dst:
+		return VK_BLEND_FACTOR_DST_ALPHA;
+	case BlendFactor::One_Minus_Alpha_Dst:
+		return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+	default:
+		return VK_BLEND_FACTOR_ZERO;//Invalid
+	}
+}
+
 VulkanPipline::VulkanPipline(VkDevice device, VulkanShader& shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription& vertex_description, VkExtent2D extent)
 {
 	this->device = device;
@@ -139,15 +168,15 @@ VulkanPipline::VulkanPipline(VkDevice device, VulkanShader& shader, VkRenderPass
 
 	switch (settings.depth_test)
 	{
-	case Genesis::DepthTest::None:
+	case DepthTest::None:
 		depth_stencil.depthTestEnable = VK_FALSE;
 		depth_stencil.depthWriteEnable = VK_FALSE;
 		break;
-	case Genesis::DepthTest::Test_Only:
+	case DepthTest::Test_Only:
 		depth_stencil.depthTestEnable = VK_TRUE;
 		depth_stencil.depthWriteEnable = VK_FALSE;
 		break;
-	case Genesis::DepthTest::Test_And_Write:
+	case DepthTest::Test_And_Write:
 		depth_stencil.depthTestEnable = VK_TRUE;
 		depth_stencil.depthWriteEnable = VK_TRUE;
 		break;
@@ -155,28 +184,28 @@ VulkanPipline::VulkanPipline(VkDevice device, VulkanShader& shader, VkRenderPass
 
 	switch (settings.depth_op)
 	{
-	case Genesis::DepthOp::Never:
+	case DepthOp::Never:
 		depth_stencil.depthCompareOp = VK_COMPARE_OP_NEVER;
 		break;
-	case Genesis::DepthOp::Less:
+	case DepthOp::Less:
 		depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS;
 		break;
-	case Genesis::DepthOp::Equal:
+	case DepthOp::Equal:
 		depth_stencil.depthCompareOp = VK_COMPARE_OP_EQUAL;
 		break;
-	case Genesis::DepthOp::Less_Equal:
+	case DepthOp::Less_Equal:
 		depth_stencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 		break;
-	case Genesis::DepthOp::Greater:
+	case DepthOp::Greater:
 		depth_stencil.depthCompareOp = VK_COMPARE_OP_GREATER;
 		break;
-	case Genesis::DepthOp::Not_Equal:
+	case DepthOp::Not_Equal:
 		depth_stencil.depthCompareOp = VK_COMPARE_OP_NOT_EQUAL;
 		break;
-	case Genesis::DepthOp::Greater_Equal:
+	case DepthOp::Greater_Equal:
 		depth_stencil.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
 		break;
-	case Genesis::DepthOp::Always:
+	case DepthOp::Always:
 		depth_stencil.depthCompareOp = VK_COMPARE_OP_ALWAYS;
 		break;
 	}
@@ -186,15 +215,45 @@ VulkanPipline::VulkanPipline(VkDevice device, VulkanShader& shader, VkRenderPass
 
 	VkPipelineColorBlendAttachmentState color_blend_attachment = {};
 	color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-	//color_blend_attachment.blendEnable = VK_FALSE;
-	//Temp
-	color_blend_attachment.blendEnable = VK_TRUE;
-	color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-	color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-	color_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
-	color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-	color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-	color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
+
+	if (settings.blend_op != BlendOp::None)
+	{
+		VkBlendFactor src_factor = getBlendFactor(settings.src_factor);
+		VkBlendFactor dst_factor = getBlendFactor(settings.dst_factor);
+		VkBlendOp blend_op;
+		switch (settings.blend_op)
+		{
+		case BlendOp::Add:
+			blend_op = VK_BLEND_OP_ADD;
+			break;
+		case BlendOp::Subtract:
+			blend_op = VK_BLEND_OP_SUBTRACT;
+			break;
+		case BlendOp::Reverse_Subtract:
+			blend_op = VK_BLEND_OP_REVERSE_SUBTRACT;
+			break;
+		case BlendOp::Min:
+			blend_op = VK_BLEND_OP_MIN;
+			break;
+		case BlendOp::Max:
+			blend_op = VK_BLEND_OP_MAX;
+			break;
+		}
+		
+		color_blend_attachment.blendEnable = VK_TRUE;
+		color_blend_attachment.srcColorBlendFactor = src_factor;
+		color_blend_attachment.srcAlphaBlendFactor = src_factor;
+
+		color_blend_attachment.dstColorBlendFactor = dst_factor;
+		color_blend_attachment.dstAlphaBlendFactor = dst_factor;
+
+		color_blend_attachment.colorBlendOp = blend_op;
+		color_blend_attachment.alphaBlendOp = blend_op;
+	}
+	else
+	{
+		color_blend_attachment.blendEnable = VK_FALSE;
+	}
 
 	VkPipelineColorBlendStateCreateInfo color_blending = {};
 	color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -206,6 +265,15 @@ VulkanPipline::VulkanPipline(VkDevice device, VulkanShader& shader, VkRenderPass
 	color_blending.blendConstants[1] = 0.0f;
 	color_blending.blendConstants[2] = 0.0f;
 	color_blending.blendConstants[3] = 0.0f;
+
+	Array<VkDynamicState> dynamic_states(1);
+	dynamic_states[0] = VK_DYNAMIC_STATE_SCISSOR;
+	//Maybe Use VK_DYNAMIC_STATE_VIEWPORT
+
+	VkPipelineDynamicStateCreateInfo dynamic_state = {};
+	dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	dynamic_state.dynamicStateCount = (uint32_t)dynamic_states.size();
+	dynamic_state.pDynamicStates = dynamic_states.data();
 
 	vector<VkPipelineShaderStageCreateInfo> shader_stage = shader.getShaderStages();
 
@@ -221,6 +289,7 @@ VulkanPipline::VulkanPipline(VkDevice device, VulkanShader& shader, VkRenderPass
 	pipelineInfo.pDepthStencilState = &depth_stencil;
 	pipelineInfo.pColorBlendState = &color_blending;
 	pipelineInfo.layout = shader.getPipelineLayout();
+	pipelineInfo.pDynamicState = &dynamic_state;
 	pipelineInfo.renderPass = renderpass;
 	pipelineInfo.subpass = 0;
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;

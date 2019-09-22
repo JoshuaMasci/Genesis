@@ -1,5 +1,7 @@
 #include "InputManager.hpp"
 
+#include "Genesis/Input/MouseDevice.hpp"
+
 using namespace Genesis;
 
 InputManager::InputManager(string config_folder_path)
@@ -105,4 +107,14 @@ void InputManager::addInputDevice(InputDevice* device)
 void InputManager::removeInputDevice(InputDevice* device)
 {
 	this->devices.erase(device);
+}
+
+void InputManager::setMousePosition(vector2F position)
+{
+	this->current_mouse_position = position;
+}
+
+vector2F InputManager::getMousePosition()
+{
+	return this->current_mouse_position;
 }
