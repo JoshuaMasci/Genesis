@@ -12,7 +12,7 @@ namespace Genesis
 		virtual void setShader(ShaderHandle shader) = 0;
 		virtual void setPipelineSettings(PipelineSettings& settings) = 0;
 		
-		virtual void setScissor(vector2U offset, vector2U extent) = 0;
+		virtual void setScissor(vector2I offset, vector2U extent) = 0;
 
 		//Uniform
 		virtual void setUniformFloat(string name, float value) = 0;

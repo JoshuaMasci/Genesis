@@ -142,6 +142,9 @@ void ImGuiRenderer::endFrame()
 	command_buffer->setUniformVec2("offset.uScale", scale);
 	command_buffer->setUniformVec2("offset.uTranslate", translate);
 
+	ImVec2 clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
+	ImVec2 clip_scale = draw_data->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
+
 	for (int n = 0; n < draw_data->CmdListsCount; n++)
 	{
 		const ImDrawList* cmd_list = draw_data->CmdLists[n];
@@ -160,17 +163,29 @@ void ImGuiRenderer::endFrame()
 			}
 			else
 			{
-				//TODO Scissor
-				//command_buffer->setScissor
-				ImVec2 pos = draw_data->DisplayPos;
-				command_buffer->setScissor
-				(
-					{ (uint32_t)(pcmd->ClipRect.x - pos.x), (uint32_t)(pcmd->ClipRect.y - pos.y) },
-					{ (uint32_t)(pcmd->ClipRect.z - pos.x), (uint32_t)(pcmd->ClipRect.w - pos.y) }
-				);
+				// Project scissor/clipping rectangles into framebuffer space
+				ImVec4 clip_rect;
+				clip_rect.x = (pcmd->ClipRect.x - clip_off.x) * clip_scale.x;
+				clip_rect.y = (pcmd->ClipRect.y - clip_off.y) * clip_scale.y;
+				clip_rect.z = (pcmd->ClipRect.z - clip_off.x) * clip_scale.x;
+				clip_rect.w = (pcmd->ClipRect.w - clip_off.y) * clip_scale.y;
 
-				command_buffer->setUniformTexture("texture_atlas", (TextureHandle)pcmd->TextureId);
-				command_buffer->drawIndexedOffset(vertex_buffer, index_buffer, pcmd->IdxOffset, pcmd->ElemCount);
+				if (clip_rect.x < draw_data->DisplaySize.x && clip_rect.y < draw_data->DisplaySize.y && clip_rect.z >= 0.0f && clip_rect.w >= 0.0f)
+				{
+					// Negative offsets are illegal for Set Scissor
+					if (clip_rect.x < 0.0f)
+						clip_rect.x = 0.0f;
+					if (clip_rect.y < 0.0f)
+						clip_rect.y = 0.0f;
+
+					// Apply scissor/clipping rectangle
+					vector2I offset = { clip_rect.x, clip_rect.y };
+					vector2U extend = { (uint32_t)(clip_rect.z - clip_rect.x),  (uint32_t)(clip_rect.w - clip_rect.y) };
+					command_buffer->setScissor(offset, extend);
+
+					command_buffer->setUniformTexture("texture_atlas", (TextureHandle)pcmd->TextureId);
+					command_buffer->drawIndexedOffset(vertex_buffer, index_buffer, pcmd->IdxOffset, pcmd->ElemCount);
+				}
 			}
 		}
 		this->backend->destroyVertexBuffer(vertex_buffer);

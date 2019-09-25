@@ -40,6 +40,12 @@ void VulkanCommandBuffer::beginCommandBuffer(VkRenderPassBeginInfo& render_pass_
 	}
 
 	vkCmdBeginRenderPass(this->command_buffer, &render_pass_info, mode);
+
+	//Setup Default Scissor
+	VkRect2D rect = {};
+	rect.offset = { 0, 0 };
+	rect.extent = this->size;
+	vkCmdSetScissor(this->command_buffer, 0, 1, &rect);
 }
 
 void VulkanCommandBuffer::endCommandBuffer()
@@ -148,10 +154,10 @@ void VulkanCommandBuffer::setPipelineSettings(PipelineSettings& settings)
 	this->current_settings = settings;
 }
 
-void VulkanCommandBuffer::setScissor(vector2U offset, vector2U extent)
+void VulkanCommandBuffer::setScissor(vector2I offset, vector2U extent)
 {
 	VkRect2D rect = {};
-	rect.offset = {(int32_t)offset.x, (int32_t)offset.y};
+	rect.offset = {offset.x, offset.y};
 	rect.extent = {extent.x, extent.y};
 	vkCmdSetScissor(this->command_buffer, 0, 1, &rect);
 }

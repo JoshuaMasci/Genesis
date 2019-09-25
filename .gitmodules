@@ -19,6 +19,6 @@
 [submodule "submodules/imgui"]
 	path = submodules/imgui
 	url = https://github.com/ocornut/imgui
-[submodule "submodules\\spirv-reflect"]
-	path = submodules\\spirv-reflect
+[submodule "submodules/spirv-reflect"]
+	path = submodules/spirv-reflect
 	url = https://github.com/Iamshortman/SPIRV-Reflect

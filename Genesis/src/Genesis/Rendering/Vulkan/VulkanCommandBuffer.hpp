@@ -28,7 +28,7 @@ namespace Genesis
 		virtual void setShader(ShaderHandle shader) override;
 		virtual void setPipelineSettings(PipelineSettings& settings) override;
 
-		virtual void setScissor(vector2U offset, vector2U extent) override;
+		virtual void setScissor(vector2I offset, vector2U extent) override;
 
 		//Uniform
 		virtual void setUniformFloat(string name, float value) override;
