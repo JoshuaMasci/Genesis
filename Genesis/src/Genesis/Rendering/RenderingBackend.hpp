@@ -14,6 +14,8 @@ namespace Genesis
 	public:
 		virtual ~RenderingBackend() {};
 
+		virtual void setScreenSize(vector2U size) = 0;
+
 		virtual bool beginFrame() = 0;
 		virtual void endFrame() = 0;
 		virtual void submitFrame(vector<ViewHandle> sub_views) = 0;
@@ -37,14 +39,8 @@ namespace Genesis
 		virtual void endView(ViewHandle index) = 0;
 		virtual void sumbitView(ViewHandle index) = 0;
 
-
 		//TEMP
 		virtual CommandBuffer* getScreenCommandBuffer() = 0;
-
-		virtual void tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, UniformBufferHandle uniform_handle) = 0;
-		
-		//IMGUI TEMP
-		virtual void tempDrawView(ViewHandle view_handle, VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, uint32_t index_offset, uint32_t index_count, vector2I scissor_offest, vector2U scissor_extent) = 0;
 
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) = 0;
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, ViewHandle view) = 0;

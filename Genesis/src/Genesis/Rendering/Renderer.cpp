@@ -43,38 +43,47 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 
 	bool result = this->backend->beginFrame();
 
-	return;
+	if (!result)
+	{
+		return;
+	}
 
 	CommandBuffer* command_buffer = this->backend->getScreenCommandBuffer();
 
-	if (result)
+	if (command_buffer == nullptr)
 	{
-		vector2U screen_size = this->backend->getScreenSize();
-		float aspect_ratio = ((float)screen_size.x) / ((float)screen_size.y);
+		return;
+	}
 
-		auto& camera = entity_registry.get<Camera>(camera_entity);
-		auto& transform = entity_registry.get<WorldTransform>(camera_entity);
-		Transform& current = transform.current_transform;
+	vector2I zero = {0,0};
+	vector2U screen_size = this->backend->getScreenSize();
+	command_buffer->setScissor(zero, screen_size);
+	command_buffer->setPipelineSettings(PipelineSettings());
 
-		matrix4F view = glm::lookAt(current.getPosition(), current.getPosition() + current.getForward(), current.getUp());
-		matrix4F proj = this->backend->getPerspectiveMatrix(&camera, aspect_ratio);
-		matrix4F mv = proj * view;
+	float aspect_ratio = ((float)screen_size.x) / ((float)screen_size.y);
 
-		auto entity_model = entity_registry.view<Model, WorldTransform>();
-		for (auto entity : entity_model)
-		{
-			auto &model = entity_model.get<Model>(entity);
-			auto &transform = entity_model.get<WorldTransform>(entity);
+	auto& camera = entity_registry.get<Camera>(camera_entity);
+	auto& transform = entity_registry.get<WorldTransform>(camera_entity);
+	Transform& current = transform.current_transform;
 
-			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
-			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
-			matrix4F mvp = mv * (translation * orientation);
+	matrix4F view = glm::lookAt(current.getPosition(), current.getPosition() + current.getForward(), current.getUp());
+	matrix4F proj = this->backend->getPerspectiveMatrix(&camera, aspect_ratio);
+	matrix4F mv = proj * view;
 
-			command_buffer->setShader(model.shader);
-			command_buffer->setUniformTexture("albedo_texture", model.texture);
-			command_buffer->setUniformMat4("matrices.mvp", mvp);
-			command_buffer->drawIndexed(model.vertices, model.indices);
-		}
+	auto entity_model = entity_registry.view<Model, WorldTransform>();
+	for (auto entity : entity_model)
+	{
+		auto &model = entity_model.get<Model>(entity);
+		auto &transform = entity_model.get<WorldTransform>(entity);
+
+		matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
+		matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
+		matrix4F mvp = mv * (translation * orientation);
+
+		command_buffer->setShader(model.shader);
+		command_buffer->setUniformTexture("albedo_texture", model.texture);
+		command_buffer->setUniformMat4("matrices.mvp", mvp);
+		command_buffer->drawIndexed(model.vertices, model.indices);
 	}
 }
 

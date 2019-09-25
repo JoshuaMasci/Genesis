@@ -158,9 +158,7 @@ namespace Genesis
 
 		~VulkanSurface()
 		{
-			//Don't bother destroying it, It will be destroyed when the device is destroyed
-			//It will crash if destroy is called since device will already be destroyed by this point
-			//vkDestroyRenderPass(this->device->get(), this->screen_render_pass, nullptr);
+			vkDestroyRenderPass(this->device->get(), this->screen_render_pass, nullptr);
 			vkDestroySurfaceKHR(this->instance, this->surface, nullptr);
 		};
 

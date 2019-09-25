@@ -95,6 +95,9 @@ void ImGuiRenderer::startFrame()
 {
 	ImGuiIO& io = ImGui::GetIO();
 
+	vector2U screen_size = this->backend->getScreenSize();
+	io.DisplaySize = { (float)screen_size.x, (float)screen_size.y };
+
 	//TODO Input
 	vector2F mouse_pos = this->input_manager->getMousePosition();
 	io.MousePos = ImVec2(mouse_pos.x, mouse_pos.y);
@@ -128,10 +131,14 @@ void ImGuiRenderer::endFrame()
 
 	//this->backend->startView(this->view);
 	CommandBuffer* command_buffer = this->backend->getScreenCommandBuffer();
+	if (command_buffer == nullptr)
+	{
+		return;
+	}
 
 	command_buffer->setPipelineSettings(this->settings);
-
 	command_buffer->setShader(this->shader);
+
 	vector2F scale;
 	scale[0] = 2.0f / draw_data->DisplaySize.x;
 	scale[1] = 2.0f / draw_data->DisplaySize.y;

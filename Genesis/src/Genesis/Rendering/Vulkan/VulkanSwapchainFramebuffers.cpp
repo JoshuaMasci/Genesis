@@ -119,6 +119,4 @@ VulkanSwapchainFramebuffers::~VulkanSwapchainFramebuffers()
 		
 		this->allocator->destroyImage(this->depth_images[i], this->depth_images_memory[i]);
 	}
-
-	vkDestroyRenderPass(this->device, this->render_pass, nullptr);
 }

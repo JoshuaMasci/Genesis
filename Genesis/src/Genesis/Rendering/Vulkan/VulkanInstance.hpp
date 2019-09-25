@@ -47,7 +47,10 @@ namespace Genesis
 		VulkanInstance(Window* window, uint32_t thread_count, uint32_t frame_count);
 		~VulkanInstance();
 
-		bool acquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore);
+		void buildSwapchain(vector2U screen_size);
+		void destroySwapchain();
+
+		void acquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore);
 		
 		const uint32_t FRAME_COUNT; //number of frames in pipeline at once
 

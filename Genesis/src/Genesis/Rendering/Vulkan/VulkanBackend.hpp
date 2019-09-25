@@ -14,6 +14,8 @@ namespace Genesis
 		VulkanBackend(Window* window, uint32_t number_of_threads);
 		~VulkanBackend();
 
+		virtual void setScreenSize(vector2U size) override;
+
 		virtual bool beginFrame() override;
 		virtual void endFrame() override;
 		virtual void submitFrame(vector<ViewHandle> sub_views) override;
@@ -38,11 +40,6 @@ namespace Genesis
 		virtual void sumbitView(ViewHandle index) override;
 
 		virtual CommandBuffer* getScreenCommandBuffer() override;
-
-		virtual void tempDrawScreen(VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, UniformBufferHandle uniform_handle) override;
-		
-		//IMGUI temp
-		virtual void tempDrawView(ViewHandle view_handle, VertexBufferHandle vertices_handle, IndexBufferHandle indices_handle, ShaderHandle shader_handle, TextureHandle texture_handle, uint32_t index_offset, uint32_t index_count, vector2I scissor_offest, vector2U scissor_extent) override;
 
 		//Utils
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) override;

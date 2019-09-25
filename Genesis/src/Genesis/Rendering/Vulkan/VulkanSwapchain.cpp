@@ -25,7 +25,9 @@ Genesis::VulkanSwapchain::VulkanSwapchain(VulkanDevice* device, VkExtent2D surfa
 {
 	this->device = device->get();
 
-	this->size = chooseSwapExtent(surface->getCapabilities(), surface_size);
+	VkSurfaceCapabilitiesKHR capabilities;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device->getPhysicalDevice(), surface->get(), &capabilities);
+	this->size = chooseSwapExtent(capabilities, surface_size);
 
 	//Create Swapchain
 	VkSwapchainCreateInfoKHR create_info = {};
