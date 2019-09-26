@@ -75,7 +75,7 @@ bool VulkanBackend::beginFrame()
 	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
 	this->vulkan->acquireSwapchainImage(this->swapchain_image_index, frame->image_available_semaphore);
 
-	if (this->vulkan->swapchain == nullptr)
+	if (this->vulkan->swapchain->invalid())
 	{
 		return false;
 	}
@@ -95,8 +95,8 @@ bool VulkanBackend::beginFrame()
 	{
 		VkExtent2D swapchain_extent = this->vulkan->swapchain->getSwapchainExtent();
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassInfo.renderPass = this->vulkan->swapchain_framebuffers->getRenderPass();
-		renderPassInfo.framebuffer = this->vulkan->swapchain_framebuffers->getSwapchainFramebuffer(this->swapchain_image_index);
+		renderPassInfo.renderPass = this->vulkan->swapchain->getRenderPass();
+		renderPassInfo.framebuffer = this->vulkan->swapchain->getFramebuffer(this->swapchain_image_index);
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = swapchain_extent;
 		VkClearValue clearValues[2];
@@ -113,7 +113,7 @@ bool VulkanBackend::beginFrame()
 
 void VulkanBackend::endFrame()
 {
-	if (this->vulkan->swapchain == nullptr)
+	if (this->vulkan->swapchain->invalid())
 	{
 		return;
 	}
@@ -125,7 +125,7 @@ void VulkanBackend::endFrame()
 
 void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
 {
-	if (this->vulkan->swapchain == nullptr)
+	if (this->vulkan->swapchain->invalid())
 	{
 		return;
 	}
@@ -263,7 +263,7 @@ void VulkanBackend::sumbitView(ViewHandle index)
 
 CommandBuffer* VulkanBackend::getScreenCommandBuffer()
 {
-	if (this->vulkan->swapchain == nullptr)
+	if (this->vulkan->swapchain->invalid())
 	{
 		return (CommandBuffer*)nullptr;
 	}

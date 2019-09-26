@@ -39,18 +39,16 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 		this->debug_layer = new VulkanDebugLayer(this->instance);
 	}
 
-	VkSurfaceKHR surface = create_surface(this->instance, this->window);
+	this->surface = create_surface(this->instance, this->window);
 
 	vector<const char*> device_extensions = this->getDeviceExtensions();
 	vector<const char*> layers = this->getLayers();
 	this->device = new VulkanDevice(VulkanPhysicalDevicePicker::pickDevice(this->instance, surface), surface, device_extensions, layers);
 
-	this->surface = new VulkanSurface(this->instance, this->device, surface);
-
 	this->allocator = new VulkanAllocator(this->device);
 
 	vector2U window_size = window->getWindowSize();
-	this->buildSwapchain(window_size);
+	this->swapchain = new VulkanSwapchain(this->device, {window_size.x, window_size.y}, this->surface);
 
 	this->graphics_command_pool_set = new VulkanCommandPoolSet(this->device, this->device->getGraphicsFamilyIndex(), thread_count);
 
@@ -152,13 +150,13 @@ VulkanInstance::~VulkanInstance()
 
 	delete this->graphics_command_pool_set;
 
-	this->destroySwapchain();
+	delete this->swapchain;
 
 	delete this->allocator;
 
-	delete this->surface;
-
 	delete this->device;
+
+	vkDestroySurfaceKHR(this->instance, this->surface, nullptr);
 
 	if (this->debug_layer != nullptr)
 	{
@@ -168,49 +166,15 @@ VulkanInstance::~VulkanInstance()
 	this->delete_instance();
 }
 
-void VulkanInstance::buildSwapchain(vector2U screen_size)
-{
-	if (this->swapchain == nullptr)
-	{
-		//Checks if the swapchain can be created
-		VkSurfaceCapabilitiesKHR capabilities;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(this->device->getPhysicalDevice(), this->surface->get(), &capabilities);
-		if (capabilities.maxImageExtent.width <= 1, capabilities.maxImageExtent.height <= 1)
-		{
-			return;
-		}
-
-		VkExtent2D surface_size = { screen_size.x, screen_size.y };
-		this->swapchain = new VulkanSwapchain(this->device, surface_size, this->surface);
-		this->swapchain_framebuffers = new VulkanSwapchainFramebuffers(this->device, this->swapchain, this->surface, this->allocator);
-	}
-}
-
-void VulkanInstance::destroySwapchain()
-{
-	vkDeviceWaitIdle(this->device->get());
-
-	if (this->swapchain_framebuffers != nullptr)
-	{
-		delete this->swapchain_framebuffers;
-		this->swapchain_framebuffers = nullptr;
-	}
-
-	if (this->swapchain != nullptr)
-	{
-		delete this->swapchain;
-		this->swapchain = nullptr;
-	}
-}
-
 void VulkanInstance::acquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore)
 {
-	if (this->swapchain == nullptr)
+	if (this->swapchain->invalid())
 	{
-		this->buildSwapchain(this->window->getWindowSize());
+		vector2U surface_size = this->window->getWindowSize();
+		this->swapchain->recreateSwapchain({ surface_size.x, surface_size.y });
 	}
 
-	if (this->swapchain == nullptr)
+	if (this->swapchain->invalid())
 	{
 		return;
 	}
@@ -219,7 +183,8 @@ void VulkanInstance::acquireSwapchainImage(uint32_t& image_index, VkSemaphore si
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
-		this->destroySwapchain();
+		this->swapchain->invalidateSwapchain();
+		vkDeviceWaitIdle(this->device->get()); // Temp Solution
 	}
 }
 

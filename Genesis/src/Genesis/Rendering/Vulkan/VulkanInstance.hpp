@@ -5,10 +5,8 @@
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDebugLayer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanSurface.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanAllocator.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanSwapchain.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanSwapchainFramebuffers.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanMultithreadCommandBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
@@ -47,23 +45,18 @@ namespace Genesis
 		VulkanInstance(Window* window, uint32_t thread_count, uint32_t frame_count);
 		~VulkanInstance();
 
-		void buildSwapchain(vector2U screen_size);
-		void destroySwapchain();
-
 		void acquireSwapchainImage(uint32_t& image_index, VkSemaphore signal_semaphore);
 		
 		const uint32_t FRAME_COUNT; //number of frames in pipeline at once
 
 		Window* window = nullptr;
 		VkInstance instance;
-
-		VulkanSurface* surface;
+		VkSurfaceKHR surface;
 
 		VulkanDebugLayer* debug_layer = nullptr;
 		VulkanDevice* device = nullptr;
-		VulkanAllocator* allocator = nullptr;
 		VulkanSwapchain* swapchain = nullptr;
-		VulkanSwapchainFramebuffers* swapchain_framebuffers = nullptr;
+		VulkanAllocator* allocator = nullptr;
 
 		VulkanCommandPoolSet* graphics_command_pool_set = nullptr;
 
