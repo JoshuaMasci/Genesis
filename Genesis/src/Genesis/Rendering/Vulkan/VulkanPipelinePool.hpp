@@ -13,14 +13,31 @@ namespace Genesis
 	class VulkanPipelinePool
 	{
 	public:
-		 VulkanPipelinePool(VkDevice device);
+		 VulkanPipelinePool(VkDevice device, uint32_t thread_count);
 		~VulkanPipelinePool();
 
-		VulkanPipline* getPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription& vertex_description, VkExtent2D extent);
+		void update();
+
+		VulkanPipline* getPipeline(uint32_t thread_id, VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription& vertex_description, VkExtent2D extent);
 
 	private:
 		VkDevice device = VK_NULL_HANDLE;
 
 		shader_pipeline_map pipelines;
+
+		struct PipelineAddInfo
+		{
+			uint32_t pipeline_hash;
+			VulkanShader* shader;
+			VulkanPipline* pipeline;
+		};
+
+		struct ThreadPipelinePool
+		{
+			shader_pipeline_map temp_map;
+			queue<PipelineAddInfo> new_pipelines;
+		};
+
+		Array<ThreadPipelinePool> thread_pools;
 	};
 }

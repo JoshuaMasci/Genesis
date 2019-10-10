@@ -2,13 +2,16 @@
 
 using namespace Genesis;
 
-VulkanPipelinePool::VulkanPipelinePool(VkDevice device)
+VulkanPipelinePool::VulkanPipelinePool(VkDevice device, uint32_t thread_count)
 {
 	this->device = device;
+	this->thread_pools.resize(thread_count);
 }
 
 VulkanPipelinePool::~VulkanPipelinePool()
 {
+	this->update();
+
 	for (auto shader_pipelines : this->pipelines)
 	{
 		for (auto pipeline : shader_pipelines.second)
@@ -18,7 +21,21 @@ VulkanPipelinePool::~VulkanPipelinePool()
 	}
 }
 
-VulkanPipline* VulkanPipelinePool::getPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription& vertex_description, VkExtent2D extent)
+void VulkanPipelinePool::update()
+{
+	for (size_t i = 0; i < this->thread_pools.size(); i++)
+	{
+		while (!this->thread_pools[i].new_pipelines.empty())
+		{
+			PipelineAddInfo pipeline_temp = this->thread_pools[i].new_pipelines.front();
+			this->pipelines[pipeline_temp.shader][pipeline_temp.pipeline_hash] = pipeline_temp.pipeline;
+			this->thread_pools[i].new_pipelines.pop();
+		}
+		this->thread_pools[i].temp_map.clear();
+	}
+}
+
+VulkanPipline* VulkanPipelinePool::getPipeline(uint32_t thread_id, VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription& vertex_description, VkExtent2D extent)
 {
 	MurmurHash2 murmur_hash;
 	murmur_hash.begin();
@@ -28,20 +45,29 @@ VulkanPipline* VulkanPipelinePool::getPipeline(VulkanShader* shader, VkRenderPas
 	murmur_hash.add(extent);
 	uint32_t pipeline_hash = murmur_hash.end();
 
-	if (this->pipelines.find(shader) != this->pipelines.end())
+	if (has_value(this->pipelines, shader))
 	{
 		pipeline_map shader_pipelines = this->pipelines[shader];
-		if (shader_pipelines.find(pipeline_hash) != shader_pipelines.end())
+		if (has_value(shader_pipelines, pipeline_hash))
 		{
 			return shader_pipelines[pipeline_hash];
 		}
 	}
 
-	//printf("Building new pipeline with hash: %u\n", pipeline_hash);
-
+	if (has_value(this->thread_pools[thread_id].temp_map, shader))
+	{
+		pipeline_map shader_pipelines = this->thread_pools[thread_id].temp_map[shader];
+		if (has_value(shader_pipelines, pipeline_hash))
+		{
+			return shader_pipelines[pipeline_hash];
+		}
+	}	
+	
 	VulkanPipline* new_pipeline = new VulkanPipline(this->device, (*shader), renderpass, settings, vertex_description, extent);
+	PipelineAddInfo pipeline_temp = {pipeline_hash, shader, new_pipeline};
+	this->thread_pools[thread_id].new_pipelines.push(pipeline_temp);
 
-	this->pipelines[shader][pipeline_hash] = new_pipeline;
+	this->thread_pools[thread_id].temp_map[shader][pipeline_hash] = new_pipeline;
 
 	return new_pipeline;
 }

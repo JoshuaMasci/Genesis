@@ -6,6 +6,12 @@
 
 namespace Genesis
 {
+	enum class CommandBufferType
+	{
+		SingleThread,
+		MultiThread
+	};
+
 	class CommandBuffer
 	{
 	public:

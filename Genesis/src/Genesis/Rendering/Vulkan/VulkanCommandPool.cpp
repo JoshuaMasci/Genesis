@@ -53,27 +53,3 @@ void VulkanCommandPool::freeCommandBuffer(VkCommandBuffer buffer)
 {
 	this->command_buffer_queue.enqueue(buffer);
 }
-
-VulkanCommandPoolSet::VulkanCommandPoolSet(VulkanDevice* device, uint32_t queue_family_index, uint32_t number_of_threads)
-{
-	this->primary_command_pool = new VulkanCommandPool(device->get(), queue_family_index, VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-	this->secondary_command_pools = Array<VulkanCommandPool*>(number_of_threads);
-	for (int i = 0; i < this->secondary_command_pools.size(); i++)
-	{
-		this->secondary_command_pools[i] = new VulkanCommandPool(device->get(), queue_family_index, VK_COMMAND_BUFFER_LEVEL_SECONDARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-	}
-}
-
-VulkanCommandPoolSet::~VulkanCommandPoolSet()
-{
-	delete this->primary_command_pool;
-	for (int i = 0; i < this->secondary_command_pools.size(); i++)
-	{
-		delete this->secondary_command_pools[i];
-	}
-}
-
-VulkanMultithreadCommandBuffer* VulkanCommandPoolSet::createCommandBuffer()
-{
-	return new VulkanMultithreadCommandBuffer(this->primary_command_pool, &this->secondary_command_pools);
-}

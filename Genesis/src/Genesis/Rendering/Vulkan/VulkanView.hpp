@@ -14,7 +14,7 @@ namespace Genesis
 	class VulkanView
 	{
 	public:
-		VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VulkanCommandPoolSet* command_pool_set, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass);
+		VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, Array<VulkanCommandBuffer*> command_buffers);
 		~VulkanView();
 
 		void startView(uint32_t frame);
@@ -24,9 +24,9 @@ namespace Genesis
 		inline VkExtent2D getViewSize() { return this->size; };
 		inline void setClearValues(Array<VkClearValue>& clear) { this->clear_values = clear; };
 
-		inline VkSemaphore getWaitSemaphore(uint32_t i) { return this->view_done_semaphores[i]; };
-		inline VulkanMultithreadCommandBuffer* getCommandBuffer(uint32_t i) { return this->command_buffers[i]; };
-		inline VulkanFramebuffer* getFramebuffer(uint32_t i) { return this->framebuffers[i]; };
+		inline VkSemaphore getWaitSemaphore(uint32_t frame) { return this->view_done_semaphores[frame]; };
+		inline VulkanCommandBuffer* getCommandBuffer(uint32_t frame) { return this->command_buffers[frame]; };
+		inline VulkanFramebuffer* getFramebuffer(uint32_t frame) { return this->framebuffers[frame]; };
 
 	private:
 		VulkanDevice* device = nullptr;
@@ -34,7 +34,7 @@ namespace Genesis
 		VkExtent2D size;
 
 		Array<VkSemaphore> view_done_semaphores;
-		Array<VulkanMultithreadCommandBuffer*> command_buffers;
+		Array<VulkanCommandBuffer*> command_buffers;
 		Array<VulkanFramebuffer*> framebuffers;
 
 		Array<VkClearValue> clear_values;

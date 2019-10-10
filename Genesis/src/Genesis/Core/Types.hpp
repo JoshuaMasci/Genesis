@@ -12,6 +12,7 @@
 #include <set>
 #include <map>
 #include <unordered_map>
+#include <queue>
 
 #define has_value(list, value) (list.find(value) != list.end())
 
@@ -25,5 +26,6 @@ namespace Genesis
 	using std::set;
 	using std::map;
 	using std::unordered_map;
+	using std::queue;
 };
 

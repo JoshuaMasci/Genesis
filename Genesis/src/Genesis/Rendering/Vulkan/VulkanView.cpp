@@ -2,14 +2,14 @@
 
 using namespace Genesis;
 
-VulkanView::VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VulkanCommandPoolSet* command_pool_set, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass)
+VulkanView::VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, Array<VulkanCommandBuffer*> command_buffers)
 {
 	this->device = device;
 
 	this->command_buffers.resize(frames_in_flight);
 	for (size_t i = 0; i < this->command_buffers.size(); i++)
 	{
-		this->command_buffers[i] = command_pool_set->createCommandBuffer();
+		this->command_buffers[i] = command_buffers[i];
 	}
 
 	this->framebuffers.resize(frames_in_flight);
@@ -46,7 +46,15 @@ VulkanView::~VulkanView()
 void VulkanView::startView(uint32_t frame)
 {
 	VulkanFramebuffer* framebuffer = this->framebuffers[frame];
-	VulkanMultithreadCommandBuffer* command_buffer = this->command_buffers[frame];
+
+	/*if (framebuffer->getSize().width != this->size.width || framebuffer->getSize().height != this->size.height)
+	{
+		delete framebuffer;
+		this->framebuffers[frame] = new VulkanFramebuffer(this->device->get(), , this->size, color_formats, depth_format, render_pass);
+		framebuffer = this->framebuffers[frame];
+	}*/
+
+	VulkanCommandBuffer* command_buffer = this->command_buffers[frame];
 
 	VkRenderPassBeginInfo renderPassInfo = {};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -58,7 +66,7 @@ void VulkanView::startView(uint32_t frame)
 	renderPassInfo.clearValueCount = (uint32_t) this->clear_values.size();
 	renderPassInfo.pClearValues = this->clear_values.data();
 
-	command_buffer->beginCommandBuffer(renderPassInfo);
+	command_buffer->beginCommandBufferPrimary(renderPassInfo);
 }
 
 void VulkanView::endView(uint32_t frame)

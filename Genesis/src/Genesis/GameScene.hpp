@@ -34,6 +34,8 @@ namespace Genesis
 		Renderer* renderer = nullptr;
 		ImGuiRenderer* ui_renderer = nullptr;
 
+		ShaderHandle screen_shader = nullptr;
+
 		//Temp stuff
 		EntityId temp;
 		EntityId camera;

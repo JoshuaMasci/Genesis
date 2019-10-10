@@ -12,17 +12,18 @@ using namespace Genesis;
 #include <fstream>
 
 ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* input_manager)
+	:RenderLayer(backend)
 {
-	this->backend = backend;
 	this->input_manager = input_manager;
 
-	vector2U window_size = backend->getScreenSize();
+	this->view_size = backend->getScreenSize();
+
 
 	Array<ImageFormat> color(1);
-	color[0] = ImageFormat::RGBA_8_UNorm;
+	color[0] = ImageFormat::RGBA_8_Unorm;
 	this->layout = FramebufferLayout(color, ImageFormat::Invalid);
 
-	this->view = this->backend->createView(window_size, this->layout);
+	this->view = this->backend->createView(this->view_size, this->layout, CommandBufferType::SingleThread);
 
 	ImGui::CreateContext();
 
@@ -34,8 +35,8 @@ ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* input_mana
 		this->texture_atlas = this->backend->createTexture(vector2U(width, height), pixels, (width * height) * 4);
 		io.Fonts->TexID = this->texture_atlas;
 
-		io.DisplaySize.x = (float)window_size.x;
-		io.DisplaySize.y = (float)window_size.y;
+		io.DisplaySize.x = (float)this->view_size.x;
+		io.DisplaySize.y = (float)this->view_size.y;
 	}
 
 	{
@@ -95,12 +96,12 @@ void ImGuiRenderer::startFrame()
 {
 	ImGuiIO& io = ImGui::GetIO();
 
-	vector2U screen_size = this->backend->getScreenSize();
-	io.DisplaySize = { (float)screen_size.x, (float)screen_size.y };
-
-	//TODO Input
+	io.DisplaySize = { (float)this->view_size.x, (float)this->view_size.y };
+	
 	vector2F mouse_pos = this->input_manager->getMousePosition();
 	io.MousePos = ImVec2(mouse_pos.x, mouse_pos.y);
+
+	//TODO Input
 
 	io.MouseDown[0] = this->input_manager->getButtonDown("Mouse_Left");
 	io.MouseDown[1] = this->input_manager->getButtonDown("Mouse_Right");
@@ -129,8 +130,8 @@ void ImGuiRenderer::endFrame()
 	ImGui::Render();
 	ImDrawData* draw_data = ImGui::GetDrawData();
 
-	//this->backend->startView(this->view);
-	CommandBuffer* command_buffer = this->backend->getScreenCommandBuffer();
+	this->backend->startView(this->view);
+	CommandBuffer* command_buffer = this->backend->getViewCommandBuffer(this->view);
 	if (command_buffer == nullptr)
 	{
 		return;
@@ -199,6 +200,21 @@ void ImGuiRenderer::endFrame()
 		this->backend->destroyIndexBuffer(index_buffer);
 	}
 
-	//this->backend->endView(this->view);
-	//this->backend->sumbitView(this->view);
+	this->backend->endView(this->view);
+	this->backend->sumbitView(this->view);
+}
+
+void ImGuiRenderer::setScreenSize(vector2U size)
+{
+	this->backend->resizeView(this->view, size);
+}
+
+ViewHandle ImGuiRenderer::getView()
+{
+	return this->view;
+}
+
+uint32_t ImGuiRenderer::getViewImageIndex()
+{
+	return 0;//First Framebuffer Image
 }

@@ -16,13 +16,16 @@ namespace Genesis
 	class VulkanCommandBuffer : public CommandBuffer
 	{
 	public:
-		VulkanCommandBuffer(uint32_t thread_index, uint32_t frame_index, VkDevice device, VulkanCommandPool* command_pool, VulkanPipelinePool* pipeline_manager, VulkanDescriptorPool* descriptor_pool, VulkanUniformPool* uniform_pool, VkSampler temp_sampler);
+		VulkanCommandBuffer(uint32_t thread_index, uint32_t frame_index, VkDevice device, VulkanCommandPool* command_pool, VulkanPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanUniformPool* uniform_pool, VkSampler temp_sampler);
 		~VulkanCommandBuffer();
 
-		void beginCommandBuffer(VkRenderPassBeginInfo& render_pass_info, VkSubpassContents mode);
+		void beginCommandBufferPrimary(VkRenderPassBeginInfo& render_pass_info);
+		void beginCommandBufferSecondary(VkCommandBufferInheritanceInfo& inheritance_info, VkExtent2D size);
 		void endCommandBuffer();
 		void submitCommandBuffer(VkQueue queue, Array<VkSemaphore>& wait_semaphores, Array<VkPipelineStageFlags>& wait_states, Array<VkSemaphore>& signal_semaphores, VkFence trigger_fence);
 		void setUniform(string name, void* data, uint32_t data_size);
+
+		inline VkCommandBuffer get() { return this->command_buffer; };
 
 		//Public functions begin
 		virtual void setShader(ShaderHandle shader) override;
@@ -54,7 +57,7 @@ namespace Genesis
 		VulkanCommandPool* command_pool = nullptr;
 
 		//Utils
-		VulkanPipelinePool* pipeline_manager;
+		VulkanPipelinePool* pipeline_pool;
 		VulkanDescriptorPool* descriptor_pool = nullptr;
 		VulkanUniformPool* uniform_pool = nullptr;
 		VkSampler sampler; //TODO sampler system;

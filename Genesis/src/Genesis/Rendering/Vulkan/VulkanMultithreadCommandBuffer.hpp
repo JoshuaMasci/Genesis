@@ -2,6 +2,8 @@
 
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanCommandBuffer.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanThread.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 
 namespace Genesis
@@ -9,22 +11,18 @@ namespace Genesis
 	class VulkanMultithreadCommandBuffer
 	{
 	public:
-		VulkanMultithreadCommandBuffer(VulkanCommandPool* primary_command_pool, Array<VulkanCommandPool*>* secondary_command_pools);
+		VulkanMultithreadCommandBuffer(uint32_t frame_index, VkDevice device, VulkanCommandPool* primary_command_pool, VulkanPipelinePool* pipeline_pool, Array<VulkanThread>& threads, VulkanUniformPool* uniform_pool, VkSampler temp_sampler);
 		~VulkanMultithreadCommandBuffer();
 
-		void beginCommandBuffer(VkRenderPassBeginInfo& render_pass_info);
+		void beginCommandBufferPrimary(VkRenderPassBeginInfo& render_pass_info);
 		void endCommandBuffer();
 		void submitCommandBuffer(VkQueue queue, Array<VkSemaphore>& wait_semaphores, Array<VkPipelineStageFlags>& wait_states, Array<VkSemaphore>& signal_semaphores, VkFence trigger_fence);
 
-		//Getters
-		inline VkCommandBuffer getPrimaryCommandBuffer() { return this->primary_command_buffer; };
-		inline VkCommandBuffer getSecondaryCommandBuffer(uint32_t index) { return this->secondary_command_buffers[index]; };
-
 	private:
-		VulkanCommandPool* primary_command_pool;
-		Array<VulkanCommandPool*>* secondary_command_pools;
-
+		const uint32_t frame_index;
 		VkCommandBuffer primary_command_buffer;
-		Array<VkCommandBuffer> secondary_command_buffers;
+		VulkanCommandPool* primary_command_pool;
+
+		Array<VulkanCommandBuffer*> secondary_command_buffers;
 	};
 }

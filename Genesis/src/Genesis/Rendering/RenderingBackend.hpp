@@ -15,6 +15,7 @@ namespace Genesis
 		virtual ~RenderingBackend() {};
 
 		virtual void setScreenSize(vector2U size) = 0;
+		virtual vector2U getScreenSize() = 0;
 
 		virtual bool beginFrame() = 0;
 		virtual void endFrame() = 0;
@@ -32,12 +33,14 @@ namespace Genesis
 		virtual ShaderHandle createShader(string vert_data, string frag_data) = 0;
 		virtual void destroyShader(ShaderHandle shader_handle) = 0;
 
-		virtual ViewHandle createView(vector2U size, FramebufferLayout& layout) = 0;
+		virtual ViewHandle createView(vector2U size, FramebufferLayout& layout, CommandBufferType type) = 0;
 		virtual void destroyView(ViewHandle index) = 0;
+		virtual void resizeView(ViewHandle index, vector2U new_size) = 0;
 
 		virtual void startView(ViewHandle index) = 0;
 		virtual void endView(ViewHandle index) = 0;
 		virtual void sumbitView(ViewHandle index) = 0;
+		virtual CommandBuffer* getViewCommandBuffer(ViewHandle index) = 0;
 
 		//TEMP
 		virtual CommandBuffer* getScreenCommandBuffer() = 0;
@@ -46,7 +49,9 @@ namespace Genesis
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, ViewHandle view) = 0;
 		//virtual matrix4F getorthographicMatrix();
 
-		virtual vector2U getScreenSize() = 0;
+		//Utils
+		virtual VertexBufferHandle getWholeScreenQuadVertex() = 0;
+		virtual IndexBufferHandle getWholeScreenQuadIndex() = 0;
 
 		//Wait until all GPU proccessing is done
 		virtual void waitTillDone() = 0;

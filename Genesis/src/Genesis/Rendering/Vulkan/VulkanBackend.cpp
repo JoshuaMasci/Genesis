@@ -2,7 +2,7 @@
 
 #include "Genesis/Rendering/Vulkan/VulkanInstance.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanPipline.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanView.hpp"
+//#include "Genesis/Rendering/Vulkan/VulkanView.hpp"
 
 #include "Genesis/Core/VectorTypes.hpp"
 #include "Genesis/Core/MurmurHash2.hpp"
@@ -25,33 +25,28 @@ VkFormat getImageFormat(ImageFormat format)
 {
 	switch (format)
 	{
-	case ImageFormat::RGBA_8_UNorm:
+	case ImageFormat::RGBA_8_Unorm:
 		return VK_FORMAT_R8G8B8A8_UNORM;
-		break;
 	case ImageFormat::R_16_Float:
 		return VK_FORMAT_R16_SFLOAT;
-		break;
 	case ImageFormat::RG_16_Float:
 		return VK_FORMAT_R16G16_SFLOAT;
-		break;
 	case ImageFormat::RGB_16_Float:
 		return VK_FORMAT_R16G16B16_SFLOAT;
-		break;
 	case ImageFormat::RGBA_16_Float:
 		return VK_FORMAT_R16G16B16A16_SFLOAT;
-		break;
 	case ImageFormat::R_32_Float:
 		return VK_FORMAT_R32_SFLOAT;
-		break;
 	case ImageFormat::RG_32_Float:
 		return VK_FORMAT_R32G32_SFLOAT;
-		break;
 	case ImageFormat::RGB_32_Float:
 		return VK_FORMAT_R32G32B32_SFLOAT;
-		break;
 	case ImageFormat::RGBA_32_Float:
 		return VK_FORMAT_R32G32B32A32_SFLOAT;
-		break;
+	case ImageFormat::D_16_Unorm:
+		return VK_FORMAT_D16_UNORM;
+	case ImageFormat::D_32_Float:
+		return VK_FORMAT_D32_SFLOAT;
 	}
 	return VK_FORMAT_UNDEFINED;
 }
@@ -63,11 +58,26 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 
 VulkanBackend::~VulkanBackend()
 {
+	if (this->screen_quad_vertex != nullptr)
+	{
+		this->destroyVertexBuffer(this->screen_quad_vertex);
+	}
+
+	if (this->screen_quad_index != nullptr)
+	{
+		this->destroyIndexBuffer(this->screen_quad_index);
+	}
+
 	delete this->vulkan;
 }
 
 void VulkanBackend::setScreenSize(vector2U size)
 {
+}
+
+vector2U VulkanBackend::getScreenSize()
+{
+	return this->vulkan->window->getWindowSize();
 }
 
 bool VulkanBackend::beginFrame()
@@ -99,14 +109,13 @@ bool VulkanBackend::beginFrame()
 		renderPassInfo.framebuffer = this->vulkan->swapchain->getFramebuffer(this->swapchain_image_index);
 		renderPassInfo.renderArea.offset = { 0, 0 };
 		renderPassInfo.renderArea.extent = swapchain_extent;
-		VkClearValue clearValues[2];
+		VkClearValue clearValues[1];
 		clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-		clearValues[1].depthStencil = { 1.0f, 0 };
-		renderPassInfo.clearValueCount = 2;
+		renderPassInfo.clearValueCount = 1;
 		renderPassInfo.pClearValues = clearValues;
 	}
 
-	frame->command_buffer_temp->beginCommandBuffer(renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+	frame->command_buffer->beginCommandBufferPrimary(renderPassInfo);
 
 	return true;
 }
@@ -120,7 +129,7 @@ void VulkanBackend::endFrame()
 
 	VulkanFrame* frame = &this->vulkan->frames_in_flight[this->frame_index];
 
-	frame->command_buffer_temp->endCommandBuffer();
+	frame->command_buffer->endCommandBuffer();
 }
 
 void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
@@ -148,7 +157,7 @@ void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
 	Array<VkSemaphore> signal_semaphores(1);
 	signal_semaphores[0] = frame->command_buffer_done_semaphore;
 
-	frame->command_buffer_temp->submitCommandBuffer(this->vulkan->device->getGraphicsQueue(), wait_semaphores, wait_states, signal_semaphores, frame->command_buffer_done_fence);
+	frame->command_buffer->submitCommandBuffer(this->vulkan->device->getGraphicsQueue(), wait_semaphores, wait_states, signal_semaphores, frame->command_buffer_done_fence);
 
 	//Present the image to the screen
 	VkPresentInfoKHR presentInfo = {};
@@ -168,11 +177,12 @@ void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
 
 	//Cleanup Resources
 	this->vulkan->cycleResourceDeleters();
+	this->vulkan->pipeline_pool->update();
 }
 
 VertexBufferHandle VulkanBackend::createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage)
 {
-	return (VertexBufferHandle) new VulkanVertexBuffer(this->vulkan->allocator, this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), data, data_size, getMemoryUsage(memory_usage), vertex_input_description);
+	return (VertexBufferHandle) new VulkanVertexBuffer(this->vulkan->allocator, this->vulkan->primary_graphics_pool, this->vulkan->device->getGraphicsQueue(), data, data_size, getMemoryUsage(memory_usage), vertex_input_description);
 }
 
 void VulkanBackend::destroyVertexBuffer(VertexBufferHandle vertex_buffer_index)
@@ -182,7 +192,7 @@ void VulkanBackend::destroyVertexBuffer(VertexBufferHandle vertex_buffer_index)
 
 IndexBufferHandle VulkanBackend::createIndexBuffer(void* indices, uint32_t indices_count, IndexType type, MemoryUsage memory_usage)
 {
-	return (IndexBufferHandle) new VulkanIndexBuffer(this->vulkan->allocator, this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), indices, (indices_count * (type == IndexType::uint16 ? sizeof(uint16_t) : sizeof(uint32_t))), getMemoryUsage(memory_usage), indices_count, type);
+	return (IndexBufferHandle) new VulkanIndexBuffer(this->vulkan->allocator, this->vulkan->primary_graphics_pool, this->vulkan->device->getGraphicsQueue(), indices, (indices_count * (type == IndexType::uint16 ? sizeof(uint16_t) : sizeof(uint32_t))), getMemoryUsage(memory_usage), indices_count, type);
 }
 
 void VulkanBackend::destroyIndexBuffer(IndexBufferHandle index_buffer_index)
@@ -193,7 +203,7 @@ void VulkanBackend::destroyIndexBuffer(IndexBufferHandle index_buffer_index)
 TextureHandle VulkanBackend::createTexture(vector2U size, void* data, uint64_t data_size)
 {
 	VulkanTexture* texture = new VulkanTexture(this->vulkan->device, this->vulkan->allocator, {size.x, size.y}, getMemoryUsage(MemoryUsage::GPU_Only), this->vulkan->linear_sampler);
-	texture->fillTexture(this->vulkan->graphics_command_pool_set->getPrimaryCommandPool(), this->vulkan->device->getGraphicsQueue(), data, data_size);
+	texture->fillTexture(this->vulkan->primary_graphics_pool, this->vulkan->device->getGraphicsQueue(), data, data_size);
 	return (TextureHandle)texture;
 }
 
@@ -213,27 +223,36 @@ void VulkanBackend::destroyShader(ShaderHandle shader_handle)
 	this->vulkan->shader_deleter->addToQueue((VulkanShader*)shader_handle);
 }
 
-ViewHandle VulkanBackend::createView(vector2U size, FramebufferLayout& layout)
+ViewHandle VulkanBackend::createView(vector2U size, FramebufferLayout& layout, CommandBufferType type)
 {
 	uint32_t frames_in_flight = (uint32_t)this->vulkan->FRAME_COUNT;
 	VkExtent2D vk_size = {size.x, size.y};
 
 	Array<VkFormat> color(layout.getColorCount());
+	Array<VkClearValue> clear_colors(color.size());
 	for (size_t i = 0; i < color.size(); i++)
 	{
 		color[i] = getImageFormat(layout.getColor(i));
+		clear_colors[i].color = { 0.f, 0.0f, 0.0f, 0.0f };
 	}
 
 	VkFormat depth = getImageFormat(layout.getDepth());
+	if (layout.getDepth() != ImageFormat::Invalid)
+	{
+		size_t array_size = clear_colors.size();
+		clear_colors.resize(array_size + 1);
+		clear_colors[array_size].depthStencil = { 1.0f, 0 };
+	}
 
 	VkRenderPass render_pass = this->vulkan->render_pass_manager->getRenderPass(layout.getHash(), color, depth);
+	Array<VulkanCommandBuffer*> command_buffers(frames_in_flight);
+	for (uint32_t i = 0; i < command_buffers.size(); i++)
+	{
+		command_buffers[i] = new VulkanCommandBuffer(0, i, this->vulkan->device->get(), this->vulkan->primary_graphics_pool, this->vulkan->pipeline_pool, this->vulkan->threads[0].descriptor_pool, this->vulkan->uniform_pool, this->vulkan->linear_sampler);
+	}
 
-	VulkanView* view = new VulkanView(this->vulkan->device, this->vulkan->allocator, frames_in_flight, this->vulkan->graphics_command_pool_set, vk_size, color, depth, render_pass);
-
-	/*Array<VkClearValue> clear_values(2);
-	clear_values[0].color = { 0.8f, 0.0f, 0.8f, 1.0f };
-	clear_values[1].depthStencil = { 1.0f, 0 };
-	view->setClearValues(clear_values);*/
+	VulkanView* view = new VulkanView(this->vulkan->device, this->vulkan->allocator, frames_in_flight, vk_size, color, depth, render_pass, command_buffers);
+	view->setClearValues(clear_colors);
 
 	return (ViewHandle)view;
 }
@@ -241,6 +260,11 @@ ViewHandle VulkanBackend::createView(vector2U size, FramebufferLayout& layout)
 void VulkanBackend::destroyView(ViewHandle index)
 {
 	this->vulkan->view_deleter->addToQueue((VulkanView*)index);
+}
+
+void VulkanBackend::resizeView(ViewHandle index, vector2U new_size)
+{
+
 }
 
 void VulkanBackend::startView(ViewHandle index)
@@ -261,6 +285,11 @@ void VulkanBackend::sumbitView(ViewHandle index)
 	view->submitView(this->frame_index, vector<VulkanView*>(), VK_NULL_HANDLE);
 }
 
+CommandBuffer* VulkanBackend::getViewCommandBuffer(ViewHandle index)
+{
+	return ((VulkanView*)index)->getCommandBuffer(this->frame_index);
+}
+
 CommandBuffer* VulkanBackend::getScreenCommandBuffer()
 {
 	if (this->vulkan->swapchain->invalid())
@@ -268,7 +297,7 @@ CommandBuffer* VulkanBackend::getScreenCommandBuffer()
 		return (CommandBuffer*)nullptr;
 	}
 
-	return (CommandBuffer*)this->vulkan->frames_in_flight[this->frame_index].command_buffer_temp;
+	return (CommandBuffer*)this->vulkan->frames_in_flight[this->frame_index].command_buffer;
 }
 
 matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, float aspect_ratio)
@@ -289,9 +318,42 @@ matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, ViewHandle view_han
 	return this->getPerspectiveMatrix(camera, aspect_ratio);
 }
 
-vector2U VulkanBackend::getScreenSize()
+VertexBufferHandle VulkanBackend::getWholeScreenQuadVertex()
 {
-	return this->vulkan->window->getWindowSize();
+	if (this->screen_quad_vertex == nullptr)
+	{
+		vector2F vertex_data[] =
+		{
+			//Pos        UV
+			{-1.0f, -1.0f}, {0.0f, 0.0f},
+			{-1.0f, 1.0f}, {0.0f, 1.0f},
+			{1.0f, -1.0f}, {1.0f, 0.0f},
+			{1.0f, 1.0f}, {1.0f, 1.0f},
+		};
+
+		VertexInputDescription vi({ {"pos", VertexElementType::float_2},
+									{"uv", VertexElementType::float_2} });
+
+		this->screen_quad_vertex = this->createVertexBuffer(vertex_data, sizeof(vector2F) * 8, vi, MemoryUsage::GPU_Only);
+	}
+
+	return this->screen_quad_vertex;
+}
+
+IndexBufferHandle VulkanBackend::getWholeScreenQuadIndex()
+{
+	if (this->screen_quad_index == nullptr)
+	{
+		uint16_t index_data[] =
+		{
+			0, 1, 2, //First Tri
+			3, 2, 1 // Second Tri
+		};
+
+		this->screen_quad_index = this->createIndexBuffer(index_data, sizeof(uint16_t) * 6, IndexType::uint16, MemoryUsage::GPU_Only);
+	}
+
+	return this->screen_quad_index;
 }
 
 void VulkanBackend::waitTillDone()

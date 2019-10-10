@@ -12,10 +12,17 @@ using namespace Genesis;
 Renderer::Renderer(RenderingBackend* backend)
 {
 	this->backend = backend;
+
+	Array<ImageFormat> color(1);
+	color[0] = ImageFormat::RGBA_8_Unorm;
+	FramebufferLayout layout = FramebufferLayout(color, ImageFormat::D_32_Float);
+	this->view = this->backend->createView(this->backend->getScreenSize(), layout, CommandBufferType::SingleThread);
 }
 
 Renderer::~Renderer()
 {
+	this->backend->destroyView(this->view);
+
 	for (auto mesh : this->loaded_meshes)
 	{
 		this->backend->destroyVertexBuffer(mesh.second.vertices);
@@ -41,14 +48,8 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 		return;
 	}
 
-	bool result = this->backend->beginFrame();
-
-	if (!result)
-	{
-		return;
-	}
-
-	CommandBuffer* command_buffer = this->backend->getScreenCommandBuffer();
+	this->backend->startView(this->view);
+	CommandBuffer* command_buffer = this->backend->getViewCommandBuffer(this->view);
 
 	if (command_buffer == nullptr)
 	{
@@ -85,13 +86,9 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 		command_buffer->setUniformMat4("matrices.mvp", mvp);
 		command_buffer->drawIndexed(model.vertices, model.indices);
 	}
-}
 
-void Renderer::endFrame()
-{
-	this->backend->endFrame();
-	vector<ViewHandle> sub_views;
-	this->backend->submitFrame(sub_views);
+	this->backend->endView(this->view);
+	this->backend->sumbitView(this->view);
 }
 
 //Temp resource stuff

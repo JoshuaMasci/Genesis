@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 namespace Genesis
 {
 	class Job
@@ -10,7 +12,7 @@ namespace Genesis
 			
 		};
 
-		virtual void run() = 0;
+		virtual void run(uint32_t thread_id) = 0;
 
 		void finish()
 		{

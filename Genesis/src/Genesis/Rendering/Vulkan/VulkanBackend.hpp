@@ -15,6 +15,7 @@ namespace Genesis
 		~VulkanBackend();
 
 		virtual void setScreenSize(vector2U size) override;
+		virtual vector2U getScreenSize() override;
 
 		virtual bool beginFrame() override;
 		virtual void endFrame() override;
@@ -32,12 +33,14 @@ namespace Genesis
 		virtual ShaderHandle createShader(string vert_data, string frag_data) override;
 		virtual void destroyShader(ShaderHandle shader_handle) override;
 
-		virtual ViewHandle createView(vector2U size, FramebufferLayout& layout) override;
+		virtual ViewHandle createView(vector2U size, FramebufferLayout& layout, CommandBufferType type) override;
 		virtual void destroyView(ViewHandle index) override;
+		virtual void resizeView(ViewHandle index, vector2U new_size) override;
 
 		virtual void startView(ViewHandle index) override;
 		virtual void endView(ViewHandle index) override;
 		virtual void sumbitView(ViewHandle index) override;
+		virtual CommandBuffer* getViewCommandBuffer(ViewHandle index) override;
 
 		virtual CommandBuffer* getScreenCommandBuffer() override;
 
@@ -45,12 +48,17 @@ namespace Genesis
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) override;
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, ViewHandle view) override;
 
-		virtual vector2U getScreenSize() override;
+		virtual VertexBufferHandle getWholeScreenQuadVertex() override;
+		virtual IndexBufferHandle getWholeScreenQuadIndex() override;
+
 		virtual void waitTillDone() override;
 
 	private:
 		VulkanInstance* vulkan = nullptr;
 		uint32_t swapchain_image_index = 0;
 		uint32_t frame_index = 0;
+
+		VertexBufferHandle screen_quad_vertex = nullptr;
+		IndexBufferHandle screen_quad_index = nullptr;
 	};
 }

@@ -19,6 +19,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanPipelinePool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanRenderPassPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanCommandBuffer.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanThread.hpp"
 
 #include "Genesis/Rendering/DelayedResourceDeleter.hpp"
 
@@ -27,16 +28,9 @@ namespace Genesis
 	struct VulkanFrame
 	{
 		VkSemaphore image_available_semaphore = VK_NULL_HANDLE;
-		VulkanMultithreadCommandBuffer* command_buffer = nullptr;
+		VulkanCommandBuffer* command_buffer = nullptr;
 		VkSemaphore command_buffer_done_semaphore = VK_NULL_HANDLE;
 		VkFence command_buffer_done_fence = VK_NULL_HANDLE;
-
-		VulkanCommandBuffer* command_buffer_temp = nullptr;
-	};
-
-	struct VulkanThread
-	{
-		VulkanDescriptorPool* descriptor_pool = nullptr;
 	};
 
 	class VulkanInstance
@@ -58,13 +52,13 @@ namespace Genesis
 		VulkanSwapchain* swapchain = nullptr;
 		VulkanAllocator* allocator = nullptr;
 
-		VulkanCommandPoolSet* graphics_command_pool_set = nullptr;
+		VulkanCommandPool* primary_graphics_pool = nullptr;
 
 		Array<VulkanFrame> frames_in_flight;
 		Array<VulkanThread> threads;
 
 		VulkanRenderPassPool* render_pass_manager = nullptr;
-		VulkanPipelinePool* pipeline_manager = nullptr;
+		VulkanPipelinePool* pipeline_pool = nullptr;
 
 		VulkanDescriptorPool* descriptor_pool = nullptr;
 		VulkanUniformPool* uniform_pool = nullptr;

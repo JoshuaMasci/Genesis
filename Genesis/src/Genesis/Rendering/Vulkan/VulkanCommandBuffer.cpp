@@ -5,14 +5,14 @@
 
 using namespace Genesis;
 
-VulkanCommandBuffer::VulkanCommandBuffer(uint32_t thread_index, uint32_t frame_index, VkDevice device, VulkanCommandPool* command_pool, VulkanPipelinePool* pipeline_manager, VulkanDescriptorPool* descriptor_pool, VulkanUniformPool* uniform_pool, VkSampler temp_sampler)
+VulkanCommandBuffer::VulkanCommandBuffer(uint32_t thread_index, uint32_t frame_index, VkDevice device, VulkanCommandPool* command_pool, VulkanPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanUniformPool* uniform_pool, VkSampler temp_sampler)
 	:thread_index(thread_index),
 	frame_index(frame_index)
 {
 	this->device = device;
 	this->command_pool = command_pool;
 	this->command_buffer = this->command_pool->getCommandBuffer();
-	this->pipeline_manager = pipeline_manager;
+	this->pipeline_pool = pipeline_pool;
 	this->descriptor_pool = descriptor_pool;
 	this->uniform_pool = uniform_pool;
 
@@ -24,7 +24,7 @@ VulkanCommandBuffer::~VulkanCommandBuffer()
 	this->command_pool->freeCommandBuffer(this->command_buffer);
 }
 
-void VulkanCommandBuffer::beginCommandBuffer(VkRenderPassBeginInfo& render_pass_info, VkSubpassContents mode)
+void VulkanCommandBuffer::beginCommandBufferPrimary(VkRenderPassBeginInfo& render_pass_info)
 {
 	this->render_pass = render_pass_info.renderPass;
 	this->size.width = render_pass_info.renderArea.extent.width - render_pass_info.renderArea.offset.x;
@@ -36,16 +36,32 @@ void VulkanCommandBuffer::beginCommandBuffer(VkRenderPassBeginInfo& render_pass_
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	if (vkBeginCommandBuffer(this->command_buffer, &begin_info) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to begin recording command buffer!");
+		throw std::runtime_error("failed to begin recording primary command buffer!");
 	}
 
-	vkCmdBeginRenderPass(this->command_buffer, &render_pass_info, mode);
+	vkCmdBeginRenderPass(this->command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
 	//Setup Default Scissor
-	VkRect2D rect = {};
-	rect.offset = { 0, 0 };
-	rect.extent = this->size;
-	vkCmdSetScissor(this->command_buffer, 0, 1, &rect);
+	vkCmdSetScissor(this->command_buffer, 0, 1, &render_pass_info.renderArea);
+}
+
+void VulkanCommandBuffer::beginCommandBufferSecondary(VkCommandBufferInheritanceInfo & inheritance_info, VkExtent2D size)
+{
+	this->render_pass = inheritance_info.renderPass;
+	this->size = size;
+
+	vkResetCommandBuffer(this->command_buffer, 0);
+
+	VkCommandBufferBeginInfo begin_info = {};
+	begin_info = {};
+	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	begin_info.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+	begin_info.pInheritanceInfo = &inheritance_info;
+
+	if (vkBeginCommandBuffer(this->command_buffer, &begin_info) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to begin recording secondary command buffer!");
+	}
 }
 
 void VulkanCommandBuffer::endCommandBuffer()
@@ -226,7 +242,7 @@ void VulkanCommandBuffer::drawIndexedOffset(VertexBufferHandle vertex_handle, In
 	VulkanVertexBuffer* vertex_buffer = (VulkanVertexBuffer*)vertex_handle;
 	VulkanIndexBuffer* index_buffer = (VulkanIndexBuffer*)index_handle;
 
-	VulkanPipline* pipeline = this->pipeline_manager->getPipeline(this->current_shader, this->render_pass, this->current_settings, vertex_buffer->getVertexDescription(), this->size);
+	VulkanPipline* pipeline = this->pipeline_pool->getPipeline(this->thread_index, this->current_shader, this->render_pass, this->current_settings, vertex_buffer->getVertexDescription(), this->size);
 
 	if (this->current_pipeline != pipeline)
 	{
@@ -242,7 +258,6 @@ void VulkanCommandBuffer::drawIndexedOffset(VertexBufferHandle vertex_handle, In
 		}
 		else
 		{
-
 			VkDescriptorSet descriptor_set = this->descriptor_pool->getDescriptorSet(this->current_shader->getDescriptorSetLayout(), this->frame_index);
 
 			Array<VkWriteDescriptorSet> write_descriptors(this->binding_uniform_buffers.size() + this->binding_image.size());

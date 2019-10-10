@@ -2,18 +2,18 @@
 
 using namespace Genesis;
 
-Genesis::PhysicsUpdateJob::PhysicsUpdateJob(PhysicsWorld* world, double delta)
+PhysicsUpdateJob::PhysicsUpdateJob(PhysicsWorld* world, double delta)
 {
 	this->physics_world = world;
 	this->delta_time = delta;
 }
 
-Genesis::PhysicsUpdateJob::~PhysicsUpdateJob()
+PhysicsUpdateJob::~PhysicsUpdateJob()
 {
 	//Nothing
 }
 
-void Genesis::PhysicsUpdateJob::run()
+void PhysicsUpdateJob::run(uint32_t thread_id)
 {
 	if (this->physics_world != nullptr)
 	{

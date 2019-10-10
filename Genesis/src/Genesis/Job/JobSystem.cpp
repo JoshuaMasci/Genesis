@@ -4,7 +4,7 @@
 
 using namespace Genesis;
 
-void workerthread(unsigned int thread_id, JobSystem* job_system)
+void workerthread(uint32_t thread_id, JobSystem* job_system)
 {
 	printf("Thread %d Start\n", thread_id);
 
@@ -14,7 +14,7 @@ void workerthread(unsigned int thread_id, JobSystem* job_system)
 		bool got_job = job_system->job_queue.try_dequeue(job);
 		if (got_job && job != nullptr)
 		{
-			job->run();
+			job->run(thread_id);
 			job->finish(); //Returns the value to indicate the job is done
 		}
 		else
@@ -29,10 +29,10 @@ void workerthread(unsigned int thread_id, JobSystem* job_system)
 
 JobSystem::JobSystem()
 {
-	unsigned int cores = std::thread::hardware_concurrency();
+	uint32_t cores = std::thread::hardware_concurrency();
 	assert(cores >= 4);//Need 4 or more cores for the engine
 
-	for (unsigned int i = 0; i < cores; i++)
+	for (uint32_t i = 0; i < cores; i++)
 	{
 		this->threads.push_back(std::thread(&workerthread, i, this));
 	}

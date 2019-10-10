@@ -50,11 +50,13 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 	vector2U window_size = window->getWindowSize();
 	this->swapchain = new VulkanSwapchain(this->device, {window_size.x, window_size.y}, this->surface);
 
-	this->graphics_command_pool_set = new VulkanCommandPoolSet(this->device, this->device->getGraphicsFamilyIndex(), thread_count);
+	this->primary_graphics_pool = new VulkanCommandPool(this->device->get(), this->device->getGraphicsFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
 	this->threads.resize(thread_count);
 	for (size_t i = 0; i < thread_count; i++)
 	{
+		this->threads[i].secondary_graphics_pool = new VulkanCommandPool(this->device->get(), this->device->getGraphicsFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_SECONDARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+
 		this->threads[i].descriptor_pool = new VulkanDescriptorPool(this->device->get(), this->FRAME_COUNT, 800000,
 			{
 				{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000},
@@ -62,8 +64,9 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 			});
 	}
 
-	this->pipeline_manager = new VulkanPipelinePool(this->device->get());
 	this->uniform_pool = new VulkanUniformPool(this->allocator, this->FRAME_COUNT);
+
+	this->pipeline_pool = new VulkanPipelinePool(this->device->get(), thread_count);
 	this->render_pass_manager = new VulkanRenderPassPool(this->device->get());
 
 	{
@@ -92,13 +95,10 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 	for (uint32_t i = 0; i < this->frames_in_flight.size(); i++)
 	{
 		VulkanFrame* frame = &this->frames_in_flight[i];
-		frame->command_buffer = this->graphics_command_pool_set->createCommandBuffer();
-
+		frame->command_buffer = new VulkanCommandBuffer(0, i, this->device->get(), this->primary_graphics_pool, this->pipeline_pool, this->threads[0].descriptor_pool, this->uniform_pool, this->linear_sampler);
 		frame->image_available_semaphore = this->device->createSemaphore();
 		frame->command_buffer_done_fence = this->device->createFence();
 		frame->command_buffer_done_semaphore = this->device->createSemaphore();
-
-		frame->command_buffer_temp = new VulkanCommandBuffer(0, i, this->device->get(), this->graphics_command_pool_set->getPrimaryCommandPool(), this->pipeline_manager, this->threads[0].descriptor_pool, this->uniform_pool, this->linear_sampler);
 	}
 
 	this->descriptor_pool = new VulkanDescriptorPool(this->device->get(), this->FRAME_COUNT, 800000,
@@ -134,9 +134,10 @@ VulkanInstance::~VulkanInstance()
 	for (size_t i = 0; i < this->threads.size(); i++)
 	{
 		delete this->threads[i].descriptor_pool;
+		delete this->threads[i].secondary_graphics_pool;
 	}
 
-	delete this->pipeline_manager;
+	delete this->pipeline_pool;
 	delete this->render_pass_manager;
 
 	for (size_t i = 0; i < this->frames_in_flight.size(); i++)
@@ -148,7 +149,7 @@ VulkanInstance::~VulkanInstance()
 		this->device->destroySemaphore(frame->command_buffer_done_semaphore);
 	}
 
-	delete this->graphics_command_pool_set;
+	delete this->primary_graphics_pool;
 
 	delete this->swapchain;
 

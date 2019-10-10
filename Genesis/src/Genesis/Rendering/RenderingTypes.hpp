@@ -20,7 +20,7 @@ namespace Genesis
 	{
 		Invalid,
 
-		RGBA_8_UNorm,
+		RGBA_8_Unorm,
 
 		R_16_Float,
 		RG_16_Float,
@@ -31,6 +31,10 @@ namespace Genesis
 		RG_32_Float,
 		RGB_32_Float,
 		RGBA_32_Float,
+
+		//Depth Images
+		D_16_Unorm,
+		D_32_Float,
 	};
 
 	typedef void* VertexBufferHandle;

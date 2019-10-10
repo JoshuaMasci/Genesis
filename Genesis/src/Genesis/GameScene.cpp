@@ -10,6 +10,8 @@
 
 #include "Genesis/DebugCamera.hpp"
 
+#include <fstream>
+
 using namespace Genesis;
 
 GameScene::GameScene(Application* app)
@@ -17,6 +19,36 @@ GameScene::GameScene(Application* app)
 	this->application = app;
 	this->renderer = new Renderer(this->application->rendering_backend);
 	this->ui_renderer = new ImGuiRenderer(this->application->rendering_backend, &this->application->input_manager);
+
+	{
+		string vert_file_path = "resources/shaders/vulkan/whole_screen.vert.spv";
+		string frag_file_path = "resources/shaders/vulkan/whole_screen.frag.spv";
+
+		string vert_data = "";
+		string frag_data = "";
+
+		std::ifstream vert_file(vert_file_path, std::ios::ate | std::ios::binary);
+		if (vert_file.is_open())
+		{
+			size_t fileSize = (size_t)vert_file.tellg();
+			vert_file.seekg(0);
+			vert_data.resize(fileSize);
+			vert_file.read(vert_data.data(), vert_data.size());
+			vert_file.close();
+		}
+
+		std::ifstream frag_file(frag_file_path, std::ios::ate | std::ios::binary);
+		if (frag_file.is_open())
+		{
+			size_t fileSize = (size_t)frag_file.tellg();
+			frag_file.seekg(0);
+			frag_data.resize(fileSize);
+			frag_file.read(frag_data.data(), frag_data.size());
+			frag_file.close();
+		}
+
+		this->screen_shader = this->application->rendering_backend->createShader(vert_data, frag_data);
+	}
 
 	this->temp = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->temp, vector3D(0.0, 0.0, 0.0), glm::angleAxis(3.1415926/2.0, vector3D(0.0, 1.0, 0.0)));
@@ -48,6 +80,8 @@ GameScene::~GameScene()
 	{
 		delete this->ui_renderer;
 	}
+
+	this->application->rendering_backend->destroyShader(this->screen_shader);
 }
 
 void GameScene::runSimulation(double delta_time)
@@ -58,10 +92,39 @@ void GameScene::runSimulation(double delta_time)
 
 void GameScene::drawFrame(double delta_time)
 {
-	this->renderer->drawFrame(this->entity_registry, this->camera);
+	bool result = this->application->rendering_backend->beginFrame();
 
-	this->ui_renderer->startFrame();
-	this->ui_renderer->endFrame();
+	if (result == true)
+	{
+		vector<ViewHandle> sub_views;
 
-	this->renderer->endFrame();
+		this->renderer->drawFrame(this->entity_registry, this->camera);
+
+		this->ui_renderer->startFrame();
+		this->ui_renderer->endFrame();
+
+		CommandBuffer* screen_buffer = this->application->rendering_backend->getScreenCommandBuffer();
+
+		PipelineSettings settings;
+		settings.depth_test = DepthTest::None;
+		settings.blend_op = BlendOp::Add;
+		settings.src_factor = BlendFactor::Alpha_Src;
+		settings.dst_factor = BlendFactor::One_Minus_Alpha_Src;
+
+		screen_buffer->setShader(this->screen_shader);
+		screen_buffer->setPipelineSettings(settings);
+		VertexBufferHandle screen_vertex = this->application->rendering_backend->getWholeScreenQuadVertex();
+		IndexBufferHandle screen_index = this->application->rendering_backend->getWholeScreenQuadIndex();
+
+		screen_buffer->setUniformView("in_texture", this->renderer->view, 0);
+		screen_buffer->drawIndexed(screen_vertex, screen_index);
+		sub_views.push_back(this->renderer->view);
+
+		screen_buffer->setUniformView("in_texture", this->ui_renderer->getView(), this->ui_renderer->getViewImageIndex());
+		screen_buffer->drawIndexed(screen_vertex, screen_index);
+		sub_views.push_back(this->ui_renderer->getView());
+		
+		this->application->rendering_backend->endFrame();
+		this->application->rendering_backend->submitFrame(sub_views);
+	}
 }
