@@ -21,7 +21,9 @@ namespace Genesis
 		void endView(uint32_t frame);
 		void submitView(uint32_t frame, vector<VulkanView*> sub_views, VkFence view_done_fence);
 
+		void setViewSize(VkExtent2D size);
 		inline VkExtent2D getViewSize() { return this->size; };
+		
 		inline void setClearValues(Array<VkClearValue>& clear) { this->clear_values = clear; };
 
 		inline VkSemaphore getWaitSemaphore(uint32_t frame) { return this->view_done_semaphores[frame]; };
@@ -30,8 +32,12 @@ namespace Genesis
 
 	private:
 		VulkanDevice* device = nullptr;
+		VulkanAllocator* allocator = nullptr;
 		VkRenderPass render_pass;
 		VkExtent2D size;
+
+		Array<VkFormat> color_formats;
+		VkFormat depth_format;
 
 		Array<VkSemaphore> view_done_semaphores;
 		Array<VulkanCommandBuffer*> command_buffers;

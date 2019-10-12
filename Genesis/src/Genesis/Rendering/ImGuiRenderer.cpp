@@ -69,7 +69,6 @@ ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* input_mana
 		this->shader = this->backend->createShader(vert_data, frag_data);
 	}
 
-
 	this->vertex_input = VertexInputDescription
 	({
 		{"in_position", VertexElementType::float_2},
@@ -94,6 +93,13 @@ ImGuiRenderer::~ImGuiRenderer()
 
 void ImGuiRenderer::startFrame()
 {
+	vector2U temp_size = this->backend->getScreenSize();
+	if (temp_size != this->view_size)
+	{
+		this->view_size = temp_size;
+		this->backend->resizeView(this->view, this->view_size);
+	}
+
 	ImGuiIO& io = ImGui::GetIO();
 
 	io.DisplaySize = { (float)this->view_size.x, (float)this->view_size.y };

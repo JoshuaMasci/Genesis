@@ -56,6 +56,8 @@ namespace Genesis
 		//No deleting please
 		RenderingBackend* backend;
 
+		vector2U view_size;
+
 		//Resources
 		map<string, Mesh> loaded_meshes;
 		map<string, TextureHandle> loaded_textures;

@@ -17,6 +17,8 @@ Renderer::Renderer(RenderingBackend* backend)
 	color[0] = ImageFormat::RGBA_8_Unorm;
 	FramebufferLayout layout = FramebufferLayout(color, ImageFormat::D_32_Float);
 	this->view = this->backend->createView(this->backend->getScreenSize(), layout, CommandBufferType::SingleThread);
+
+	this->view_size = this->backend->getScreenSize();
 }
 
 Renderer::~Renderer()
@@ -42,6 +44,14 @@ Renderer::~Renderer()
 
 void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity)
 {
+	vector2U temp_size = this->backend->getScreenSize();
+	if (temp_size != this->view_size)
+	{
+		this->view_size = temp_size;
+		this->backend->resizeView(this->view, this->view_size);
+	}
+
+
 	if (!entity_registry.has<WorldTransform>(camera_entity) || !entity_registry.has<Camera>(camera_entity))
 	{
 		//No camera
@@ -57,11 +67,10 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 	}
 
 	vector2I zero = {0,0};
-	vector2U screen_size = this->backend->getScreenSize();
-	command_buffer->setScissor(zero, screen_size);
+	command_buffer->setScissor(zero, this->view_size);
 	command_buffer->setPipelineSettings(PipelineSettings());
 
-	float aspect_ratio = ((float)screen_size.x) / ((float)screen_size.y);
+	float aspect_ratio = ((float)this->view_size.x) / ((float)this->view_size.y);
 
 	auto& camera = entity_registry.get<Camera>(camera_entity);
 	auto& transform = entity_registry.get<WorldTransform>(camera_entity);

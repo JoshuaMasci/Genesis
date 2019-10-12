@@ -5,6 +5,12 @@ using namespace Genesis;
 VulkanView::VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, Array<VulkanCommandBuffer*> command_buffers)
 {
 	this->device = device;
+	this->allocator = allocator;
+
+	this->size = size;
+	this->color_formats = color_formats;
+	this->depth_format = depth_format;
+	this->render_pass = render_pass;
 
 	this->command_buffers.resize(frames_in_flight);
 	for (size_t i = 0; i < this->command_buffers.size(); i++)
@@ -15,7 +21,7 @@ VulkanView::VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_
 	this->framebuffers.resize(frames_in_flight);
 	for (size_t i = 0; i < this->framebuffers.size(); i++)
 	{
-		this->framebuffers[i] = new VulkanFramebuffer(this->device->get(), allocator, size, color_formats, depth_format, render_pass);
+		this->framebuffers[i] = new VulkanFramebuffer(this->device->get(), this->allocator, this->size, this->color_formats, this->depth_format, this->render_pass);
 	}
 
 	this->view_done_semaphores.resize(frames_in_flight);
@@ -47,12 +53,12 @@ void VulkanView::startView(uint32_t frame)
 {
 	VulkanFramebuffer* framebuffer = this->framebuffers[frame];
 
-	/*if (framebuffer->getSize().width != this->size.width || framebuffer->getSize().height != this->size.height)
+	if (framebuffer->getSize().width != this->size.width || framebuffer->getSize().height != this->size.height)
 	{
 		delete framebuffer;
-		this->framebuffers[frame] = new VulkanFramebuffer(this->device->get(), , this->size, color_formats, depth_format, render_pass);
+		this->framebuffers[frame] = new VulkanFramebuffer(this->device->get(), this->allocator, this->size, this->color_formats, this->depth_format, this->render_pass);
 		framebuffer = this->framebuffers[frame];
-	}*/
+	}
 
 	VulkanCommandBuffer* command_buffer = this->command_buffers[frame];
 
@@ -89,4 +95,9 @@ void VulkanView::submitView(uint32_t frame, vector<VulkanView*> sub_views, VkFen
 	signal_semaphores[0] = this->view_done_semaphores[frame];
 
 	this->command_buffers[frame]->submitCommandBuffer(this->device->getGraphicsQueue(), wait_semaphores, wait_states, signal_semaphores, view_done_fence);
+}
+
+void VulkanView::setViewSize(VkExtent2D size)
+{
+	this->size = size;
 }

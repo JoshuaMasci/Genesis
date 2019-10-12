@@ -264,7 +264,8 @@ void VulkanBackend::destroyView(ViewHandle index)
 
 void VulkanBackend::resizeView(ViewHandle index, vector2U new_size)
 {
-
+	VulkanView* view = (VulkanView*)index;
+	view->setViewSize({ new_size.x, new_size.y });
 }
 
 void VulkanBackend::startView(ViewHandle index)
