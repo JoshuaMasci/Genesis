@@ -4,6 +4,7 @@
 
 #include "Genesis/Rendering/Renderer.hpp"
 #include "Genesis/Rendering/ImGuiRenderer.hpp"
+#include "Genesis/Rendering/Lighting.hpp"
 
 namespace Genesis
 {
@@ -21,6 +22,10 @@ namespace Genesis
 
 		virtual void drawFrame(double delta_time);
 
+		//TEMP lighting stuff
+		DirectionalLight light;
+
+
 	protected:
 		Application* application;
 
@@ -34,11 +39,12 @@ namespace Genesis
 		Renderer* renderer = nullptr;
 		ImGuiRenderer* ui_renderer = nullptr;
 
-		ShaderHandle screen_shader = nullptr;
+		Shader screen_shader = nullptr;
 
 		//Temp stuff
 		EntityId temp;
 		EntityId camera;
+		EntityId directional_light;
 
 		//Game Systems
 			//Pre-Frame Update

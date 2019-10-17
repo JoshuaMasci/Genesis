@@ -18,7 +18,7 @@ namespace Genesis
 
 		virtual void setScreenSize(vector2U size) = 0;
 
-		virtual ViewHandle getView() = 0;
+		virtual View getView() = 0;
 		virtual uint32_t getViewImageIndex() = 0;
 
 	protected:

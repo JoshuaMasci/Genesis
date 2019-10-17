@@ -37,12 +37,9 @@ namespace Genesis
 		D_32_Float,
 	};
 
-	typedef void* VertexBufferHandle;
-	typedef void* IndexBufferHandle;
-	typedef void* UniformBufferHandle;
-	typedef void* TextureHandle;
-	typedef void* ShaderHandle;
-
-	typedef void* ViewHandle;
-	typedef void* CommandBufferHandle;
+	typedef void* VertexBuffer;
+	typedef void* IndexBuffer;
+	typedef void* Texture;
+	typedef void* Shader;
+	typedef void* View;
 }

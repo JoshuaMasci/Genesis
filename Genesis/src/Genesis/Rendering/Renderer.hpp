@@ -2,6 +2,7 @@
 
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Rendering/RenderingBackend.hpp"
+#include "Genesis/Rendering/ResourceLoaders.hpp"
 
 #include "Genesis/Entity.hpp"
 
@@ -9,29 +10,9 @@ namespace Genesis
 {
 	struct Model
 	{
-		VertexBufferHandle vertices = nullptr;
-		IndexBufferHandle indices = nullptr;
-		TextureHandle texture = nullptr;
-		ShaderHandle shader = nullptr;
-		UniformBufferHandle matrix = nullptr;
-	};
-
-	struct TexturedVertex
-	{
-		vector3F pos;
-		vector3F normal;
-		vector2F uv;
-
-		bool operator==(const TexturedVertex& other) const
-		{
-			return pos == other.pos && normal == other.normal && uv == other.uv;
-		}
-	};
-
-	struct Mesh
-	{
-		VertexBufferHandle vertices = nullptr;
-		IndexBufferHandle indices = nullptr;
+		string mesh;
+		string texture;
+		string shader;
 	};
 
 	class Renderer
@@ -42,25 +23,20 @@ namespace Genesis
 
 		void drawFrame(EntityRegistry& entity_registry, EntityId camera_entity);
 
-		//Temp resource stuff
-		void loadMesh(string mesh_file);
-		void loadTexture(string texture_file);
-		void loadShader(string shader_file_base);
+		View view;
+		vector3F ambient_light = vector3F(0.4f);
 
-		Model createModel(string mesh, string texture, string shader);
-
-		ViewHandle view;
 
 	private:
 		//Lifetime of the Backend is longer than the Renderer
 		//No deleting please
 		RenderingBackend* backend;
 
-		vector2U view_size;
-
 		//Resources
 		map<string, Mesh> loaded_meshes;
-		map<string, TextureHandle> loaded_textures;
-		map<string, ShaderHandle> loaded_shaders;
+		map<string, Texture> loaded_textures;
+		map<string, Shader> loaded_shaders;
+
+		vector2U view_size;
 	};
 }

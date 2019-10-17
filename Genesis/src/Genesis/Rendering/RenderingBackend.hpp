@@ -19,39 +19,39 @@ namespace Genesis
 
 		virtual bool beginFrame() = 0;
 		virtual void endFrame() = 0;
-		virtual void submitFrame(vector<ViewHandle> sub_views) = 0;
+		virtual void submitFrame(vector<View> sub_views) = 0;
 
-		virtual VertexBufferHandle createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage = MemoryUsage::GPU_Only) = 0;
-		virtual void destroyVertexBuffer(VertexBufferHandle vertex_buffer_index) = 0;
+		virtual VertexBuffer createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage = MemoryUsage::GPU_Only) = 0;
+		virtual void destroyVertexBuffer(VertexBuffer vertex_buffer_index) = 0;
 
-		virtual IndexBufferHandle createIndexBuffer(void* indices, uint32_t indices_count, IndexType type, MemoryUsage memory_usage = MemoryUsage::GPU_Only) = 0;
-		virtual void destroyIndexBuffer(IndexBufferHandle index_buffer_index) = 0;
+		virtual IndexBuffer createIndexBuffer(void* indices, uint32_t indices_count, IndexType type, MemoryUsage memory_usage = MemoryUsage::GPU_Only) = 0;
+		virtual void destroyIndexBuffer(IndexBuffer index_buffer_index) = 0;
 
-		virtual TextureHandle createTexture(vector2U size, void* data, uint64_t data_size) = 0;
-		virtual void destroyTexture(TextureHandle texture_index) = 0;
+		virtual Texture createTexture(vector2U size, void* data, uint64_t data_size) = 0;
+		virtual void destroyTexture(Texture texture_index) = 0;
 
-		virtual ShaderHandle createShader(string vert_data, string frag_data) = 0;
-		virtual void destroyShader(ShaderHandle shader_handle) = 0;
+		virtual Shader createShader(string vert_data, string frag_data) = 0;
+		virtual void destroyShader(Shader shader_handle) = 0;
 
-		virtual ViewHandle createView(vector2U size, FramebufferLayout& layout, CommandBufferType type) = 0;
-		virtual void destroyView(ViewHandle index) = 0;
-		virtual void resizeView(ViewHandle index, vector2U new_size) = 0;
+		virtual View createView(vector2U size, FramebufferLayout& layout, CommandBufferType type) = 0;
+		virtual void destroyView(View index) = 0;
+		virtual void resizeView(View index, vector2U new_size) = 0;
 
-		virtual void startView(ViewHandle index) = 0;
-		virtual void endView(ViewHandle index) = 0;
-		virtual void sumbitView(ViewHandle index) = 0;
-		virtual CommandBuffer* getViewCommandBuffer(ViewHandle index) = 0;
+		virtual void startView(View index) = 0;
+		virtual void endView(View index) = 0;
+		virtual void sumbitView(View index) = 0;
+		virtual CommandBuffer* getViewCommandBuffer(View index) = 0;
 
 		//TEMP
 		virtual CommandBuffer* getScreenCommandBuffer() = 0;
 
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) = 0;
-		virtual matrix4F getPerspectiveMatrix(Camera* camera, ViewHandle view) = 0;
+		virtual matrix4F getPerspectiveMatrix(Camera* camera, View view) = 0;
 		//virtual matrix4F getorthographicMatrix();
 
 		//Utils
-		virtual VertexBufferHandle getWholeScreenQuadVertex() = 0;
-		virtual IndexBufferHandle getWholeScreenQuadIndex() = 0;
+		virtual VertexBuffer getWholeScreenQuadVertex() = 0;
+		virtual IndexBuffer getWholeScreenQuadIndex() = 0;
 
 		//Wait until all GPU proccessing is done
 		virtual void waitTillDone() = 0;

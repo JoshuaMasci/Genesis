@@ -18,7 +18,7 @@ namespace Genesis
 
 		virtual void setScreenSize(vector2U size) override;
 
-		virtual ViewHandle getView() override;
+		virtual View getView() override;
 		virtual uint32_t getViewImageIndex() override;
 
 	private:
@@ -26,11 +26,11 @@ namespace Genesis
 
 		FramebufferLayout layout;
 
-		ViewHandle view = nullptr;
+		View view = nullptr;
 		vector2U view_size;
 		
-		TextureHandle texture_atlas = nullptr;
-		ShaderHandle shader = nullptr;
+		Texture texture_atlas = nullptr;
+		Shader shader = nullptr;
 
 		VertexInputDescription vertex_input;
 		PipelineSettings settings;

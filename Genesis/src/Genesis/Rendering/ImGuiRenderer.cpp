@@ -125,9 +125,6 @@ void ImGuiRenderer::startFrame()
 	}
 
 	ImGui::NewFrame();
-
-	bool show_demo = true;
-	ImGui::ShowDemoWindow(&show_demo);
 }
 
 void ImGuiRenderer::endFrame()
@@ -164,8 +161,8 @@ void ImGuiRenderer::endFrame()
 		const ImDrawList* cmd_list = draw_data->CmdLists[n];
 		const ImDrawIdx* idx_buffer = cmd_list->IdxBuffer.Data;
 
-		VertexBufferHandle vertex_buffer = this->backend->createVertexBuffer(cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.size_in_bytes(), this->vertex_input, MemoryUsage::CPU_Visable);
-		IndexBufferHandle index_buffer = this->backend->createIndexBuffer(cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.size(), IndexType::uint16);
+		VertexBuffer vertex_buffer = this->backend->createVertexBuffer(cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.size_in_bytes(), this->vertex_input, MemoryUsage::CPU_Visable);
+		IndexBuffer index_buffer = this->backend->createIndexBuffer(cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.size(), IndexType::uint16);
 
 		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
 		{
@@ -197,7 +194,7 @@ void ImGuiRenderer::endFrame()
 					vector2U extend = { (uint32_t)(clip_rect.z - clip_rect.x),  (uint32_t)(clip_rect.w - clip_rect.y) };
 					command_buffer->setScissor(offset, extend);
 
-					command_buffer->setUniformTexture("texture_atlas", (TextureHandle)pcmd->TextureId);
+					command_buffer->setUniformTexture("texture_atlas", (Texture)pcmd->TextureId);
 					command_buffer->drawIndexedOffset(vertex_buffer, index_buffer, pcmd->IdxOffset, pcmd->ElemCount);
 				}
 			}
@@ -215,7 +212,7 @@ void ImGuiRenderer::setScreenSize(vector2U size)
 	this->backend->resizeView(this->view, size);
 }
 
-ViewHandle ImGuiRenderer::getView()
+View ImGuiRenderer::getView()
 {
 	return this->view;
 }

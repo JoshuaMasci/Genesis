@@ -132,7 +132,7 @@ void VulkanBackend::endFrame()
 	frame->command_buffer->endCommandBuffer();
 }
 
-void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
+void VulkanBackend::submitFrame(vector<View> sub_views)
 {
 	if (this->vulkan->swapchain->invalid())
 	{
@@ -180,50 +180,50 @@ void VulkanBackend::submitFrame(vector<ViewHandle> sub_views)
 	this->vulkan->pipeline_pool->update();
 }
 
-VertexBufferHandle VulkanBackend::createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage)
+VertexBuffer VulkanBackend::createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage)
 {
-	return (VertexBufferHandle) new VulkanVertexBuffer(this->vulkan->allocator, this->vulkan->primary_graphics_pool, this->vulkan->device->getGraphicsQueue(), data, data_size, getMemoryUsage(memory_usage), vertex_input_description);
+	return (VertexBuffer) new VulkanVertexBuffer(this->vulkan->allocator, this->vulkan->primary_graphics_pool, this->vulkan->device->getGraphicsQueue(), data, data_size, getMemoryUsage(memory_usage), vertex_input_description);
 }
 
-void VulkanBackend::destroyVertexBuffer(VertexBufferHandle vertex_buffer_index)
+void VulkanBackend::destroyVertexBuffer(VertexBuffer vertex_buffer_index)
 {
 	this->vulkan->buffer_deleter->addToQueue((VulkanBuffer*)vertex_buffer_index);
 }
 
-IndexBufferHandle VulkanBackend::createIndexBuffer(void* indices, uint32_t indices_count, IndexType type, MemoryUsage memory_usage)
+IndexBuffer VulkanBackend::createIndexBuffer(void* indices, uint32_t indices_count, IndexType type, MemoryUsage memory_usage)
 {
-	return (IndexBufferHandle) new VulkanIndexBuffer(this->vulkan->allocator, this->vulkan->primary_graphics_pool, this->vulkan->device->getGraphicsQueue(), indices, (indices_count * (type == IndexType::uint16 ? sizeof(uint16_t) : sizeof(uint32_t))), getMemoryUsage(memory_usage), indices_count, type);
+	return (IndexBuffer) new VulkanIndexBuffer(this->vulkan->allocator, this->vulkan->primary_graphics_pool, this->vulkan->device->getGraphicsQueue(), indices, (indices_count * (type == IndexType::uint16 ? sizeof(uint16_t) : sizeof(uint32_t))), getMemoryUsage(memory_usage), indices_count, type);
 }
 
-void VulkanBackend::destroyIndexBuffer(IndexBufferHandle index_buffer_index)
+void VulkanBackend::destroyIndexBuffer(IndexBuffer index_buffer_index)
 {
 	this->vulkan->buffer_deleter->addToQueue((VulkanBuffer*)index_buffer_index);
 }
 
-TextureHandle VulkanBackend::createTexture(vector2U size, void* data, uint64_t data_size)
+Texture VulkanBackend::createTexture(vector2U size, void* data, uint64_t data_size)
 {
 	VulkanTexture* texture = new VulkanTexture(this->vulkan->device, this->vulkan->allocator, {size.x, size.y}, getMemoryUsage(MemoryUsage::GPU_Only), this->vulkan->linear_sampler);
 	texture->fillTexture(this->vulkan->primary_graphics_pool, this->vulkan->device->getGraphicsQueue(), data, data_size);
-	return (TextureHandle)texture;
+	return (Texture)texture;
 }
 
-void VulkanBackend::destroyTexture(TextureHandle texture_handle)
+void VulkanBackend::destroyTexture(Texture texture_handle)
 {
 	this->vulkan->texture_deleter->addToQueue((VulkanTexture*)texture_handle);
 }
 
-ShaderHandle VulkanBackend::createShader(string vert_data, string frag_data)
+Shader VulkanBackend::createShader(string vert_data, string frag_data)
 {
 	VulkanShader* shader = new VulkanShader(this->vulkan->device->get(), vert_data, frag_data);
 	return shader;
 }
 
-void VulkanBackend::destroyShader(ShaderHandle shader_handle)
+void VulkanBackend::destroyShader(Shader shader_handle)
 {
 	this->vulkan->shader_deleter->addToQueue((VulkanShader*)shader_handle);
 }
 
-ViewHandle VulkanBackend::createView(vector2U size, FramebufferLayout& layout, CommandBufferType type)
+View VulkanBackend::createView(vector2U size, FramebufferLayout& layout, CommandBufferType type)
 {
 	uint32_t frames_in_flight = (uint32_t)this->vulkan->FRAME_COUNT;
 	VkExtent2D vk_size = {size.x, size.y};
@@ -254,39 +254,39 @@ ViewHandle VulkanBackend::createView(vector2U size, FramebufferLayout& layout, C
 	VulkanView* view = new VulkanView(this->vulkan->device, this->vulkan->allocator, frames_in_flight, vk_size, color, depth, render_pass, command_buffers);
 	view->setClearValues(clear_colors);
 
-	return (ViewHandle)view;
+	return (View)view;
 }
 
-void VulkanBackend::destroyView(ViewHandle index)
+void VulkanBackend::destroyView(View index)
 {
 	this->vulkan->view_deleter->addToQueue((VulkanView*)index);
 }
 
-void VulkanBackend::resizeView(ViewHandle index, vector2U new_size)
+void VulkanBackend::resizeView(View index, vector2U new_size)
 {
 	VulkanView* view = (VulkanView*)index;
 	view->setViewSize({ new_size.x, new_size.y });
 }
 
-void VulkanBackend::startView(ViewHandle index)
+void VulkanBackend::startView(View index)
 {
 	VulkanView* view = (VulkanView*)index;
 	view->startView(this->frame_index);
 }
 
-void VulkanBackend::endView(ViewHandle index)
+void VulkanBackend::endView(View index)
 {
 	VulkanView* view = (VulkanView*)index;
 	view->endView(this->frame_index);
 }
 
-void VulkanBackend::sumbitView(ViewHandle index)
+void VulkanBackend::sumbitView(View index)
 {
 	VulkanView* view = (VulkanView*)index;
 	view->submitView(this->frame_index, vector<VulkanView*>(), VK_NULL_HANDLE);
 }
 
-CommandBuffer* VulkanBackend::getViewCommandBuffer(ViewHandle index)
+CommandBuffer* VulkanBackend::getViewCommandBuffer(View index)
 {
 	return ((VulkanView*)index)->getCommandBuffer(this->frame_index);
 }
@@ -310,7 +310,7 @@ matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, float aspect_ratio)
 	return proj;
 }
 
-matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, ViewHandle view_handle)
+matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, View view_handle)
 {
 	VulkanView* view = (VulkanView*)view_handle;
 
@@ -319,7 +319,7 @@ matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, ViewHandle view_han
 	return this->getPerspectiveMatrix(camera, aspect_ratio);
 }
 
-VertexBufferHandle VulkanBackend::getWholeScreenQuadVertex()
+VertexBuffer VulkanBackend::getWholeScreenQuadVertex()
 {
 	if (this->screen_quad_vertex == nullptr)
 	{
@@ -341,7 +341,7 @@ VertexBufferHandle VulkanBackend::getWholeScreenQuadVertex()
 	return this->screen_quad_vertex;
 }
 
-IndexBufferHandle VulkanBackend::getWholeScreenQuadIndex()
+IndexBuffer VulkanBackend::getWholeScreenQuadIndex()
 {
 	if (this->screen_quad_index == nullptr)
 	{

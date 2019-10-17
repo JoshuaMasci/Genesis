@@ -19,37 +19,37 @@ namespace Genesis
 
 		virtual bool beginFrame() override;
 		virtual void endFrame() override;
-		virtual void submitFrame(vector<ViewHandle> sub_views) override;
+		virtual void submitFrame(vector<View> sub_views) override;
 
-		virtual VertexBufferHandle createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage = MemoryUsage::GPU_Only) override;
-		virtual void destroyVertexBuffer(VertexBufferHandle vertex_buffer_index) override;
+		virtual VertexBuffer createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage = MemoryUsage::GPU_Only) override;
+		virtual void destroyVertexBuffer(VertexBuffer vertex_buffer_index) override;
 
-		virtual IndexBufferHandle createIndexBuffer(void* indices, uint32_t indices_count, IndexType type, MemoryUsage memory_usage = MemoryUsage::GPU_Only) override;
-		virtual void destroyIndexBuffer(IndexBufferHandle index_buffer_index) override;
+		virtual IndexBuffer createIndexBuffer(void* indices, uint32_t indices_count, IndexType type, MemoryUsage memory_usage = MemoryUsage::GPU_Only) override;
+		virtual void destroyIndexBuffer(IndexBuffer index_buffer_index) override;
 
-		virtual TextureHandle createTexture(vector2U size, void* data, uint64_t data_size) override;
-		virtual void destroyTexture(TextureHandle texture_handle) override;
+		virtual Texture createTexture(vector2U size, void* data, uint64_t data_size) override;
+		virtual void destroyTexture(Texture texture_handle) override;
 
-		virtual ShaderHandle createShader(string vert_data, string frag_data) override;
-		virtual void destroyShader(ShaderHandle shader_handle) override;
+		virtual Shader createShader(string vert_data, string frag_data) override;
+		virtual void destroyShader(Shader shader_handle) override;
 
-		virtual ViewHandle createView(vector2U size, FramebufferLayout& layout, CommandBufferType type) override;
-		virtual void destroyView(ViewHandle index) override;
-		virtual void resizeView(ViewHandle index, vector2U new_size) override;
+		virtual View createView(vector2U size, FramebufferLayout& layout, CommandBufferType type) override;
+		virtual void destroyView(View index) override;
+		virtual void resizeView(View index, vector2U new_size) override;
 
-		virtual void startView(ViewHandle index) override;
-		virtual void endView(ViewHandle index) override;
-		virtual void sumbitView(ViewHandle index) override;
-		virtual CommandBuffer* getViewCommandBuffer(ViewHandle index) override;
+		virtual void startView(View index) override;
+		virtual void endView(View index) override;
+		virtual void sumbitView(View index) override;
+		virtual CommandBuffer* getViewCommandBuffer(View index) override;
 
 		virtual CommandBuffer* getScreenCommandBuffer() override;
 
 		//Utils
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) override;
-		virtual matrix4F getPerspectiveMatrix(Camera* camera, ViewHandle view) override;
+		virtual matrix4F getPerspectiveMatrix(Camera* camera, View view) override;
 
-		virtual VertexBufferHandle getWholeScreenQuadVertex() override;
-		virtual IndexBufferHandle getWholeScreenQuadIndex() override;
+		virtual VertexBuffer getWholeScreenQuadVertex() override;
+		virtual IndexBuffer getWholeScreenQuadIndex() override;
 
 		virtual void waitTillDone() override;
 
@@ -58,7 +58,7 @@ namespace Genesis
 		uint32_t swapchain_image_index = 0;
 		uint32_t frame_index = 0;
 
-		VertexBufferHandle screen_quad_vertex = nullptr;
-		IndexBufferHandle screen_quad_index = nullptr;
+		VertexBuffer screen_quad_vertex = nullptr;
+		IndexBuffer screen_quad_index = nullptr;
 	};
 }

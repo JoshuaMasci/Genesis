@@ -28,7 +28,7 @@ namespace Genesis
 		inline VkCommandBuffer get() { return this->command_buffer; };
 
 		//Public functions begin
-		virtual void setShader(ShaderHandle shader) override;
+		virtual void setShader(Shader shader) override;
 		virtual void setPipelineSettings(PipelineSettings& settings) override;
 
 		virtual void setScissor(vector2I offset, vector2U extent) override;
@@ -41,12 +41,12 @@ namespace Genesis
 
 		virtual void setUniformMat3(string name, matrix3F value) override;
 		virtual void setUniformMat4(string name, matrix4F value) override;
-		virtual void setUniformTexture(string name, TextureHandle texture) override;
-		virtual void setUniformView(string name, ViewHandle view, uint16_t view_image_index) override;
+		virtual void setUniformTexture(string name, Texture texture) override;
+		virtual void setUniformView(string name, View view, uint16_t view_image_index) override;
 
 		//Draw Calls
-		virtual void drawIndexed(VertexBufferHandle vertex_handle, IndexBufferHandle index_handle) override;
-		virtual void drawIndexedOffset(VertexBufferHandle vertex_handle, IndexBufferHandle index_handle, uint32_t index_offset, uint32_t index_count) override;
+		virtual void drawIndexed(VertexBuffer vertex_handle, IndexBuffer index_handle) override;
+		virtual void drawIndexedOffset(VertexBuffer vertex_handle, IndexBuffer index_handle, uint32_t index_offset, uint32_t index_count) override;
 
 	protected:
 		const uint32_t thread_index;

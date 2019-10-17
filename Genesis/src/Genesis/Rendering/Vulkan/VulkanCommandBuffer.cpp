@@ -124,7 +124,7 @@ void VulkanCommandBuffer::setUniform(string name, void* data, uint32_t data_size
 	}
 }
 
-void VulkanCommandBuffer::setShader(ShaderHandle shader)
+void VulkanCommandBuffer::setShader(Shader shader)
 {
 	if (this->current_shader == shader)
 	{
@@ -208,7 +208,7 @@ void VulkanCommandBuffer::setUniformMat4(string name, matrix4F value)
 	this->setUniform(name, &value, sizeof(matrix4F));
 }
 
-void VulkanCommandBuffer::setUniformTexture(string name, TextureHandle texture)
+void VulkanCommandBuffer::setUniformTexture(string name, Texture texture)
 {
 	assert(this->current_shader != nullptr);
 	ShaderBindingVariableLocation location = this->current_shader->getBindingVariableLocation(name);
@@ -220,7 +220,7 @@ void VulkanCommandBuffer::setUniformTexture(string name, TextureHandle texture)
 	}
 }
 
-void VulkanCommandBuffer::setUniformView(string name, ViewHandle view, uint16_t view_image_index)
+void VulkanCommandBuffer::setUniformView(string name, View view, uint16_t view_image_index)
 {
 	assert(this->current_shader != nullptr);
 	ShaderBindingVariableLocation location = this->current_shader->getBindingVariableLocation(name);
@@ -232,12 +232,12 @@ void VulkanCommandBuffer::setUniformView(string name, ViewHandle view, uint16_t 
 	}
 }
 
-void VulkanCommandBuffer::drawIndexed(VertexBufferHandle vertex_handle, IndexBufferHandle index_handle)
+void VulkanCommandBuffer::drawIndexed(VertexBuffer vertex_handle, IndexBuffer index_handle)
 {
 	this->drawIndexedOffset(vertex_handle, index_handle, 0, ((VulkanIndexBuffer*)index_handle)->getIndicesCount());
 }
 
-void VulkanCommandBuffer::drawIndexedOffset(VertexBufferHandle vertex_handle, IndexBufferHandle index_handle, uint32_t index_offset, uint32_t index_count)
+void VulkanCommandBuffer::drawIndexedOffset(VertexBuffer vertex_handle, IndexBuffer index_handle, uint32_t index_offset, uint32_t index_count)
 {
 	VulkanVertexBuffer* vertex_buffer = (VulkanVertexBuffer*)vertex_handle;
 	VulkanIndexBuffer* index_buffer = (VulkanIndexBuffer*)index_handle;

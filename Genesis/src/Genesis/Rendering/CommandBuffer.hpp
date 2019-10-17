@@ -15,7 +15,7 @@ namespace Genesis
 	class CommandBuffer
 	{
 	public:
-		virtual void setShader(ShaderHandle shader) = 0;
+		virtual void setShader(Shader shader) = 0;
 		virtual void setPipelineSettings(PipelineSettings& settings) = 0;
 		
 		virtual void setScissor(vector2I offset, vector2U extent) = 0;
@@ -29,12 +29,12 @@ namespace Genesis
 		virtual void setUniformMat3(string name, matrix3F value) = 0;
 		virtual void setUniformMat4(string name, matrix4F value) = 0;
 		
-		virtual void setUniformTexture(string name, TextureHandle texture) = 0;
-		virtual void setUniformView(string name, ViewHandle view, uint16_t view_image_index) = 0;
+		virtual void setUniformTexture(string name, Texture texture) = 0;
+		virtual void setUniformView(string name, View view, uint16_t view_image_index) = 0;
 
 		//Draw Calls
-		virtual void drawIndexed(VertexBufferHandle vertex_handle, IndexBufferHandle index_handle) = 0;
-		virtual void drawIndexedOffset(VertexBufferHandle vertex_handle, IndexBufferHandle index_handle, uint32_t index_offset, uint32_t index_count) = 0;
+		virtual void drawIndexed(VertexBuffer vertex_handle, IndexBuffer index_handle) = 0;
+		virtual void drawIndexedOffset(VertexBuffer vertex_handle, IndexBuffer index_handle, uint32_t index_offset, uint32_t index_count) = 0;
 
 	protected:
 	};

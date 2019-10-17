@@ -14,7 +14,6 @@ VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VulkanAllocator* allocator
 	this->images.resize(color_formats.size());
 	for (uint16_t i = 0; i < this->images.size(); i++)
 	{
-
 		VkImageCreateInfo image_info = {};
 		image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		image_info.imageType = VK_IMAGE_TYPE_2D;
