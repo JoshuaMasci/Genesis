@@ -23,7 +23,7 @@ namespace Genesis
 		void beginCommandBufferSecondary(VkCommandBufferInheritanceInfo& inheritance_info, VkExtent2D size);
 		void endCommandBuffer();
 		void submitCommandBuffer(VkQueue queue, Array<VkSemaphore>& wait_semaphores, Array<VkPipelineStageFlags>& wait_states, Array<VkSemaphore>& signal_semaphores, VkFence trigger_fence);
-		void setUniform(string name, void* data, uint32_t data_size);
+		void setUniform(const string& name, void* data, uint32_t data_size);
 
 		inline VkCommandBuffer get() { return this->command_buffer; };
 
@@ -34,15 +34,15 @@ namespace Genesis
 		virtual void setScissor(vector2I offset, vector2U extent) override;
 
 		//Uniform
-		virtual void setUniformFloat(string name, float value) override;
-		virtual void setUniformVec2(string name, vector2F value) override;
-		virtual void setUniformVec3(string name, vector3F value) override;
-		virtual void setUniformVec4(string name, vector4F value) override;
+		virtual void setUniformFloat(const string& name, float value) override;
+		virtual void setUniformVec2(const string& name, vector2F value) override;
+		virtual void setUniformVec3(const string& name, vector3F value) override;
+		virtual void setUniformVec4(const string& name, vector4F value) override;
 
-		virtual void setUniformMat3(string name, matrix3F value) override;
-		virtual void setUniformMat4(string name, matrix4F value) override;
-		virtual void setUniformTexture(string name, Texture texture) override;
-		virtual void setUniformView(string name, View view, uint16_t view_image_index) override;
+		virtual void setUniformMat3(const string& name, matrix3F value) override;
+		virtual void setUniformMat4(const string& name, matrix4F value) override;
+		virtual void setUniformTexture(const string& name, Texture texture) override;
+		virtual void setUniformView(const string& name, View view, uint16_t view_image_index) override;
 
 		//Draw Calls
 		virtual void drawIndexed(VertexBuffer vertex_handle, IndexBuffer index_handle) override;

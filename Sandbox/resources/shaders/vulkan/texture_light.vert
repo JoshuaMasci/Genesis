@@ -13,6 +13,7 @@ layout(push_constant) uniform Matrices
 {
 	mat4 mvp;
 	mat4 model;
+	mat3 normal;
 } matrices;
 
 void main()
@@ -20,6 +21,9 @@ void main()
     gl_Position = matrices.mvp * vec4(in_position, 1.0);
 	
 	frag_world_pos = (matrices.model * vec4(in_position, 1.0)).xyz;
-	frag_normal = in_normal;
+	
+	frag_normal = matrices.normal * in_normal;
+	//frag_normal = (matrices.model * vec4(in_normal, 0.0)).xyz;
+	
 	frag_uv = in_uv;
 }

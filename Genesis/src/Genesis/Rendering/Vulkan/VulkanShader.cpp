@@ -4,7 +4,7 @@
 
 using namespace Genesis;
 
-VulkanShaderModule::VulkanShaderModule(VkDevice device, string shader_data)
+VulkanShaderModule::VulkanShaderModule(VkDevice device, string& shader_data)
 {
 	this->device = device;
 
@@ -70,12 +70,6 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string shader_data)
 	Array<SpvReflectDescriptorSet*> descriptor_sets_spv(descriptor_sets_count);
 	spvReflectEnumerateDescriptorSets(&module, &descriptor_sets_count, descriptor_sets_spv.data());
 
-	//TODO
-	/*for (size_t i = 0; i < descriptor_sets_spv.size(); i++)
-	{
-
-	}*/
-
 	if (descriptor_sets_count > 0)
 	{
 		SpvReflectDescriptorSet* descriptor_set_spv = descriptor_sets_spv[0];
@@ -109,33 +103,59 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string shader_data)
 		}
 	}
 
-	/*		printf("Binding %d: %s , %d = %d\n", descriptor_set_spv->bindings[binding_index]->set, descriptor_set_spv->bindings[binding_index]->name, descriptor_set_spv->bindings[binding_index]->block.size, descriptor_set_spv->bindings[binding_index]->block.padded_size);
-			uint32_t member_count = descriptor_set_spv->bindings[binding_index]->block.member_count;
-			for (uint32_t i = 0; i < member_count; i++)
-			{
-				SpvReflectBlockVariable var = descriptor_set_spv->bindings[binding_index]->block.members[i];
-				printf("    %d: %s, %d = %d\n", var.absolute_offset, var.name, var.size, var.padded_size);
-			}
-			printf("\n");
-
-			this->bindings[binding_index].binding = descriptor_set_spv->bindings[binding_index]->binding;
-			this->bindings[binding_index].descriptorType = (VkDescriptorType)descriptor_set_spv->bindings[binding_index]->descriptor_type;
-			this->bindings[binding_index].descriptorCount = 1;
-			for (uint32_t i_dim = 0; i_dim < descriptor_set_spv->bindings[binding_index]->array.dims_count; ++i_dim)
-			{
-				this->bindings[binding_index].descriptorCount *= descriptor_set_spv->bindings[binding_index]->array.dims[i_dim];
-			}
-
-			this->bindings[binding_index].stageFlags = this->shader_stage;
-
-			this->bindings[binding_index].pImmutableSamplers = nullptr;*/
-
 	spvReflectDestroyShaderModule(&module);
 }
 
 VulkanShaderModule::~VulkanShaderModule()
 {
 	vkDestroyShaderModule(this->device, this->shader_module, nullptr);
+}
+
+void VulkanShaderModule::addVariables(map<string, ShaderVariableLocation>& variable_loactions)
+{
+	for (size_t binding_index = 0; binding_index < this->shader_bindings.size(); binding_index++)
+	{
+		string binding_name = this->shader_bindings[binding_index].name;
+
+		if (this->shader_bindings[binding_index].type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+		{
+			ShaderVariableLocation new_var;
+			new_var.type = ShaderVariableType::Binding;
+			new_var.location.binding_index = this->shader_bindings[binding_index].binding_location;
+			new_var.variable_offset = 0;
+			new_var.variable_size = 0;
+			variable_loactions[binding_name] = new_var;
+		}
+
+		for (size_t var_index = 0; var_index < this->shader_bindings[binding_index].variables.size(); var_index++)
+		{
+			ShaderVariableLocation new_var;
+			new_var.type = ShaderVariableType::Binding;
+			new_var.location.binding_index = this->shader_bindings[binding_index].binding_location;
+
+			new_var.variable_offset = this->shader_bindings[binding_index].variables[var_index].offset;
+			new_var.variable_size = this->shader_bindings[binding_index].variables[var_index].size;
+
+			string var_path = binding_name + "." + this->shader_bindings[binding_index].variables[var_index].name;
+			variable_loactions[var_path] = new_var;
+		}
+	}
+
+	if (this->push_constant.total_size != 0)
+	{
+		for (size_t var_index = 0; var_index < this->push_constant.variables.size(); var_index++)
+		{
+			ShaderVariableLocation new_var;
+			new_var.type = ShaderVariableType::PushConstant;
+			new_var.location.variable_stage = this->shader_stage;
+
+			new_var.variable_offset = this->push_constant.variables[var_index].offset;
+			new_var.variable_size = this->push_constant.variables[var_index].size;
+
+			string var_path = this->push_constant.name + "." + this->push_constant.variables[var_index].name;
+			variable_loactions[var_path] = new_var;
+		}
+	}
 }
 
 VkPipelineShaderStageCreateInfo VulkanShaderModule::getStageInfo()
@@ -166,7 +186,7 @@ VkDescriptorSetLayoutBinding toVkBinding(ShaderBinding shader_binding)
 	return binding;
 }
 
-VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
+VulkanShader::VulkanShader(VkDevice device, string& vert_data, string& frag_data)
 {
 	this->device = device;
 
@@ -184,13 +204,15 @@ VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
 	{
 		Array<VkDescriptorSetLayoutBinding> bindings(binding_count);
 
+		this->vert_module->addVariables(this->name_variable_loaction_cache);
+
 		for (size_t i = 0; i < vert_binding_count; i++)
 		{
 			bindings[i] = toVkBinding(this->vert_module->shader_bindings[i]);
-			
-			if (!has_value(this->name_bindings, this->vert_module->shader_bindings[i].name))
+			string binding_name = this->vert_module->shader_bindings[i].name;
+			if (!has_value(this->name_bindings, binding_name))
 			{
-				this->name_bindings[this->vert_module->shader_bindings[i].name] = &this->vert_module->shader_bindings[i];
+				this->name_bindings[binding_name] = &this->vert_module->shader_bindings[i];
 			}
 			else
 			{
@@ -204,6 +226,8 @@ VulkanShader::VulkanShader(VkDevice device, string vert_data, string frag_data)
 
 		if (this->frag_module != nullptr)
 		{
+			this->frag_module->addVariables(this->name_variable_loaction_cache);
+
 			for (size_t i = 0; i < this->frag_module->shader_bindings.size(); i++)
 			{
 				bindings[i + vert_binding_count] = toVkBinding(this->frag_module->shader_bindings[i]);
@@ -282,116 +306,12 @@ VulkanShader::~VulkanShader()
 	}
 }
 
-ShaderVariableType VulkanShader::getVariableType(string name)
+ShaderVariableLocation Genesis::VulkanShader::getVariableLocation(string name)
 {
-	size_t find_loc = name.find_first_of('.');
-	string binding_name = name.substr(0, find_loc);
-
-	if (has_value(this->name_constants, binding_name))
+	if (!has_value(this->name_variable_loaction_cache, name))
 	{
-		return ShaderVariableType::PushConstant;
-	}
-	else if (has_value(this->name_bindings, binding_name))
-	{
-		return ShaderVariableType::Binding;
-	}
-	else
-	{
-		throw std::runtime_error("Uniform doesn't exsit");
-	}
-}
-
-ShaderBindingVariableLocation VulkanShader::getBindingVariableLocation(string name)
-{
-	if (has_value(this->name_binding_location_cache, name))
-	{
-		return this->name_binding_location_cache[name];
+		throw std::runtime_error("Binding Variable doesn't exsit");
 	}
 
-	ShaderBindingVariableLocation new_loc;
-
-	size_t find_loc = name.find_first_of('.');
-	string binding_name = name.substr(0, find_loc);
-	string var_name = name.substr(find_loc + 1, (name.size() - (find_loc + 1)));
-
-	if (!has_value(this->name_bindings, binding_name))
-	{
-		throw std::runtime_error("Uniform doesn't exsit");
-	}
-
-	ShaderBinding* binding = this->name_bindings[binding_name];
-	new_loc.binding = binding->binding_location;
-
-	if (binding->type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
-	{
-		new_loc.variable_size = 0;
-		new_loc.variable_offset = 0;
-	}
-	else
-	{
-		size_t var_index = 0;
-		bool found = false;
-		for (; var_index < binding->variables.size(); var_index++)
-		{
-			if (var_name == binding->variables[var_index].name)
-			{
-				found = true;
-				break; //Found it
-			}
-		}
-
-		if (found != true)
-		{
-			throw std::runtime_error("Uniform Variable doesn't exsit");
-		}
-
-		new_loc.variable_size = binding->variables[var_index].size;
-		new_loc.variable_offset = binding->variables[var_index].offset;
-	}
-
-	this->name_binding_location_cache[name] = new_loc;
-	return new_loc;
-}
-
-ShaderPushConstantVariableLocation VulkanShader::getPushConstantVariableLocation(string name)
-{
-	if (has_value(this->name_constant_loaction_cache, name))
-	{
-		return this->name_constant_loaction_cache[name];
-	}
-
-	ShaderPushConstantVariableLocation new_loc;
-
-	size_t find_loc = name.find_first_of('.');
-	string binding_name = name.substr(0, find_loc);
-	string var_name = name.substr(find_loc + 1, (name.size() - (find_loc + 1)));
-
-	if (!has_value(this->name_constants, binding_name))
-	{
-		throw std::runtime_error("Push Constant doesn't exsit");
-	}
-
-	ShaderPushConstant* constant = this->name_constants[binding_name];
-	new_loc.variable_stage = constant->shader_stage;
-
-	size_t var_index = 0;
-	bool found = false;
-	for (; var_index < constant->variables.size(); var_index++)
-	{
-		if (var_name == constant->variables[var_index].name)
-		{
-			found = true;
-			break; //Found it
-		}
-	}
-
-	if (found != true)
-	{
-		throw std::runtime_error("Uniform Variable doesn't exsit");
-	}
-
-	new_loc.variable_size = constant->variables[var_index].size;
-	new_loc.variable_offset = constant->variables[var_index].offset;
-
-	return new_loc;
+	return this->name_variable_loaction_cache[name];
 }

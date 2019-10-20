@@ -28,12 +28,6 @@ namespace Genesis
 		uint32_t array_count;
 	};
 
-	struct ShaderBindingVariableLocation
-	{
-		uint32_t binding;
-		uint32_t variable_size; 
-		uint32_t variable_offset;
-	};
 
 	struct ShaderPushConstant
 	{
@@ -45,18 +39,32 @@ namespace Genesis
 		Array<ShaderBindingVariable> variables;
 	};
 
-	struct ShaderPushConstantVariableLocation
+	enum class ShaderVariableType
 	{
-		VkShaderStageFlagBits variable_stage;
+		Binding,
+		PushConstant
+	};
+
+	struct ShaderVariableLocation
+	{
+		ShaderVariableType type;
 		uint32_t variable_size;
 		uint32_t variable_offset;
+
+		union
+		{
+			uint32_t binding_index;
+			VkShaderStageFlagBits variable_stage;
+		} location;
 	};
 
 	class VulkanShaderModule
 	{
 	public:
-		VulkanShaderModule(VkDevice device, string shader_data);
+		VulkanShaderModule(VkDevice device, string& shader_data);
 		~VulkanShaderModule();
+
+		void addVariables(map<string, ShaderVariableLocation>& variable_loactions);
 
 		VkPipelineShaderStageCreateInfo getStageInfo();
 
@@ -70,25 +78,18 @@ namespace Genesis
 		VkDevice device;
 	};
 
-	enum class ShaderVariableType
-	{
-		Binding,
-		PushConstant
-	};
-
 	class VulkanShader
 	{
 	public:
-		VulkanShader(VkDevice device, string vert_data, string frag_data);
+		VulkanShader(VkDevice device, string& vert_data, string& frag_data);
 		~VulkanShader();
 
 		inline vector<VkPipelineShaderStageCreateInfo> getShaderStages() { return this->shader_stages; };
 		inline VkDescriptorSetLayout getDescriptorSetLayout() { return this->descriptor_layout; };
 		inline VkPipelineLayout getPipelineLayout() { return this->pipeline_layout; };
 
-		ShaderVariableType getVariableType(string name);
-		ShaderBindingVariableLocation getBindingVariableLocation(string name);
-		ShaderPushConstantVariableLocation getPushConstantVariableLocation(string name);
+
+		ShaderVariableLocation getVariableLocation(string name);
 
 		map<string, ShaderBinding*> name_bindings;
 		map<string, ShaderPushConstant*> name_constants;
@@ -103,7 +104,6 @@ namespace Genesis
 		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
 		vector<VkPipelineShaderStageCreateInfo> shader_stages;
 
-		map<string, ShaderBindingVariableLocation> name_binding_location_cache;
-		map<string, ShaderPushConstantVariableLocation> name_constant_loaction_cache;
+		map<string, ShaderVariableLocation> name_variable_loaction_cache;
 	};
 }

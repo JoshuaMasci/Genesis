@@ -93,34 +93,31 @@ void VulkanCommandBuffer::submitCommandBuffer(VkQueue queue, Array<VkSemaphore>&
 	this->setShader(nullptr);
 }
 
-void VulkanCommandBuffer::setUniform(string name, void* data, uint32_t data_size)
+void VulkanCommandBuffer::setUniform(const string& name, void* data, uint32_t data_size)
 {
 	assert(this->current_shader != nullptr);
 
-	ShaderVariableType type = this->current_shader->getVariableType(name);
-	if (type == ShaderVariableType::Binding)
+	ShaderVariableLocation var_loc = this->current_shader->getVariableLocation(name);
+	if (var_loc.type == ShaderVariableType::Binding)
 	{
 		has_descriptor_set_changed = true;
 
-		ShaderBindingVariableLocation location = this->current_shader->getBindingVariableLocation(name);
-
-		if (data_size != location.variable_size)
+		if (data_size != var_loc.variable_size)
 		{
 			printf("Warning: Size mismatch on uniform data: %s\n", name.c_str());
 		}
 
-		memcpy_s(this->binding_uniform_buffers[location.binding].data() + location.variable_offset, location.variable_size, data, data_size);
+		memcpy_s(this->binding_uniform_buffers[var_loc.location.binding_index].data() + var_loc.variable_offset, var_loc.variable_size, data, data_size);
 	}
-	else if (type == ShaderVariableType::PushConstant)
+	else if (var_loc.type == ShaderVariableType::PushConstant)
 	{
-		ShaderPushConstantVariableLocation location = this->current_shader->getPushConstantVariableLocation(name);
 
-		if (data_size != location.variable_size)
+		if (data_size > var_loc.variable_size)
 		{
 			printf("Warning: Size mismatch on push constant data: %s\n", name.c_str());
 		}
 
-		memcpy_s(this->push_constant_blocks[location.variable_stage].data() + location.variable_offset, location.variable_size, data, data_size);
+		memcpy_s(this->push_constant_blocks[var_loc.location.variable_stage].data() + var_loc.variable_offset, var_loc.variable_size, data, data_size);
 	}
 }
 
@@ -178,56 +175,61 @@ void VulkanCommandBuffer::setScissor(vector2I offset, vector2U extent)
 	vkCmdSetScissor(this->command_buffer, 0, 1, &rect);
 }
 
-void VulkanCommandBuffer::setUniformFloat(string name, float value)
+void VulkanCommandBuffer::setUniformFloat(const string& name, float value)
 {
 	this->setUniform(name, &value, sizeof(float));
 }
 
-void VulkanCommandBuffer::setUniformVec2(string name, vector2F value)
+void VulkanCommandBuffer::setUniformVec2(const string& name, vector2F value)
 {
 	this->setUniform(name, &value, sizeof(vector2F));
 }
 
-void VulkanCommandBuffer::setUniformVec3(string name, vector3F value)
+void VulkanCommandBuffer::setUniformVec3(const string& name, vector3F value)
 {
 	this->setUniform(name, &value, sizeof(vector3F));
 }
 
-void VulkanCommandBuffer::setUniformVec4(string name, vector4F value)
+void VulkanCommandBuffer::setUniformVec4(const string& name, vector4F value)
 {
 	this->setUniform(name, &value, sizeof(vector4F));
 }
 
-void VulkanCommandBuffer::setUniformMat3(string name, matrix3F value)
+void VulkanCommandBuffer::setUniformMat3(const string& name, matrix3F value)
 {
-	this->setUniform(name, &value, sizeof(matrix3F));
+	glm::mat3x4 temp_matrix(value);
+	this->setUniform(name, &temp_matrix, sizeof(glm::mat3x4));
 }
 
-void VulkanCommandBuffer::setUniformMat4(string name, matrix4F value)
+void VulkanCommandBuffer::setUniformMat4(const string& name, matrix4F value)
 {
 	this->setUniform(name, &value, sizeof(matrix4F));
 }
 
-void VulkanCommandBuffer::setUniformTexture(string name, Texture texture)
+void VulkanCommandBuffer::setUniformTexture(const string& name, Texture texture)
 {
 	assert(this->current_shader != nullptr);
-	ShaderBindingVariableLocation location = this->current_shader->getBindingVariableLocation(name);
+
 	VkImageView image_view = ((VulkanTexture*)texture)->getImageView();
-	if (this->binding_image[location.binding] != image_view)
+
+	ShaderVariableLocation var_loc = this->current_shader->getVariableLocation(name);
+	if (this->binding_image[var_loc.location.binding_index] != image_view)
 	{
-		this->binding_image[location.binding] = image_view;
+		this->binding_image[var_loc.location.binding_index] = image_view;
 		this->has_descriptor_set_changed = true;
 	}
 }
 
-void VulkanCommandBuffer::setUniformView(string name, View view, uint16_t view_image_index)
+void VulkanCommandBuffer::setUniformView(const string& name, View view, uint16_t view_image_index)
 {
 	assert(this->current_shader != nullptr);
-	ShaderBindingVariableLocation location = this->current_shader->getBindingVariableLocation(name);
+
 	VkImageView image_view = ((VulkanView*)view)->getFramebuffer(this->frame_index)->getImageView(view_image_index);
-	if (this->binding_image[location.binding] != image_view)
+
+	ShaderVariableLocation var_loc = this->current_shader->getVariableLocation(name);
+	if (this->binding_image[var_loc.location.binding_index] != image_view)
 	{
-		this->binding_image[location.binding] = image_view;
+		this->binding_image[var_loc.location.binding_index] = image_view;
 		this->has_descriptor_set_changed = true;
 	}
 }

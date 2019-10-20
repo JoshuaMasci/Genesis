@@ -118,6 +118,8 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 		matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
 		matrix4F model_matrix = translation * orientation;
 		matrix4F mvp = mv * model_matrix;
+		matrix3F normal_matrix(orientation);
+		normal_matrix = glm::inverseTranspose(normal_matrix);
 
 		command_buffer->setShader(shader);
 		command_buffer->setPipelineSettings(model_settings);
@@ -139,6 +141,7 @@ void Renderer::drawFrame(EntityRegistry& entity_registry, EntityId camera_entity
 			command_buffer->setUniformTexture("albedo_texture", texture);
 			command_buffer->setUniformMat4("matrices.mvp", mvp);
 			command_buffer->setUniformMat4("matrices.model", model_matrix);
+			command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 			//Lights
 			command_buffer->setUniformVec3("light.color", directional_light.color);
