@@ -9,11 +9,18 @@ layout(location = 0) out vec3 frag_world_pos;
 layout(location = 1) out vec3 frag_normal;
 layout(location = 2) out vec2 frag_uv;
 
+struct lama
+{
+	float bat;
+	vec3 dog;
+};
+
 layout(push_constant) uniform Matrices
 {
 	mat4 mvp;
 	mat4 model;
 	mat3 normal;
+	lama not_dog;
 } matrices;
 
 void main()

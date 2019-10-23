@@ -18,7 +18,7 @@ namespace Genesis
 		virtual ~Application();
 
 		virtual void runSimulation(double delta_time);
-		virtual void drawFrame(double delta_time);
+		virtual void drawWorld(double delta_time);
 
 		void close();
 		bool isRunning();

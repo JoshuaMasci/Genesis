@@ -30,7 +30,7 @@ namespace Genesis
 		virtual Texture createTexture(vector2U size, void* data, uint64_t data_size) override;
 		virtual void destroyTexture(Texture texture_handle) override;
 
-		virtual Shader createShader(string vert_data, string frag_data) override;
+		virtual Shader createShader(string& vert_data, string& frag_data) override;
 		virtual void destroyShader(Shader shader_handle) override;
 
 		virtual View createView(vector2U size, FramebufferLayout& layout, CommandBufferType type) override;
@@ -39,7 +39,7 @@ namespace Genesis
 
 		virtual void startView(View index) override;
 		virtual void endView(View index) override;
-		virtual void sumbitView(View index) override;
+		virtual void submitView(View index, vector<View> sub_views = {}) override;
 		virtual CommandBuffer* getViewCommandBuffer(View index) override;
 
 		virtual CommandBuffer* getScreenCommandBuffer() override;

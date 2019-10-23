@@ -8,7 +8,7 @@ public:
 	SandboxApplication();
 	virtual ~SandboxApplication();
 
-	virtual void drawFrame(double delta_time);
+	virtual void drawWorld(double delta_time);
 protected:
 };
 

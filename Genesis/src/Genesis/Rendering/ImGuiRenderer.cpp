@@ -204,7 +204,7 @@ void ImGuiRenderer::endFrame()
 	}
 
 	this->backend->endView(this->view);
-	this->backend->sumbitView(this->view);
+	this->backend->submitView(this->view);
 }
 
 void ImGuiRenderer::setScreenSize(vector2U size)

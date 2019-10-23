@@ -18,7 +18,7 @@ SandboxApplication::~SandboxApplication()
 {
 }
 
-void SandboxApplication::drawFrame(double delta_time)
+void SandboxApplication::drawWorld(double delta_time)
 {
-	Genesis::Application::drawFrame(delta_time);
+	Genesis::Application::drawWorld(delta_time);
 }

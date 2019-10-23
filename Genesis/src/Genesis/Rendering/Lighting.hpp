@@ -27,9 +27,11 @@ namespace Genesis
 		:BaseLight(color, intensity, casts_shadows, enabled)
 		{
 			this->direction = direction;
+			this->shadow_size = vector2F(0.0);
 		};
 
 		vector3F direction;
+		vector2F shadow_size;
 	};
 
 	struct PointLight : public BaseLight

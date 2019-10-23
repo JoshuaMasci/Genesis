@@ -3,8 +3,10 @@
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Rendering/RenderingBackend.hpp"
 #include "Genesis/Rendering/ResourceLoaders.hpp"
-
+#include "Genesis/Rendering/RenderLayer.hpp"
+#include "Genesis/Rendering/Lighting.hpp"
 #include "Genesis/Entity.hpp"
+#include "Genesis/Core/Transform.hpp"
 
 namespace Genesis
 {
@@ -15,28 +17,42 @@ namespace Genesis
 		string shader;
 	};
 
-	class Renderer
+	class Renderer : public RenderLayer
 	{
 	public:
 		Renderer(RenderingBackend* backend);
 		~Renderer();
 
-		void drawFrame(EntityRegistry& entity_registry, EntityId camera_entity);
+		virtual void startFrame() override;
+		virtual void endFrame() override;
 
-		View view;
+		void drawWorld(EntityRegistry& entity_registry, EntityId camera_entity);
+
 		vector3F ambient_light = vector3F(0.4f);
 
+		virtual void setScreenSize(vector2U size) override;
+		virtual View getView() override;
+		virtual uint32_t getViewImageIndex() override;
+
+		View getShadowView() { return this->shadow_views[0]; };
 
 	private:
-		//Lifetime of the Backend is longer than the Renderer
-		//No deleting please
-		RenderingBackend* backend;
-
 		//Resources
 		map<string, Mesh> loaded_meshes;
 		map<string, Texture> loaded_textures;
 		map<string, Shader> loaded_shaders;
 
+		//Main view
+		View view;
 		vector2U view_size;
+
+		//Shadows
+		Array<View> shadow_views;
+		size_t used_shadows = 0;
+		vector2U shadow_size;
+
+		vector<View> sub_views;
+
+		void drawDirectionalShadowView(EntityRegistry& entity_registry, View shadow_view, DirectionalLight& light, Transform& light_transform);
 	};
 }

@@ -64,8 +64,8 @@ VkRenderPass VulkanRenderPassPool::getRenderPass(uint32_t hash, Array<VkFormat>&
 		depth_description.samples = VK_SAMPLE_COUNT_1_BIT;
 		depth_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		depth_description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depth_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depth_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depth_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 		depth_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		depth_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 

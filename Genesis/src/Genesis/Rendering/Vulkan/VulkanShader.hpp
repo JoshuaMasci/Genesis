@@ -22,10 +22,6 @@ namespace Genesis
 
 		//buffer info
 		uint32_t total_size;
-		Array<ShaderBindingVariable> variables;
-
-		//Other
-		uint32_t array_count;
 	};
 
 
@@ -73,6 +69,8 @@ namespace Genesis
 		VkShaderStageFlagBits shader_stage;
 
 		ShaderPushConstant push_constant;
+
+		map<string, ShaderVariableLocation> variable_loactions;
 
 	protected:
 		VkDevice device;

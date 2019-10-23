@@ -30,7 +30,7 @@ namespace Genesis
 		virtual Texture createTexture(vector2U size, void* data, uint64_t data_size) = 0;
 		virtual void destroyTexture(Texture texture_index) = 0;
 
-		virtual Shader createShader(string vert_data, string frag_data) = 0;
+		virtual Shader createShader(string& vert_data, string& frag_data) = 0;
 		virtual void destroyShader(Shader shader_handle) = 0;
 
 		virtual View createView(vector2U size, FramebufferLayout& layout, CommandBufferType type) = 0;
@@ -39,7 +39,7 @@ namespace Genesis
 
 		virtual void startView(View index) = 0;
 		virtual void endView(View index) = 0;
-		virtual void sumbitView(View index) = 0;
+		virtual void submitView(View index, vector<View> sub_views = {}) = 0;
 		virtual CommandBuffer* getViewCommandBuffer(View index) = 0;
 
 		//TEMP

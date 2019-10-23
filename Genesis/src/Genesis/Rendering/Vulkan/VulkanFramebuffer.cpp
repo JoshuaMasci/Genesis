@@ -67,7 +67,7 @@ VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VulkanAllocator* allocator
 		image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		image_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 		image_info.samples = VK_SAMPLE_COUNT_1_BIT;
-		image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		image_info.flags = 0;
 
 		this->allocator->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &this->depth_image.image, &this->depth_image.image_memory, nullptr);
 

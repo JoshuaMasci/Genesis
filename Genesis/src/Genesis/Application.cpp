@@ -52,9 +52,9 @@ void Application::runSimulation(double delta_time)
 	}
 }
 
-void Application::drawFrame(double delta_time)
+void Application::drawWorld(double delta_time)
 {
-	this->scene->drawFrame(delta_time);
+	this->scene->drawWorld(delta_time);
 }
 
 void Application::close()

@@ -212,7 +212,7 @@ void VulkanBackend::destroyTexture(Texture texture_handle)
 	this->vulkan->texture_deleter->addToQueue((VulkanTexture*)texture_handle);
 }
 
-Shader VulkanBackend::createShader(string vert_data, string frag_data)
+Shader VulkanBackend::createShader(string& vert_data, string& frag_data)
 {
 	VulkanShader* shader = new VulkanShader(this->vulkan->device->get(), vert_data, frag_data);
 	return shader;
@@ -280,10 +280,16 @@ void VulkanBackend::endView(View index)
 	view->endView(this->frame_index);
 }
 
-void VulkanBackend::sumbitView(View index)
+void VulkanBackend::submitView(View index, vector<View> sub_views)
 {
+	vector<VulkanView*> vk_sub_views(sub_views.size());
+	for (size_t i = 0; i < vk_sub_views.size(); i++)
+	{
+		vk_sub_views[i] = (VulkanView*)sub_views[i];
+	}
+
 	VulkanView* view = (VulkanView*)index;
-	view->submitView(this->frame_index, vector<VulkanView*>(), VK_NULL_HANDLE);
+	view->submitView(this->frame_index, vk_sub_views, VK_NULL_HANDLE);
 }
 
 CommandBuffer* VulkanBackend::getViewCommandBuffer(View index)

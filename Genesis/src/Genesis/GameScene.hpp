@@ -20,7 +20,7 @@ namespace Genesis
 
 		virtual void runSimulation(double delta_time);
 
-		virtual void drawFrame(double delta_time);
+		virtual void drawWorld(double delta_time);
 
 		//TEMP lighting stuff
 		DirectionalLight light;

@@ -7,11 +7,11 @@
 int main(int argc, char** argv)
 {
 	//Used for debugging
-	bool temp = true;
+	/*bool temp = false;
 	while (!temp)
 	{
 		int i = 1 + 2;
-	}
+	}*/
 
 	//ALPHA
 	SandboxApplication* sandbox = new SandboxApplication();
@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 		//accumulator += delta_time;
 
 		sandbox->runSimulation(delta_time);
-		sandbox->drawFrame(delta_time);
+		sandbox->drawWorld(delta_time);
 
 		time_last = time_current;
 
