@@ -37,6 +37,8 @@ ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* input_mana
 
 		io.DisplaySize.x = (float)this->view_size.x;
 		io.DisplaySize.y = (float)this->view_size.y;
+
+		io.IniFilename = NULL;
 	}
 
 	{

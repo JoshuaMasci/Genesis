@@ -53,6 +53,6 @@ namespace Genesis
 
 		vector<View> sub_views;
 
-		void drawDirectionalShadowView(EntityRegistry& entity_registry, View shadow_view, DirectionalLight& light, Transform& light_transform);
+		matrix4F drawDirectionalShadowView(EntityRegistry& entity_registry, View shadow_view, DirectionalLight& light, Transform& light_transform);
 	};
 }

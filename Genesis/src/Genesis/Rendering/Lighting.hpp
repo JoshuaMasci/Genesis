@@ -23,14 +23,12 @@ namespace Genesis
 
 	struct DirectionalLight : public BaseLight
 	{
-		DirectionalLight(vector3F direction = vector3F(0.0), vector3F color = vector3F(0.0), float intensity = 0.0f, bool casts_shadows = false, bool enabled = true)
+		DirectionalLight(vector3F color = vector3F(0.0), float intensity = 0.0f, bool casts_shadows = false, bool enabled = true)
 		:BaseLight(color, intensity, casts_shadows, enabled)
 		{
-			this->direction = direction;
 			this->shadow_size = vector2F(0.0);
 		};
 
-		vector3F direction;
 		vector2F shadow_size;
 	};
 

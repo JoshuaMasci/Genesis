@@ -262,10 +262,11 @@ void VulkanCommandBuffer::drawIndexedOffset(VertexBuffer vertex_handle, IndexBuf
 		{
 			VkDescriptorSet descriptor_set = this->descriptor_pool->getDescriptorSet(this->current_shader->getDescriptorSetLayout(), this->frame_index);
 
-			Array<VkWriteDescriptorSet> write_descriptors(this->binding_uniform_buffers.size() + this->binding_image.size());
+			vector<VkWriteDescriptorSet> write_descriptors(this->binding_uniform_buffers.size() + this->binding_image.size());
 			size_t write_index = 0;
 
-			vector<VkDescriptorBufferInfo> buffer_info_list;
+			size_t buffer_info_index = 0;
+			Array<VkDescriptorBufferInfo> buffer_info_list(this->binding_uniform_buffers.size());
 			for (auto buffer : this->binding_uniform_buffers)
 			{
 				Array<uint8_t>* temp_buffer = &buffer.second;
@@ -275,11 +276,9 @@ void VulkanCommandBuffer::drawIndexedOffset(VertexBuffer vertex_handle, IndexBuf
 				VkWriteDescriptorSet& descriptor_write = write_descriptors[write_index];
 				write_index++;
 
-				size_t info_index = buffer_info_list.size();
-				buffer_info_list.push_back({});
-				buffer_info_list[info_index].buffer = uniform->get();
-				buffer_info_list[info_index].offset = 0;
-				buffer_info_list[info_index].range = (VkDeviceSize)uniform->getSize();
+				buffer_info_list[buffer_info_index].buffer = uniform->get();
+				buffer_info_list[buffer_info_index].offset = 0;
+				buffer_info_list[buffer_info_index].range = (VkDeviceSize)uniform->getSize();
 
 				descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 				descriptor_write.pNext = VK_NULL_HANDLE;
@@ -288,22 +287,23 @@ void VulkanCommandBuffer::drawIndexedOffset(VertexBuffer vertex_handle, IndexBuf
 				descriptor_write.dstArrayElement = 0;
 				descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 				descriptor_write.descriptorCount = 1;
-				descriptor_write.pBufferInfo = &buffer_info_list[info_index];
+				descriptor_write.pBufferInfo = &buffer_info_list[buffer_info_index];
 				descriptor_write.pImageInfo = nullptr;
 				descriptor_write.pTexelBufferView = nullptr;
+
+				buffer_info_index++;
 			}
 
-			vector<VkDescriptorImageInfo> image_info_list;
+			size_t image_info_index = 0;
+			Array<VkDescriptorImageInfo> image_info_list(this->binding_image.size());
 			for (auto image : this->binding_image)
 			{
 				VkWriteDescriptorSet& descriptor_write = write_descriptors[write_index];
 				write_index++;
 
-				size_t info_index = image_info_list.size();
-				image_info_list.push_back({});
-				image_info_list[info_index].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				image_info_list[info_index].imageView = image.second;
-				image_info_list[info_index].sampler = this->sampler;
+				image_info_list[image_info_index].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				image_info_list[image_info_index].imageView = image.second;
+				image_info_list[image_info_index].sampler = this->sampler;
 
 				descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 				descriptor_write.pNext = VK_NULL_HANDLE;
@@ -313,8 +313,10 @@ void VulkanCommandBuffer::drawIndexedOffset(VertexBuffer vertex_handle, IndexBuf
 				descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 				descriptor_write.descriptorCount = 1;
 				descriptor_write.pBufferInfo = nullptr;
-				descriptor_write.pImageInfo = &image_info_list[info_index];
+				descriptor_write.pImageInfo = &image_info_list[image_info_index];
 				descriptor_write.pTexelBufferView = nullptr;
+
+				image_info_index++;
 			}
 
 			vkUpdateDescriptorSets(this->device, (uint32_t)write_descriptors.size(), write_descriptors.data(), 0, nullptr);

@@ -9,6 +9,7 @@ layout(location = 0) out vec3 frag_world_pos;
 layout(location = 1) out vec3 frag_normal;
 layout(location = 2) out vec2 frag_uv;
 
+
 layout(push_constant) uniform Matrices
 {
 	mat4 mvp;

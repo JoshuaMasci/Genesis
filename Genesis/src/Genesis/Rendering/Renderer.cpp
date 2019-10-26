@@ -21,7 +21,7 @@ Renderer::Renderer(RenderingBackend* backend)
 	this->view = this->backend->createView(this->backend->getScreenSize(), main_layout, CommandBufferType::SingleThread);
 	this->view_size = this->backend->getScreenSize();
 
-	this->shadow_size = vector2U(512);
+	this->shadow_size = vector2U(1024);
 	FramebufferLayout shadow_layout = FramebufferLayout(Array<ImageFormat>(), ImageFormat::D_32_Float);
 	this->shadow_views = Array<View>(10);
 	for (size_t i = 0; i < this->shadow_views.size(); i++)
@@ -31,6 +31,7 @@ Renderer::Renderer(RenderingBackend* backend)
 
 	this->loaded_shaders["resources/shaders/vulkan/texture_light"] = ShaderLoader::loadShaderSingle(this->backend, "resources/shaders/vulkan/texture_light");
 	this->loaded_shaders["resources/shaders/vulkan/shadow"] = ShaderLoader::loadShaderSingle(this->backend, "resources/shaders/vulkan/shadow");
+	this->loaded_shaders["resources/shaders/vulkan/texture_light_shadow"] = ShaderLoader::loadShaderSingle(this->backend, "resources/shaders/vulkan/texture_light_shadow");
 }
 
 Renderer::~Renderer()
@@ -80,6 +81,14 @@ void Renderer::endFrame()
 	this->backend->submitView(this->view, this->sub_views);
 }
 
+struct DirectionalLightData
+{
+	DirectionalLight light;
+	vector3F direction;
+	View shadow_view;
+	matrix4F shadow_transform;
+};
+
 void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity)
 {
 	PipelineSettings model_settings;
@@ -96,23 +105,22 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 		return;
 	}
 
-	auto lights = entity_registry.view<DirectionalLight>();
+	vector<DirectionalLightData> directional_light_shadow;
+
+	auto lights = entity_registry.view<DirectionalLight, WorldTransform>();
 	for (auto light : lights)
 	{
 		auto directional_light = entity_registry.get<DirectionalLight>(light);
+		auto directional_light_transform = entity_registry.get<WorldTransform>(light);
 
 		if (directional_light.enabled && directional_light.casts_shadows)
 		{
-			//Ignore light it if doesn't have a position to cast a shadow from
-			if (entity_registry.has<WorldTransform>(light))
-			{
-				this->drawDirectionalShadowView(entity_registry, shadow_views[this->used_shadows], directional_light, entity_registry.get<WorldTransform>(light).current_transform);
-				this->sub_views.push_back(shadow_views[this->used_shadows]);
-				this->used_shadows++;
-			}
+			matrix4F light_transform = this->drawDirectionalShadowView(entity_registry, shadow_views[this->used_shadows], directional_light, directional_light_transform.current_transform);
+			this->sub_views.push_back(shadow_views[this->used_shadows]);
+			directional_light_shadow.push_back({directional_light, ((vector3F)directional_light_transform.current_transform.getForward()), shadow_views[this->used_shadows], light_transform});
+			this->used_shadows++;
 		}
 	}
-
 
 	CommandBuffer* command_buffer = this->backend->getViewCommandBuffer(this->view);
 
@@ -176,21 +184,14 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 
 		command_buffer->setPipelineSettings(light_settings);
 
-		auto lights = entity_registry.view<DirectionalLight>();
+		//Lights
+		auto lights = entity_registry.view<DirectionalLight, WorldTransform>();
 		for (auto light : lights)
 		{
 			auto directional_light = entity_registry.get<DirectionalLight>(light);
+			auto directional_light_transform = entity_registry.get<WorldTransform>(light);
 
-			if (!directional_light.enabled)
-			{
-				continue;
-			}
-
-			if (directional_light.casts_shadows)
-			{
-
-			}
-			else
+			if (directional_light.enabled && !directional_light.casts_shadows)
 			{
 				Shader light_shader = this->loaded_shaders["resources/shaders/vulkan/texture_light"];
 				command_buffer->setShader(light_shader);
@@ -199,13 +200,35 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 				command_buffer->setUniformMat4("matrices.model", model_matrix);
 				command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
-				//Lights
+				//Light
 				command_buffer->setUniformVec3("light.color", directional_light.color);
 				command_buffer->setUniformFloat("light.intensity", directional_light.intensity);
-				command_buffer->setUniformVec3("light.direction", glm::normalize(directional_light.direction));
+				command_buffer->setUniformVec3("light.direction", directional_light_transform.current_transform.getForward());
 
 				command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 			}
+		}
+
+		//Lights with shadows
+		for (size_t i = 0; i < directional_light_shadow.size(); i++)
+		{
+			DirectionalLightData& data = directional_light_shadow[i];
+
+			Shader light_shader = this->loaded_shaders["resources/shaders/vulkan/texture_light_shadow"];
+			command_buffer->setShader(light_shader);
+			command_buffer->setUniformTexture("albedo_texture", texture);
+			command_buffer->setUniformMat4("matrices.mvp", mvp);
+			command_buffer->setUniformMat4("matrices.model", model_matrix);
+			command_buffer->setUniformMat3("matrices.normal", normal_matrix);
+
+			//Light
+			command_buffer->setUniformVec3("light.color", data.light.color);
+			command_buffer->setUniformFloat("light.intensity", data.light.intensity);
+			command_buffer->setUniformVec3("light.direction", data.direction);
+			command_buffer->setUniformMat4("light.shadow_mv", data.shadow_transform);
+			command_buffer->setUniformView("shadow_map", data.shadow_view, 0);
+
+			command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 		}
 	}
 }
@@ -225,7 +248,7 @@ uint32_t Renderer::getViewImageIndex()
 	return 0;
 }
 
-void Renderer::drawDirectionalShadowView(EntityRegistry& entity_registry, View shadow_view, DirectionalLight& light, Transform& light_transform)
+matrix4F Renderer::drawDirectionalShadowView(EntityRegistry& entity_registry, View shadow_view, DirectionalLight& light, Transform& light_transform)
 {
 	PipelineSettings model_settings;
 	model_settings.depth_test = DepthTest::Test_And_Write;
@@ -238,7 +261,7 @@ void Renderer::drawDirectionalShadowView(EntityRegistry& entity_registry, View s
 
 	Camera camera(20.0f);
 	matrix4F proj = glm::ortho(light_x, -light_x, -light_y, light_y, 0.1f, 100.0f);
-	proj[1][1] *= -1.0f;
+	proj[1][1] *= -1.0f;//TODO not hardcode this
 
 	matrix4F mv = proj * view;
 
@@ -276,4 +299,6 @@ void Renderer::drawDirectionalShadowView(EntityRegistry& entity_registry, View s
 
 	this->backend->endView(shadow_view);
 	this->backend->submitView(shadow_view);
+
+	return mv;
 }
