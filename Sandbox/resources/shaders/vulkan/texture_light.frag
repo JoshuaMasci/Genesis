@@ -16,15 +16,8 @@ layout(binding = 1) uniform Lights
 	DirectionalLight directional;
 } lights;
 
-
-void CalcStuff(DirectionalLight stuff)
-{
-	float x = stuff.color.x;
-}
-
 void main()
 {
-	CalcStuff(lights.directional);
-	vec4 light_value = CalcDirectionalLight(lights.directional.color, lights.directional.intensity, lights.directional.direction, frag_normal, frag_world_pos, lights.eye_pos);
+	vec4 light_value = CalcDirectionalLight(lights.directional, frag_normal, frag_world_pos, lights.eye_pos);
     out_color = texture(albedo_texture, frag_uv) * light_value;
 }

@@ -201,10 +201,11 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 				command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 				//Light
-				command_buffer->setUniformVec3("light.color", directional_light.color);
-				command_buffer->setUniformFloat("light.intensity", directional_light.intensity);
-				command_buffer->setUniformVec3("light.direction", directional_light_transform.current_transform.getForward());
-
+				command_buffer->setUniformVec3("lights.directional.color", directional_light.color);
+				command_buffer->setUniformFloat("lights.directional.intensity", directional_light.intensity);
+				command_buffer->setUniformVec3("lights.directional.direction", directional_light_transform.current_transform.getForward());
+				command_buffer->setUniformVec3("lights.eye_pos", (vector3F)transform.current_transform.getPosition());
+				
 				command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 			}
 		}
@@ -222,10 +223,11 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 			command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 			//Light
-			command_buffer->setUniformVec3("light.color", data.light.color);
-			command_buffer->setUniformFloat("light.intensity", data.light.intensity);
-			command_buffer->setUniformVec3("light.direction", data.direction);
-			command_buffer->setUniformMat4("light.shadow_mv", data.shadow_transform);
+			command_buffer->setUniformVec3("lights.directional.color", data.light.color);
+			command_buffer->setUniformFloat("lights.directional.intensity", data.light.intensity);
+			command_buffer->setUniformVec3("lights.directional.direction", data.direction);
+			command_buffer->setUniformVec3("lights.eye_pos", (vector3F)transform.current_transform.getPosition());
+			command_buffer->setUniformMat4("lights.shadow_mv", data.shadow_transform);
 			command_buffer->setUniformView("shadow_map", data.shadow_view, 0);
 
 			command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);

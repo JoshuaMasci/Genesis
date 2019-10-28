@@ -43,7 +43,7 @@ GameScene::GameScene(Application* app)
 
 	this->directional_light = this->entity_registry.create();
 	this->entity_registry.assign<DirectionalLight>(this->directional_light, vector3F(1.0f), 0.1F);
-	this->entity_registry.get<DirectionalLight>(this->directional_light).casts_shadows = false;
+	this->entity_registry.get<DirectionalLight>(this->directional_light).casts_shadows = true;
 	this->entity_registry.get<DirectionalLight>(this->directional_light).shadow_size = vector2F(10.0f);
 	this->entity_registry.assign<WorldTransform>(this->directional_light, vector3D(0.0, 10.0, 0.0), glm::angleAxis(3.1415926 / 2.0, vector3D(1.0, 0.0, 0.0)));
 }

@@ -77,9 +77,9 @@ vec4 CalcPoint(vec3 color, float intensity, vec3 attenuation, vec3 position, flo
     return out_color / attenuation_value;
 }
 
-vec4 CalcDirectionalLight(vec3 color, float intensity, vec3 direction, vec3 normal, vec3 world_pos, vec3 eye_pos)
+vec4 CalcDirectionalLight(DirectionalLight directional_light, vec3 normal, vec3 world_pos, vec3 eye_pos)
 {
-    return CalcLight(color, intensity, direction, normal, world_pos, eye_pos);
+    return CalcLight(directional_light.color, directional_light.intensity, directional_light.direction, normal, world_pos, eye_pos);
 }
 
 
@@ -103,14 +103,14 @@ vec4 CalcSpotLight(SpotLight spot, vec3 normal, vec3 world_pos, vec3 eye_pos)
     return color;
 }
 
-float CalcShadow(sampler2D shadow_map, vec4 fragPosLightSpace)
+float CalcShadow(sampler2D shadow_map, vec4 light_space_pos)
 {
     // perform perspective divide
-    vec3 projCoords = ((fragPosLightSpace.xyz / fragPosLightSpace.w) * 0.5) + 0.5;
+    vec3 projCoords = ((light_space_pos.xyz / light_space_pos.w) * 0.5) + 0.5;
 	float currentDepth = projCoords.z;
 	float closestDepth = (texture(shadow_map, projCoords.xy).r * 0.5) + 0.5;
 	
 	float bias = 0.00004;
-	float shadow = currentDepth + bias > closestDepth  ? 1.0 : 0.0;   
+	float shadow = currentDepth - bias > closestDepth  ? 0.0 : 1.0;   
     return shadow;
 }
