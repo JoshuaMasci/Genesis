@@ -4,23 +4,51 @@
 
 using namespace Genesis;
 
-void addBindingVariable(map<string, ShaderVariableLocation>* variable_loactions, uint32_t binding_index, string block_name, SpvReflectBlockVariable* block)
+void addBindingVariable(map<string, ShaderVariableLocation>* variable_loactions, uint32_t binding_index, string block_name, SpvReflectBlockVariable* block, uint32_t array_offset = 0)
 {
-	string var_name = block_name;
-	ShaderVariableLocation var_info;
-	var_info.variable_offset = block->absolute_offset;
-	var_info.variable_size = block->size;
-	var_info.type = ShaderVariableType::Binding;
-	var_info.location.binding_index = binding_index;
-	variable_loactions->emplace(var_name, var_info);
-
-	for (size_t i = 0; i < block->member_count; i++)
+	if (block->array.dims_count > 0 && block->array.dims[0] > 0)
 	{
-		addBindingVariable(variable_loactions, binding_index, var_name + "." + block->members[i].name, &block->members[i]);
+		size_t array_count = block->array.dims[0];
+		uint32_t array_stride = block->array.stride;
+
+		string var_name = block_name;
+
+		for (size_t array_index = 0; array_index < array_count; array_index++)
+		{
+			string array_block_name = var_name + "[" + std::to_string(array_index) + "].";
+			uint32_t array_block_offset = array_stride * (uint32_t)array_index;
+
+			for (size_t i = 0; i < block->member_count; i++)
+			{
+				addBindingVariable(variable_loactions, binding_index, array_block_name + block->members[i].name, &block->members[i], array_block_offset);
+			}
+		}
+	}
+	else
+	{
+		string var_name = block_name;
+
+		//Only add "leaf nodes" to the map
+		if (block->member_count == 0)
+		{
+			ShaderVariableLocation var_info;
+			var_info.variable_offset = block->absolute_offset + array_offset;
+			var_info.variable_size = block->size;
+			var_info.type = ShaderVariableType::Binding;
+			var_info.location.binding_index = binding_index;
+			variable_loactions->emplace(var_name, var_info);
+		}
+		else
+		{
+			for (size_t i = 0; i < block->member_count; i++)
+			{
+				addBindingVariable(variable_loactions, binding_index, var_name + "." + block->members[i].name, &block->members[i], array_offset);
+			}
+		}
 	}
 };
 
-void addConstVariable(map<string, ShaderVariableLocation>* variable_loactions, VkShaderStageFlagBits variable_stage, string block_name, SpvReflectBlockVariable* block)
+void addConstVariable(map<string, ShaderVariableLocation>* variable_loactions, VkShaderStageFlagBits variable_stage, string block_name, SpvReflectBlockVariable* block, uint32_t array_offset = 0)
 {
 	string var_name = block_name;
 	ShaderVariableLocation var_info;
@@ -33,6 +61,47 @@ void addConstVariable(map<string, ShaderVariableLocation>* variable_loactions, V
 	for (size_t i = 0; i < block->member_count; i++)
 	{
 		addConstVariable(variable_loactions, variable_stage, var_name + "." + block->members[i].name, &block->members[i]);
+	}
+
+	if (block->array.dims_count > 0 && block->array.dims[0] > 0)
+	{
+		size_t array_count = block->array.dims[0];
+		uint32_t array_stride = block->array.stride;
+
+		string var_name = block_name;
+
+		for (size_t array_index = 0; array_index < array_count; array_index++)
+		{
+			string array_block_name = var_name + "[" + std::to_string(array_index) + "].";
+			uint32_t array_block_offset = array_stride * (uint32_t)array_index;
+
+			for (size_t i = 0; i < block->member_count; i++)
+			{
+				addConstVariable(variable_loactions, variable_stage, array_block_name + block->members[i].name, &block->members[i], array_block_offset);
+			}
+		}
+	}
+	else
+	{
+		string var_name = block_name;
+
+		//Only add "leaf nodes" to the map
+		if (block->member_count == 0)
+		{
+			ShaderVariableLocation var_info;
+			var_info.variable_offset = block->absolute_offset + array_offset;
+			var_info.variable_size = block->size;
+			var_info.type = ShaderVariableType::PushConstant;
+			var_info.location.variable_stage = variable_stage;
+			variable_loactions->emplace(var_name, var_info);
+		}
+		else
+		{
+			for (size_t i = 0; i < block->member_count; i++)
+			{
+				addConstVariable(variable_loactions, variable_stage, var_name + "." + block->members[i].name, &block->members[i], array_offset);
+			}
+		}
 	}
 };
 
@@ -123,6 +192,9 @@ VulkanShaderModule::~VulkanShaderModule()
 void VulkanShaderModule::addVariables(map<string, ShaderVariableLocation>& variable_loactions)
 {
 	variable_loactions.insert(this->variable_loactions.begin(), this->variable_loactions.end());
+
+	//clear to save memory
+	this->variable_loactions.clear();
 }
 
 VkPipelineShaderStageCreateInfo VulkanShaderModule::getStageInfo()

@@ -5,6 +5,8 @@
 #include "Genesis/Rendering/PipelineSettings.hpp"
 #include "Genesis/WorldTransform.hpp"
 
+#include "Genesis/Rendering/RenderUtils.hpp"
+
 #include <fstream>
 
 using namespace Genesis;
@@ -29,9 +31,9 @@ Renderer::Renderer(RenderingBackend* backend)
 		this->shadow_views[i] = this->backend->createView(this->shadow_size, shadow_layout, CommandBufferType::SingleThread);
 	}
 
-	this->loaded_shaders["resources/shaders/vulkan/texture_light"] = ShaderLoader::loadShaderSingle(this->backend, "resources/shaders/vulkan/texture_light");
+	this->loaded_shaders["resources/shaders/vulkan/texture_directional"] = ShaderLoader::loadShaderSingle(this->backend, "resources/shaders/vulkan/texture_directional");
+	this->loaded_shaders["resources/shaders/vulkan/texture_directional_shadow"] = ShaderLoader::loadShaderSingle(this->backend, "resources/shaders/vulkan/texture_directional_shadow");
 	this->loaded_shaders["resources/shaders/vulkan/shadow"] = ShaderLoader::loadShaderSingle(this->backend, "resources/shaders/vulkan/shadow");
-	this->loaded_shaders["resources/shaders/vulkan/texture_light_shadow"] = ShaderLoader::loadShaderSingle(this->backend, "resources/shaders/vulkan/texture_light_shadow");
 }
 
 Renderer::~Renderer()
@@ -107,11 +109,11 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 
 	vector<DirectionalLightData> directional_light_shadow;
 
-	auto lights = entity_registry.view<DirectionalLight, WorldTransform>();
-	for (auto light : lights)
+	auto directional_lights = entity_registry.view<DirectionalLight, WorldTransform>();
+	for (auto directional : directional_lights)
 	{
-		auto directional_light = entity_registry.get<DirectionalLight>(light);
-		auto directional_light_transform = entity_registry.get<WorldTransform>(light);
+		auto directional_light = entity_registry.get<DirectionalLight>(directional);
+		auto directional_light_transform = entity_registry.get<WorldTransform>(directional);
 
 		if (directional_light.enabled && directional_light.casts_shadows)
 		{
@@ -185,15 +187,15 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 		command_buffer->setPipelineSettings(light_settings);
 
 		//Lights
-		auto lights = entity_registry.view<DirectionalLight, WorldTransform>();
-		for (auto light : lights)
+		auto directional_lights = entity_registry.view<DirectionalLight, WorldTransform>();
+		for (auto directional : directional_lights)
 		{
-			auto directional_light = entity_registry.get<DirectionalLight>(light);
-			auto directional_light_transform = entity_registry.get<WorldTransform>(light);
+			auto directional_light = entity_registry.get<DirectionalLight>(directional);
+			auto directional_light_transform = entity_registry.get<WorldTransform>(directional);
 
 			if (directional_light.enabled && !directional_light.casts_shadows)
 			{
-				Shader light_shader = this->loaded_shaders["resources/shaders/vulkan/texture_light"];
+				Shader light_shader = this->loaded_shaders["resources/shaders/vulkan/texture_directional"];
 				command_buffer->setShader(light_shader);
 				command_buffer->setUniformTexture("albedo_texture", texture);
 				command_buffer->setUniformMat4("matrices.mvp", mvp);
@@ -201,9 +203,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 				command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 				//Light
-				command_buffer->setUniformVec3("lights.directional.color", directional_light.color);
-				command_buffer->setUniformFloat("lights.directional.intensity", directional_light.intensity);
-				command_buffer->setUniformVec3("lights.directional.direction", directional_light_transform.current_transform.getForward());
+				UniformWrite::writeDirectionalLight(command_buffer, "lights.directional", directional_light, directional_light_transform.current_transform.getForward());
 				command_buffer->setUniformVec3("lights.eye_pos", (vector3F)transform.current_transform.getPosition());
 				
 				command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
@@ -215,7 +215,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 		{
 			DirectionalLightData& data = directional_light_shadow[i];
 
-			Shader light_shader = this->loaded_shaders["resources/shaders/vulkan/texture_light_shadow"];
+			Shader light_shader = this->loaded_shaders["resources/shaders/vulkan/texture_directional_shadow"];
 			command_buffer->setShader(light_shader);
 			command_buffer->setUniformTexture("albedo_texture", texture);
 			command_buffer->setUniformMat4("matrices.mvp", mvp);
@@ -223,9 +223,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 			command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 			//Light
-			command_buffer->setUniformVec3("lights.directional.color", data.light.color);
-			command_buffer->setUniformFloat("lights.directional.intensity", data.light.intensity);
-			command_buffer->setUniformVec3("lights.directional.direction", data.direction);
+			UniformWrite::writeDirectionalLight(command_buffer, "lights.directional", data.light, data.direction);
 			command_buffer->setUniformVec3("lights.eye_pos", (vector3F)transform.current_transform.getPosition());
 			command_buffer->setUniformMat4("lights.shadow_mv", data.shadow_transform);
 			command_buffer->setUniformView("shadow_map", data.shadow_view, 0);
