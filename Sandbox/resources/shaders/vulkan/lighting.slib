@@ -1,0 +1,116 @@
+struct DirectionalLight
+{
+    vec3 color;
+    float intensity;
+	
+	vec3 direction;
+};
+
+struct PointLight
+{
+    vec3 color;
+    float intensity;
+
+    vec3 attenuation;
+	vec3 position;
+    float range;
+};
+
+struct SpotLight
+{
+	vec3 color;
+    float intensity;
+
+    vec3 attenuation;
+	vec3 position;
+    float range;
+	
+    vec3 direction;
+    float cutoff;
+};
+
+vec4 CalcLight(vec3 color, float intensity, vec3 direction, vec3 normal, vec3 world_pos, vec3 eye_pos)
+{
+    float diffuseFactor = dot(normal, -direction);
+    
+    vec4 diffuseColor = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 specularColor = vec4(0.0, 0.0, 0.0, 0.0);
+    
+    if(diffuseFactor > 0.0)
+    {
+        diffuseColor = vec4(color, 1.0) * intensity * diffuseFactor;
+        
+        vec3 directionToEye = normalize(eye_pos - world_pos);
+        //vec3 reflectDirection = normalize(reflect(direction, normal));
+        vec3 halfDirection = normalize(directionToEye - direction);
+        
+        float specularFactor = dot(halfDirection, normal);
+        //specularFactor = pow(specularFactor, specularPower);
+		specularFactor = pow(specularFactor, 96.078431);
+        
+        if(specularFactor > 0.0)
+        {
+			specularColor = vec4(color, 1.0) * 0.5 * specularFactor;
+        }
+    }
+    
+    return diffuseColor + specularColor;
+}
+
+vec4 CalcPoint(vec3 color, float intensity, vec3 attenuation, vec3 position, float range, vec3 normal, vec3 world_pos, vec3 eye_pos)
+{
+ vec3 lightDirection = world_pos - position;
+    float distance_to_point = length(lightDirection);
+    
+    if(distance_to_point > range)
+        return vec4(0.0, 0.0, 0.0, 0.0);
+    
+    lightDirection = normalize(lightDirection);
+    
+    vec4 out_color = CalcLight(color, intensity, lightDirection, normal, world_pos, eye_pos);
+    
+    float attenuation_value = attenuation.x + //Constant
+                         attenuation.y * distance_to_point + //Linear
+                         attenuation.z * distance_to_point * distance_to_point + //Quadratic
+                         0.0001;
+                         
+    return out_color / attenuation_value;
+}
+
+vec4 CalcDirectionalLight(vec3 color, float intensity, vec3 direction, vec3 normal, vec3 world_pos, vec3 eye_pos)
+{
+    return CalcLight(color, intensity, direction, normal, world_pos, eye_pos);
+}
+
+
+vec4 CalcPointLight(PointLight point, vec3 normal, vec3 world_pos, vec3 eye_pos)
+{
+	return CalcPoint(point.color, point.intensity, point.attenuation, point.position, point.range, normal, world_pos, eye_pos);
+}
+
+vec4 CalcSpotLight(SpotLight spot, vec3 normal, vec3 world_pos, vec3 eye_pos)
+{
+    vec3 light_direction = normalize(world_pos - spot.position);
+    float spot_factor = dot(light_direction, spot.direction);
+    
+    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+    
+    if(spot_factor > spot.cutoff)
+    {
+        color = CalcPoint(spot.color, spot.intensity, spot.attenuation, spot.position, spot.range, normal, world_pos, eye_pos) * (1.0 - (1.0 - spot_factor)/(1.0 - spot.cutoff));
+    }
+    
+    return color;
+}
+
+float CalcShadow(sampler2D shadow_map, vec4 fragPosLightSpace)
+{
+    // perform perspective divide
+    vec3 projCoords = ((fragPosLightSpace.xyz / fragPosLightSpace.w) * 0.5) + 0.5;
+	float currentDepth = projCoords.z;
+	float closestDepth = (texture(shadow_map, projCoords.xy).r * 0.5) + 0.5;
+	
+	float bias = 0.00004;
+	float shadow = currentDepth + bias > closestDepth  ? 1.0 : 0.0;   
+    return shadow;
+}
