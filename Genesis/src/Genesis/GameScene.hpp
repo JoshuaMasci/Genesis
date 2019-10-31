@@ -23,8 +23,8 @@ namespace Genesis
 		virtual void drawWorld(double delta_time);
 
 		//TEMP lighting stuff
-		DirectionalLight light;
-
+		DirectionalLight directional;
+		SpotLight spot;
 
 	protected:
 		Application* application;
