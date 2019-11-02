@@ -68,7 +68,8 @@ namespace Genesis
 		vector<const char*> getDeviceExtensions();
 		vector<const char*> getLayers();
 
-		VkSampler linear_sampler;
+		VkSampler view_sampler;
+		VkSampler texture_sampler;
 
 		//Resource Stuff
 		void cycleResourceDeleters();

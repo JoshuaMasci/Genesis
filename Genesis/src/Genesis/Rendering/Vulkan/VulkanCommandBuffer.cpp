@@ -144,7 +144,7 @@ void VulkanCommandBuffer::setShader(Shader shader)
 		{
 			if (binding.second->type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
 			{
-				this->binding_image[binding.second->binding_location] = VK_NULL_HANDLE;
+				this->binding_image[binding.second->binding_location].view = VK_NULL_HANDLE;
 			}
 			else
 			{
@@ -211,11 +211,13 @@ void VulkanCommandBuffer::setUniformTexture(const string& name, Texture texture)
 	assert(this->current_shader != nullptr);
 
 	VkImageView image_view = ((VulkanTexture*)texture)->getImageView();
+	VkSampler image_sampler = ((VulkanTexture*)texture)->getSampler();
 
 	ShaderVariableLocation var_loc = this->current_shader->getVariableLocation(name);
-	if (this->binding_image[var_loc.location.binding_index] != image_view)
+	if (has_value(this->binding_image, var_loc.location.binding_index) && this->binding_image[var_loc.location.binding_index].view != image_view)
 	{
-		this->binding_image[var_loc.location.binding_index] = image_view;
+		this->binding_image[var_loc.location.binding_index].view = image_view;
+		this->binding_image[var_loc.location.binding_index].sampler = image_sampler;
 		this->has_descriptor_set_changed = true;
 	}
 }
@@ -225,11 +227,13 @@ void VulkanCommandBuffer::setUniformView(const string& name, View view, uint16_t
 	assert(this->current_shader != nullptr);
 
 	VkImageView image_view = ((VulkanView*)view)->getFramebuffer(this->frame_index)->getImageView(view_image_index);
+	VkSampler image_sampler = ((VulkanView*)view)->getSampler();
 
 	ShaderVariableLocation var_loc = this->current_shader->getVariableLocation(name);
-	if (this->binding_image[var_loc.location.binding_index] != image_view)
+	if (has_value(this->binding_image, var_loc.location.binding_index) && this->binding_image[var_loc.location.binding_index].view != image_view)
 	{
-		this->binding_image[var_loc.location.binding_index] = image_view;
+		this->binding_image[var_loc.location.binding_index].view = image_view;
+		this->binding_image[var_loc.location.binding_index].sampler = image_sampler;
 		this->has_descriptor_set_changed = true;
 	}
 }
@@ -302,8 +306,8 @@ void VulkanCommandBuffer::drawIndexedOffset(VertexBuffer vertex_handle, IndexBuf
 				write_index++;
 
 				image_info_list[image_info_index].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-				image_info_list[image_info_index].imageView = image.second;
-				image_info_list[image_info_index].sampler = this->sampler;
+				image_info_list[image_info_index].imageView = image.second.view;
+				image_info_list[image_info_index].sampler = image.second.sampler;
 
 				descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 				descriptor_write.pNext = VK_NULL_HANDLE;

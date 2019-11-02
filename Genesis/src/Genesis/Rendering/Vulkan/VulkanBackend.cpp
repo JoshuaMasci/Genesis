@@ -202,7 +202,7 @@ void VulkanBackend::destroyIndexBuffer(IndexBuffer index_buffer_index)
 
 Texture VulkanBackend::createTexture(vector2U size, void* data, uint64_t data_size)
 {
-	VulkanTexture* texture = new VulkanTexture(this->vulkan->device, this->vulkan->allocator, {size.x, size.y}, getMemoryUsage(MemoryUsage::GPU_Only), this->vulkan->linear_sampler);
+	VulkanTexture* texture = new VulkanTexture(this->vulkan->device, this->vulkan->allocator, {size.x, size.y}, getMemoryUsage(MemoryUsage::GPU_Only), this->vulkan->texture_sampler);
 	texture->fillTexture(this->vulkan->primary_graphics_pool, this->vulkan->device->getGraphicsQueue(), data, data_size);
 	return (Texture)texture;
 }
@@ -248,10 +248,10 @@ View VulkanBackend::createView(vector2U size, FramebufferLayout& layout, Command
 	Array<VulkanCommandBuffer*> command_buffers(frames_in_flight);
 	for (uint32_t i = 0; i < command_buffers.size(); i++)
 	{
-		command_buffers[i] = new VulkanCommandBuffer(0, i, this->vulkan->device->get(), this->vulkan->primary_graphics_pool, this->vulkan->pipeline_pool, this->vulkan->threads[0].descriptor_pool, this->vulkan->uniform_pool, this->vulkan->linear_sampler);
+		command_buffers[i] = new VulkanCommandBuffer(0, i, this->vulkan->device->get(), this->vulkan->primary_graphics_pool, this->vulkan->pipeline_pool, this->vulkan->threads[0].descriptor_pool, this->vulkan->uniform_pool, this->vulkan->texture_sampler);
 	}
 
-	VulkanView* view = new VulkanView(this->vulkan->device, this->vulkan->allocator, frames_in_flight, vk_size, color, depth, render_pass, command_buffers);
+	VulkanView* view = new VulkanView(this->vulkan->device, this->vulkan->allocator, frames_in_flight, vk_size, color, depth, render_pass, command_buffers, this->vulkan->view_sampler);
 	view->setClearValues(clear_colors);
 
 	return (View)view;
@@ -307,10 +307,10 @@ CommandBuffer* VulkanBackend::getScreenCommandBuffer()
 	return (CommandBuffer*)this->vulkan->frames_in_flight[this->frame_index].command_buffer;
 }
 
-matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, float aspect_ratio)
+matrix4F VulkanBackend::getPerspectiveMatrix(float fov, float z_near, float aspect_ratio)
 {
-	float fov = 1.0f / tan(glm::radians(camera->frame_of_view) / 2.0f);
-	matrix4F proj = glm::infinitePerspective(fov, aspect_ratio, camera->z_near);
+	float fovy = atan(tan(glm::radians(fov) / 2.0f) / aspect_ratio) * 2.0f;
+	matrix4F proj = glm::infinitePerspective(fovy, aspect_ratio, z_near);
 	proj[1][1] *= -1; //Need to apply this because vulkan flips the y-axis and that's not what I need
 
 	return proj;
@@ -319,10 +319,8 @@ matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, float aspect_ratio)
 matrix4F VulkanBackend::getPerspectiveMatrix(Camera* camera, View view_handle)
 {
 	VulkanView* view = (VulkanView*)view_handle;
-
 	VkExtent2D screen_size = view->getViewSize();
-	float aspect_ratio = ((float)screen_size.width) / ((float)screen_size.height);
-	return this->getPerspectiveMatrix(camera, aspect_ratio);
+	return this->getPerspectiveMatrix(camera->frame_of_view, camera->z_near, ((float)screen_size.width) / ((float)screen_size.height));
 }
 
 VertexBuffer VulkanBackend::getWholeScreenQuadVertex()

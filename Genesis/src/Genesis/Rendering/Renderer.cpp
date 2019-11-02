@@ -230,7 +230,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 	Transform& current = transform.current_transform;
 
 	matrix4F view = glm::lookAt(current.getPosition(), current.getPosition() + current.getForward(), current.getUp());
-	matrix4F proj = this->backend->getPerspectiveMatrix(&camera, aspect_ratio);
+	matrix4F proj = this->backend->getPerspectiveMatrix(&camera, this->view);
 	matrix4F mv = proj * view;
 
 	auto entity_model = entity_registry.view<Model, WorldTransform>();
@@ -414,7 +414,7 @@ matrix4F Renderer::drawDirectionalShadowView(EntityRegistry& entity_registry, Vi
 	return mv;
 }
 
-matrix4F Renderer::drawSpotShadowView(EntityRegistry& entity_registry, View shadow_view, SpotLight& directional, Transform& light_transform)
+matrix4F Renderer::drawSpotShadowView(EntityRegistry& entity_registry, View shadow_view, SpotLight& spot, Transform& light_transform)
 {
 	PipelineSettings model_settings;
 	model_settings.depth_test = DepthTest::Test_And_Write;
@@ -422,7 +422,7 @@ matrix4F Renderer::drawSpotShadowView(EntityRegistry& entity_registry, View shad
 
 	matrix4F view = glm::lookAt((vector3F)light_transform.getPosition(), (vector3F)light_transform.getPosition() + (vector3F)light_transform.getForward(), (vector3F)light_transform.getUp());
 
-	Camera camera(glm::degrees(acos(directional.cutoff) * 2.0f));
+	Camera camera(spot.cutoff);
 	matrix4F proj = this->backend->getPerspectiveMatrix(&camera, shadow_view);
 
 	matrix4F mv = proj * view;

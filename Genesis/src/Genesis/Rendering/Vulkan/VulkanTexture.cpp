@@ -8,6 +8,7 @@ VulkanTexture::VulkanTexture(VulkanDevice* device, VulkanAllocator* allocator, V
 {
 	this->device = device->get();
 	this->allocator = allocator;
+	this->sampler = sampler;
 	this->size = size;
 
 	VkImageCreateInfo image_info = {};

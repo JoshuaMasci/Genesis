@@ -45,7 +45,7 @@ namespace Genesis
 		//TEMP
 		virtual CommandBuffer* getScreenCommandBuffer() = 0;
 
-		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) = 0;
+		virtual matrix4F getPerspectiveMatrix(float fov, float z_near, float aspect_ratio) = 0;
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, View view) = 0;
 		//virtual matrix4F getorthographicMatrix();
 

@@ -39,7 +39,7 @@ namespace Genesis
 			command_buffer->setUniformFloat(base_name + ".range", directional.range);
 
 			command_buffer->setUniformVec3(base_name + ".direction", direction);
-			command_buffer->setUniformFloat(base_name + ".cutoff", directional.cutoff);
+			command_buffer->setUniformFloat(base_name + ".cutoff", glm::cos(glm::radians(directional.cutoff / 2.0f)));
 		};
 	};
 }

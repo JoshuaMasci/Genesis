@@ -73,9 +73,15 @@ namespace Genesis
 		bool has_descriptor_set_changed = true;
 		VkDescriptorSet last_descriptor_set = VK_NULL_HANDLE;
 
+		struct ImageBinding
+		{
+			VkImageView view;
+			VkSampler sampler;
+		};
+
 		//Bindings
 		map<uint32_t, Array<uint8_t>> binding_uniform_buffers;
-		map<uint32_t, VkImageView> binding_image;
+		map<uint32_t, ImageBinding> binding_image;
 		map<VkShaderStageFlagBits, Array<uint8_t>> push_constant_blocks;
 	};
 }

@@ -2,10 +2,11 @@
 
 using namespace Genesis;
 
-VulkanView::VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, Array<VulkanCommandBuffer*> command_buffers)
+VulkanView::VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, Array<VulkanCommandBuffer*> command_buffers, VkSampler sampler)
 {
 	this->device = device;
 	this->allocator = allocator;
+	this->sampler = sampler;
 
 	this->size = size;
 	this->color_formats = color_formats;

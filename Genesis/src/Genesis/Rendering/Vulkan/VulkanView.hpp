@@ -14,7 +14,7 @@ namespace Genesis
 	class VulkanView
 	{
 	public:
-		VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, Array<VulkanCommandBuffer*> command_buffers);
+		VulkanView(VulkanDevice* device, VulkanAllocator* allocator, uint32_t frames_in_flight, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, Array<VulkanCommandBuffer*> command_buffers, VkSampler sampler);
 		~VulkanView();
 
 		void startView(uint32_t frame);
@@ -30,9 +30,12 @@ namespace Genesis
 		inline VulkanCommandBuffer* getCommandBuffer(uint32_t frame) { return this->command_buffers[frame]; };
 		inline VulkanFramebuffer* getFramebuffer(uint32_t frame) { return this->framebuffers[frame]; };
 
+		VkSampler getSampler() { return this->sampler; };
+
 	private:
 		VulkanDevice* device = nullptr;
 		VulkanAllocator* allocator = nullptr;
+		VkSampler sampler;
 		VkRenderPass render_pass;
 		VkExtent2D size;
 

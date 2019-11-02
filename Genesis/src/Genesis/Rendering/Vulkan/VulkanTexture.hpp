@@ -17,10 +17,12 @@ namespace Genesis
 
 		inline VkImage get() { return this->image; };
 		inline VkImageView getImageView() { return this->image_view; };
+		inline VkSampler getSampler() { return this->sampler; };
 
 	private:
 		VkDevice device;
 		VulkanAllocator* allocator = nullptr;
+		VkSampler sampler;
 
 		VkExtent2D size;
 		VkImage image;

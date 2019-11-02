@@ -46,7 +46,7 @@ GameScene::GameScene(Application* app)
 	this->entity_registry.get<DirectionalLight>(this->directional_light).casts_shadows = true;
 	this->entity_registry.get<DirectionalLight>(this->directional_light).shadow_size = vector2F(10.0f);
 	this->entity_registry.assign<WorldTransform>(this->directional_light, vector3D(0.0, 10.0, 0.0), glm::angleAxis(3.1415926 / 2.0, vector3D(1.0, 0.0, 0.0)));
-	this->entity_registry.assign<SpotLight>(this->directional_light, 0.5f, 30.0f, vector3F(0.0f, 0.1f, 0.01f), vector3F(0.4f), 1.0f);
+	this->entity_registry.assign<SpotLight>(this->directional_light, 90.0f, 30.0f, vector3F(0.0f, 0.1f, 0.01f), vector3F(0.4f), 1.0f);
 
 }
 
@@ -97,7 +97,7 @@ void GameScene::drawWorld(double delta_time)
 
 			ImGui::Begin("Spot Light");
 			ImGui::SliderFloat("Range", &this->spot.range, 0.0f, 100.0f);
-			ImGui::SliderFloat("Cutoff", &this->spot.cutoff, 0.0f, 1.0f);
+			ImGui::SliderFloat("Cutoff", &this->spot.cutoff, 5.0f, 179.0f);
 			ImGui::SliderFloat("Intensity", &this->spot.intensity, 0.0f, 10.0f);
 			ImGui::ColorEdit3("Color", &this->spot.color.x);
 			ImGui::SliderFloat3("Attenuation", &this->spot.attenuation.x, 0.0f, 1.0f);

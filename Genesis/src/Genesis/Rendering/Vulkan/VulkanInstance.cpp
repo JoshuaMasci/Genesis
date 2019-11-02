@@ -70,22 +70,44 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 	this->render_pass_manager = new VulkanRenderPassPool(this->device->get());
 
 	{
-		VkSamplerCreateInfo samplerInfo = {};
-		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		samplerInfo.magFilter = VK_FILTER_LINEAR;
-		samplerInfo.minFilter = VK_FILTER_LINEAR;
-		samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-		samplerInfo.anisotropyEnable = VK_FALSE;
-		samplerInfo.maxAnisotropy = 0;
-		samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-		samplerInfo.unnormalizedCoordinates = VK_FALSE;
-		samplerInfo.compareEnable = VK_FALSE;
-		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		VkSamplerCreateInfo sampler_info = {};
+		sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		sampler_info.magFilter = VK_FILTER_NEAREST;
+		sampler_info.minFilter = VK_FILTER_LINEAR;
+		sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		sampler_info.anisotropyEnable = VK_FALSE;
+		sampler_info.maxAnisotropy = 0;
+		sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		sampler_info.unnormalizedCoordinates = VK_FALSE;
+		sampler_info.compareEnable = VK_FALSE;
+		sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+		sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-		if (vkCreateSampler(this->device->get(), &samplerInfo, nullptr, &this->linear_sampler) != VK_SUCCESS)
+		if (vkCreateSampler(this->device->get(), &sampler_info, nullptr, &this->texture_sampler) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create texture sampler!");
+		}
+	}
+
+	{
+		VkSamplerCreateInfo sampler_info = {};
+		sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		sampler_info.magFilter = VK_FILTER_NEAREST;
+		sampler_info.minFilter = VK_FILTER_NEAREST;
+		sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		sampler_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		sampler_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+		sampler_info.anisotropyEnable = VK_FALSE;
+		sampler_info.maxAnisotropy = 0;
+		sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		sampler_info.unnormalizedCoordinates = VK_FALSE;
+		sampler_info.compareEnable = VK_FALSE;
+		sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+		sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+		if (vkCreateSampler(this->device->get(), &sampler_info, nullptr, &this->view_sampler) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create texture sampler!");
 		}
@@ -95,7 +117,7 @@ VulkanInstance::VulkanInstance(Window* window, uint32_t thread_count, uint32_t F
 	for (uint32_t i = 0; i < this->frames_in_flight.size(); i++)
 	{
 		VulkanFrame* frame = &this->frames_in_flight[i];
-		frame->command_buffer = new VulkanCommandBuffer(0, i, this->device->get(), this->primary_graphics_pool, this->pipeline_pool, this->threads[0].descriptor_pool, this->uniform_pool, this->linear_sampler);
+		frame->command_buffer = new VulkanCommandBuffer(0, i, this->device->get(), this->primary_graphics_pool, this->pipeline_pool, this->threads[0].descriptor_pool, this->uniform_pool, this->texture_sampler);
 		frame->image_available_semaphore = this->device->createSemaphore();
 		frame->command_buffer_done_fence = this->device->createFence();
 		frame->command_buffer_done_semaphore = this->device->createSemaphore();
@@ -126,7 +148,8 @@ VulkanInstance::~VulkanInstance()
 
 	vkDeviceWaitIdle(this->device->get());
 
-	vkDestroySampler(this->device->get(), this->linear_sampler, nullptr);
+	vkDestroySampler(this->device->get(), this->view_sampler, nullptr);
+	vkDestroySampler(this->device->get(), this->texture_sampler, nullptr);
 
 	delete this->descriptor_pool;
 	delete this->uniform_pool;

@@ -45,7 +45,7 @@ namespace Genesis
 		virtual CommandBuffer* getScreenCommandBuffer() override;
 
 		//Utils
-		virtual matrix4F getPerspectiveMatrix(Camera* camera, float aspect_ratio) override;
+		virtual matrix4F getPerspectiveMatrix(float fov, float z_near, float aspect_ratio) override;
 		virtual matrix4F getPerspectiveMatrix(Camera* camera, View view) override;
 
 		virtual VertexBuffer getWholeScreenQuadVertex() override;
