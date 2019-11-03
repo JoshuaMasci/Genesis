@@ -28,7 +28,7 @@ namespace Genesis
 
 	struct PointLight
 	{
-		PointLight(float range = 0.0f, vector3F attenuation = vector3F(0.0f), vector3F color = vector3F(0.0f), float intensity = 0.0f, bool enabled = true)
+		PointLight(float range = 0.0f, vector2F attenuation = vector2F(0.0f), vector3F color = vector3F(0.0f), float intensity = 0.0f, bool enabled = true)
 		{
 			this->enabled = enabled;
 
@@ -45,12 +45,12 @@ namespace Genesis
 		float intensity;
 
 		float range;
-		vector3F attenuation;
+		vector2F attenuation;
 	};
 
 	struct SpotLight
 	{
-		SpotLight(float cutoff = 0.0f, float range = 0.0f, vector3F attenuation = vector3F(0.0f), vector3F color = vector3F(0.0f), float intensity = 0.0f, bool casts_shadows = false, bool enabled = true)
+		SpotLight(float cutoff = 0.0f, float range = 0.0f, vector2F attenuation = vector2F(0.0f), vector3F color = vector3F(0.0f), float intensity = 0.0f, bool casts_shadows = false, bool enabled = true)
 		{
 			this->enabled = enabled;
 			this->casts_shadows = casts_shadows;
@@ -70,7 +70,7 @@ namespace Genesis
 		float intensity;
 
 		float range;
-		vector3F attenuation;
+		vector2F attenuation;
 		float cutoff;
 	};
 }

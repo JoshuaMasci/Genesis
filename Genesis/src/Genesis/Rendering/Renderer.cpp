@@ -31,18 +31,30 @@ Renderer::Renderer(RenderingBackend* backend)
 		this->shadow_views[i] = this->backend->createView(this->shadow_size, shadow_layout, CommandBufferType::SingleThread);
 	}
 
+	this->loaded_shaders["resources/shaders/vulkan/texture"] = ShaderLoader::loadShaderSingle(this->backend, "resources/shaders/vulkan/texture");
 	this->loaded_shaders["resources/shaders/vulkan/shadow"] = ShaderLoader::loadShaderSingle(this->backend, "resources/shaders/vulkan/shadow");
 
 	string texture_light_vert = "resources/shaders/vulkan/texture_light.vert.spv";
 	this->loaded_shaders["resources/shaders/vulkan/texture_directional"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_directional.frag.spv");
-	this->loaded_shaders["resources/shaders/vulkan/texture_directional_shadow"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_directional_shadow.frag.spv");
+	this->loaded_shaders["resources/shaders/vulkan/texture_point"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_point.frag.spv");
+	this->loaded_shaders["resources/shaders/vulkan/texture_spot"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_spot.frag.spv");
 
 	//Point light's don't get shadows
 	//Don't want to deal with cubemaps yet
-	this->loaded_shaders["resources/shaders/vulkan/texture_point"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_point.frag.spv");
-
-	this->loaded_shaders["resources/shaders/vulkan/texture_spot"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_spot.frag.spv");
+	this->loaded_shaders["resources/shaders/vulkan/texture_directional_shadow"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_directional_shadow.frag.spv");
 	this->loaded_shaders["resources/shaders/vulkan/texture_spot_shadow"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_spot_shadow.frag.spv");
+
+	{
+		this->albedo_set.ambient_pass = this->loaded_shaders["resources/shaders/vulkan/texture"];
+		this->albedo_set.shadow_pass = this->loaded_shaders["resources/shaders/vulkan/shadow"];
+
+		this->albedo_set.directional_pass = this->loaded_shaders["resources/shaders/vulkan/texture_directional"];
+		this->albedo_set.point_pass = this->loaded_shaders["resources/shaders/vulkan/texture_point"];
+		this->albedo_set.spot_pass = this->loaded_shaders["resources/shaders/vulkan/texture_spot"];
+
+		this->albedo_set.directional_shadow_pass = this->loaded_shaders["resources/shaders/vulkan/texture_directional_shadow"];
+		this->albedo_set.spot_shadow_pass = this->loaded_shaders["resources/shaders/vulkan/texture_spot_shadow"];
+	}
 }
 
 Renderer::~Renderer()
@@ -140,7 +152,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 			auto directional_light = entity_registry.get<DirectionalLight>(directional);
 			auto directional_light_transform = entity_registry.get<WorldTransform>(directional);
 
-			if (directional_light.enabled)
+			if (directional_light.enabled && directional_light.intensity != 0.0)
 			{
 				DirectionalLightData light_data;
 				light_data.light = directional_light;
@@ -171,7 +183,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 			auto point_light = entity_registry.get<PointLight>(point);
 			auto point_light_transform = entity_registry.get<WorldTransform>(point);
 
-			if (point_light.enabled)
+			if (point_light.enabled && point_light.intensity != 0.0)
 			{
 				PointLightData light_data;
 				light_data.light = point_light;
@@ -189,7 +201,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 			auto spot_light = entity_registry.get<SpotLight>(spot);
 			auto spot_light_transform = entity_registry.get<WorldTransform>(spot);
 
-			if (spot_light.enabled)
+			if (spot_light.enabled && spot_light.intensity != 0.0)
 			{
 				SpotLightData light_data;
 				light_data.light = spot_light;
@@ -226,8 +238,8 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 	float aspect_ratio = ((float)this->view_size.x) / ((float)this->view_size.y);
 
 	auto& camera = entity_registry.get<Camera>(camera_entity);
-	auto& transform = entity_registry.get<WorldTransform>(camera_entity);
-	Transform& current = transform.current_transform;
+	auto& camera_transform = entity_registry.get<WorldTransform>(camera_entity);
+	Transform& current = camera_transform.current_transform;
 
 	matrix4F view = glm::lookAt(current.getPosition(), current.getPosition() + current.getForward(), current.getUp());
 	matrix4F proj = this->backend->getPerspectiveMatrix(&camera, this->view);
@@ -236,27 +248,33 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 	auto entity_model = entity_registry.view<Model, WorldTransform>();
 	for (auto entity : entity_model)
 	{
-		auto &model = entity_model.get<Model>(entity);
-		auto &transform = entity_model.get<WorldTransform>(entity);
+		auto& model = entity_model.get<Model>(entity);
+		auto& transform = entity_model.get<WorldTransform>(entity);
+
+		ModelShaderSet* set = this->getShaderSet(model);
+		if (set == nullptr)
+		{
+			printf("No suitable shader set found!\n");
+			continue;
+		}
 
 		if (!has_value(this->loaded_meshes, model.mesh))
 		{
 			this->loaded_meshes[model.mesh] = ObjLoader::loadMesh(this->backend, model.mesh);
 		}
 
-		if (!has_value(this->loaded_textures, model.texture))
+		if (model.albedo_texture != "" && !has_value(this->loaded_textures, model.albedo_texture))
 		{
-			this->loaded_textures[model.texture] = PngLoader::loadTexture(this->backend, model.texture);
+			this->loaded_textures[model.albedo_texture] = PngLoader::loadTexture(this->backend, model.albedo_texture);
 		}
 
-		if (!has_value(this->loaded_shaders, model.shader))
+		if (model.normal_texture != "" && !has_value(this->loaded_shaders, model.normal_texture))
 		{
-			this->loaded_shaders[model.shader] = ShaderLoader::loadShaderSingle(this->backend, model.shader);
+			this->loaded_textures[model.normal_texture] = PngLoader::loadTexture(this->backend, model.normal_texture);
 		}
 
 		Mesh mesh = this->loaded_meshes[model.mesh];
-		Texture texture = this->loaded_textures[model.texture];
-		Shader shader = this->loaded_shaders[model.shader];
+		Texture texture = this->loaded_textures[model.albedo_texture];
 
 		matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
 		matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
@@ -265,7 +283,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 		matrix3F normal_matrix(orientation);
 		normal_matrix = glm::inverseTranspose(normal_matrix);
 
-		command_buffer->setShader(shader);
+		command_buffer->setShader(set->ambient_pass);
 		command_buffer->setPipelineSettings(model_settings);
 		command_buffer->setUniformTexture("albedo_texture", texture);
 		command_buffer->setUniformMat4("matrices.mvp", mvp);
@@ -280,7 +298,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 		{
 			DirectionalLightData light_data = directional_lights[i];
 
-			Shader light_shader = (light_data.shadow_view == nullptr) ? this->loaded_shaders["resources/shaders/vulkan/texture_directional"] : this->loaded_shaders["resources/shaders/vulkan/texture_directional_shadow"];
+			Shader light_shader = (light_data.shadow_view == nullptr) ? set->directional_pass : set->directional_shadow_pass;
 			command_buffer->setShader(light_shader);
 			command_buffer->setUniformTexture("albedo_texture", texture);
 			command_buffer->setUniformMat4("matrices.mvp", mvp);
@@ -289,7 +307,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 
 			//Light
 			UniformWrite::writeDirectionalLight(command_buffer, "lights.directional", light_data.light, light_data.direction);
-			command_buffer->setUniformVec3("lights.eye_pos", (vector3F)transform.current_transform.getPosition());
+			command_buffer->setUniformVec3("lights.eye_pos", (vector3F)camera_transform.current_transform.getPosition());
 
 			if (light_data.shadow_view != nullptr) //No Shadow
 			{
@@ -304,7 +322,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 		for (size_t i = 0; i < point_lights.size(); i++)
 		{
 			PointLightData light_data = point_lights[i];
-			Shader light_shader = this->loaded_shaders["resources/shaders/vulkan/texture_point"];
+			Shader light_shader = set->point_pass;
 			command_buffer->setShader(light_shader);
 			command_buffer->setUniformTexture("albedo_texture", texture);
 			command_buffer->setUniformMat4("matrices.mvp", mvp);
@@ -313,7 +331,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 
 			//Light
 			UniformWrite::writePointLight(command_buffer, "lights.directional", light_data.light, light_data.position);
-			command_buffer->setUniformVec3("lights.eye_pos", (vector3F)transform.current_transform.getPosition());
+			command_buffer->setUniformVec3("lights.eye_pos", (vector3F)camera_transform.current_transform.getPosition());
 
 			command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 		}
@@ -323,7 +341,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 		{
 			SpotLightData light_data = spot_lights[i];
 
-			Shader light_shader = (light_data.shadow_view == nullptr) ? this->loaded_shaders["resources/shaders/vulkan/texture_spot"] : this->loaded_shaders["resources/shaders/vulkan/texture_spot_shadow"];
+			Shader light_shader = (light_data.shadow_view == nullptr) ? set->spot_pass : set->spot_shadow_pass;
 			command_buffer->setShader(light_shader);
 			command_buffer->setUniformTexture("albedo_texture", texture);
 			command_buffer->setUniformMat4("matrices.mvp", mvp);
@@ -332,7 +350,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 
 			//Light
 			UniformWrite::writeSpotLight(command_buffer, "lights.spot", light_data.light, light_data.position, light_data.direction);
-			command_buffer->setUniformVec3("lights.eye_pos", (vector3F)transform.current_transform.getPosition());
+			command_buffer->setUniformVec3("lights.eye_pos", (vector3F)camera_transform.current_transform.getPosition());
 
 			if (light_data.shadow_view != nullptr) //No Shadow
 			{
@@ -360,6 +378,16 @@ uint32_t Renderer::getViewImageIndex()
 	return 0;
 }
 
+ModelShaderSet* Renderer::getShaderSet(Model& model)
+{
+	ModelShaderSet* shader_set = nullptr;
+	if (model.albedo_texture != "" && model.normal_texture == "")
+	{
+		shader_set = &this->albedo_set;
+	}
+	return shader_set;
+}
+
 matrix4F Renderer::drawDirectionalShadowView(EntityRegistry& entity_registry, View shadow_view, DirectionalLight& directional, Transform& light_transform)
 {
 	PipelineSettings model_settings;
@@ -379,7 +407,6 @@ matrix4F Renderer::drawDirectionalShadowView(EntityRegistry& entity_registry, Vi
 	this->backend->startView(shadow_view);
 	CommandBuffer* command_buffer = this->backend->getViewCommandBuffer(shadow_view);
 	command_buffer->setPipelineSettings(model_settings);
-	command_buffer->setShader(this->loaded_shaders["resources/shaders/vulkan/shadow"]);
 
 	auto entity_model = entity_registry.view<Model, WorldTransform>();
 	for (auto entity : entity_model)
@@ -392,10 +419,13 @@ matrix4F Renderer::drawDirectionalShadowView(EntityRegistry& entity_registry, Vi
 			this->loaded_meshes[model.mesh] = ObjLoader::loadMesh(this->backend, model.mesh);
 		}
 
-		if (!has_value(this->loaded_textures, model.texture))
+		ModelShaderSet* set = this->getShaderSet(model);
+		if (set == nullptr)
 		{
-			this->loaded_textures[model.texture] = PngLoader::loadTexture(this->backend, model.texture);
+			printf("No suitable shader set found!\n");
+			continue;
 		}
+		command_buffer->setShader(set->shadow_pass);
 
 		Mesh mesh = this->loaded_meshes[model.mesh];
 
@@ -443,10 +473,13 @@ matrix4F Renderer::drawSpotShadowView(EntityRegistry& entity_registry, View shad
 			this->loaded_meshes[model.mesh] = ObjLoader::loadMesh(this->backend, model.mesh);
 		}
 
-		if (!has_value(this->loaded_textures, model.texture))
+		ModelShaderSet* set = this->getShaderSet(model);
+		if (set == nullptr)
 		{
-			this->loaded_textures[model.texture] = PngLoader::loadTexture(this->backend, model.texture);
+			printf("No suitable shader set found!\n");
+			continue;
 		}
+		command_buffer->setShader(set->shadow_pass);
 
 		Mesh mesh = this->loaded_meshes[model.mesh];
 

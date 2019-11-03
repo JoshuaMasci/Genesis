@@ -26,27 +26,27 @@ GameScene::GameScene(Application* app)
 
 	this->temp = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->temp, vector3D(0.0, 0.0, 0.0), glm::angleAxis(3.1415926/2.0, vector3D(0.0, 1.0, 0.0)));
-	this->entity_registry.assign<Model>(this->temp, "resources/meshes/cube.obj", "resources/textures/1k_grid.png", "resources/shaders/vulkan/texture");
+	this->entity_registry.assign<Model>(this->temp, "resources/meshes/cube.obj", "resources/textures/1k_grid.png", "");
 
 	EntityId rock = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(rock, vector3D(0.0, 0.0, 2.0));
-	this->entity_registry.assign<Model>(rock, "resources/test_rock/rock.obj", "resources/test_rock/rock_d.png", "resources/shaders/vulkan/texture");
+	this->entity_registry.assign<Model>(rock, "resources/test_rock/rock.obj", "resources/test_rock/rock_d.png", "");
 
 	EntityId plane = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(plane, vector3D(0.0, -3.0, 0.0));
-	this->entity_registry.assign<Model>(plane, "resources/meshes/plane.obj", "resources/textures/4k_grid.png", "resources/shaders/vulkan/texture");
+	this->entity_registry.assign<Model>(plane, "resources/meshes/plane.obj", "resources/textures/4k_grid.png", "");
 
 	this->camera = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->camera, vector3D(0.0, 0.75, -2.0));
-	this->entity_registry.assign<Camera>(this->camera, 75.0f);
+	this->entity_registry.assign<Camera>(this->camera, 90.0f);
 	this->entity_registry.assign<DebugCamera>(this->camera, 0.5, 0.2);
 
 	this->directional_light = this->entity_registry.create();
 	this->entity_registry.assign<DirectionalLight>(this->directional_light, vector3F(1.0f), 0.1F);
 	this->entity_registry.get<DirectionalLight>(this->directional_light).casts_shadows = true;
-	this->entity_registry.get<DirectionalLight>(this->directional_light).shadow_size = vector2F(10.0f);
+	this->entity_registry.get<DirectionalLight>(this->directional_light).shadow_size = vector2F(20.0f);
 	this->entity_registry.assign<WorldTransform>(this->directional_light, vector3D(0.0, 10.0, 0.0), glm::angleAxis(3.1415926 / 2.0, vector3D(1.0, 0.0, 0.0)));
-	this->entity_registry.assign<SpotLight>(this->directional_light, 90.0f, 30.0f, vector3F(0.0f, 0.1f, 0.01f), vector3F(0.4f), 1.0f);
+	this->entity_registry.assign<SpotLight>(this->directional_light, 90.0f, 30.0f, vector2F(0.1f, 0.01f), vector3F(0.4f), 1.0f);
 
 }
 
@@ -87,6 +87,7 @@ void GameScene::drawWorld(double delta_time)
 
 		this->directional = this->entity_registry.get<DirectionalLight>(this->directional_light);
 		this->spot = this->entity_registry.get<SpotLight>(this->directional_light);
+		float fov = this->entity_registry.get<Camera>(this->camera).frame_of_view;
 		this->ui_renderer->startFrame();
 		{
 			ImGui::Begin("Directional Light");
@@ -97,12 +98,15 @@ void GameScene::drawWorld(double delta_time)
 
 			ImGui::Begin("Spot Light");
 			ImGui::SliderFloat("Range", &this->spot.range, 0.0f, 100.0f);
-			ImGui::SliderFloat("Cutoff", &this->spot.cutoff, 5.0f, 179.0f);
+			ImGui::SliderFloat("Cutoff", &this->spot.cutoff, 5.0f, 140.0f);
 			ImGui::SliderFloat("Intensity", &this->spot.intensity, 0.0f, 10.0f);
 			ImGui::ColorEdit3("Color", &this->spot.color.x);
-			ImGui::SliderFloat3("Attenuation", &this->spot.attenuation.x, 0.0f, 1.0f);
+			ImGui::SliderFloat2("Attenuation", &this->spot.attenuation.x, 0.0f, 1.0f);
 			ImGui::Checkbox("Cast_Shadows", &this->spot.casts_shadows);
+			ImGui::End();
 
+			ImGui::Begin("Camera");
+			ImGui::SliderFloat("FOVX", &fov, 5.0f, 140.0f);
 			ImGui::End();
 
 		}
@@ -110,6 +114,8 @@ void GameScene::drawWorld(double delta_time)
 		this->ui_renderer->endFrame();
 		this->entity_registry.get<DirectionalLight>(this->directional_light) = this->directional;
 		this->entity_registry.get<SpotLight>(this->directional_light) = this->spot;
+		this->entity_registry.get<Camera>(this->camera).frame_of_view = fov;
+
 
 		CommandBuffer* screen_buffer = this->application->rendering_backend->getScreenCommandBuffer();
 

@@ -18,28 +18,28 @@ namespace Genesis
 			command_buffer->setUniformVec3(base_name + ".direction", direction);
 		};
 		
-		inline static void writePointLight(CommandBuffer* command_buffer, string base_name, PointLight& directional, vector3F position)
+		inline static void writePointLight(CommandBuffer* command_buffer, string base_name, PointLight& point, vector3F position)
 		{
-			command_buffer->setUniformVec3(base_name + ".color", directional.color);
-			command_buffer->setUniformFloat(base_name + ".intensity", directional.intensity);
+			command_buffer->setUniformVec3(base_name + ".color", point.color);
+			command_buffer->setUniformFloat(base_name + ".intensity", point.intensity);
 
-			command_buffer->setUniformVec3(base_name + ".attenuation", directional.attenuation);
+			command_buffer->setUniformVec2(base_name + ".attenuation", point.attenuation);
 			command_buffer->setUniformVec3(base_name + ".position", position);
-			command_buffer->setUniformFloat(base_name + ".range", directional.range);
+			command_buffer->setUniformFloat(base_name + ".range", point.range);
 
 		};
 		
-		inline static void writeSpotLight(CommandBuffer* command_buffer, string base_name, SpotLight& directional, vector3F position, vector3F direction)
+		inline static void writeSpotLight(CommandBuffer* command_buffer, string base_name, SpotLight& spot, vector3F position, vector3F direction)
 		{
-			command_buffer->setUniformVec3(base_name + ".color", directional.color);
-			command_buffer->setUniformFloat(base_name + ".intensity", directional.intensity);
+			command_buffer->setUniformVec3(base_name + ".color", spot.color);
+			command_buffer->setUniformFloat(base_name + ".intensity", spot.intensity);
 
-			command_buffer->setUniformVec3(base_name + ".attenuation", directional.attenuation);
+			command_buffer->setUniformVec2(base_name + ".attenuation", spot.attenuation);
 			command_buffer->setUniformVec3(base_name + ".position", position);
-			command_buffer->setUniformFloat(base_name + ".range", directional.range);
+			command_buffer->setUniformFloat(base_name + ".range", spot.range);
 
 			command_buffer->setUniformVec3(base_name + ".direction", direction);
-			command_buffer->setUniformFloat(base_name + ".cutoff", glm::cos(glm::radians(directional.cutoff / 2.0f)));
+			command_buffer->setUniformFloat(base_name + ".cutoff", glm::cos(glm::radians(spot.cutoff / 2.0f)));
 		};
 	};
 }

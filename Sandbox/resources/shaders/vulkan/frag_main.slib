@@ -1,0 +1,9 @@
+layout(location = 0) out vec4 out_color;
+
+void main()
+{
+	vec4 base_color = calcBaseColor();
+	vec3 normal = calcNormal();
+	vec4 light_color = calcLightColor(normal);
+	out_color = base_color * light_color;
+}

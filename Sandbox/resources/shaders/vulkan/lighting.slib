@@ -11,7 +11,7 @@ struct PointLight
     vec3 color;
     float intensity;
 
-    vec3 attenuation;
+    vec2 attenuation;
 	vec3 position;
     float range;
 };
@@ -21,7 +21,7 @@ struct SpotLight
 	vec3 color;
     float intensity;
 
-    vec3 attenuation;
+    vec2 attenuation;
 	vec3 position;
     float range;
 	
@@ -29,35 +29,30 @@ struct SpotLight
     float cutoff;
 };
 
+//TODO configure specular_factor;
 vec4 CalcLight(vec3 color, float intensity, vec3 direction, vec3 normal, vec3 world_pos, vec3 eye_pos)
 {
     float diffuseFactor = dot(normal, -direction);
     
-    vec4 diffuseColor = vec4(0.0, 0.0, 0.0, 0.0);
-    vec4 specularColor = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 diffuse_color = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 specular_color = vec4(0.0, 0.0, 0.0, 0.0);
     
     if(diffuseFactor > 0.0)
     {
-        diffuseColor = vec4(color, 1.0) * intensity * diffuseFactor;
+        diffuse_color = vec4(color, 1.0) * intensity * diffuseFactor;
+        	
+		float specular_strength = 0.5;
+        vec3 eye_dir = normalize(eye_pos - world_pos);
+        vec3 reflect_dir = normalize(reflect(direction, normal));
         
-        vec3 directionToEye = normalize(eye_pos - world_pos);
-        //vec3 reflectDirection = normalize(reflect(direction, normal));
-        vec3 halfDirection = normalize(directionToEye - direction);
-        
-        float specularFactor = dot(halfDirection, normal);
-        //specularFactor = pow(specularFactor, specularPower);
-		specularFactor = pow(specularFactor, 96.078431);
-        
-        if(specularFactor > 0.0)
-        {
-			specularColor = vec4(color, 1.0) * 0.5 * specularFactor;
-        }
+        float specular_factor = pow(max(dot(eye_dir, reflect_dir), 0.0), 32.0);
+		specular_color = vec4(color, 1.0) * specular_strength * specular_factor;
     }
     
-    return diffuseColor + specularColor;
+    return diffuse_color + specular_color;
 }
 
-vec4 CalcPoint(vec3 color, float intensity, vec3 attenuation, vec3 position, float range, vec3 normal, vec3 world_pos, vec3 eye_pos)
+vec4 CalcPoint(vec3 color, float intensity, vec2 attenuation, vec3 position, float range, vec3 normal, vec3 world_pos, vec3 eye_pos)
 {
  vec3 lightDirection = world_pos - position;
     float distance_to_point = length(lightDirection);
@@ -69,10 +64,10 @@ vec4 CalcPoint(vec3 color, float intensity, vec3 attenuation, vec3 position, flo
     
     vec4 out_color = CalcLight(color, intensity, lightDirection, normal, world_pos, eye_pos);
     
-    float attenuation_value = attenuation.x + //Constant
-                         attenuation.y * distance_to_point + //Linear
-                         attenuation.z * distance_to_point * distance_to_point + //Quadratic
-                         0.0001;
+    float attenuation_value =
+                         (attenuation.x * distance_to_point) + //Linear
+                         (attenuation.y * (distance_to_point * distance_to_point)) + //Quadratic
+                         0.0001; //Stop it from being zero
                          
     return out_color / attenuation_value;
 }

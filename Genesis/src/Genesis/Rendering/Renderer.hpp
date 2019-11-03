@@ -13,8 +13,21 @@ namespace Genesis
 	struct Model
 	{
 		string mesh;
-		string texture;
-		string shader;
+		string albedo_texture;
+		string normal_texture;
+	};
+
+	struct ModelShaderSet
+	{
+		Shader ambient_pass;
+		Shader shadow_pass;
+
+		Shader directional_pass;
+		Shader point_pass;
+		Shader spot_pass;
+
+		Shader directional_shadow_pass;
+		Shader spot_shadow_pass;
 	};
 
 	class Renderer : public RenderLayer
@@ -37,6 +50,11 @@ namespace Genesis
 		View getShadowView() { return this->shadow_views[0]; };
 
 	private:
+
+		ModelShaderSet* getShaderSet(Model& model);
+		ModelShaderSet albedo_set;
+		ModelShaderSet albedo_normal_set;
+
 		//Resources
 		map<string, Mesh> loaded_meshes;
 		map<string, Texture> loaded_textures;
