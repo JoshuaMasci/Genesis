@@ -1,15 +1,10 @@
 #include "GameScene.hpp"
 
 #include "Genesis/Application.hpp"
-
 #include "Genesis/WorldTransform.hpp"
-
 #include "Genesis/Rendering/Renderer.hpp"
-
 #include "Genesis/Rendering/Camera.hpp"
-
 #include "Genesis/DebugCamera.hpp"
-
 #include "Genesis/Rendering/ResourceLoaders.hpp"
 
 #include <fstream>
@@ -26,15 +21,19 @@ GameScene::GameScene(Application* app)
 
 	this->temp = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->temp, vector3D(0.0, 0.0, 0.0), glm::angleAxis(3.1415926/2.0, vector3D(0.0, 1.0, 0.0)));
-	this->entity_registry.assign<Model>(this->temp, "resources/meshes/cube.obj", "resources/textures/1k_grid.png", "");
+	this->entity_registry.assign<TexturedModel>(this->temp, "resources/meshes/cube.obj", "resources/textures/1k_grid.png");
 
 	EntityId rock = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(rock, vector3D(0.0, 0.0, 2.0));
-	this->entity_registry.assign<Model>(rock, "resources/test_rock/rock.obj", "resources/test_rock/rock_d.png", "");
+	this->entity_registry.assign<TexturedNormalModel>(rock, "resources/test_rock/rock.obj", "resources/test_rock/rock_d.png", "resources/test_rock/rock_n.png");
+
+	//Force Load it with Tangents
+	//this->renderer->tempAddMeshToList("resources/meshes/cube.obj", ObjLoader::loadMesh_CalcTangent(this->application->rendering_backend, "resources/meshes/cube.obj"));
 
 	EntityId plane = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(plane, vector3D(0.0, -3.0, 0.0));
-	this->entity_registry.assign<Model>(plane, "resources/meshes/plane.obj", "resources/textures/4k_grid.png", "");
+	this->entity_registry.assign<TexturedNormalModel>(plane, "resources/meshes/plane.obj", "resources/textures/brick_wall_d.png", "resources/textures/brick_wall_n.png");
+
 
 	this->camera = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->camera, vector3D(0.0, 0.75, -2.0));
@@ -42,10 +41,10 @@ GameScene::GameScene(Application* app)
 	this->entity_registry.assign<DebugCamera>(this->camera, 0.5, 0.2);
 
 	this->directional_light = this->entity_registry.create();
+	this->entity_registry.assign<WorldTransform>(this->directional_light, vector3D(0.0, 10.0, 0.0), glm::angleAxis(3.1415926 / 2.0, vector3D(1.0, 0.0, 0.0)));
 	this->entity_registry.assign<DirectionalLight>(this->directional_light, vector3F(1.0f), 0.1F);
 	this->entity_registry.get<DirectionalLight>(this->directional_light).casts_shadows = true;
 	this->entity_registry.get<DirectionalLight>(this->directional_light).shadow_size = vector2F(20.0f);
-	this->entity_registry.assign<WorldTransform>(this->directional_light, vector3D(0.0, 10.0, 0.0), glm::angleAxis(3.1415926 / 2.0, vector3D(1.0, 0.0, 0.0)));
 	this->entity_registry.assign<SpotLight>(this->directional_light, 90.0f, 30.0f, vector2F(0.1f, 0.01f), vector3F(0.4f), 1.0f);
 
 }
@@ -85,37 +84,36 @@ void GameScene::drawWorld(double delta_time)
 		this->renderer->drawWorld(this->entity_registry, this->camera);
 		this->renderer->endFrame();
 
-		this->directional = this->entity_registry.get<DirectionalLight>(this->directional_light);
-		this->spot = this->entity_registry.get<SpotLight>(this->directional_light);
+		DirectionalLight directional = this->entity_registry.get<DirectionalLight>(this->directional_light);
+		SpotLight spot = this->entity_registry.get<SpotLight>(this->directional_light);
 		float fov = this->entity_registry.get<Camera>(this->camera).frame_of_view;
 		this->ui_renderer->startFrame();
 		{
 			ImGui::Begin("Directional Light");
-			ImGui::SliderFloat("Intensity", &this->directional.intensity, 0.0f, 10.0f);
-			ImGui::ColorEdit3("Color", &this->directional.color.x);
-			ImGui::ColorEdit3("Ambient Light", &this->renderer->ambient_light.x);
+			ImGui::SliderFloat("Intensity", &directional.intensity, 0.0f, 10.0f);
+			ImGui::ColorEdit3("Color", &directional.color.x);
 			ImGui::End();
 
 			ImGui::Begin("Spot Light");
-			ImGui::SliderFloat("Range", &this->spot.range, 0.0f, 100.0f);
-			ImGui::SliderFloat("Cutoff", &this->spot.cutoff, 5.0f, 140.0f);
-			ImGui::SliderFloat("Intensity", &this->spot.intensity, 0.0f, 10.0f);
-			ImGui::ColorEdit3("Color", &this->spot.color.x);
-			ImGui::SliderFloat2("Attenuation", &this->spot.attenuation.x, 0.0f, 1.0f);
-			ImGui::Checkbox("Cast_Shadows", &this->spot.casts_shadows);
+			ImGui::SliderFloat("Range", &spot.range, 0.0f, 100.0f);
+			ImGui::SliderFloat("Cutoff", &spot.cutoff, 5.0f, 140.0f);
+			ImGui::SliderFloat("Intensity", &spot.intensity, 0.0f, 10.0f);
+			ImGui::ColorEdit3("Color", &spot.color.x);
+			ImGui::SliderFloat2("Attenuation", &spot.attenuation.x, 0.0f, 1.0f);
+			ImGui::Checkbox("Cast_Shadows", &spot.casts_shadows);
 			ImGui::End();
 
 			ImGui::Begin("Camera");
 			ImGui::SliderFloat("FOVX", &fov, 5.0f, 140.0f);
+			ImGui::ColorEdit3("Ambient Light", &this->renderer->ambient_light.x);
 			ImGui::End();
 
 		}
 
 		this->ui_renderer->endFrame();
-		this->entity_registry.get<DirectionalLight>(this->directional_light) = this->directional;
-		this->entity_registry.get<SpotLight>(this->directional_light) = this->spot;
+		this->entity_registry.get<DirectionalLight>(this->directional_light) = directional;
+		this->entity_registry.get<SpotLight>(this->directional_light) = spot;
 		this->entity_registry.get<Camera>(this->camera).frame_of_view = fov;
-
 
 		CommandBuffer* screen_buffer = this->application->rendering_backend->getScreenCommandBuffer();
 

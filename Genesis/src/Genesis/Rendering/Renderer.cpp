@@ -12,7 +12,9 @@
 using namespace Genesis;
 
 Renderer::Renderer(RenderingBackend* backend)
-	:RenderLayer(backend)
+	:RenderLayer(backend),
+	textured_renderer(backend),
+	textured_normal_renderer(backend)
 {
 	this->backend = backend;
 
@@ -29,31 +31,6 @@ Renderer::Renderer(RenderingBackend* backend)
 	for (size_t i = 0; i < this->shadow_views.size(); i++)
 	{
 		this->shadow_views[i] = this->backend->createView(this->shadow_size, shadow_layout, CommandBufferType::SingleThread);
-	}
-
-	this->loaded_shaders["resources/shaders/vulkan/texture"] = ShaderLoader::loadShaderSingle(this->backend, "resources/shaders/vulkan/texture");
-	this->loaded_shaders["resources/shaders/vulkan/shadow"] = ShaderLoader::loadShaderSingle(this->backend, "resources/shaders/vulkan/shadow");
-
-	string texture_light_vert = "resources/shaders/vulkan/texture_light.vert.spv";
-	this->loaded_shaders["resources/shaders/vulkan/texture_directional"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_directional.frag.spv");
-	this->loaded_shaders["resources/shaders/vulkan/texture_point"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_point.frag.spv");
-	this->loaded_shaders["resources/shaders/vulkan/texture_spot"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_spot.frag.spv");
-
-	//Point light's don't get shadows
-	//Don't want to deal with cubemaps yet
-	this->loaded_shaders["resources/shaders/vulkan/texture_directional_shadow"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_directional_shadow.frag.spv");
-	this->loaded_shaders["resources/shaders/vulkan/texture_spot_shadow"] = ShaderLoader::loadShader(this->backend, texture_light_vert, "resources/shaders/vulkan/texture_spot_shadow.frag.spv");
-
-	{
-		this->albedo_set.ambient_pass = this->loaded_shaders["resources/shaders/vulkan/texture"];
-		this->albedo_set.shadow_pass = this->loaded_shaders["resources/shaders/vulkan/shadow"];
-
-		this->albedo_set.directional_pass = this->loaded_shaders["resources/shaders/vulkan/texture_directional"];
-		this->albedo_set.point_pass = this->loaded_shaders["resources/shaders/vulkan/texture_point"];
-		this->albedo_set.spot_pass = this->loaded_shaders["resources/shaders/vulkan/texture_spot"];
-
-		this->albedo_set.directional_shadow_pass = this->loaded_shaders["resources/shaders/vulkan/texture_directional_shadow"];
-		this->albedo_set.spot_shadow_pass = this->loaded_shaders["resources/shaders/vulkan/texture_spot_shadow"];
 	}
 }
 
@@ -152,7 +129,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 			auto directional_light = entity_registry.get<DirectionalLight>(directional);
 			auto directional_light_transform = entity_registry.get<WorldTransform>(directional);
 
-			if (directional_light.enabled && directional_light.intensity != 0.0)
+			if (directional_light.enabled&& directional_light.intensity != 0.0)
 			{
 				DirectionalLightData light_data;
 				light_data.light = directional_light;
@@ -183,7 +160,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 			auto point_light = entity_registry.get<PointLight>(point);
 			auto point_light_transform = entity_registry.get<WorldTransform>(point);
 
-			if (point_light.enabled && point_light.intensity != 0.0)
+			if (point_light.enabled&& point_light.intensity != 0.0)
 			{
 				PointLightData light_data;
 				light_data.light = point_light;
@@ -201,7 +178,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 			auto spot_light = entity_registry.get<SpotLight>(spot);
 			auto spot_light_transform = entity_registry.get<WorldTransform>(spot);
 
-			if (spot_light.enabled && spot_light.intensity != 0.0)
+			if (spot_light.enabled&& spot_light.intensity != 0.0)
 			{
 				SpotLightData light_data;
 				light_data.light = spot_light;
@@ -240,127 +217,160 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 	auto& camera = entity_registry.get<Camera>(camera_entity);
 	auto& camera_transform = entity_registry.get<WorldTransform>(camera_entity);
 	Transform& current = camera_transform.current_transform;
+	vector3F eye_pos = current.getPosition();
 
 	matrix4F view = glm::lookAt(current.getPosition(), current.getPosition() + current.getForward(), current.getUp());
 	matrix4F proj = this->backend->getPerspectiveMatrix(&camera, this->view);
-	matrix4F mv = proj * view;
+	matrix4F view_proj_matrix = proj * view;
 
-	auto entity_model = entity_registry.view<Model, WorldTransform>();
-	for (auto entity : entity_model)
 	{
-		auto& model = entity_model.get<Model>(entity);
-		auto& transform = entity_model.get<WorldTransform>(entity);
-
-		ModelShaderSet* set = this->getShaderSet(model);
-		if (set == nullptr)
+		auto entity_model = entity_registry.view<TexturedModel, WorldTransform>();
+		for (auto entity : entity_model)
 		{
-			printf("No suitable shader set found!\n");
-			continue;
-		}
+			auto& model = entity_model.get<TexturedModel>(entity);
+			auto& transform = entity_model.get<WorldTransform>(entity);
 
-		if (!has_value(this->loaded_meshes, model.mesh))
-		{
-			this->loaded_meshes[model.mesh] = ObjLoader::loadMesh(this->backend, model.mesh);
-		}
-
-		if (model.albedo_texture != "" && !has_value(this->loaded_textures, model.albedo_texture))
-		{
-			this->loaded_textures[model.albedo_texture] = PngLoader::loadTexture(this->backend, model.albedo_texture);
-		}
-
-		if (model.normal_texture != "" && !has_value(this->loaded_shaders, model.normal_texture))
-		{
-			this->loaded_textures[model.normal_texture] = PngLoader::loadTexture(this->backend, model.normal_texture);
-		}
-
-		Mesh mesh = this->loaded_meshes[model.mesh];
-		Texture texture = this->loaded_textures[model.albedo_texture];
-
-		matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
-		matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
-		matrix4F model_matrix = translation * orientation;
-		matrix4F mvp = mv * model_matrix;
-		matrix3F normal_matrix(orientation);
-		normal_matrix = glm::inverseTranspose(normal_matrix);
-
-		command_buffer->setShader(set->ambient_pass);
-		command_buffer->setPipelineSettings(model_settings);
-		command_buffer->setUniformTexture("albedo_texture", texture);
-		command_buffer->setUniformMat4("matrices.mvp", mvp);
-		command_buffer->setUniformVec3("environment.ambient_light", this->ambient_light);
-
-		command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
-
-		command_buffer->setPipelineSettings(light_settings);
-
-		//Directional Lights
-		for (size_t i = 0; i < directional_lights.size(); i++)
-		{
-			DirectionalLightData light_data = directional_lights[i];
-
-			Shader light_shader = (light_data.shadow_view == nullptr) ? set->directional_pass : set->directional_shadow_pass;
-			command_buffer->setShader(light_shader);
-			command_buffer->setUniformTexture("albedo_texture", texture);
-			command_buffer->setUniformMat4("matrices.mvp", mvp);
-			command_buffer->setUniformMat4("matrices.model", model_matrix);
-			command_buffer->setUniformMat3("matrices.normal", normal_matrix);
-
-			//Light
-			UniformWrite::writeDirectionalLight(command_buffer, "lights.directional", light_data.light, light_data.direction);
-			command_buffer->setUniformVec3("lights.eye_pos", (vector3F)camera_transform.current_transform.getPosition());
-
-			if (light_data.shadow_view != nullptr) //No Shadow
+			if (!has_value(this->loaded_meshes, model.mesh))
 			{
-				command_buffer->setUniformMat4("lights.shadow_mv", light_data.shadow_transform);
-				command_buffer->setUniformView("shadow_map", light_data.shadow_view, 0);
+				this->loaded_meshes[model.mesh] = ObjLoader::loadMesh(this->backend, model.mesh);
 			}
 
-			command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
-		}
-
-		//Point Lights
-		for (size_t i = 0; i < point_lights.size(); i++)
-		{
-			PointLightData light_data = point_lights[i];
-			Shader light_shader = set->point_pass;
-			command_buffer->setShader(light_shader);
-			command_buffer->setUniformTexture("albedo_texture", texture);
-			command_buffer->setUniformMat4("matrices.mvp", mvp);
-			command_buffer->setUniformMat4("matrices.model", model_matrix);
-			command_buffer->setUniformMat3("matrices.normal", normal_matrix);
-
-			//Light
-			UniformWrite::writePointLight(command_buffer, "lights.directional", light_data.light, light_data.position);
-			command_buffer->setUniformVec3("lights.eye_pos", (vector3F)camera_transform.current_transform.getPosition());
-
-			command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
-		}
-
-		//Spot Lights
-		for (size_t i = 0; i < spot_lights.size(); i++)
-		{
-			SpotLightData light_data = spot_lights[i];
-
-			Shader light_shader = (light_data.shadow_view == nullptr) ? set->spot_pass : set->spot_shadow_pass;
-			command_buffer->setShader(light_shader);
-			command_buffer->setUniformTexture("albedo_texture", texture);
-			command_buffer->setUniformMat4("matrices.mvp", mvp);
-			command_buffer->setUniformMat4("matrices.model", model_matrix);
-			command_buffer->setUniformMat3("matrices.normal", normal_matrix);
-
-			//Light
-			UniformWrite::writeSpotLight(command_buffer, "lights.spot", light_data.light, light_data.position, light_data.direction);
-			command_buffer->setUniformVec3("lights.eye_pos", (vector3F)camera_transform.current_transform.getPosition());
-
-			if (light_data.shadow_view != nullptr) //No Shadow
+			if (!has_value(this->loaded_textures, model.albedo_texture))
 			{
-				command_buffer->setUniformMat4("lights.shadow_mv", light_data.shadow_transform);
-				command_buffer->setUniformView("shadow_map", light_data.shadow_view, 0);
+				this->loaded_textures[model.albedo_texture] = PngLoader::loadTexture(this->backend, model.albedo_texture);
 			}
 
-			command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
+			Mesh mesh = this->loaded_meshes[model.mesh];
+			Texture texture = this->loaded_textures[model.albedo_texture];
+
+			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
+			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
+			matrix4F model_matrix = translation * orientation;
+			matrix3F normal_matrix(orientation);
+			normal_matrix = glm::inverseTranspose(normal_matrix);
+
+			command_buffer->setPipelineSettings(model_settings);
+
+			this->textured_renderer.drawAmbient(command_buffer, mesh, texture, view_proj_matrix, model_matrix, this->ambient_light);
+
+			command_buffer->setPipelineSettings(light_settings);
+
+			//Directional Lights
+			for (size_t i = 0; i < directional_lights.size(); i++)
+			{
+				DirectionalLightData light_data = directional_lights[i];
+
+				if (light_data.shadow_view == nullptr) //No Shadow
+				{
+					this->textured_renderer.drawDirectional(command_buffer, mesh, texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.direction);
+				}
+				else
+				{
+					this->textured_renderer.drawDirectionalShadow(command_buffer, mesh, texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.direction, light_data.shadow_view, light_data.shadow_transform);
+				}
+			}
+
+			//Point Lights
+			for (size_t i = 0; i < point_lights.size(); i++)
+			{
+				PointLightData light_data = point_lights[i];
+				this->textured_renderer.drawPoint(command_buffer, mesh, texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.position);
+			}
+
+			//Spot Lights
+			for (size_t i = 0; i < spot_lights.size(); i++)
+			{
+				SpotLightData light_data = spot_lights[i];
+
+				if (light_data.shadow_view == nullptr) //No Shadow
+				{
+					this->textured_renderer.drawSpot(command_buffer, mesh, texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.position, light_data.direction);
+				}
+				else
+				{
+					this->textured_renderer.drawSpotShadow(command_buffer, mesh, texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.position, light_data.direction, light_data.shadow_view, light_data.shadow_transform);
+				}
+			}
 		}
 	}
+
+	{
+		auto entity_model = entity_registry.view<TexturedNormalModel, WorldTransform>();
+		for (auto entity : entity_model)
+		{
+			auto& model = entity_model.get<TexturedNormalModel>(entity);
+			auto& transform = entity_model.get<WorldTransform>(entity);
+
+			if (!has_value(this->loaded_meshes, model.mesh))
+			{
+				this->loaded_meshes[model.mesh] = ObjLoader::loadMesh_CalcTangent(this->backend, model.mesh);
+			}
+
+			if (!has_value(this->loaded_textures, model.albedo_texture))
+			{
+				this->loaded_textures[model.albedo_texture] = PngLoader::loadTexture(this->backend, model.albedo_texture);
+			}
+
+			if (!has_value(this->loaded_textures, model.normal_texture))
+			{
+				this->loaded_textures[model.normal_texture] = PngLoader::loadTexture(this->backend, model.normal_texture);
+			}
+
+			Mesh mesh = this->loaded_meshes[model.mesh];
+			Texture albedo_texture = this->loaded_textures[model.albedo_texture];
+			Texture normal_texture = this->loaded_textures[model.normal_texture];
+
+			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
+			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
+			matrix4F model_matrix = translation * orientation;
+			matrix3F normal_matrix(orientation);
+			normal_matrix = glm::inverseTranspose(normal_matrix);
+
+			command_buffer->setPipelineSettings(model_settings);
+
+			this->textured_normal_renderer.drawAmbient(command_buffer, mesh, albedo_texture, view_proj_matrix, model_matrix, this->ambient_light);
+
+			command_buffer->setPipelineSettings(light_settings);
+
+			//Directional Lights
+			for (size_t i = 0; i < directional_lights.size(); i++)
+			{
+				DirectionalLightData light_data = directional_lights[i];
+
+				if (light_data.shadow_view == nullptr) //No Shadow
+				{
+					this->textured_normal_renderer.drawDirectional(command_buffer, mesh,  albedo_texture, normal_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.direction);
+				}
+				else
+				{
+					this->textured_normal_renderer.drawDirectionalShadow(command_buffer, mesh,  albedo_texture, normal_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.direction, light_data.shadow_view, light_data.shadow_transform);
+				}
+			}
+
+			//Point Lights
+			for (size_t i = 0; i < point_lights.size(); i++)
+			{
+				PointLightData light_data = point_lights[i];
+				this->textured_normal_renderer.drawPoint(command_buffer, mesh,  albedo_texture, normal_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.position);
+			}
+
+			//Spot Lights
+			for (size_t i = 0; i < spot_lights.size(); i++)
+			{
+				SpotLightData light_data = spot_lights[i];
+
+				if (light_data.shadow_view == nullptr) //No Shadow
+				{
+					this->textured_normal_renderer.drawSpot(command_buffer, mesh,  albedo_texture, normal_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.position, light_data.direction);
+				}
+				else
+				{
+					this->textured_normal_renderer.drawSpotShadow(command_buffer, mesh,  albedo_texture, normal_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.position, light_data.direction, light_data.shadow_view, light_data.shadow_transform);
+				}
+			}
+		}
+	}
+
 }
 
 void Renderer::setScreenSize(vector2U size)
@@ -378,16 +388,6 @@ uint32_t Renderer::getViewImageIndex()
 	return 0;
 }
 
-ModelShaderSet* Renderer::getShaderSet(Model& model)
-{
-	ModelShaderSet* shader_set = nullptr;
-	if (model.albedo_texture != "" && model.normal_texture == "")
-	{
-		shader_set = &this->albedo_set;
-	}
-	return shader_set;
-}
-
 matrix4F Renderer::drawDirectionalShadowView(EntityRegistry& entity_registry, View shadow_view, DirectionalLight& directional, Transform& light_transform)
 {
 	PipelineSettings model_settings;
@@ -402,46 +402,60 @@ matrix4F Renderer::drawDirectionalShadowView(EntityRegistry& entity_registry, Vi
 	matrix4F proj = glm::ortho(light_x, -light_x, -light_y, light_y, 0.1f, 100.0f);
 	proj[1][1] *= -1.0f;//TODO not hardcode this
 
-	matrix4F mv = proj * view;
+	matrix4F view_proj_matrix = proj * view;
 
 	this->backend->startView(shadow_view);
 	CommandBuffer* command_buffer = this->backend->getViewCommandBuffer(shadow_view);
 	command_buffer->setPipelineSettings(model_settings);
 
-	auto entity_model = entity_registry.view<Model, WorldTransform>();
-	for (auto entity : entity_model)
 	{
-		auto &model = entity_model.get<Model>(entity);
-		auto &transform = entity_model.get<WorldTransform>(entity);
-
-		if (!has_value(this->loaded_meshes, model.mesh))
+		auto entity_model = entity_registry.view<TexturedModel, WorldTransform>();
+		for (auto entity : entity_model)
 		{
-			this->loaded_meshes[model.mesh] = ObjLoader::loadMesh(this->backend, model.mesh);
-		}
+			auto& model = entity_model.get<TexturedModel>(entity);
+			auto& transform = entity_model.get<WorldTransform>(entity);
 
-		ModelShaderSet* set = this->getShaderSet(model);
-		if (set == nullptr)
+			if (!has_value(this->loaded_meshes, model.mesh))
+			{
+				this->loaded_meshes[model.mesh] = ObjLoader::loadMesh(this->backend, model.mesh);
+			}
+
+			Mesh mesh = this->loaded_meshes[model.mesh];
+
+			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
+			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
+			matrix4F model_matrix = translation * orientation;
+
+			this->textured_renderer.drawShadow(command_buffer, mesh, view_proj_matrix, model_matrix);
+		}
+	}
+
+	{
+		auto entity_model = entity_registry.view<TexturedNormalModel, WorldTransform>();
+		for (auto entity : entity_model)
 		{
-			printf("No suitable shader set found!\n");
-			continue;
+			auto& model = entity_model.get<TexturedNormalModel>(entity);
+			auto& transform = entity_model.get<WorldTransform>(entity);
+
+			if (!has_value(this->loaded_meshes, model.mesh))
+			{
+				this->loaded_meshes[model.mesh] = ObjLoader::loadMesh_CalcTangent(this->backend, model.mesh);
+			}
+
+			Mesh mesh = this->loaded_meshes[model.mesh];
+
+			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
+			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
+			matrix4F model_matrix = translation * orientation;
+
+			this->textured_normal_renderer.drawShadow(command_buffer, mesh, view_proj_matrix, model_matrix);
 		}
-		command_buffer->setShader(set->shadow_pass);
-
-		Mesh mesh = this->loaded_meshes[model.mesh];
-
-		matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
-		matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
-		matrix4F model_matrix = translation * orientation;
-		matrix4F mvp = mv * model_matrix;
-		command_buffer->setUniformMat4("matrices.mvp", mvp);
-
-		command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 	}
 
 	this->backend->endView(shadow_view);
 	this->backend->submitView(shadow_view);
 
-	return mv;
+	return view_proj_matrix;
 }
 
 matrix4F Renderer::drawSpotShadowView(EntityRegistry& entity_registry, View shadow_view, SpotLight& spot, Transform& light_transform)
@@ -455,45 +469,59 @@ matrix4F Renderer::drawSpotShadowView(EntityRegistry& entity_registry, View shad
 	Camera camera(spot.cutoff);
 	matrix4F proj = this->backend->getPerspectiveMatrix(&camera, shadow_view);
 
-	matrix4F mv = proj * view;
+	matrix4F view_proj_matrix = proj * view;
 
 	this->backend->startView(shadow_view);
 	CommandBuffer* command_buffer = this->backend->getViewCommandBuffer(shadow_view);
 	command_buffer->setPipelineSettings(model_settings);
 	command_buffer->setShader(this->loaded_shaders["resources/shaders/vulkan/shadow"]);
 
-	auto entity_model = entity_registry.view<Model, WorldTransform>();
-	for (auto entity : entity_model)
 	{
-		auto &model = entity_model.get<Model>(entity);
-		auto &transform = entity_model.get<WorldTransform>(entity);
-
-		if (!has_value(this->loaded_meshes, model.mesh))
+		auto entity_model = entity_registry.view<TexturedModel, WorldTransform>();
+		for (auto entity : entity_model)
 		{
-			this->loaded_meshes[model.mesh] = ObjLoader::loadMesh(this->backend, model.mesh);
-		}
+			auto& model = entity_model.get<TexturedModel>(entity);
+			auto& transform = entity_model.get<WorldTransform>(entity);
 
-		ModelShaderSet* set = this->getShaderSet(model);
-		if (set == nullptr)
+			if (!has_value(this->loaded_meshes, model.mesh))
+			{
+				this->loaded_meshes[model.mesh] = ObjLoader::loadMesh(this->backend, model.mesh);
+			}
+
+			Mesh mesh = this->loaded_meshes[model.mesh];
+
+			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
+			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
+			matrix4F model_matrix = translation * orientation;
+
+			this->textured_renderer.drawShadow(command_buffer, mesh, view_proj_matrix, model_matrix);
+		}
+	}
+
+	{
+		auto entity_model = entity_registry.view<TexturedNormalModel, WorldTransform>();
+		for (auto entity : entity_model)
 		{
-			printf("No suitable shader set found!\n");
-			continue;
+			auto& model = entity_model.get<TexturedNormalModel>(entity);
+			auto& transform = entity_model.get<WorldTransform>(entity);
+
+			if (!has_value(this->loaded_meshes, model.mesh))
+			{
+				this->loaded_meshes[model.mesh] = ObjLoader::loadMesh(this->backend, model.mesh);
+			}
+
+			Mesh mesh = this->loaded_meshes[model.mesh];
+
+			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
+			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
+			matrix4F model_matrix = translation * orientation;
+
+			this->textured_normal_renderer.drawShadow(command_buffer, mesh, view_proj_matrix, model_matrix);
 		}
-		command_buffer->setShader(set->shadow_pass);
-
-		Mesh mesh = this->loaded_meshes[model.mesh];
-
-		matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
-		matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
-		matrix4F model_matrix = translation * orientation;
-		matrix4F mvp = mv * model_matrix;
-		command_buffer->setUniformMat4("matrices.mvp", mvp);
-
-		command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 	}
 
 	this->backend->endView(shadow_view);
 	this->backend->submitView(shadow_view);
 
-	return mv;
+	return view_proj_matrix;
 }

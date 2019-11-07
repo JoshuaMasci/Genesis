@@ -16,6 +16,8 @@ namespace Genesis
 	{
 	public:
 		static Mesh loadMesh(RenderingBackend* backend, string mesh_file_path);
+		static Mesh loadMesh_CalcTangent(RenderingBackend* backend, string mesh_file_path);
+
 	};
 
 	class PngLoader

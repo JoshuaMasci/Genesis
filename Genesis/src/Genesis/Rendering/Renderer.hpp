@@ -1,35 +1,18 @@
 #pragma once
 
+#include "Genesis/Entity.hpp"
+#include "Genesis/Core/Transform.hpp"
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Rendering/RenderingBackend.hpp"
 #include "Genesis/Rendering/ResourceLoaders.hpp"
+#include "Genesis/Rendering/ModelRenderer.hpp"
 #include "Genesis/Rendering/RenderLayer.hpp"
 #include "Genesis/Rendering/Lighting.hpp"
-#include "Genesis/Entity.hpp"
-#include "Genesis/Core/Transform.hpp"
+#include "Genesis/Rendering/Model.hpp"
+
 
 namespace Genesis
 {
-	struct Model
-	{
-		string mesh;
-		string albedo_texture;
-		string normal_texture;
-	};
-
-	struct ModelShaderSet
-	{
-		Shader ambient_pass;
-		Shader shadow_pass;
-
-		Shader directional_pass;
-		Shader point_pass;
-		Shader spot_pass;
-
-		Shader directional_shadow_pass;
-		Shader spot_shadow_pass;
-	};
-
 	class Renderer : public RenderLayer
 	{
 	public:
@@ -47,13 +30,12 @@ namespace Genesis
 		virtual View getView() override;
 		virtual uint32_t getViewImageIndex() override;
 
-		View getShadowView() { return this->shadow_views[0]; };
+		void tempAddMeshToList(string name, CommandBuffer* command_buffer, Mesh& mesh) { this->loaded_meshes[name] = mesh; };
 
 	private:
-
-		ModelShaderSet* getShaderSet(Model& model);
-		ModelShaderSet albedo_set;
-		ModelShaderSet albedo_normal_set;
+		//Model Renderer
+		TexturedModelRenderer textured_renderer;
+		TexturedNormalModelRenderer textured_normal_renderer;
 
 		//Resources
 		map<string, Mesh> loaded_meshes;

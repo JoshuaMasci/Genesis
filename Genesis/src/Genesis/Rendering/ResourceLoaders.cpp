@@ -71,6 +71,97 @@ Mesh ObjLoader::loadMesh(RenderingBackend * backend, string mesh_file_path)
 	return mesh;
 }
 
+Mesh ObjLoader::loadMesh_CalcTangent(RenderingBackend* backend, string mesh_file_path)
+{
+	struct TexturedVertex
+	{
+		vector3F pos;
+		vector3F normal;
+		vector2F uv;
+		vector3F tangent;
+	};
+
+	Mesh mesh;
+
+	tinyobj::attrib_t attrib;
+	vector<tinyobj::shape_t> shapes;
+	vector<tinyobj::material_t> materials;
+	string warn, err;
+
+	if (tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, mesh_file_path.c_str()))
+	{
+		vector<TexturedVertex> vertices;
+		vector<uint32_t> indices;
+
+		for (const auto& shape : shapes)
+		{
+			size_t index_offset = 0;
+			for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++)
+			{
+				int fv = shape.mesh.num_face_vertices[f];
+
+				// Loop over vertices in the face
+				for (size_t v = 0; v < fv; v++)
+				{
+					// access to vertex
+					tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
+					vector3F position = vector3F(attrib.vertices[3 * idx.vertex_index + 0], attrib.vertices[3 * idx.vertex_index + 1], attrib.vertices[3 * idx.vertex_index + 2]);
+					vector3F normal = vector3F(attrib.normals[3 * idx.normal_index + 0], attrib.normals[3 * idx.normal_index + 1], attrib.normals[3 * idx.normal_index + 2]);
+					vector2F uv = vector2F(attrib.texcoords[2 * idx.texcoord_index + 0], -attrib.texcoords[2 * idx.texcoord_index + 1]);
+
+					TexturedVertex vertex = { position, normal, uv, vector3F(0.0f) };
+
+					vertices.push_back(vertex);
+					indices.push_back((uint32_t)indices.size());
+				}
+				index_offset += fv;
+			}
+		}
+
+		for (size_t i = 0; i < indices.size(); i += 3)
+		{
+			uint32_t index_1 = indices[i + 0];
+			uint32_t index_2 = indices[i + 1];
+			uint32_t index_3 = indices[i + 2];
+
+			vector3F edge_1 = vertices[index_2].pos - vertices[index_1].pos;
+			vector3F edge_2 = vertices[index_3].pos - vertices[index_1].pos;
+
+			vector2F uv_1 = vertices[index_2].uv - vertices[index_1].uv;
+			vector2F uv_2 = vertices[index_3].uv - vertices[index_1].uv;
+
+			float factor = 1.0f / ((uv_1.x * uv_2.y) - (uv_2.x * uv_1.y));
+
+			vector3F tangent;
+			tangent.x = factor * ((uv_2.y * edge_1.x) - (uv_1.y * edge_2.x));
+			tangent.y = factor * ((uv_2.y * edge_1.y) - (uv_1.y * edge_2.y));
+			tangent.z = factor * ((uv_2.y * edge_1.z) - (uv_1.y * edge_2.z));
+			tangent = glm::normalize(tangent);
+
+			vertices[index_1].tangent = tangent;
+			vertices[index_2].tangent = tangent;
+			vertices[index_3].tangent = tangent;
+		}
+
+		VertexInputDescription vertex_description
+		({
+			{"in_position", VertexElementType::float_3},
+			{"in_normal", VertexElementType::float_3},
+			{"in_uv", VertexElementType::float_2},
+			{"in_tangent", VertexElementType::float_3}
+		});
+
+		mesh.vertex_buffer = backend->createVertexBuffer(vertices.data(), sizeof(TexturedVertex) * vertices.size(), vertex_description);
+		mesh.index_buffer = backend->createIndexBuffer(indices.data(), (uint32_t)indices.size(), IndexType::uint32);
+	}
+	else
+	{
+		printf("Error: Can't load Mesh: %s\n", mesh_file_path.c_str());
+	}
+
+	return mesh;
+}
+
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
 #include <stb_image.h>
