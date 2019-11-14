@@ -9,12 +9,17 @@ layout(binding = 1) uniform Environment
 	vec3 ambient_light;
 } environment;
 
-vec4 calcBaseColor()
+vec2 calcUV()
 {
-	return texture(albedo_texture, frag_uv);
+	return frag_uv;
 }
 
-vec3 calcNormal()
+vec4 calcBaseColor(vec2 uv)
+{
+	return texture(albedo_texture, uv);
+}
+
+vec3 calcNormal(vec2 uv)
 {
 	return frag_normal;
 }

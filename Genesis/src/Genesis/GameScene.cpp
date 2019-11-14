@@ -19,33 +19,29 @@ GameScene::GameScene(Application* app)
 
 	this->screen_shader = ShaderLoader::loadShaderSingle(this->application->rendering_backend, "resources/shaders/vulkan/whole_screen");
 
-	this->temp = this->entity_registry.create();
+	/*this->temp = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->temp, vector3D(0.0, 0.0, 0.0), glm::angleAxis(3.1415926/2.0, vector3D(0.0, 1.0, 0.0)));
-	this->entity_registry.assign<TexturedModel>(this->temp, "resources/meshes/cube.obj", "resources/textures/1k_grid.png");
+	this->entity_registry.assign<TexturedModel>(this->temp, "resources/meshes/cube.obj", "resources/textures/1k_grid.png");*/
 
 	EntityId rock = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(rock, vector3D(0.0, 0.0, 2.0));
-	this->entity_registry.assign<TexturedNormalModel>(rock, "resources/test_rock/rock.obj", "resources/test_rock/rock_d.png", "resources/test_rock/rock_n.png");
-
-	//Force Load it with Tangents
-	//this->renderer->tempAddMeshToList("resources/meshes/cube.obj", ObjLoader::loadMesh_CalcTangent(this->application->rendering_backend, "resources/meshes/cube.obj"));
+	this->entity_registry.assign<TexturedNormalModel>(rock, "resources/test_rock/rock.obj", "resources/test_rock/rock_d.png", "resources/test_rock/rock_n.png", "resources/textures/Black.png");
 
 	EntityId plane = this->entity_registry.create();
-	this->entity_registry.assign<WorldTransform>(plane, vector3D(0.0, -3.0, 0.0));
-	this->entity_registry.assign<TexturedNormalModel>(plane, "resources/meshes/plane.obj", "resources/textures/brick_wall_d.png", "resources/textures/brick_wall_n.png");
-
+	this->entity_registry.assign<WorldTransform>(plane, vector3D(0.0, 0.0, 0.0));
+	this->entity_registry.assign<TexturedNormalModel>(plane, "resources/meshes/cube.obj", "resources/textures/bricks2_diffuse.png", "resources/textures/bricks2_normal.png", "resources/textures/bricks2_disp.png");
 
 	this->camera = this->entity_registry.create();
-	this->entity_registry.assign<WorldTransform>(this->camera, vector3D(0.0, 0.75, -2.0));
+	this->entity_registry.assign<WorldTransform>(this->camera, vector3D(0.0, 1.5, 0.0), glm::angleAxis(3.1415926 / 2.0, vector3D(1.0, 0.0, 0.0)));
 	this->entity_registry.assign<Camera>(this->camera, 90.0f);
 	this->entity_registry.assign<DebugCamera>(this->camera, 0.5, 0.2);
 
 	this->directional_light = this->entity_registry.create();
 	this->entity_registry.assign<WorldTransform>(this->directional_light, vector3D(0.0, 10.0, 0.0), glm::angleAxis(3.1415926 / 2.0, vector3D(1.0, 0.0, 0.0)));
-	this->entity_registry.assign<DirectionalLight>(this->directional_light, vector3F(1.0f), 0.1F);
+	this->entity_registry.assign<DirectionalLight>(this->directional_light, vector3F(1.0f), 0.0F);
 	this->entity_registry.get<DirectionalLight>(this->directional_light).casts_shadows = true;
 	this->entity_registry.get<DirectionalLight>(this->directional_light).shadow_size = vector2F(20.0f);
-	this->entity_registry.assign<SpotLight>(this->directional_light, 90.0f, 30.0f, vector2F(0.1f, 0.01f), vector3F(0.4f), 1.0f);
+	this->entity_registry.assign<SpotLight>(this->directional_light, 90.0f, 30.0f, vector2F(0.1f, 0.01f), vector3F(0.4f), 0.0f);
 
 }
 

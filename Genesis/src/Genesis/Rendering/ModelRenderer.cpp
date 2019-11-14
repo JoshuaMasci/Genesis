@@ -52,8 +52,8 @@ void TexturedModelRenderer::drawDirectional(CommandBuffer* command_buffer, Mesh&
 	command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 	//Light
-	UniformWrite::writeDirectionalLight(command_buffer, "lights.directional", light, light_dir);
-	command_buffer->setUniformVec3("lights.eye_pos", eye_pos);
+	UniformWrite::writeDirectionalLight(command_buffer, "environment.directional", light, light_dir);
+	command_buffer->setUniformVec3("environment.eye_pos", eye_pos);
 
 	command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 }
@@ -67,8 +67,8 @@ void TexturedModelRenderer::drawPoint(CommandBuffer* command_buffer, Mesh& mesh,
 	command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 	//Light
-	UniformWrite::writePointLight(command_buffer, "lights.point", light, light_pos);
-	command_buffer->setUniformVec3("lights.eye_pos", eye_pos);
+	UniformWrite::writePointLight(command_buffer, "environment.point", light, light_pos);
+	command_buffer->setUniformVec3("environment.eye_pos", eye_pos);
 
 	command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 }
@@ -82,8 +82,8 @@ void TexturedModelRenderer::drawSpot(CommandBuffer* command_buffer, Mesh& mesh, 
 	command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 	//Light
-	UniformWrite::writeSpotLight(command_buffer, "lights.spot", light, light_pos, light_dir);
-	command_buffer->setUniformVec3("lights.eye_pos", eye_pos);
+	UniformWrite::writeSpotLight(command_buffer, "environment.spot", light, light_pos, light_dir);
+	command_buffer->setUniformVec3("environment.eye_pos", eye_pos);
 
 	command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 }
@@ -104,10 +104,10 @@ void TexturedModelRenderer::drawDirectionalShadow(CommandBuffer* command_buffer,
 	command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 	//Light
-	UniformWrite::writeDirectionalLight(command_buffer, "lights.directional", light, light_dir);
-	command_buffer->setUniformVec3("lights.eye_pos", eye_pos);
+	UniformWrite::writeDirectionalLight(command_buffer, "environment.directional", light, light_dir);
+	command_buffer->setUniformVec3("environment.eye_pos", eye_pos);
 
-	command_buffer->setUniformMat4("lights.shadow_matrix", shadow_matrix);
+	command_buffer->setUniformMat4("environment.shadow_matrix", shadow_matrix);
 	command_buffer->setUniformView("shadow_map", shadow_view, 0);
 
 	command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
@@ -122,10 +122,10 @@ void TexturedModelRenderer::drawSpotShadow(CommandBuffer* command_buffer, Mesh& 
 	command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 	//Light
-	UniformWrite::writeSpotLight(command_buffer, "lights.spot", light, light_pos, light_dir);
-	command_buffer->setUniformVec3("lights.eye_pos", eye_pos);
+	UniformWrite::writeSpotLight(command_buffer, "environment.spot", light, light_pos, light_dir);
+	command_buffer->setUniformVec3("environment.eye_pos", eye_pos);
 
-	command_buffer->setUniformMat4("lights.shadow_matrix", shadow_matrix);
+	command_buffer->setUniformMat4("environment.shadow_matrix", shadow_matrix);
 	command_buffer->setUniformView("shadow_map", shadow_view, 0);
 
 	command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
@@ -157,47 +157,62 @@ TexturedNormalModelRenderer::~TexturedNormalModelRenderer()
 
 }
 
-void TexturedNormalModelRenderer::drawAmbient(CommandBuffer* command_buffer, Mesh& mesh, Texture& albedo_texture, matrix4F& view_proj_matrix, matrix4F& model_matrix, vector3F& ambient_light)
+void TexturedNormalModelRenderer::drawAmbient(CommandBuffer* command_buffer, Mesh& mesh, Texture& albedo_texture, Texture& height_texture, matrix4F& view_proj_matrix, matrix4F& model_matrix, matrix3F& normal_matrix, vector3F& eye_pos, vector3F& ambient_light)
 {
 	command_buffer->setShader(this->ambient_pass);
 	command_buffer->setUniformTexture("albedo_texture", albedo_texture);
+	command_buffer->setUniformTexture("height_texture", height_texture);
+
 	command_buffer->setUniformMat4("matrices.mvp", view_proj_matrix * model_matrix);
+	command_buffer->setUniformMat4("matrices.model", model_matrix);
+	command_buffer->setUniformMat3("matrices.normal", normal_matrix);
+
+
+	command_buffer->setUniformVec3("environment.eye_pos", eye_pos);
 	command_buffer->setUniformVec3("environment.ambient_light", ambient_light);
+	command_buffer->setUniformFloat("environment.height_scale", 0.05f);
+
 	command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 }
 
-void TexturedNormalModelRenderer::drawDirectional(CommandBuffer* command_buffer, Mesh& mesh, Texture& albedo_texture, Texture& normal_texture, matrix4F& view_proj_matrix, matrix4F& model_matrix, matrix3F& normal_matrix, vector3F& eye_pos, DirectionalLight& light, vector3F& light_dir)
+void TexturedNormalModelRenderer::drawDirectional(CommandBuffer* command_buffer, Mesh& mesh, Texture& albedo_texture, Texture& normal_texture, Texture& height_texture, matrix4F& view_proj_matrix, matrix4F& model_matrix, matrix3F& normal_matrix, vector3F& eye_pos, DirectionalLight& light, vector3F& light_dir)
 {
 	command_buffer->setShader(this->directional_pass);
 	command_buffer->setUniformTexture("albedo_texture", albedo_texture);
 	command_buffer->setUniformTexture("normal_texture", normal_texture);
+	command_buffer->setUniformTexture("height_texture", height_texture);
+
 	command_buffer->setUniformMat4("matrices.mvp", view_proj_matrix * model_matrix);
 	command_buffer->setUniformMat4("matrices.model", model_matrix);
 	command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 	//Light
-	UniformWrite::writeDirectionalLight(command_buffer, "lights.directional", light, light_dir);
-	command_buffer->setUniformVec3("lights.eye_pos", eye_pos);
+	UniformWrite::writeDirectionalLight(command_buffer, "environment.directional", light, light_dir);
+	command_buffer->setUniformVec3("environment.eye_pos", eye_pos);
+	command_buffer->setUniformFloat("environment.height_scale", 0.05f);
 
 	command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 }
 
-void TexturedNormalModelRenderer::drawPoint(CommandBuffer* command_buffer, Mesh& mesh, Texture& albedo_texture, Texture& normal_texture, matrix4F& view_proj_matrix, matrix4F& model_matrix, matrix3F& normal_matrix, vector3F& eye_pos, PointLight& light, vector3F& light_pos)
+void TexturedNormalModelRenderer::drawPoint(CommandBuffer* command_buffer, Mesh& mesh, Texture& albedo_texture, Texture& normal_texture, Texture& height_texture, matrix4F& view_proj_matrix, matrix4F& model_matrix, matrix3F& normal_matrix, vector3F& eye_pos, PointLight& light, vector3F& light_pos)
 {
 }
 
-void TexturedNormalModelRenderer::drawSpot(CommandBuffer* command_buffer, Mesh& mesh, Texture& albedo_texture, Texture& normal_texture, matrix4F& view_proj_matrix, matrix4F& model_matrix, matrix3F& normal_matrix, vector3F& eye_pos, SpotLight& light, vector3F& light_pos, vector3F& light_dir)
+void TexturedNormalModelRenderer::drawSpot(CommandBuffer* command_buffer, Mesh& mesh, Texture& albedo_texture, Texture& normal_texture, Texture& height_texture, matrix4F& view_proj_matrix, matrix4F& model_matrix, matrix3F& normal_matrix, vector3F& eye_pos, SpotLight& light, vector3F& light_pos, vector3F& light_dir)
 {
 	command_buffer->setShader(this->spot_pass);
 	command_buffer->setUniformTexture("albedo_texture", albedo_texture);
 	command_buffer->setUniformTexture("normal_texture", normal_texture);
+	command_buffer->setUniformTexture("height_texture", height_texture);
+
 	command_buffer->setUniformMat4("matrices.mvp", view_proj_matrix * model_matrix);
 	command_buffer->setUniformMat4("matrices.model", model_matrix);
 	command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 	//Light
-	UniformWrite::writeSpotLight(command_buffer, "lights.spot", light, light_pos, light_dir);
-	command_buffer->setUniformVec3("lights.eye_pos", eye_pos);
+	UniformWrite::writeSpotLight(command_buffer, "environment.spot", light, light_pos, light_dir);
+	command_buffer->setUniformVec3("environment.eye_pos", eye_pos);
+	command_buffer->setUniformFloat("environment.height_scale", 0.05f);
 
 	command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 }
@@ -209,40 +224,46 @@ void TexturedNormalModelRenderer::drawShadow(CommandBuffer* command_buffer, Mesh
 	command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 }
 
-void TexturedNormalModelRenderer::drawDirectionalShadow(CommandBuffer* command_buffer, Mesh& mesh, Texture& albedo_texture, Texture& normal_texture, matrix4F& view_proj_matrix, matrix4F& model_matrix, matrix3F& normal_matrix, vector3F& eye_pos, DirectionalLight& light, vector3F& light_dir, View& shadow_view, matrix4F& shadow_matrix)
+void TexturedNormalModelRenderer::drawDirectionalShadow(CommandBuffer* command_buffer, Mesh& mesh, Texture& albedo_texture, Texture& normal_texture, Texture& height_texture, matrix4F& view_proj_matrix, matrix4F& model_matrix, matrix3F& normal_matrix, vector3F& eye_pos, DirectionalLight& light, vector3F& light_dir, View& shadow_view, matrix4F& shadow_matrix)
 {
 	command_buffer->setShader(this->directional_shadow_pass);
 	command_buffer->setUniformTexture("albedo_texture", albedo_texture);
 	command_buffer->setUniformTexture("normal_texture", normal_texture);
+	command_buffer->setUniformTexture("height_texture", height_texture);
+
 	command_buffer->setUniformMat4("matrices.mvp", view_proj_matrix * model_matrix);
 	command_buffer->setUniformMat4("matrices.model", model_matrix);
 	command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 	//Light
-	UniformWrite::writeDirectionalLight(command_buffer, "lights.directional", light, light_dir);
-	command_buffer->setUniformVec3("lights.eye_pos", eye_pos);
+	UniformWrite::writeDirectionalLight(command_buffer, "environment.directional", light, light_dir);
+	command_buffer->setUniformVec3("environment.eye_pos", eye_pos);
 
-	command_buffer->setUniformMat4("lights.shadow_matrix", shadow_matrix);
+	command_buffer->setUniformMat4("environment.shadow_matrix", shadow_matrix);
 	command_buffer->setUniformView("shadow_map", shadow_view, 0);
+	command_buffer->setUniformFloat("environment.height_scale", 0.05f);
 
 	command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 }
 
-void TexturedNormalModelRenderer::drawSpotShadow(CommandBuffer* command_buffer, Mesh& mesh, Texture& albedo_texture, Texture& normal_texture, matrix4F& view_proj_matrix, matrix4F& model_matrix, matrix3F& normal_matrix, vector3F& eye_pos, SpotLight& light, vector3F& light_pos, vector3F& light_dir, View& shadow_view, matrix4F& shadow_matrix)
+void TexturedNormalModelRenderer::drawSpotShadow(CommandBuffer* command_buffer, Mesh& mesh, Texture& albedo_texture, Texture& normal_texture, Texture& height_texture, matrix4F& view_proj_matrix, matrix4F& model_matrix, matrix3F& normal_matrix, vector3F& eye_pos, SpotLight& light, vector3F& light_pos, vector3F& light_dir, View& shadow_view, matrix4F& shadow_matrix)
 {
 	command_buffer->setShader(this->spot_shadow_pass);
 	command_buffer->setUniformTexture("albedo_texture", albedo_texture);
 	command_buffer->setUniformTexture("normal_texture", normal_texture);
+	command_buffer->setUniformTexture("height_texture", height_texture);
+
 	command_buffer->setUniformMat4("matrices.mvp", view_proj_matrix * model_matrix);
 	command_buffer->setUniformMat4("matrices.model", model_matrix);
 	command_buffer->setUniformMat3("matrices.normal", normal_matrix);
 
 	//Light
-	UniformWrite::writeSpotLight(command_buffer, "lights.spot", light, light_pos, light_dir);
-	command_buffer->setUniformVec3("lights.eye_pos", eye_pos);
+	UniformWrite::writeSpotLight(command_buffer, "environment.spot", light, light_pos, light_dir);
+	command_buffer->setUniformVec3("environment.eye_pos", eye_pos);
 
-	command_buffer->setUniformMat4("lights.shadow_matrix", shadow_matrix);
+	command_buffer->setUniformMat4("environment.shadow_matrix", shadow_matrix);
 	command_buffer->setUniformView("shadow_map", shadow_view, 0);
+	command_buffer->setUniformFloat("environment.height_scale", 0.05f);
 
 	command_buffer->drawIndexed(mesh.vertex_buffer, mesh.index_buffer);
 }

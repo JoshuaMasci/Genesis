@@ -7,11 +7,11 @@
 int main(int argc, char** argv)
 {
 	//Used for debugging
-	/*bool temp = false;
+	bool temp = true;
 	while (!temp)
 	{
 		int i = 1 + 2;
-	}*/
+	}
 
 	//ALPHA
 	SandboxApplication* sandbox = new SandboxApplication();

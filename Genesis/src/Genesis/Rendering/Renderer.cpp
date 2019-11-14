@@ -316,9 +316,15 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 				this->loaded_textures[model.normal_texture] = PngLoader::loadTexture(this->backend, model.normal_texture);
 			}
 
+			if (!has_value(this->loaded_textures, model.height_texture))
+			{
+				this->loaded_textures[model.height_texture] = PngLoader::loadTexture(this->backend, model.height_texture);
+			}
+
 			Mesh mesh = this->loaded_meshes[model.mesh];
 			Texture albedo_texture = this->loaded_textures[model.albedo_texture];
 			Texture normal_texture = this->loaded_textures[model.normal_texture];
+			Texture height_texture = this->loaded_textures[model.height_texture];
 
 			matrix4F translation = glm::translate(matrix4F(1.0F), (vector3F)(transform.current_transform.getPosition()));
 			matrix4F orientation = glm::toMat4((quaternionF)transform.current_transform.getOrientation());
@@ -328,7 +334,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 
 			command_buffer->setPipelineSettings(model_settings);
 
-			this->textured_normal_renderer.drawAmbient(command_buffer, mesh, albedo_texture, view_proj_matrix, model_matrix, this->ambient_light);
+			this->textured_normal_renderer.drawAmbient(command_buffer, mesh, albedo_texture, height_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, this->ambient_light);
 
 			command_buffer->setPipelineSettings(light_settings);
 
@@ -339,11 +345,11 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 
 				if (light_data.shadow_view == nullptr) //No Shadow
 				{
-					this->textured_normal_renderer.drawDirectional(command_buffer, mesh,  albedo_texture, normal_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.direction);
+					this->textured_normal_renderer.drawDirectional(command_buffer, mesh,  albedo_texture, normal_texture, height_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.direction);
 				}
 				else
 				{
-					this->textured_normal_renderer.drawDirectionalShadow(command_buffer, mesh,  albedo_texture, normal_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.direction, light_data.shadow_view, light_data.shadow_transform);
+					this->textured_normal_renderer.drawDirectionalShadow(command_buffer, mesh,  albedo_texture, normal_texture, height_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.direction, light_data.shadow_view, light_data.shadow_transform);
 				}
 			}
 
@@ -351,7 +357,7 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 			for (size_t i = 0; i < point_lights.size(); i++)
 			{
 				PointLightData light_data = point_lights[i];
-				this->textured_normal_renderer.drawPoint(command_buffer, mesh,  albedo_texture, normal_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.position);
+				this->textured_normal_renderer.drawPoint(command_buffer, mesh,  albedo_texture, normal_texture, height_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.position);
 			}
 
 			//Spot Lights
@@ -361,11 +367,11 @@ void Renderer::drawWorld(EntityRegistry& entity_registry, EntityId camera_entity
 
 				if (light_data.shadow_view == nullptr) //No Shadow
 				{
-					this->textured_normal_renderer.drawSpot(command_buffer, mesh,  albedo_texture, normal_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.position, light_data.direction);
+					this->textured_normal_renderer.drawSpot(command_buffer, mesh,  albedo_texture, normal_texture, height_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.position, light_data.direction);
 				}
 				else
 				{
-					this->textured_normal_renderer.drawSpotShadow(command_buffer, mesh,  albedo_texture, normal_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.position, light_data.direction, light_data.shadow_view, light_data.shadow_transform);
+					this->textured_normal_renderer.drawSpotShadow(command_buffer, mesh,  albedo_texture, normal_texture, height_texture, view_proj_matrix, model_matrix, normal_matrix, eye_pos, light_data.light, light_data.position, light_data.direction, light_data.shadow_view, light_data.shadow_transform);
 				}
 			}
 		}

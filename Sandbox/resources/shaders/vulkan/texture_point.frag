@@ -7,25 +7,29 @@ layout(location = 1) in vec3 frag_normal;
 layout(location = 2) in vec2 frag_uv;
 
 layout(binding = 0) uniform sampler2D albedo_texture;
-layout(binding = 1) uniform Lights
+layout(binding = 1) uniform Environment
 {
 	vec3 eye_pos;
 	PointLight point;
-} lights;
+} environment;
 
-vec4 calcBaseColor()
+vec2 calcUV()
 {
-	return texture(albedo_texture, frag_uv);
+	return frag_uv;
 }
 
-vec3 calcNormal()
+vec4 calcBaseColor(vec2 uv)
+{
+	return texture(albedo_texture, uv);
+}
+vec3 calcNormal(vec2 uv)
 {
 	return frag_normal;
 }
 
 vec4 calcLightColor(vec3 normal)
 {
-	return CalcPointLight(lights.point, normal, frag_world_pos, lights.eye_pos);
+	return CalcPointLight(environment.point, normal, frag_world_pos, environment.eye_pos);
 }
 
 #include "frag_main.slib"

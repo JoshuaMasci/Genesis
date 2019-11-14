@@ -24,6 +24,7 @@ void main()
 	
 	vec3 N = normalize(matrices.normal * in_normal);
 	vec3 T = normalize(matrices.normal * in_tangent);
-	vec3 B = cross(N, T);	
+	vec3 B = normalize(cross(T, N));	
+	
 	tangent_space_matrix = mat3(T, B, N);
 }

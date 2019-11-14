@@ -107,7 +107,10 @@ Mesh ObjLoader::loadMesh_CalcTangent(RenderingBackend* backend, string mesh_file
 					tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
 					vector3F position = vector3F(attrib.vertices[3 * idx.vertex_index + 0], attrib.vertices[3 * idx.vertex_index + 1], attrib.vertices[3 * idx.vertex_index + 2]);
 					vector3F normal = vector3F(attrib.normals[3 * idx.normal_index + 0], attrib.normals[3 * idx.normal_index + 1], attrib.normals[3 * idx.normal_index + 2]);
-					vector2F uv = vector2F(attrib.texcoords[2 * idx.texcoord_index + 0], -attrib.texcoords[2 * idx.texcoord_index + 1]);
+					vector2F uv = vector2F(attrib.texcoords[2 * idx.texcoord_index + 0], attrib.texcoords[2 * idx.texcoord_index + 1]);
+
+					//Flip the y axis
+					uv.y = 1.0f - uv.y;
 
 					TexturedVertex vertex = { position, normal, uv, vector3F(0.0f) };
 

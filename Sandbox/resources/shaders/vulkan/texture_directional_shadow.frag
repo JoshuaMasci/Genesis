@@ -8,27 +8,32 @@ layout(location = 2) in vec2 frag_uv;
 
 layout(binding = 0) uniform sampler2D albedo_texture;
 layout(binding = 1) uniform sampler2D shadow_map;
-layout(binding = 2) uniform Lights
+layout(binding = 2) uniform Environment
 {
 	vec3 eye_pos;
 	DirectionalLight directional;
 	mat4 shadow_matrix;
-} lights;
+} environment;
 
-vec4 calcBaseColor()
+vec2 calcUV()
 {
-	return texture(albedo_texture, frag_uv);
+	return frag_uv;
 }
 
-vec3 calcNormal()
+vec4 calcBaseColor(vec2 uv)
+{
+	return texture(albedo_texture, uv);
+}
+
+vec3 calcNormal(vec2 uv)
 {
 	return frag_normal;
 }
 
 vec4 calcLightColor(vec3 normal)
 {
-	vec4 light_space_pos = lights.shadow_matrix * vec4(frag_world_pos, 1.0);
-	return CalcDirectionalLight(lights.directional, normal, frag_world_pos, lights.eye_pos) * CalcShadow(shadow_map, light_space_pos);
+	vec4 light_space_pos = environment.shadow_matrix * vec4(frag_world_pos, 1.0);
+	return CalcDirectionalLight(environment.directional, normal, frag_world_pos, environment.eye_pos) * CalcShadow(shadow_map, light_space_pos);
 }
 
 #include "frag_main.slib"

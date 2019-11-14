@@ -101,11 +101,62 @@ vec4 CalcSpotLight(SpotLight spot, vec3 normal, vec3 world_pos, vec3 eye_pos)
 float CalcShadow(sampler2D shadow_map, vec4 light_space_pos)
 {
     // perform perspective divide
-    vec3 projCoords = ((light_space_pos.xyz / light_space_pos.w) * 0.5) + 0.5;
-	float currentDepth = projCoords.z;
-	float closestDepth = (texture(shadow_map, projCoords.xy).r * 0.5) + 0.5;
+    vec3 proj_coords = ((light_space_pos.xyz / light_space_pos.w) * 0.5) + 0.5;
+	float current_depth = proj_coords.z;
+	float closest_depth = (texture(shadow_map, proj_coords.xy).r * 0.5) + 0.5;
 	
 	float bias = 0.00004;
-	float shadow = currentDepth - bias > closestDepth  ? 0.0 : 1.0;   
+	float shadow = current_depth - bias > closest_depth  ? 0.0 : 1.0;   
     return shadow;
+}
+
+vec2 ParallaxMapping(sampler2D depth_map, vec2 tex_coords, vec3 view_dir, float height_scale)
+{
+    float height = texture(depth_map, tex_coords).r;    
+    vec2 p = view_dir.xy * (height * height_scale) / view_dir.z;
+    return tex_coords - p; 
+}
+
+vec2 ParallaxOcclusionMapping(sampler2D depth_map, vec2 tex_coords, vec3 view_dir, float height_scale)
+{ 
+    // number of depth layers
+    const float min_layers = 8;
+    const float max_layers = 32;
+    float num_layers = mix(max_layers, min_layers, abs(dot(vec3(0.0, 0.0, 1.0), view_dir)));
+	
+    // calculate the size of each layer
+    float layer_depth = 1.0 / num_layers;
+    // depth of current layer
+    float current_layer_depth = 0.0;
+	
+    // the amount to shift the texture coordinates per layer (from vector P)
+    vec2 P = view_dir.xy / view_dir.z * height_scale; 
+    vec2 delta_tex_coords = P / num_layers;
+  
+    // get initial values
+    vec2  current_tex_coords = tex_coords;
+    float current_depth_map_value = texture(depth_map, current_tex_coords).r;
+      
+    while(current_layer_depth < current_depth_map_value)
+    {
+        // shift texture coordinates along direction of P
+        current_tex_coords -= delta_tex_coords;
+        // get depth_map value at current texture coordinates
+        current_depth_map_value = texture(depth_map, current_tex_coords).r;  
+        // get depth of next layer
+        current_layer_depth += layer_depth;  
+    }
+    
+    // get texture coordinates before collision (reverse operations)
+    vec2 prev_tex_coords = current_tex_coords + delta_tex_coords;
+
+    // get depth after and before collision for linear interpolation
+    float after_depth  = current_depth_map_value - current_layer_depth;
+    float before_depth = texture(depth_map, prev_tex_coords).r - current_layer_depth + layer_depth;
+ 
+    // interpolation of texture coordinates
+    float weight = after_depth / (after_depth - before_depth);
+    vec2 final_tex_coords = prev_tex_coords * weight + current_tex_coords * (1.0 - weight);
+
+    return final_tex_coords;
 }
