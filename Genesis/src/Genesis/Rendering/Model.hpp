@@ -16,5 +16,6 @@ namespace Genesis
 		string albedo_texture;
 		string normal_texture;
 		string height_texture;
+		float height_scale;
 	};
 }

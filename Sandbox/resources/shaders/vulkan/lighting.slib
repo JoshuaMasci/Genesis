@@ -119,6 +119,11 @@ vec2 ParallaxMapping(sampler2D depth_map, vec2 tex_coords, vec3 view_dir, float 
 
 vec2 ParallaxOcclusionMapping(sampler2D depth_map, vec2 tex_coords, vec3 view_dir, float height_scale)
 { 
+	if(height_scale == 0.0)
+	{
+		return tex_coords;
+	}
+
     // number of depth layers
     const float min_layers = 8;
     const float max_layers = 32;
@@ -135,14 +140,14 @@ vec2 ParallaxOcclusionMapping(sampler2D depth_map, vec2 tex_coords, vec3 view_di
   
     // get initial values
     vec2  current_tex_coords = tex_coords;
-    float current_depth_map_value = texture(depth_map, current_tex_coords).r;
+    float current_depth_map_value = (1.0 - texture(depth_map, current_tex_coords).r);
       
     while(current_layer_depth < current_depth_map_value)
     {
         // shift texture coordinates along direction of P
         current_tex_coords -= delta_tex_coords;
         // get depth_map value at current texture coordinates
-        current_depth_map_value = texture(depth_map, current_tex_coords).r;  
+        current_depth_map_value = (1.0 - texture(depth_map, current_tex_coords).r);  
         // get depth of next layer
         current_layer_depth += layer_depth;  
     }
@@ -152,7 +157,7 @@ vec2 ParallaxOcclusionMapping(sampler2D depth_map, vec2 tex_coords, vec3 view_di
 
     // get depth after and before collision for linear interpolation
     float after_depth  = current_depth_map_value - current_layer_depth;
-    float before_depth = texture(depth_map, prev_tex_coords).r - current_layer_depth + layer_depth;
+    float before_depth = (1.0 - texture(depth_map, prev_tex_coords).r) - current_layer_depth + layer_depth;
  
     // interpolation of texture coordinates
     float weight = after_depth / (after_depth - before_depth);
