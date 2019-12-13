@@ -2,12 +2,11 @@
 
 using namespace Genesis;
 
-VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VulkanAllocator* allocator, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass)
+VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass)
 {
 	this->device = device;
 	this->size = size;
 	this->render_pass = render_pass;
-	this->allocator = allocator;
 
 	vector<VkImageView> image_views;
 
@@ -29,8 +28,8 @@ VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VulkanAllocator* allocator
 		image_info.samples = VK_SAMPLE_COUNT_1_BIT;
 		image_info.flags = 0;
 
-		VmaAllocationInfo info;
-		this->allocator->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &this->images[i].image, &this->images[i].image_memory, &info);
+		//VmaAllocationInfo info;
+		//this->allocator->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &this->images[i].image, &this->images[i].image_memory, &info);
 	
 		VkImageViewCreateInfo view_info = {};
 		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -69,7 +68,7 @@ VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VulkanAllocator* allocator
 		image_info.samples = VK_SAMPLE_COUNT_1_BIT;
 		image_info.flags = 0;
 
-		this->allocator->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &this->depth_image.image, &this->depth_image.image_memory, nullptr);
+		//this->allocator->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &this->depth_image.image, &this->depth_image.image_memory, nullptr);
 
 		VkImageViewCreateInfo view_info = {};
 		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -115,12 +114,12 @@ VulkanFramebuffer::~VulkanFramebuffer()
 	if (this->depth_image.image_format != VK_FORMAT_UNDEFINED)
 	{
 		vkDestroyImageView(this->device, this->depth_image.image_view, nullptr);
-		this->allocator->destroyImage(this->depth_image.image, this->depth_image.image_memory);
+		//this->allocator->destroyImage(this->depth_image.image, this->depth_image.image_memory);
 	}
 
 	for (size_t i = 0; i < this->images.size(); i++)
 	{
 		vkDestroyImageView(this->device, this->images[i].image_view, nullptr);
-		this->allocator->destroyImage(this->images[i].image, this->images[i].image_memory);
+		//this->allocator->destroyImage(this->images[i].image, this->images[i].image_memory);
 	}
 }

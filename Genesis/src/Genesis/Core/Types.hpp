@@ -6,7 +6,7 @@
 #include <string>
 
 //STL replacements
-#include "Genesis/Core/Array.hpp"
+#include "Genesis/Core/List.hpp"
 
 #include <vector>
 #include <set>

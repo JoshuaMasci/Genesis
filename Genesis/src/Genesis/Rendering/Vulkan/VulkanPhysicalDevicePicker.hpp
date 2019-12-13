@@ -4,9 +4,8 @@
 
 namespace Genesis
 {
-	class VulkanPhysicalDevicePicker
+	struct VulkanPhysicalDevicePicker
 	{
-	public:
 		static VkPhysicalDevice pickDevice(VkInstance instance, VkSurfaceKHR surface);
 	};
 }

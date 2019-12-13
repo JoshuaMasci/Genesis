@@ -1,12 +1,14 @@
+#define VMA_IMPLEMENTATION
+
 #include "VulkanDevice.hpp"
 
 #include "Genesis/Rendering/Vulkan/VulkanQueueFamily.hpp"
 
 using namespace Genesis;
 
-VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VkSurfaceKHR surface, vector<const char*>& extensions, vector<const char*>& layers)
+VulkanDevice::VulkanDevice(VkPhysicalDevice device, VkSurfaceKHR surface, vector<const char*>& extensions, vector<const char*>& layers)
 {
-	this->physical_device = chosen_device;
+	this->physical_device = device;
 	vkGetPhysicalDeviceProperties(this->physical_device, &this->properties);
 	vkGetPhysicalDeviceMemoryProperties(this->physical_device, &this->memory_properties);
 	vkGetPhysicalDeviceFeatures(this->physical_device, &this->features);
@@ -89,11 +91,68 @@ VulkanDevice::VulkanDevice(VkPhysicalDevice chosen_device, VkSurfaceKHR surface,
 	this->present_family_index = queue_allocator.present.queue_family;
 	this->transfer_family_index = queue_allocator.transfer.queue_family;
 	this->compute_family_index = queue_allocator.compute.queue_family;
+
+	VmaAllocatorCreateInfo allocatorInfo = {};
+	allocatorInfo.physicalDevice = this->physical_device;
+	allocatorInfo.device = this->logical_device;
+	vmaCreateAllocator(&allocatorInfo, &this->allocator);
 }
 
 VulkanDevice::~VulkanDevice()
 {
+	vmaDestroyAllocator(this->allocator);
 	vkDestroyDevice(this->logical_device, nullptr);
+}
+
+bool Genesis::VulkanDevice::isMemoryHostVisible(VmaAllocationInfo& memory_info)
+{
+	VkMemoryPropertyFlags memFlags;
+	vmaGetMemoryTypeProperties(this->allocator, memory_info.memoryType, &memFlags);
+	return (memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0;
+}
+
+void VulkanDevice::mapMemory(VmaAllocation memory, void** data)
+{
+	vmaMapMemory(this->allocator, memory, data);
+}
+
+void VulkanDevice::unmapMemory(VmaAllocation memory)
+{
+	vmaUnmapMemory(this->allocator, memory);
+}
+
+void VulkanDevice::createBuffer(VkBufferCreateInfo* buffer_create, VmaMemoryUsage memory_usage, VkBuffer * buffer, VmaAllocation * memory, VmaAllocationInfo * memory_info)
+{
+	VmaAllocationCreateInfo alloc_info = {};
+	alloc_info.usage = memory_usage;
+
+	VkResult result = vmaCreateBuffer(this->allocator, buffer_create, &alloc_info, buffer, memory, memory_info);
+	if (result != VK_SUCCESS)
+	{
+		printf("Error\n");
+	}
+}
+
+void VulkanDevice::destroyBuffer(VkBuffer buffer, VmaAllocation memory)
+{
+	vmaDestroyBuffer(this->allocator, buffer, memory);
+}
+
+void VulkanDevice::createImage(VkImageCreateInfo* image_create, VmaMemoryUsage memory_usage, VkImage * image, VmaAllocation * memory, VmaAllocationInfo * memory_info)
+{
+	VmaAllocationCreateInfo alloc_info = {};
+	alloc_info.usage = memory_usage;
+
+	VkResult result = vmaCreateImage(this->allocator, image_create, &alloc_info, image, memory, memory_info);
+	if (result != VK_SUCCESS)
+	{
+		printf("Error\n");
+	}
+}
+
+void VulkanDevice::destroyImage(VkImage image, VmaAllocation memory)
+{
+	vmaDestroyImage(this->allocator, image, memory);
 }
 
 VkSemaphore VulkanDevice::createSemaphore()

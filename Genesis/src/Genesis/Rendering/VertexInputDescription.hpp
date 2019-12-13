@@ -148,7 +148,7 @@ namespace Genesis
 			uint32_t offset;
 		};
 
-		Array<InputElementInternal> elements;
+		List<InputElementInternal> elements;
 		uint32_t total_size = 0;
 
 		uint32_t hash_value;

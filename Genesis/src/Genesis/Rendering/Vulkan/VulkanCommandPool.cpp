@@ -1,7 +1,5 @@
 #include "VulkanCommandPool.hpp"
 
-#include "Genesis/Rendering/Vulkan/VulkanMultithreadCommandBuffer.hpp"
-
 #include <stdexcept>
 
 using namespace Genesis;

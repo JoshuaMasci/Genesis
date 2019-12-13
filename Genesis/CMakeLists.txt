@@ -63,8 +63,8 @@ include_directories(${CMAKE_SOURCE_DIR}/submodules/concurrent_queue/)
 
 
 if(INCLUDE_VULKAN)
-	find_package(Vulkan REQUIRED)
-	include_directories(Vulkan_INCLUDE_DIR)
+	find_package(Vulkan REQUIRED FATAL_ERROR)
+	include_directories(${Vulkan_INCLUDE_DIR})	
 	target_link_libraries(Genesis PRIVATE Vulkan::Vulkan)
 	
 	include_directories(${CMAKE_SOURCE_DIR}/submodules/vulkan_memory_allocator/src/)

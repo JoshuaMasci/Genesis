@@ -5,8 +5,8 @@ using namespace Genesis;
 ArrayInputDevice::ArrayInputDevice(string device_name, uint16_t number_of_buttons, uint16_t number_of_axes)
 	:InputDevice(device_name)
 {
-	this->button_values = Array<ButtonValue>(number_of_buttons);
-	this->axis_values = Array<AxisValue>(number_of_axes);
+	this->button_values = List<ButtonValue>(number_of_buttons);
+	this->axis_values = List<AxisValue>(number_of_axes);
 }
 
 bool ArrayInputDevice::hasButton(string button_name)

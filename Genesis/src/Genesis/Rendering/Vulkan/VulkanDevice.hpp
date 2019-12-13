@@ -3,17 +3,38 @@
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 
+#include "vk_mem_alloc.h"
+
 namespace Genesis
 {
 	class VulkanDevice
 	{
 	public:
-		VulkanDevice(VkPhysicalDevice chosen_device, VkSurfaceKHR surface, vector<const char*>& extensions, vector<const char*>& layers);
+		//Device
+		VulkanDevice(VkPhysicalDevice device, VkSurfaceKHR surface, vector<const char*>& extensions, vector<const char*>& layers);
 		~VulkanDevice();
 
 		inline VkDevice get() { return this->logical_device; };
 		inline VkPhysicalDevice getPhysicalDevice() { return this->physical_device; };
 
+		//Device Memory
+		bool isMemoryHostVisible(VmaAllocationInfo& memory_info);
+		void mapMemory(VmaAllocation memory, void** data);
+		void unmapMemory(VmaAllocation memory);
+
+		void createBuffer(VkBufferCreateInfo* buffer_create, VmaMemoryUsage memory_usage, VkBuffer* buffer, VmaAllocation* memory, VmaAllocationInfo* memory_info);
+		void destroyBuffer(VkBuffer buffer, VmaAllocation memory);
+
+		void createImage(VkImageCreateInfo* image_create, VmaMemoryUsage memory_usage, VkImage* image, VmaAllocation* memory, VmaAllocationInfo* memory_info);
+		void destroyImage(VkImage image, VmaAllocation memory);
+
+		VkSemaphore createSemaphore();
+		void destroySemaphore(VkSemaphore semaphore);
+
+		VkFence createFence();
+		void destroyFence(VkFence fence);
+
+		//Device Queues
 		inline VkQueue getGraphicsQueue() { return this->graphics_queue; };
 		inline uint32_t getGraphicsFamilyIndex() { return this->graphics_family_index; };
 
@@ -26,11 +47,7 @@ namespace Genesis
 		inline VkQueue getComputeQueue() { return this->compute_queue; };
 		inline uint32_t getComputeFamilyIndex() { return this->compute_family_index; };
 
-		VkSemaphore createSemaphore();
-		void destroySemaphore(VkSemaphore semaphore);
-
-		VkFence createFence();
-		void destroyFence(VkFence fence);
+		inline void waitIdle() { vkDeviceWaitIdle(this->logical_device); };
 
 	private:
 		//Device
@@ -42,6 +59,10 @@ namespace Genesis
 		VkPhysicalDeviceMemoryProperties memory_properties;
 		VkPhysicalDeviceFeatures features;
 
+		//Device Memory
+		VmaAllocator allocator;
+
+		//Device Queues
 		VkQueue graphics_queue;
 		uint32_t graphics_family_index;
 

@@ -1,6 +1,6 @@
 #include "VulkanDescriptorPool.hpp"
 
-#include "Genesis/Core/Array.hpp"
+#include "Genesis/Core/List.hpp"
 
 #include <stdexcept>
 
@@ -22,10 +22,10 @@ VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, uint32_t frame_count
 		throw std::runtime_error("failed to create descriptor pool!");
 	}
 
-	this->frame_data = Array<FrameData>(frame_count);
+	this->frame_data = List<FrameData>(frame_count);
 	for (size_t i = 0; i < this->frame_data.size(); i++)
 	{
-		this->frame_data[i].used_descriptor_set = Array<VkDescriptorSet>(MAX_PER_FRAME_DESCRIPTOR_SETS);
+		this->frame_data[i].used_descriptor_set = List<VkDescriptorSet>(MAX_PER_FRAME_DESCRIPTOR_SETS);
 	}
 }
 

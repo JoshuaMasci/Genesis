@@ -159,14 +159,14 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string& shader_data)
 		throw std::runtime_error("more than one DescriptorSet is not supported");
 	}
 
-	Array<SpvReflectDescriptorSet*> descriptor_sets_spv(descriptor_sets_count);
+	List<SpvReflectDescriptorSet*> descriptor_sets_spv(descriptor_sets_count);
 	spvReflectEnumerateDescriptorSets(&module, &descriptor_sets_count, descriptor_sets_spv.data());
 
 	if (descriptor_sets_count > 0)
 	{
 		SpvReflectDescriptorSet* descriptor_set_spv = descriptor_sets_spv[0];
 
-		this->shader_bindings = Array<ShaderBinding>(descriptor_set_spv->binding_count);
+		this->shader_bindings = List<ShaderBinding>(descriptor_set_spv->binding_count);
 		for (size_t binding_index = 0; binding_index < this->shader_bindings.size(); binding_index++)
 		{
 			this->shader_bindings[binding_index] = {};
@@ -256,7 +256,7 @@ VulkanShader::VulkanShader(VkDevice device, string& vert_data, string& frag_data
 
 	if (binding_count > 0)
 	{
-		Array<VkDescriptorSetLayoutBinding> bindings(binding_count);
+		List<VkDescriptorSetLayoutBinding> bindings(binding_count);
 		for (size_t i = 0; i < vert_binding_count; i++)
 		{
 			bindings[i] = toVkBinding(this->vert_module->shader_bindings[i]);
@@ -311,7 +311,7 @@ VulkanShader::VulkanShader(VkDevice device, string& vert_data, string& frag_data
 	pipeline_layout_info.pSetLayouts = &this->descriptor_layout;
 
 
-	Array<VkPushConstantRange> push_constants(this->name_constants.size());
+	List<VkPushConstantRange> push_constants(this->name_constants.size());
 	size_t i = 0;
 	for (auto constant : this->name_constants)
 	{

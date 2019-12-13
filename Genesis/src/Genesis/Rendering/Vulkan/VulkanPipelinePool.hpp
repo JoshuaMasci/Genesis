@@ -38,6 +38,6 @@ namespace Genesis
 			queue<PipelineAddInfo> new_pipelines;
 		};
 
-		Array<ThreadPipelinePool> thread_pools;
+		List<ThreadPipelinePool> thread_pools;
 	};
 }

@@ -15,8 +15,10 @@ VulkanRenderPassPool::~VulkanRenderPassPool()
 	}
 }
 
-VkRenderPass VulkanRenderPassPool::getRenderPass(uint32_t hash, Array<VkFormat>& color_formats, VkFormat depth_format)
+VkRenderPass VulkanRenderPassPool::getRenderPass(uint32_t hash, List<VkFormat>& color_formats, VkFormat depth_format)
 {
+	this->map_lock.lock();
+
 	if (this->render_passes.find(hash) != this->render_passes.end())
 	{
 		return this->render_passes[hash];
@@ -77,7 +79,7 @@ VkRenderPass VulkanRenderPassPool::getRenderPass(uint32_t hash, Array<VkFormat>&
 	}
 
 	//Use subpass dependencies for layout transitions
-	Array<VkSubpassDependency> dependencies(2);
+	List<VkSubpassDependency> dependencies(2);
 
 	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
 	dependencies[0].dstSubpass = 0;
@@ -113,6 +115,8 @@ VkRenderPass VulkanRenderPassPool::getRenderPass(uint32_t hash, Array<VkFormat>&
 	}
 
 	this->render_passes[hash] = render_pass;
+
+	this->map_lock.unlock();
 
 	return render_pass;
 }

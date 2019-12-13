@@ -32,7 +32,7 @@ namespace Genesis
 
 		//buffer info
 		uint32_t total_size;
-		Array<ShaderBindingVariable> variables;
+		List<ShaderBindingVariable> variables;
 	};
 
 	enum class ShaderVariableType
@@ -65,7 +65,7 @@ namespace Genesis
 		VkPipelineShaderStageCreateInfo getStageInfo();
 
 		VkShaderModule shader_module;
-		Array<ShaderBinding> shader_bindings;
+		List<ShaderBinding> shader_bindings;
 		VkShaderStageFlagBits shader_stage;
 
 		ShaderPushConstant push_constant;

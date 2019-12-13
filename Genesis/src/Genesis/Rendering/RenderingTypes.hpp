@@ -39,7 +39,13 @@ namespace Genesis
 
 	typedef void* VertexBuffer;
 	typedef void* IndexBuffer;
+	typedef void* UniformBuffer;
+
 	typedef void* Texture;
 	typedef void* Shader;
-	typedef void* View;
+
+	typedef void* FrameBuffer;
+
+	typedef void* CommandBufferSingle;
+	typedef void* CommandBufferMulti;
 }

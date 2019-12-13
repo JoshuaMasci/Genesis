@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
@@ -14,11 +16,13 @@ namespace Genesis
 		VulkanRenderPassPool(VkDevice device);
 		~VulkanRenderPassPool();
 
-		VkRenderPass getRenderPass(uint32_t hash, Array<VkFormat>& color_formats, VkFormat depth_format);
+		VkRenderPass getRenderPass(uint32_t hash, List<VkFormat>& color_formats, VkFormat depth_format);
 
 	private:
+		std::mutex map_lock;
+
 		VkDevice device = VK_NULL_HANDLE;
 
-		map <uint32_t, VkRenderPass> render_passes;
+		map<uint32_t, VkRenderPass> render_passes;
 	};
 }

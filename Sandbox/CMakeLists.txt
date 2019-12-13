@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8.0)
 project(Sandbox)
 
 include_directories(src)
+
 file(GLOB_RECURSE SANDBOX_SOURCES "src/Sandbox/*.cpp")
 file(GLOB_RECURSE SANDBOX_HEADERS "src/Sandbox/*.hpp")
 source_group("Sandbox" FILES ${SANDBOX_SOURCES})
@@ -23,9 +24,10 @@ link_directories(${CMAKE_SOURCE_DIR}/submodules/bullet_physics/lib/)
 #link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
 
 if(INCLUDE_VULKAN)
-	find_package(Vulkan REQUIRED)
+	find_package(Vulkan REQUIRED FATAL_ERROR)
+	include_directories(${Vulkan_INCLUDE_DIR})	
 	include_directories(${CMAKE_SOURCE_DIR}/submodules/vulkan_memory_allocator/src/)
-	include_directories(Vulkan_INCLUDE_DIR)
+	include_directories(${CMAKE_SOURCE_DIR}/submodules/spirv-reflect/)
 endif()
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})

@@ -16,6 +16,8 @@ namespace Genesis
 		void invalidateSwapchain();
 		void recreateSwapchain(VkExtent2D surface_size);
 
+		uint32_t getNextImage(VkSemaphore image_ready_semaphore);
+
 		inline bool invalid() { return this->swapchain_invalid; };
 
 		inline VkSwapchainKHR get() { return this->current.swapchain; };
@@ -37,9 +39,9 @@ namespace Genesis
 			uint32_t image_count;
 			VkExtent2D size;
 			VkRenderPass render_pass;
-			Array<VkImage> images;
-			Array<VkImageView> imageviews;
-			Array<VkFramebuffer> framebuffers;
+			List<VkImage> images;
+			List<VkImageView> imageviews;
+			List<VkFramebuffer> framebuffers;
 		};
 
 		Swapchain createSwapchain(VkPhysicalDevice physical_device, VkExtent2D surface_size, VkSurfaceKHR surface, VkSwapchainKHR old_swapchain);

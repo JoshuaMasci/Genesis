@@ -21,7 +21,7 @@ namespace Genesis
 		void addJobs(vector<Job*> jobs);
 		void addJobsAndWait(vector<Job*> jobs);
 
-		void addJobsAndWait(Array<Job>& jobs);
+		void addJobsAndWait(List<Job>& jobs);
 
 		inline bool shouldThreadsRun() { return this->should_threads_run; };
 		inline uint8_t getThreadWaitTimeMilliseconds() { return this->thread_wait_time_milli; };

@@ -3,11 +3,20 @@
 #include "Genesis/Rendering/RenderingBackend.hpp"
 #include "Genesis/Platform/Window.hpp"
 
+#include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanInstance.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanDebugLayer.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanSwapchain.hpp"
+
+#include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanPipelinePool.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanRenderPassPool.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanTransferBuffer.hpp"
+
 namespace Genesis
 {
-	//Prototype
-	class VulkanInstance;
-
 	class VulkanBackend : public RenderingBackend
 	{
 	public:
@@ -19,13 +28,15 @@ namespace Genesis
 
 		virtual bool beginFrame() override;
 		virtual void endFrame() override;
-		virtual void submitFrame(vector<View> sub_views) override;
 
 		virtual VertexBuffer createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage = MemoryUsage::GPU_Only) override;
 		virtual void destroyVertexBuffer(VertexBuffer vertex_buffer_index) override;
 
-		virtual IndexBuffer createIndexBuffer(void* indices, uint32_t indices_count, IndexType type, MemoryUsage memory_usage = MemoryUsage::GPU_Only) override;
+		virtual IndexBuffer createIndexBuffer(void* data, uint64_t data_size, IndexType type, MemoryUsage memory_usage = MemoryUsage::GPU_Only) override;
 		virtual void destroyIndexBuffer(IndexBuffer index_buffer_index) override;
+
+		virtual UniformBuffer createUniformBuffer(uint64_t data_size, MemoryUsage memory_usage = MemoryUsage::CPU_Visable) override;
+		virtual void destroyUniformBuffer(UniformBuffer* uniform_buffer) override;
 
 		virtual Texture createTexture(vector2U size, void* data, uint64_t data_size) override;
 		virtual void destroyTexture(Texture texture_handle) override;
@@ -33,32 +44,51 @@ namespace Genesis
 		virtual Shader createShader(string& vert_data, string& frag_data) override;
 		virtual void destroyShader(Shader shader_handle) override;
 
-		virtual View createView(vector2U size, FramebufferLayout& layout, CommandBufferType type) override;
-		virtual void destroyView(View index) override;
-		virtual void resizeView(View index, vector2U new_size) override;
-
-		virtual void startView(View index) override;
-		virtual void endView(View index) override;
-		virtual void submitView(View index, vector<View> sub_views = {}) override;
-		virtual CommandBuffer* getViewCommandBuffer(View index) override;
-
-		virtual CommandBuffer* getScreenCommandBuffer() override;
-
-		//Utils
-		virtual matrix4F getPerspectiveMatrix(float fov, float z_near, float aspect_ratio) override;
-		virtual matrix4F getPerspectiveMatrix(Camera* camera, View view) override;
-
-		virtual VertexBuffer getWholeScreenQuadVertex() override;
-		virtual IndexBuffer getWholeScreenQuadIndex() override;
-
 		virtual void waitTillDone() override;
 
 	private:
-		VulkanInstance* vulkan = nullptr;
+		const uint32_t FRAME_COUNT;
+		const uint32_t THREAD_COUNT;
+
+		Window* window = nullptr;
+
+		VkInstance instance = VK_NULL_HANDLE;
+		VkSurfaceKHR surface = VK_NULL_HANDLE;
+
+		VulkanDebugLayer* debug_layer = nullptr;
+
+		VulkanDevice* device = nullptr;
+		VulkanSwapchain* swapchain = nullptr;
+
 		uint32_t swapchain_image_index = 0;
 		uint32_t frame_index = 0;
 
-		VertexBuffer screen_quad_vertex = nullptr;
-		IndexBuffer screen_quad_index = nullptr;
+		struct Frame
+		{
+			VkCommandBuffer screen_command_buffer = VK_NULL_HANDLE;
+
+			VkSemaphore image_ready_semaphore = VK_NULL_HANDLE;
+			VkSemaphore command_buffer_done_semaphore = VK_NULL_HANDLE;
+			VkFence frame_done_fence = VK_NULL_HANDLE;
+
+			VulkanTransferBuffer* transfer_buffer = nullptr;
+		};
+		List<Frame> frames;
+
+		//Graphics Command Pools
+		VulkanCommandPool* primary_graphics_pool = nullptr;
+		List<VulkanCommandPool*> secondary_graphics_pools;
+
+		//Transfer Command Pool
+		VulkanCommandPool* transfer_pool = nullptr;
+
+		//Descriptor Pools
+		List<VulkanDescriptorPool*> descriptor_pools;
+
+		//Pipeline Pool
+		VulkanPipelinePool* pipeline_pool = nullptr;
+
+		//RenderPass Pool
+		VulkanRenderPassPool* render_pass_pool = nullptr;
 	};
 }

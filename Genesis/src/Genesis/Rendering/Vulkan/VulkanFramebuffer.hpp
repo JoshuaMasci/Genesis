@@ -3,7 +3,6 @@
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 #include "Genesis/Rendering/RenderingTypes.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanAllocator.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
 
 #include "Genesis/Core/Types.hpp"
@@ -21,7 +20,7 @@ namespace Genesis
 	class VulkanFramebuffer
 	{
 	public:
-		VulkanFramebuffer(VkDevice device, VulkanAllocator* allocator, VkExtent2D size, Array<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass);
+		VulkanFramebuffer(VkDevice device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass);
 		virtual ~VulkanFramebuffer();
 
 		inline VkExtent2D getSize() { return this->size; };
@@ -45,10 +44,9 @@ namespace Genesis
 		VkExtent2D size;
 		VkRenderPass render_pass;
 
-		Array<VulkanFramebufferImage> images;
+		List<VulkanFramebufferImage> images;
 		VulkanFramebufferImage depth_image;
 		VkFramebuffer framebuffer;
 		
-		VulkanAllocator* allocator = nullptr;
 	};
 }

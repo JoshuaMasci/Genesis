@@ -61,6 +61,25 @@ void VulkanSwapchain::recreateSwapchain(VkExtent2D surface_size)
 	this->destroySwapchain(this->old);
 }
 
+uint32_t VulkanSwapchain::getNextImage(VkSemaphore image_ready_semaphore)
+{
+	if (this->invalid())
+	{
+		return std::numeric_limits<uint32_t>::max();
+	}
+
+	uint32_t image_index;
+	VkResult result = vkAcquireNextImageKHR(this->device->get(), this->current.swapchain, std::numeric_limits<uint64_t>::max(), image_ready_semaphore, VK_NULL_HANDLE, &image_index);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		this->invalidateSwapchain();
+		return std::numeric_limits<uint32_t>::max();
+	}
+
+	return image_index;
+}
+
 VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice physical_device, VkExtent2D surface_size, VkSurfaceKHR surface, VkSwapchainKHR old_swapchain)
 {
 	Swapchain new_swapchain = {};
@@ -136,7 +155,6 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 		}
 		create_info.presentMode = best_mode;
 	}
-
 
 	//QueueFamily
 	{
@@ -252,7 +270,7 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 	new_swapchain.framebuffers.resize(new_swapchain.image_count);
 	for (size_t i = 0; i < new_swapchain.framebuffers.size(); i++)
 	{
-		Array<VkImageView> attachments(1);
+		List<VkImageView> attachments(1);
 		attachments[0] = new_swapchain.imageviews[i];
 
 		VkFramebufferCreateInfo framebufferInfo = {};
@@ -275,6 +293,8 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 
 void VulkanSwapchain::destroySwapchain(Swapchain& swapchain)
 {
+	this->device->waitIdle();
+
 	for (size_t i = 0; i < swapchain.image_count; i++)
 	{
 		vkDestroyFramebuffer(this->device->get(), swapchain.framebuffers[i], nullptr);

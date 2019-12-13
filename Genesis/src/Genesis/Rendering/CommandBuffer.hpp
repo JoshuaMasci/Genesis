@@ -6,12 +6,6 @@
 
 namespace Genesis
 {
-	enum class CommandBufferType
-	{
-		SingleThread,
-		MultiThread
-	};
-
 	class CommandBuffer
 	{
 	public:
@@ -20,17 +14,6 @@ namespace Genesis
 		
 		virtual void setScissor(vector2I offset, vector2U extent) = 0;
 
-		//Uniform
-		virtual void setUniformFloat(const string& name, float value) = 0;
-		virtual void setUniformVec2(const string& name, vector2F value) = 0;
-		virtual void setUniformVec3(const string& name, vector3F value) = 0;
-		virtual void setUniformVec4(const string& name, vector4F value) = 0;
-
-		virtual void setUniformMat3(const string& name, matrix3F value) = 0;
-		virtual void setUniformMat4(const string& name, matrix4F value) = 0;
-		
-		virtual void setUniformTexture(const string& name, Texture texture) = 0;
-		virtual void setUniformView(const string& name, View view, uint16_t view_image_index) = 0;
 
 		//Draw Calls
 		virtual void drawIndexed(VertexBuffer vertex_handle, IndexBuffer index_handle) = 0;

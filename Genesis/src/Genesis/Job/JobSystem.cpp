@@ -82,7 +82,7 @@ void JobSystem::addJobsAndWait(vector<Job*> jobs)
 	}
 }
 
-void JobSystem::addJobsAndWait(Array<Job>& jobs)
+void JobSystem::addJobsAndWait(List<Job>& jobs)
 {
 	for (size_t i = 0; i < jobs.size(); i++)
 	{

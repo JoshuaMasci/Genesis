@@ -91,7 +91,7 @@ VulkanPipline::VulkanPipline(VkDevice device, VulkanShader& shader, VkRenderPass
 	binding_description.stride = vertex_description.getSize();
 	binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-	Array<VkVertexInputAttributeDescription> attribute_descriptions(vertex_description.getElementCount());
+	List<VkVertexInputAttributeDescription> attribute_descriptions(vertex_description.getElementCount());
 	for (size_t i = 0; i < attribute_descriptions.size(); i++)
 	{
 		attribute_descriptions[i].binding = 0;
@@ -266,7 +266,7 @@ VulkanPipline::VulkanPipline(VkDevice device, VulkanShader& shader, VkRenderPass
 	color_blending.blendConstants[2] = 0.0f;
 	color_blending.blendConstants[3] = 0.0f;
 
-	Array<VkDynamicState> dynamic_states(1);
+	List<VkDynamicState> dynamic_states(1);
 	dynamic_states[0] = VK_DYNAMIC_STATE_SCISSOR;
 	//Maybe Use VK_DYNAMIC_STATE_VIEWPORT
 

@@ -26,10 +26,10 @@ namespace Genesis
 		//Per frame descriptorset allocations
 		struct FrameData
 		{
-			Array<VkDescriptorSet> used_descriptor_set;
+			List<VkDescriptorSet> used_descriptor_set;
 			uint32_t descriptor_set_count = 0;
 		};
 		
-		Array<FrameData> frame_data;
+		List<FrameData> frame_data;
 	};
 }
