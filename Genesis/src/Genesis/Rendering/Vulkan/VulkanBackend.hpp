@@ -35,7 +35,7 @@ namespace Genesis
 		virtual void setScreenSize(vector2U size) override;
 		virtual vector2U getScreenSize() override;
 
-		virtual bool beginFrame() override;
+		virtual CommandBuffer* beginFrame() override;
 		virtual void endFrame() override;
 
 		virtual VertexBuffer createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage = MemoryUsage::GPU_Only) override;
@@ -53,16 +53,6 @@ namespace Genesis
 
 		virtual Shader createShader(string& vert_data, string& frag_data) override;
 		virtual void destroyShader(Shader shader) override;
-
-		/*virtual Framebuffer createFramebuffer(FramebufferLayout& layout, vector2U size) override;
-		virtual void destroyFramebuffer(Framebuffer frame_buffer) override;
-		virtual void resizeFramebuffer(Framebuffer frame_buffer, vector2U size) override;
-
-		virtual CommandBuffer* createCommandBuffer() override;
-		virtual void destroyCommandBuffer(CommandBuffer* command_buffer) override;
-		virtual void beginCommandBuffer(CommandBuffer* command_buffer, Framebuffer target) override;
-		virtual void endCommandBuffer(CommandBuffer* command_buffer) override;
-		virtual void submitCommandBuffer(CommandBuffer* command_buffer) override;*/
 
 		virtual View createView(FramebufferLayout& layout, vector2U size) override;
 		virtual void destroyView(View view) override;
@@ -91,9 +81,9 @@ namespace Genesis
 
 		struct Frame
 		{
-			VkCommandBuffer screen_command_buffer = VK_NULL_HANDLE;
-
 			VkSemaphore image_ready_semaphore = VK_NULL_HANDLE;
+
+			VulkanCommandBufferSingle* command_buffer = nullptr;
 			VkSemaphore command_buffer_done_semaphore = VK_NULL_HANDLE;
 			VkFence frame_done_fence = VK_NULL_HANDLE;
 

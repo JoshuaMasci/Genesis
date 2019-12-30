@@ -17,7 +17,7 @@ namespace Genesis
 		virtual void setScreenSize(vector2U size) = 0;
 		virtual vector2U getScreenSize() = 0;
 
-		virtual bool beginFrame() = 0;
+		virtual CommandBuffer* beginFrame() = 0;
 		virtual void endFrame() = 0;
 
 		virtual VertexBuffer createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage = MemoryUsage::GPU_Only) = 0;
@@ -35,16 +35,6 @@ namespace Genesis
 
 		virtual Shader createShader(string& vert_data, string& frag_data) = 0;
 		virtual void destroyShader(Shader shader) = 0;
-
-		/*virtual Framebuffer createFramebuffer(FramebufferLayout& layout, vector2U size) = 0;
-		virtual void destroyFramebuffer(Framebuffer frame_buffer) = 0;
-		virtual void resizeFramebuffer(Framebuffer frame_buffer, vector2U size) = 0;
-
-		virtual CommandBuffer* createCommandBuffer() = 0;
-		virtual void destroyCommandBuffer(CommandBuffer* command_buffer) = 0;
-		virtual void beginCommandBuffer(CommandBuffer* command_buffer, Framebuffer target) = 0;
-		virtual void endCommandBuffer(CommandBuffer* command_buffer) = 0;
-		virtual void submitCommandBuffer(CommandBuffer* command_buffer) = 0;*/
 
 		virtual View createView(FramebufferLayout& layout, vector2U size) = 0;
 		virtual void destroyView(View view) = 0;

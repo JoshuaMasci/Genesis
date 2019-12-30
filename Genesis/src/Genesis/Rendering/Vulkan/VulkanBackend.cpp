@@ -62,7 +62,7 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 
 	vector<const char*> layers;
 	layers.push_back("VK_LAYER_LUNARG_standard_validation");
-	//layers.push_back("VK_LAYER_RENDERDOC_Capture");
+	layers.push_back("VK_LAYER_RENDERDOC_Capture");
 
 	this->instance = VulkanInstance::create(VK_API_VERSION_1_1, "Sandbox", VK_MAKE_VERSION(0, 0, 0), "Genesis_Engine", VK_MAKE_VERSION(0, 0, 0), extensions, layers);
 
@@ -88,32 +88,22 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 	//Transfer Command Pool
 	this->transfer_pool = new VulkanCommandPool(this->device->get(), this->device->getTransferFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
-	this->frames.resize(this->FRAME_COUNT);
-	for (size_t i = 0; i < this->frames.size(); i++)
-	{
-		this->frames[i].screen_command_buffer = this->primary_graphics_pool->getCommandBuffer();
-
-		this->frames[i].image_ready_semaphore = this->device->createSemaphore();
-		this->frames[i].command_buffer_done_semaphore = this->device->createSemaphore();
-		this->frames[i].frame_done_fence = this->device->createFence();
-
-		this->frames[i].transfer_buffer = new VulkanTransferBuffer(this->device, this->transfer_pool);
-	}
-
 	//Descriptor Pools
 	this->descriptor_pools.resize(this->THREAD_COUNT);
 	for (size_t i = 0; i < this->descriptor_pools.size(); i++)
 	{
-		this->descriptor_pools[i] = 
-			new VulkanDescriptorPool( this->device->get(), this->FRAME_COUNT, 800000,
-			{
-				{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000},
-				{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8000}
-			});
+		this->descriptor_pools[i] =
+			new VulkanDescriptorPool(this->device->get(), this->FRAME_COUNT, 800000,
+				{
+					{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000},
+					{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8000}
+				});
 	}
 
+	//Layout pool
 	this->layout_pool = new VulkanLayoutPool(this->device->get());
 
+	//Pipeline pools
 	this->pipeline_pool = new VulkanPipelinePool(this->device->get());
 	this->thread_pipeline_pools.resize(this->THREAD_COUNT);
 	for (size_t i = 0; i < this->thread_pipeline_pools.size(); i++)
@@ -121,15 +111,25 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 		this->thread_pipeline_pools[i] = new VulkanThreadPipelinePool(this->device->get(), this->pipeline_pool);
 	}
 
+	//RenderPass pool
 	this->render_pass_pool = new VulkanRenderPassPool(this->device->get());
+
+	this->frames.resize(this->FRAME_COUNT);
+	for (size_t i = 0; i < this->frames.size(); i++)
+	{
+		this->frames[i].image_ready_semaphore = this->device->createSemaphore();
+		this->frames[i].command_buffer = new VulkanCommandBufferSingle(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], (uint32_t)i);
+		this->frames[i].command_buffer_done_semaphore = this->device->createSemaphore();
+		this->frames[i].frame_done_fence = this->device->createFence();
+
+		this->frames[i].transfer_buffer = new VulkanTransferBuffer(this->device, this->transfer_pool);
+	}
 
 	const uint8_t delay_cycles = (uint8_t)this->FRAME_COUNT + 1;
 	this->buffer_deleter = new DelayedResourceDeleter<VulkanBuffer>(delay_cycles);
 	this->uniform_deleter = new DelayedResourceDeleter<VulkanUniformBuffer>(delay_cycles);
 	this->texture_deleter = new DelayedResourceDeleter<VulkanTexture>(delay_cycles);
 	this->shader_deleter = new DelayedResourceDeleter<VulkanShader>(delay_cycles);
-	//this->framebuffer_set_deleter = new DelayedResourceDeleter<VulkanFramebufferSet>(delay_cycles);
-	//this->single_command_buffer_deleter = new DelayedResourceDeleter<VulkanCommandBufferSingle>(delay_cycles);
 	this->view_deleter = new DelayedResourceDeleter<VulkanViewSingleThread>(delay_cycles);
 }
 
@@ -139,8 +139,6 @@ VulkanBackend::~VulkanBackend()
 	delete this->uniform_deleter;
 	delete this->texture_deleter;
 	delete this->shader_deleter;
-	//delete this->framebuffer_set_deleter;
-	//delete this->single_command_buffer_deleter;
 	delete this->view_deleter;
 
 	delete this->render_pass_pool;
@@ -160,9 +158,8 @@ VulkanBackend::~VulkanBackend()
 
 	for (size_t i = 0; i < this->frames.size(); i++)
 	{
-		this->primary_graphics_pool->freeCommandBuffer(this->frames[i].screen_command_buffer);
-
 		this->device->destroySemaphore(this->frames[i].image_ready_semaphore);
+		delete this->frames[i].command_buffer;
 		this->device->destroySemaphore(this->frames[i].command_buffer_done_semaphore);
 		this->device->destroyFence(this->frames[i].frame_done_fence);
 
@@ -198,7 +195,7 @@ vector2U VulkanBackend::getScreenSize()
 	return vector2U();
 }
 
-bool VulkanBackend::beginFrame()
+CommandBuffer* VulkanBackend::beginFrame()
 {
 	if (this->swapchain->invalid())
 	{
@@ -210,7 +207,7 @@ bool VulkanBackend::beginFrame()
 
 	if (index == std::numeric_limits<uint32_t>::max())
 	{
-		return false;
+		return nullptr;
 	}
 
 	this->swapchain_image_index = index;
@@ -218,73 +215,43 @@ bool VulkanBackend::beginFrame()
 	vkWaitForFences(this->device->get(), 1, &this->frames[this->frame_index].frame_done_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
 	vkResetFences(this->device->get(), 1, &this->frames[this->frame_index].frame_done_fence);
 
-	vkResetCommandBuffer(this->frames[this->frame_index].screen_command_buffer, 0);
-
 	this->frames[this->frame_index].transfer_buffer->reset();
 
-	VkCommandBufferBeginInfo begin_info = {};
-	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	if (vkBeginCommandBuffer(this->frames[this->frame_index].screen_command_buffer, &begin_info) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to begin recording primary command buffer!");
-	}
+	List<VkClearValue> clear_values(1);
+	clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+	VkRect2D render_area = {};
+	render_area.offset = { 0, 0 };
+	render_area.extent = this->swapchain->getSwapchainExtent();
+	this->frames[this->frame_index].command_buffer->command_buffer.startPrimary(this->swapchain->getFramebuffer(this->swapchain_image_index), this->swapchain->getRenderPass(), render_area, clear_values, VK_SUBPASS_CONTENTS_INLINE);
 
-	{
-		VkRenderPassBeginInfo render_pass_info = {};
-		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		render_pass_info.renderPass = this->swapchain->getRenderPass();
-		render_pass_info.framebuffer = this->swapchain->getFramebuffer(this->swapchain_image_index);
-		render_pass_info.renderArea.offset = { 0, 0 };
-		render_pass_info.renderArea.extent = this->swapchain->getSwapchainExtent();
-		VkClearValue clearValues[1];
-		clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-		render_pass_info.clearValueCount = 1;
-		render_pass_info.pClearValues = clearValues;
-
-		vkCmdBeginRenderPass(this->frames[this->frame_index].screen_command_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-	}
-
-	return true;
+	return this->frames[this->frame_index].command_buffer;
 }
 
 void VulkanBackend::endFrame()
 {
 	bool transfer_required = this->frames[this->frame_index].transfer_buffer->SubmitTransfers(this->device->getTransferQueue());
 
-	vkCmdEndRenderPass(this->frames[this->frame_index].screen_command_buffer);
-	vkEndCommandBuffer(this->frames[this->frame_index].screen_command_buffer);
+	this->frames[this->frame_index].command_buffer->command_buffer.end();
 
-	vector<VkSemaphore> wait_semaphores;
-	vector<VkPipelineStageFlags> wait_states;
+	List<VkSemaphore> wait_semaphores(1);
+	List<VkPipelineStageFlags> wait_states(1);
 
-	wait_semaphores.push_back(this->frames[this->frame_index].image_ready_semaphore);
-	wait_states.push_back(VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+	List<VkSemaphore> signal_semaphores(1);
+	signal_semaphores[0] = this->frames[this->frame_index].command_buffer_done_semaphore;
+
+	wait_semaphores[0] = this->frames[this->frame_index].image_ready_semaphore;
+	wait_states[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
 
 	if (transfer_required == true)
 	{
-		wait_semaphores.push_back(this->frames[this->frame_index].transfer_buffer->getTransferDoneSemaphore());
-		wait_states.push_back(VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT);
+		wait_semaphores.resize(2);
+		wait_states.resize(2);
+
+		wait_semaphores[1] = this->frames[this->frame_index].transfer_buffer->getTransferDoneSemaphore();
+		wait_states[1] = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
 	}
 
-	{
-		VkSubmitInfo submit_info = {};
-		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-		submit_info.waitSemaphoreCount = (uint32_t)wait_semaphores.size();
-		submit_info.pWaitSemaphores = wait_semaphores.data();
-		submit_info.pWaitDstStageMask = wait_states.data();
-
-		submit_info.commandBufferCount = 1;
-		submit_info.pCommandBuffers = &this->frames[this->frame_index].screen_command_buffer;
-
-		submit_info.signalSemaphoreCount = 1;
-		submit_info.pSignalSemaphores = &this->frames[this->frame_index].command_buffer_done_semaphore;
-
-		if (vkQueueSubmit(this->device->getGraphicsQueue(), 1, &submit_info, this->frames[this->frame_index].frame_done_fence) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to submit command buffer!");
-		}
-	}
+	this->frames[this->frame_index].command_buffer->command_buffer.submit(this->device->getGraphicsQueue(), wait_semaphores, wait_states, signal_semaphores, this->frames[this->frame_index].frame_done_fence);
 
 	//Present the image to the screen
 	VkPresentInfoKHR present_info = {};
@@ -295,7 +262,6 @@ void VulkanBackend::endFrame()
 	VkSwapchainKHR swapchains[] = { this->swapchain->get() };
 	present_info.swapchainCount = 1;
 	present_info.pSwapchains = swapchains;
-
 	present_info.pImageIndices = &this->swapchain_image_index;
 
 	VkResult result = vkQueuePresentKHR(this->device->getPresentQueue(), &present_info);
@@ -306,9 +272,9 @@ void VulkanBackend::endFrame()
 	this->uniform_deleter->cycle();
 	this->texture_deleter->cycle();
 	this->shader_deleter->cycle();
-	//this->framebuffer_set_deleter->cycle();
-	//this->single_command_buffer_deleter->cycle();
 	this->view_deleter->cycle();
+
+	this->pipeline_pool->update();
 }
 
 VertexBuffer VulkanBackend::createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage)
@@ -414,114 +380,6 @@ void VulkanBackend::destroyShader(Shader shader)
 {
 	this->shader_deleter->addToQueue((VulkanShader*)shader);
 }
-
-/*Framebuffer VulkanBackend::createFramebuffer(FramebufferLayout& layout, vector2U size)
-{
-	List<VkFormat> color(layout.getColorCount());
-	List<VkClearValue> clear_colors(color.size());
-	for (size_t i = 0; i < color.size(); i++)
-	{
-		color[i] = getImageFormat(layout.getColor(i));
-		clear_colors[i].color = { 0.f, 0.0f, 0.0f, 0.0f };
-	}
-
-	VkFormat depth = getImageFormat(layout.getDepth());
-	if (layout.getDepth() != ImageFormat::Invalid)
-	{
-		size_t array_size = clear_colors.size();
-		clear_colors.resize(array_size + 1);
-		clear_colors[array_size].depthStencil = { 1.0f, 0 };
-	}
-
-	VkRenderPass render_pass = this->render_pass_pool->getRenderPass(layout.getHash(), color, depth);
-
-	VulkanFramebufferSet* frame_buffer = new VulkanFramebufferSet(this->device, { size.x, size.y }, color, depth, render_pass, this->FRAME_COUNT);
-	frame_buffer->setClearValues(clear_colors);
-	return (Framebuffer)frame_buffer;
-}
-
-void VulkanBackend::destroyFramebuffer(Framebuffer frame_buffer)
-{
-	this->framebuffer_set_deleter->addToQueue((VulkanFramebufferSet*) frame_buffer);
-}
-
-void VulkanBackend::resizeFramebuffer(Framebuffer frame_buffer, vector2U size)
-{
-	((VulkanFramebufferSet*)frame_buffer)->setSize({size.x, size.y});
-}
-
-CommandBuffer* VulkanBackend::createCommandBuffer()
-{
-	return new VulkanCommandBufferSingle(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->FRAME_COUNT);
-}
-
-void VulkanBackend::destroyCommandBuffer(CommandBuffer* command_buffer)
-{
-	this->single_command_buffer_deleter->addToQueue((VulkanCommandBufferSingle*)command_buffer);
-}
-
-void VulkanBackend::beginCommandBuffer(CommandBuffer* command_buffer, Framebuffer target)
-{
-	if (target != nullptr)
-	{
-		VulkanFramebufferSet* framebuffer_set = ((VulkanFramebufferSet*)target);
-		VulkanFramebuffer* framebuffer = framebuffer_set->getFrameBuffer(this->frame_index);
-
-		VkRect2D rect = {};
-		rect.offset = { 0, 0 };
-		rect.extent = framebuffer->getSize();
-		((VulkanCommandBufferSingle*)command_buffer)->command_buffer.startPrimary(this->frame_index, framebuffer->get(), framebuffer->getRenderPass(), rect, framebuffer_set->getClearValues(), VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
-	}
-	else
-	{
-		//Use screen
-		VkFramebuffer screen = this->swapchain->getFramebuffer(this->swapchain_image_index);
-		VkRenderPass screen_render_pass = this->swapchain->getRenderPass();
-		VkRect2D rect = {};
-		rect.offset = { 0, 0 };
-		rect.extent = this->swapchain->getSwapchainExtent();
-
-		List<VkClearValue> clear_values(1);
-		clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-		((VulkanCommandBufferSingle*)command_buffer)->command_buffer.startPrimary(this->frame_index, screen, screen_render_pass, rect, clear_values, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
-	}
-}
-
-void VulkanBackend::endCommandBuffer(CommandBuffer* command_buffer)
-{
-	((VulkanCommandBufferSingle*)command_buffer)->command_buffer.end();
-}
-
-void VulkanBackend::submitCommandBuffer(CommandBuffer* command_buffer)
-{
-	//((VulkanCommandBufferSingle*)command_buffer)->command_buffer.submit(this->device->getGraphicsQueue(), {}, {}, {}, VK_NULL_HANDLE);
-}*/
-
-/*View VulkanBackend::createView(FramebufferLayout& layout, vector2U size)
-{
-	return View();
-}
-
-void VulkanBackend::destroyView(View view)
-{
-}
-
-void VulkanBackend::resizeView(View view, vector2U size)
-{
-}
-
-void VulkanBackend::beginView(View view)
-{
-}
-
-void VulkanBackend::endView(View view)
-{
-}
-
-void VulkanBackend::submitView(View view, View * sub_views, size_t sub_view_count)
-{
-}*/
 
 View VulkanBackend::createView(FramebufferLayout& layout, vector2U size)
 {

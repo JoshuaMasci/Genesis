@@ -226,7 +226,7 @@ void VulkanCommandBuffer::drawIndexed(uint32_t index_count, uint32_t index_offse
 		this->current_pipeline = pipeline;
 	}
 
-	vkCmdDrawIndexed(this->command_buffer, index_count, instance_offset, index_offset, 0, instance_offset);
+	vkCmdDrawIndexed(this->command_buffer, index_count, instance_count, index_offset, 0, instance_offset);
 }
 
 void VulkanCommandBuffer::bindDescriptors()
