@@ -14,7 +14,7 @@ namespace Genesis
 		~VulkanLayoutPool();
 
 		VkDescriptorSetLayout getDescriptorLayout(List<VkDescriptorSetLayoutBinding>& bindings);
-		VkPipelineLayout getPipelineLayout(List<VkDescriptorSetLayout>& layouts);
+		VkPipelineLayout getPipelineLayout(List<VkDescriptorSetLayout>& layouts, List<VkPushConstantRange>& ranges);
 
 	private:
 		VkDevice device;

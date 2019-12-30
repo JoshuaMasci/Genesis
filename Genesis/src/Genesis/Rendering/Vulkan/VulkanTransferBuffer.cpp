@@ -28,17 +28,21 @@ void VulkanTransferBuffer::reset()
 {
 	this->buffer_lock.lock();
 
-	//Delete buffers
-	for (size_t i = 0; i < (size_t)this->delete_list_index; i++)
+	//Reset only if all transfers have taken place
+	if (this->transfer_count == 0)
 	{
-		delete this->delete_list[i];
+		//Delete buffers
+		for (size_t i = 0; i < (size_t)this->delete_list_index; i++)
+		{
+			delete this->delete_list[i];
+		}
+
+		this->delete_list_index = 0;
+		this->transfer_count = 0;
+
+		this->copy_buffer_list_index = 0;
+		this->fill_texture_list_index = 0;
 	}
-
-	this->delete_list_index = 0;
-	this->transfer_count = 0;
-
-	this->copy_buffer_list_index = 0;
-	this->fill_texture_list_index = 0;
 
 	this->buffer_lock.unlock();
 }
@@ -89,6 +93,7 @@ bool VulkanTransferBuffer::SubmitTransfers(VkQueue queue)
 			throw std::runtime_error("failed to submit command buffer!");
 		}
 
+		this->transfer_count = 0;
 		submitted = true;
 	}
 	this->buffer_lock.unlock();

@@ -215,6 +215,7 @@ CommandBuffer* VulkanBackend::beginFrame()
 	vkWaitForFences(this->device->get(), 1, &this->frames[this->frame_index].frame_done_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
 	vkResetFences(this->device->get(), 1, &this->frames[this->frame_index].frame_done_fence);
 
+	//Start TransferPool for this frame
 	this->frames[this->frame_index].transfer_buffer->reset();
 
 	List<VkClearValue> clear_values(1);

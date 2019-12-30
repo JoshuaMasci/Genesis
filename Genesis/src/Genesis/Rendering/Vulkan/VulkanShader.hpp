@@ -35,6 +35,8 @@ namespace Genesis
 
 		List<List<DescriptorSetBindingModule>> descriptor_sets;
 
+		List<VkPushConstantRange> push_constant;
+
 	protected:
 		VkDevice device;
 	};

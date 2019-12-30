@@ -46,8 +46,8 @@ GameScene::GameScene(Application* app)
 		{"in_color", VertexElementType::float_3},
 	});
 
-	this->vertex = this->application->rendering_backend->createVertexBuffer((void*)vertices.data(), vertices.size() * sizeof(Vertex), vertex_description, MemoryUsage::CPU_Visable);
-	this->index = this->application->rendering_backend->createIndexBuffer((void*)indices.data(), indices.size() * sizeof(uint16_t), IndexType::uint16, MemoryUsage::CPU_Visable);
+	this->vertex = this->application->rendering_backend->createVertexBuffer((void*)vertices.data(), vertices.size() * sizeof(Vertex), vertex_description);
+	this->index = this->application->rendering_backend->createIndexBuffer((void*)indices.data(), indices.size() * sizeof(uint16_t), IndexType::uint16);
 }
 
 GameScene::~GameScene()
@@ -87,6 +87,9 @@ void GameScene::drawWorld(double delta_time)
 		
 		command_buffer->setPipelineSettings(settings);
 		command_buffer->setShader(this->screen_shader);
+
+		vector3F color(0.0f, 0.0f, 1.0f);
+		command_buffer->setUniformConstant(&color, sizeof(vector3F));
 		command_buffer->setVertexBuffer(this->vertex, VertexInputDescription());
 		command_buffer->setIndexBuffer(this->index, IndexType::uint16);
 		command_buffer->drawIndexed(3, 0, 1, 0);

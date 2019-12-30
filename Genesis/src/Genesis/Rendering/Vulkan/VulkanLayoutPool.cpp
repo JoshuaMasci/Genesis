@@ -56,10 +56,11 @@ VkDescriptorSetLayout VulkanLayoutPool::getDescriptorLayout(List<VkDescriptorSet
 	return layout;
 }
 
-VkPipelineLayout VulkanLayoutPool::getPipelineLayout(List<VkDescriptorSetLayout>& layouts)
+VkPipelineLayout VulkanLayoutPool::getPipelineLayout(List<VkDescriptorSetLayout>& layouts, List<VkPushConstantRange>& ranges)
 {
 	MurmurHash2 layout_hash;
 	layout_hash.addData((const uint8_t*)layouts.data(), (uint32_t)(layouts.size() * sizeof(VkDescriptorSetLayout)));
+	layout_hash.addData((const uint8_t*)ranges.data(), (uint32_t)(ranges.size() * sizeof(VkPushConstantRange)));
 	uint32_t hash_value = layout_hash.end();
 
 	VkPipelineLayout layout = VK_NULL_HANDLE;
@@ -72,12 +73,12 @@ VkPipelineLayout VulkanLayoutPool::getPipelineLayout(List<VkDescriptorSetLayout>
 	{
 		VkPipelineLayoutCreateInfo pipeline_layout_info = {};
 		pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipeline_layout_info.pushConstantRangeCount = 0;
+
 		pipeline_layout_info.setLayoutCount = (uint32_t)layouts.size();
 		pipeline_layout_info.pSetLayouts = layouts.data();
 
-		pipeline_layout_info.pushConstantRangeCount = 0;
-		pipeline_layout_info.pPushConstantRanges = nullptr;
+		pipeline_layout_info.pushConstantRangeCount = (uint32_t)ranges.size();
+		pipeline_layout_info.pPushConstantRanges = ranges.data();
 
 		if (vkCreatePipelineLayout(this->device, &pipeline_layout_info, nullptr, &layout) != VK_SUCCESS)
 		{

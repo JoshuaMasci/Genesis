@@ -139,6 +139,8 @@ void VulkanCommandBuffer::setShader(VulkanShader* new_shader)
 		return; //Do nothing
 	}
 
+	this->current_pipeline_layout = new_shader->getPipelineLayout();
+
 	auto new_descriptor_layouts = new_shader->getDescriptorSetLayouts();
 	auto new_descriptor_bindings = new_shader->getDescriptorSetBindings();
 
@@ -198,7 +200,7 @@ void VulkanCommandBuffer::setUniformTexture(uint32_t set, uint32_t binding, VkIm
 
 void VulkanCommandBuffer::setUniformConstant(void* data, uint32_t data_size)
 {
-	vkCmdPushConstants(this->command_buffer, this->current_pipeline_layout, VK_SHADER_STAGE_ALL, 0, data_size, data);
+	vkCmdPushConstants(this->command_buffer, this->current_pipeline_layout, VK_SHADER_STAGE_ALL, 0, data_size, data); //TODO use specific stage flags
 }
 
 void VulkanCommandBuffer::setVertexBuffer(VkBuffer vertex_buffer, VertexInputDescription* vertex_description)

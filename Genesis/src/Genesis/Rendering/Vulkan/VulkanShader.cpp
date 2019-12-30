@@ -25,6 +25,19 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string& shader_data)
 
 	uint32_t push_constant_count = 0;
 	spvReflectEnumeratePushConstantBlocks(&module, &push_constant_count, NULL);
+	if (push_constant_count > 0)
+	{
+		List<SpvReflectBlockVariable*> push_blocks(push_constant_count);
+		this->push_constant.resize(push_constant_count);
+		spvReflectEnumeratePushConstantBlocks(&module, &push_constant_count, push_blocks.data());
+
+		for (size_t i = 0; i < push_blocks.size(); i++)
+		{
+			this->push_constant[i].size = push_blocks[i]->padded_size;
+			this->push_constant[i].offset = push_blocks[i]->absolute_offset;
+			this->push_constant[i].stageFlags = VK_SHADER_STAGE_ALL; //TODO use specific stage flags
+		}
+	}
 
 	uint32_t descriptor_sets_count = 0;
 	spvReflectEnumerateDescriptorSets(&module, &descriptor_sets_count, NULL);
@@ -191,10 +204,24 @@ VulkanShader::VulkanShader(VkDevice device, string& vert_data, string& frag_data
 	this->vert_module = new VulkanShaderModule(this->device, vert_data);
 	fillDescriptorSetBindings(this->descriptor_set_bindings, this->vert_module->descriptor_sets, this->vert_module->shader_stage);
 
+	size_t vert_push_constant_count = this->vert_module->push_constant.size();
+	List<VkPushConstantRange> push_constant(vert_push_constant_count);
+	for (size_t i = 0; i < vert_push_constant_count; i++)
+	{
+		push_constant[i] = this->vert_module->push_constant[i];
+	}
+
 	if (frag_data != "")
 	{
 		this->frag_module = new VulkanShaderModule(this->device, frag_data);
 		fillDescriptorSetBindings(this->descriptor_set_bindings, this->frag_module->descriptor_sets, this->frag_module->shader_stage);
+
+		size_t frag_push_constant_count = this->frag_module->push_constant.size();
+		push_constant.resize(vert_push_constant_count + frag_push_constant_count);
+		for (size_t i = 0; i < frag_push_constant_count; i++)
+		{
+			push_constant[vert_push_constant_count + i] = this->frag_module->push_constant[i];
+		}
 	}
 
 	List<List<VkDescriptorSetLayoutBinding>> descriptor_sets(this->descriptor_set_bindings.size());
@@ -215,7 +242,7 @@ VulkanShader::VulkanShader(VkDevice device, string& vert_data, string& frag_data
 	{
 		this->descriptor_layouts[i] = layout_pool->getDescriptorLayout(descriptor_sets[i]);
 	}
-	this->pipeline_layout = layout_pool->getPipelineLayout(this->descriptor_layouts);
+	this->pipeline_layout = layout_pool->getPipelineLayout(this->descriptor_layouts, push_constant);
 
 	this->shader_stages.push_back(this->vert_module->getStageInfo());
 
