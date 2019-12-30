@@ -4,107 +4,6 @@
 
 using namespace Genesis;
 
-void addBindingVariable(map<string, ShaderVariableLocation>* variable_loactions, uint32_t binding_index, string block_name, SpvReflectBlockVariable* block, uint32_t array_offset = 0)
-{
-	if (block->array.dims_count > 0 && block->array.dims[0] > 0)
-	{
-		size_t array_count = block->array.dims[0];
-		uint32_t array_stride = block->array.stride;
-
-		string var_name = block_name;
-
-		for (size_t array_index = 0; array_index < array_count; array_index++)
-		{
-			string array_block_name = var_name + "[" + std::to_string(array_index) + "].";
-			uint32_t array_block_offset = array_stride * (uint32_t)array_index;
-
-			for (size_t i = 0; i < block->member_count; i++)
-			{
-				addBindingVariable(variable_loactions, binding_index, array_block_name + block->members[i].name, &block->members[i], array_block_offset);
-			}
-		}
-	}
-	else
-	{
-		string var_name = block_name;
-
-		//Only add "leaf nodes" to the map
-		if (block->member_count == 0)
-		{
-			ShaderVariableLocation var_info;
-			var_info.variable_offset = block->absolute_offset + array_offset;
-			var_info.variable_size = block->size;
-			var_info.type = ShaderVariableType::Binding;
-			var_info.location.binding_index = binding_index;
-			variable_loactions->emplace(var_name, var_info);
-		}
-		else
-		{
-			for (size_t i = 0; i < block->member_count; i++)
-			{
-				addBindingVariable(variable_loactions, binding_index, var_name + "." + block->members[i].name, &block->members[i], array_offset);
-			}
-		}
-	}
-};
-
-void addConstVariable(map<string, ShaderVariableLocation>* variable_loactions, VkShaderStageFlagBits variable_stage, string block_name, SpvReflectBlockVariable* block, uint32_t array_offset = 0)
-{
-	string var_name = block_name;
-	ShaderVariableLocation var_info;
-	var_info.variable_offset = block->absolute_offset;
-	var_info.variable_size = block->size;
-	var_info.type = ShaderVariableType::PushConstant;
-	var_info.location.variable_stage = variable_stage;
-	variable_loactions->emplace(var_name, var_info);
-
-	for (size_t i = 0; i < block->member_count; i++)
-	{
-		addConstVariable(variable_loactions, variable_stage, var_name + "." + block->members[i].name, &block->members[i]);
-	}
-
-	if (block->array.dims_count > 0 && block->array.dims[0] > 0)
-	{
-		size_t array_count = block->array.dims[0];
-		uint32_t array_stride = block->array.stride;
-
-		string var_name = block_name;
-
-		for (size_t array_index = 0; array_index < array_count; array_index++)
-		{
-			string array_block_name = var_name + "[" + std::to_string(array_index) + "].";
-			uint32_t array_block_offset = array_stride * (uint32_t)array_index;
-
-			for (size_t i = 0; i < block->member_count; i++)
-			{
-				addConstVariable(variable_loactions, variable_stage, array_block_name + block->members[i].name, &block->members[i], array_block_offset);
-			}
-		}
-	}
-	else
-	{
-		string var_name = block_name;
-
-		//Only add "leaf nodes" to the map
-		if (block->member_count == 0)
-		{
-			ShaderVariableLocation var_info;
-			var_info.variable_offset = block->absolute_offset + array_offset;
-			var_info.variable_size = block->size;
-			var_info.type = ShaderVariableType::PushConstant;
-			var_info.location.variable_stage = variable_stage;
-			variable_loactions->emplace(var_name, var_info);
-		}
-		else
-		{
-			for (size_t i = 0; i < block->member_count; i++)
-			{
-				addConstVariable(variable_loactions, variable_stage, var_name + "." + block->members[i].name, &block->members[i], array_offset);
-			}
-		}
-	}
-};
-
 VulkanShaderModule::VulkanShaderModule(VkDevice device, string& shader_data)
 {
 	this->device = device;
@@ -126,58 +25,49 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string& shader_data)
 
 	uint32_t push_constant_count = 0;
 	spvReflectEnumeratePushConstantBlocks(&module, &push_constant_count, NULL);
-	if (push_constant_count == 0)
-	{
-		this->push_constant.name = "";
-		this->push_constant.total_size = 0;
-	}
-	else if (push_constant_count == 1)
-	{
-		SpvReflectBlockVariable* push_block;
-
-		spvReflectEnumeratePushConstantBlocks(&module, &push_constant_count, &push_block);
-		this->push_constant.name = push_block->var_name;
-		this->push_constant.shader_stage = this->shader_stage;
-		this->push_constant.total_size = push_block->size;
-		this->push_constant.variables = push_block->padded_size;
-
-		addConstVariable(&this->variable_loactions, this->shader_stage, push_block->var_name, push_block);
-	}
-	else if (push_constant_count > 1)
-	{
-		//Push Constants not supported
-		throw std::runtime_error("more than one PushConstant is not supported");
-	}
 
 	uint32_t descriptor_sets_count = 0;
 	spvReflectEnumerateDescriptorSets(&module, &descriptor_sets_count, NULL);
 
-	//TEMP
-	if (descriptor_sets_count > 1)
-	{
-		//Push Constants not supported
-		throw std::runtime_error("more than one DescriptorSet is not supported");
-	}
-
 	List<SpvReflectDescriptorSet*> descriptor_sets_spv(descriptor_sets_count);
 	spvReflectEnumerateDescriptorSets(&module, &descriptor_sets_count, descriptor_sets_spv.data());
 
-	if (descriptor_sets_count > 0)
+	for (size_t i = 0; i < descriptor_sets_spv.size(); i++)
 	{
-		SpvReflectDescriptorSet* descriptor_set_spv = descriptor_sets_spv[0];
+		uint32_t descriptor_index = descriptor_sets_spv[i]->set;
 
-		this->shader_bindings = List<ShaderBinding>(descriptor_set_spv->binding_count);
-		for (size_t binding_index = 0; binding_index < this->shader_bindings.size(); binding_index++)
+		if (descriptor_index >= this->descriptor_sets.size())
 		{
-			this->shader_bindings[binding_index] = {};
-			ShaderBinding* shader_binding = &this->shader_bindings[binding_index];
-			shader_binding->name = descriptor_set_spv->bindings[binding_index]->name;
-			shader_binding->binding_location = descriptor_set_spv->bindings[binding_index]->binding;
-			shader_binding->type = (VkDescriptorType)descriptor_set_spv->bindings[binding_index]->descriptor_type;
-			shader_binding->shader_stage = this->shader_stage;
-			shader_binding->total_size = descriptor_set_spv->bindings[binding_index]->block.padded_size;
-		
-			addBindingVariable(&this->variable_loactions, descriptor_set_spv->bindings[binding_index]->binding, descriptor_set_spv->bindings[binding_index]->name, &descriptor_set_spv->bindings[binding_index]->block);
+			this->descriptor_sets.resize(descriptor_index + 1);
+		}
+
+		for (size_t j = 0; j < descriptor_sets_spv[i]->binding_count; j++)
+		{
+			uint32_t binding_index = descriptor_sets_spv[i]->bindings[j]->binding;
+
+			if (binding_index >= this->descriptor_sets[descriptor_index].size())
+			{
+				this->descriptor_sets[descriptor_index].resize(binding_index + 1);
+			}
+		}
+	}
+
+	for (size_t i = 0; i < descriptor_sets_spv.size(); i++)
+	{
+		uint32_t descriptor_index = descriptor_sets_spv[i]->set;
+		for (size_t j = 0; j < descriptor_sets_spv[i]->binding_count; j++)
+		{
+			uint32_t binding_index = descriptor_sets_spv[i]->bindings[j]->binding;
+
+			this->descriptor_sets[descriptor_index][binding_index].type = (VkDescriptorType)descriptor_sets_spv[i]->bindings[j]->descriptor_type;
+
+			uint32_t count = 1;
+			for (uint32_t i_dim = 0; i_dim < descriptor_sets_spv[i]->bindings[j]->array.dims_count; ++i_dim)
+			{
+				count *= descriptor_sets_spv[i]->bindings[j]->array.dims[i_dim];
+			}
+			this->descriptor_sets[descriptor_index][binding_index].count = count;
+			this->descriptor_sets[descriptor_index][binding_index].size = descriptor_sets_spv[i]->bindings[j]->block.padded_size;
 		}
 	}
 
@@ -187,14 +77,6 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string& shader_data)
 VulkanShaderModule::~VulkanShaderModule()
 {
 	vkDestroyShaderModule(this->device, this->shader_module, nullptr);
-}
-
-void VulkanShaderModule::addVariables(map<string, ShaderVariableLocation>& variable_loactions)
-{
-	variable_loactions.insert(this->variable_loactions.begin(), this->variable_loactions.end());
-
-	//clear to save memory
-	this->variable_loactions.clear();
 }
 
 VkPipelineShaderStageCreateInfo VulkanShaderModule::getStageInfo()
@@ -208,125 +90,132 @@ VkPipelineShaderStageCreateInfo VulkanShaderModule::getStageInfo()
 	return shader_stage_info;
 }
 
-VkDescriptorSetLayoutBinding toVkBinding(ShaderBinding shader_binding)
+void fillDescriptorSetLayouts(List<List<VkDescriptorSetLayoutBinding>>& destination, List<List<DescriptorSetBindingModule>>& source, VkShaderStageFlags stage)
 {
-	VkDescriptorSetLayoutBinding binding = {};
-	binding.binding = shader_binding.binding_location;
-	
-	binding.descriptorType = shader_binding.type;
-	/*if (binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+	if (destination.size() < source.size())
 	{
-		binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-	}*/
+		destination.resize(source.size());
+	}
 
-	binding.stageFlags = shader_binding.shader_stage;
-	binding.descriptorCount = 1;//shader_binding.array_count;
-	binding.pImmutableSamplers = nullptr;
-	return binding;
+	for (int i = 0; i < destination.size(); i++)
+	{
+		if (destination[i].size() < source[i].size())
+		{
+			destination[i].resize(source[i].size());
+			for (int j = 0; j < destination[i].size(); j++)
+			{
+				//Default Values
+				destination[i][j].binding = j;
+				destination[i][j].descriptorCount = 0;
+				destination[i][j].pImmutableSamplers = nullptr;
+				destination[i][j].stageFlags = 0;
+			}
+		}
+
+		for (int j = 0; j < destination[i].size(); j++)
+		{
+			if (j >= source[i].size())
+			{
+				break;
+			}
+
+			if (source[i][j].count > 0)
+			{
+				if (destination[i][j].descriptorCount > 0)
+				{
+					if ((destination[i][j].descriptorType != source[i][j].type) || (destination[i][j].descriptorCount != source[i][j].count))
+					{
+						throw std::runtime_error("Shader type mismatch");
+					}
+
+					destination[i][j].stageFlags |= stage;
+				}
+				else
+				{
+					destination[i][j].descriptorType = source[i][j].type;
+					destination[i][j].descriptorCount = source[i][j].count;
+					destination[i][j].stageFlags = stage;
+				}
+			}
+		}
+	}
 }
 
-VulkanShader::VulkanShader(VkDevice device, string& vert_data, string& frag_data)
+void fillDescriptorSetBindings(List<List<DescriptorSetBinding>>& destination, List<List<DescriptorSetBindingModule>>& source, VkShaderStageFlags stage)
+{
+	if (destination.size() < source.size())
+	{
+		destination.resize(source.size());
+	}
+
+	for (int i = 0; i < destination.size(); i++)
+	{
+		if (destination[i].size() < source[i].size())
+		{
+			destination[i].resize(source[i].size());
+		}
+
+		for (int j = 0; j < destination[i].size(); j++)
+		{
+			if (j >= source[i].size())
+			{
+				break;
+			}
+
+			if (source[i][j].count > 0)
+			{
+				if (destination[i][j].count > 0)
+				{
+					if ((destination[i][j].type != source[i][j].type) || (destination[i][j].count != source[i][j].count))
+					{
+						throw std::runtime_error("Shader type mismatch");
+					}
+
+					destination[i][j].stage |= stage;
+				}
+				else
+				{
+					destination[i][j].type = source[i][j].type;
+					destination[i][j].count = source[i][j].count;
+					destination[i][j].stage = stage;
+				}
+			}
+		}
+	}
+}
+
+VulkanShader::VulkanShader(VkDevice device, string& vert_data, string& frag_data, VulkanLayoutPool* layout_pool)
 {
 	this->device = device;
 
 	this->vert_module = new VulkanShaderModule(this->device, vert_data);
+	fillDescriptorSetBindings(this->descriptor_set_bindings, this->vert_module->descriptor_sets, this->vert_module->shader_stage);
 
 	if (frag_data != "")
 	{
 		this->frag_module = new VulkanShaderModule(this->device, frag_data);
+		fillDescriptorSetBindings(this->descriptor_set_bindings, this->frag_module->descriptor_sets, this->frag_module->shader_stage);
 	}
 
-	this->vert_module->addVariables(this->name_variable_loaction_cache);
-	if (this->vert_module->push_constant.total_size != 0)
+	List<List<VkDescriptorSetLayoutBinding>> descriptor_sets(this->descriptor_set_bindings.size());
+	for (size_t set = 0; set < this->descriptor_layouts.size(); set++)
 	{
-		this->name_constants[this->vert_module->push_constant.name] = &this->vert_module->push_constant;
-	}
-
-	if (this->frag_module != nullptr)
-	{
-		this->frag_module->addVariables(this->name_variable_loaction_cache);
-		if (this->frag_module->push_constant.total_size != 0)
+		for (size_t binding = 0; binding < this->descriptor_set_bindings[set].size(); binding++)
 		{
-			this->name_constants[this->frag_module->push_constant.name] = &this->frag_module->push_constant;
+			descriptor_sets[set][binding].binding = (uint32_t)binding;
+			descriptor_sets[set][binding].descriptorType = this->descriptor_set_bindings[set][binding].type;
+			descriptor_sets[set][binding].descriptorCount = this->descriptor_set_bindings[set][binding].count;
+			descriptor_sets[set][binding].stageFlags = this->descriptor_set_bindings[set][binding].stage;
+			descriptor_sets[set][binding].pImmutableSamplers = nullptr;
 		}
 	}
 
-	size_t vert_binding_count = this->vert_module->shader_bindings.size();
-	size_t binding_count = vert_binding_count + ((this->frag_module != nullptr) ? this->frag_module->shader_bindings.size() : 0);
-
-	if (binding_count > 0)
+	this->descriptor_layouts.resize(descriptor_sets.size());
+	for (size_t i = 0; i < this->descriptor_layouts.size(); i++)
 	{
-		List<VkDescriptorSetLayoutBinding> bindings(binding_count);
-		for (size_t i = 0; i < vert_binding_count; i++)
-		{
-			bindings[i] = toVkBinding(this->vert_module->shader_bindings[i]);
-			string binding_name = this->vert_module->shader_bindings[i].name;
-			if (!has_value(this->name_bindings, binding_name))
-			{
-				this->name_bindings[binding_name] = &this->vert_module->shader_bindings[i];
-			}
-			else
-			{
-				throw std::runtime_error("Duplicate Uniform Name!!!!");
-			}
-		}
-
-		if (this->frag_module != nullptr)
-		{
-			this->frag_module->addVariables(this->name_variable_loaction_cache);
-
-			for (size_t i = 0; i < this->frag_module->shader_bindings.size(); i++)
-			{
-				bindings[i + vert_binding_count] = toVkBinding(this->frag_module->shader_bindings[i]);
-
-				if (!has_value(this->name_bindings, this->frag_module->shader_bindings[i].name))
-				{
-					this->name_bindings[this->frag_module->shader_bindings[i].name] = &this->frag_module->shader_bindings[i];
-				}
-				else
-				{
-					throw std::runtime_error("Duplicate Uniform Name!!!!");
-				}
-			}
-		}
-
-		VkDescriptorSetLayoutCreateInfo descriptor_set_layout_info;
-		descriptor_set_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		descriptor_set_layout_info.pNext = NULL;
-		descriptor_set_layout_info.flags = 0;
-		descriptor_set_layout_info.bindingCount = (uint32_t)bindings.size();
-		descriptor_set_layout_info.pBindings = bindings.data();
-
-
-		if (vkCreateDescriptorSetLayout(this->device, &descriptor_set_layout_info, nullptr, &this->descriptor_layout) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create pipeline layout!");
-		}
+		this->descriptor_layouts[i] = layout_pool->getDescriptorLayout(descriptor_sets[i]);
 	}
-
-	VkPipelineLayoutCreateInfo pipeline_layout_info = {};
-	pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipeline_layout_info.pushConstantRangeCount = 0;
-	pipeline_layout_info.setLayoutCount = ((this->descriptor_layout != VK_NULL_HANDLE) ? 1 : 0);
-	pipeline_layout_info.pSetLayouts = &this->descriptor_layout;
-
-
-	List<VkPushConstantRange> push_constants(this->name_constants.size());
-	size_t i = 0;
-	for (auto constant : this->name_constants)
-	{
-		push_constants[i].offset = 0;
-		push_constants[i].size = constant.second->total_size;
-		push_constants[i].stageFlags = constant.second->shader_stage;
-		i++;
-	}
-	pipeline_layout_info.pushConstantRangeCount = (uint32_t)push_constants.size();
-	pipeline_layout_info.pPushConstantRanges = push_constants.data();
-
-	if (vkCreatePipelineLayout(this->device, &pipeline_layout_info, nullptr, &this->pipeline_layout) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create pipeline layout!");
-	}
+	this->pipeline_layout = layout_pool->getPipelineLayout(this->descriptor_layouts);
 
 	this->shader_stages.push_back(this->vert_module->getStageInfo());
 
@@ -338,23 +227,10 @@ VulkanShader::VulkanShader(VkDevice device, string& vert_data, string& frag_data
 
 VulkanShader::~VulkanShader()
 {
-	vkDestroyDescriptorSetLayout(this->device, this->descriptor_layout, nullptr);
-	vkDestroyPipelineLayout(this->device, this->pipeline_layout, nullptr);
-
 	delete this->vert_module;
 
 	if (this->frag_module != nullptr)
 	{
 		delete this->frag_module;
 	}
-}
-
-ShaderVariableLocation Genesis::VulkanShader::getVariableLocation(string name)
-{
-	if (!has_value(this->name_variable_loaction_cache, name))
-	{
-		throw std::runtime_error("Binding Variable doesn't exsit");
-	}
-
-	return this->name_variable_loaction_cache[name];
 }

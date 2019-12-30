@@ -61,7 +61,7 @@ Mesh ObjLoader::loadMesh(RenderingBackend * backend, string mesh_file_path)
 		});
 
 		mesh.vertex_buffer = backend->createVertexBuffer(vertices.data(), sizeof(TexturedVertex) * vertices.size(), vertex_description);
-		mesh.index_buffer = backend->createIndexBuffer(indices.data(), (uint32_t)indices.size(), IndexType::uint32);
+		mesh.index_buffer = backend->createIndexBuffer(indices.data(), sizeof(uint32_t) * indices.size(), IndexType::uint32);
 	}
 	else
 	{
@@ -155,7 +155,7 @@ Mesh ObjLoader::loadMesh_CalcTangent(RenderingBackend* backend, string mesh_file
 		});
 
 		mesh.vertex_buffer = backend->createVertexBuffer(vertices.data(), sizeof(TexturedVertex) * vertices.size(), vertex_description);
-		mesh.index_buffer = backend->createIndexBuffer(indices.data(), (uint32_t)indices.size(), IndexType::uint32);
+		mesh.index_buffer = backend->createIndexBuffer(indices.data(), sizeof(uint32_t) * indices.size(), IndexType::uint32);
 	}
 	else
 	{

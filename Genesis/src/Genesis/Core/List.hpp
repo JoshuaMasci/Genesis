@@ -111,6 +111,17 @@ namespace Genesis
 			this->array_size = new_size;
 		};
 
+		void clear()
+		{
+			if (this->array_data != nullptr)
+			{
+				delete[] this->array_data;
+			}
+
+			this->array_data = nullptr;
+			this->array_size = 0;
+		};
+
 	private:
 		size_t array_size = 0;
 		T* array_data = nullptr;

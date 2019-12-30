@@ -2,8 +2,6 @@
 
 #include "Genesis/Rendering/Vulkan/VulkanPhysicalDevicePicker.hpp"
 
-#include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
-
 using namespace Genesis;
 
 VmaMemoryUsage getMemoryUsage(MemoryUsage memory_usage)
@@ -114,16 +112,46 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 			});
 	}
 
-	this->pipeline_pool = new VulkanPipelinePool(this->device->get(), this->THREAD_COUNT);
+	this->layout_pool = new VulkanLayoutPool(this->device->get());
+
+	this->pipeline_pool = new VulkanPipelinePool(this->device->get());
+	this->thread_pipeline_pools.resize(this->THREAD_COUNT);
+	for (size_t i = 0; i < this->thread_pipeline_pools.size(); i++)
+	{
+		this->thread_pipeline_pools[i] = new VulkanThreadPipelinePool(this->device->get(), this->pipeline_pool);
+	}
 
 	this->render_pass_pool = new VulkanRenderPassPool(this->device->get());
+
+	const uint8_t delay_cycles = (uint8_t)this->FRAME_COUNT + 1;
+	this->buffer_deleter = new DelayedResourceDeleter<VulkanBuffer>(delay_cycles);
+	this->uniform_deleter = new DelayedResourceDeleter<VulkanUniformBuffer>(delay_cycles);
+	this->texture_deleter = new DelayedResourceDeleter<VulkanTexture>(delay_cycles);
+	this->shader_deleter = new DelayedResourceDeleter<VulkanShader>(delay_cycles);
+	//this->framebuffer_set_deleter = new DelayedResourceDeleter<VulkanFramebufferSet>(delay_cycles);
+	//this->single_command_buffer_deleter = new DelayedResourceDeleter<VulkanCommandBufferSingle>(delay_cycles);
+	this->view_deleter = new DelayedResourceDeleter<VulkanViewSingleThread>(delay_cycles);
 }
 
 VulkanBackend::~VulkanBackend()
 {
+	delete this->buffer_deleter;
+	delete this->uniform_deleter;
+	delete this->texture_deleter;
+	delete this->shader_deleter;
+	//delete this->framebuffer_set_deleter;
+	//delete this->single_command_buffer_deleter;
+	delete this->view_deleter;
+
 	delete this->render_pass_pool;
 
+	for (size_t i = 0; i < this->thread_pipeline_pools.size(); i++)
+	{
+		delete this->thread_pipeline_pools[i];
+	}
 	delete this->pipeline_pool;
+
+	delete this->layout_pool;
 
 	for (size_t i = 0; i < this->descriptor_pools.size(); i++)
 	{
@@ -162,6 +190,7 @@ VulkanBackend::~VulkanBackend()
 
 void VulkanBackend::setScreenSize(vector2U size)
 {
+
 }
 
 vector2U VulkanBackend::getScreenSize()
@@ -272,6 +301,14 @@ void VulkanBackend::endFrame()
 	VkResult result = vkQueuePresentKHR(this->device->getPresentQueue(), &present_info);
 
 	this->frame_index = (this->frame_index + 1) % this->FRAME_COUNT;
+
+	this->buffer_deleter->cycle();
+	this->uniform_deleter->cycle();
+	this->texture_deleter->cycle();
+	this->shader_deleter->cycle();
+	//this->framebuffer_set_deleter->cycle();
+	//this->single_command_buffer_deleter->cycle();
+	this->view_deleter->cycle();
 }
 
 VertexBuffer VulkanBackend::createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage)
@@ -293,9 +330,9 @@ VertexBuffer VulkanBackend::createVertexBuffer(void* data, uint64_t data_size, V
 	return (VertexBuffer)vertex_buffer;
 }
 
-void VulkanBackend::destroyVertexBuffer(VertexBuffer vertex_buffer_index)
+void VulkanBackend::destroyVertexBuffer(VertexBuffer vertex_buffer)
 {
-
+	this->buffer_deleter->addToQueue((VulkanBuffer*)vertex_buffer);
 }
 
 IndexBuffer VulkanBackend::createIndexBuffer(void* data, uint64_t data_size, IndexType type, MemoryUsage memory_usage)
@@ -317,39 +354,214 @@ IndexBuffer VulkanBackend::createIndexBuffer(void* data, uint64_t data_size, Ind
 	return (IndexBuffer)index_buffer;
 }
 
-void VulkanBackend::destroyIndexBuffer(IndexBuffer index_buffer_index)
+void VulkanBackend::destroyIndexBuffer(IndexBuffer index_buffer)
 {
-
+	this->buffer_deleter->addToQueue((VulkanBuffer*)index_buffer);
 }
 
 UniformBuffer VulkanBackend::createUniformBuffer(uint64_t data_size, MemoryUsage memory_usage)
 {
-	return nullptr;
+	return (UniformBuffer)new VulkanUniformBuffer(this->device, data_size, getMemoryUsage(memory_usage), this->FRAME_COUNT);
 }
 
-void VulkanBackend::destroyUniformBuffer(UniformBuffer * uniform_buffer)
+void VulkanBackend::destroyUniformBuffer(UniformBuffer uniform_buffer)
 {
-	
+	this->uniform_deleter->addToQueue((VulkanUniformBuffer*)uniform_buffer);
+}
+
+void VulkanBackend::setUniform(UniformBuffer uniform_buffer, void* data, uint64_t data_size)
+{
+	VulkanUniformBuffer* vulkan_uniform = (VulkanUniformBuffer*)uniform_buffer;
+	vulkan_uniform->incrementIndex();
+	VulkanBuffer* buffer = vulkan_uniform->getCurrentBuffer();
+
+	if (buffer->isHostVisable() == true)
+	{
+		buffer->fillBuffer(data, data_size);
+	}
+	else
+	{
+		VulkanBuffer* staging_buffer = new VulkanBuffer(this->device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+		staging_buffer->fillBuffer(data, data_size);
+
+		this->frames[this->frame_index].transfer_buffer->copyBuffer(staging_buffer, 0, buffer, 0, data_size);
+	}
 }
 
 Texture VulkanBackend::createTexture(vector2U size, void* data, uint64_t data_size)
 {
-	return nullptr;
+	VulkanTexture* texture = new VulkanTexture(this->device, {size.x, size.y}, getMemoryUsage(MemoryUsage::GPU_Only));
+
+	VulkanBuffer* staging_buffer = new VulkanBuffer(this->device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+	staging_buffer->fillBuffer(data, data_size);
+
+	this->frames[this->frame_index].transfer_buffer->fillTexture(staging_buffer, texture);
+
+	return texture;
 }
 
-void VulkanBackend::destroyTexture(Texture texture_handle)
+void VulkanBackend::destroyTexture(Texture texture)
 {
-	
+	this->texture_deleter->addToQueue((VulkanTexture*)texture);
 }
 
 Shader VulkanBackend::createShader(string& vert_data, string& frag_data)
 {
-	return nullptr;
+	return new VulkanShader(this->device->get(), vert_data, frag_data, this->layout_pool);
 }
 
-void VulkanBackend::destroyShader(Shader shader_handle)
+void VulkanBackend::destroyShader(Shader shader)
 {
-	
+	this->shader_deleter->addToQueue((VulkanShader*)shader);
+}
+
+/*Framebuffer VulkanBackend::createFramebuffer(FramebufferLayout& layout, vector2U size)
+{
+	List<VkFormat> color(layout.getColorCount());
+	List<VkClearValue> clear_colors(color.size());
+	for (size_t i = 0; i < color.size(); i++)
+	{
+		color[i] = getImageFormat(layout.getColor(i));
+		clear_colors[i].color = { 0.f, 0.0f, 0.0f, 0.0f };
+	}
+
+	VkFormat depth = getImageFormat(layout.getDepth());
+	if (layout.getDepth() != ImageFormat::Invalid)
+	{
+		size_t array_size = clear_colors.size();
+		clear_colors.resize(array_size + 1);
+		clear_colors[array_size].depthStencil = { 1.0f, 0 };
+	}
+
+	VkRenderPass render_pass = this->render_pass_pool->getRenderPass(layout.getHash(), color, depth);
+
+	VulkanFramebufferSet* frame_buffer = new VulkanFramebufferSet(this->device, { size.x, size.y }, color, depth, render_pass, this->FRAME_COUNT);
+	frame_buffer->setClearValues(clear_colors);
+	return (Framebuffer)frame_buffer;
+}
+
+void VulkanBackend::destroyFramebuffer(Framebuffer frame_buffer)
+{
+	this->framebuffer_set_deleter->addToQueue((VulkanFramebufferSet*) frame_buffer);
+}
+
+void VulkanBackend::resizeFramebuffer(Framebuffer frame_buffer, vector2U size)
+{
+	((VulkanFramebufferSet*)frame_buffer)->setSize({size.x, size.y});
+}
+
+CommandBuffer* VulkanBackend::createCommandBuffer()
+{
+	return new VulkanCommandBufferSingle(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->FRAME_COUNT);
+}
+
+void VulkanBackend::destroyCommandBuffer(CommandBuffer* command_buffer)
+{
+	this->single_command_buffer_deleter->addToQueue((VulkanCommandBufferSingle*)command_buffer);
+}
+
+void VulkanBackend::beginCommandBuffer(CommandBuffer* command_buffer, Framebuffer target)
+{
+	if (target != nullptr)
+	{
+		VulkanFramebufferSet* framebuffer_set = ((VulkanFramebufferSet*)target);
+		VulkanFramebuffer* framebuffer = framebuffer_set->getFrameBuffer(this->frame_index);
+
+		VkRect2D rect = {};
+		rect.offset = { 0, 0 };
+		rect.extent = framebuffer->getSize();
+		((VulkanCommandBufferSingle*)command_buffer)->command_buffer.startPrimary(this->frame_index, framebuffer->get(), framebuffer->getRenderPass(), rect, framebuffer_set->getClearValues(), VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+	}
+	else
+	{
+		//Use screen
+		VkFramebuffer screen = this->swapchain->getFramebuffer(this->swapchain_image_index);
+		VkRenderPass screen_render_pass = this->swapchain->getRenderPass();
+		VkRect2D rect = {};
+		rect.offset = { 0, 0 };
+		rect.extent = this->swapchain->getSwapchainExtent();
+
+		List<VkClearValue> clear_values(1);
+		clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+		((VulkanCommandBufferSingle*)command_buffer)->command_buffer.startPrimary(this->frame_index, screen, screen_render_pass, rect, clear_values, VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE);
+	}
+}
+
+void VulkanBackend::endCommandBuffer(CommandBuffer* command_buffer)
+{
+	((VulkanCommandBufferSingle*)command_buffer)->command_buffer.end();
+}
+
+void VulkanBackend::submitCommandBuffer(CommandBuffer* command_buffer)
+{
+	//((VulkanCommandBufferSingle*)command_buffer)->command_buffer.submit(this->device->getGraphicsQueue(), {}, {}, {}, VK_NULL_HANDLE);
+}*/
+
+/*View VulkanBackend::createView(FramebufferLayout& layout, vector2U size)
+{
+	return View();
+}
+
+void VulkanBackend::destroyView(View view)
+{
+}
+
+void VulkanBackend::resizeView(View view, vector2U size)
+{
+}
+
+void VulkanBackend::beginView(View view)
+{
+}
+
+void VulkanBackend::endView(View view)
+{
+}
+
+void VulkanBackend::submitView(View view, View * sub_views, size_t sub_view_count)
+{
+}*/
+
+View VulkanBackend::createView(FramebufferLayout& layout, vector2U size)
+{
+	List<VkFormat> color(layout.getColorCount());
+	List<VkClearValue> clear_colors(color.size());
+	for (size_t i = 0; i < color.size(); i++)
+	{
+		color[i] = getImageFormat(layout.getColor(i));
+	}
+	VkFormat depth = getImageFormat(layout.getDepth());
+
+	VkRenderPass render_pass = this->render_pass_pool->getRenderPass(layout.getHash(), color, depth);
+
+	return (View*) new VulkanViewSingleThread(this->device, this->FRAME_COUNT, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], {size.x, size.y}, color, depth, render_pass);
+
+}
+
+void VulkanBackend::destroyView(View view)
+{
+	this->view_deleter->addToQueue((VulkanViewSingleThread*) view);
+}
+
+void VulkanBackend::resizeView(View view, vector2U size)
+{
+	((VulkanViewSingleThread*)view)->setSize({ size.x, size.y });
+}
+
+CommandBuffer* VulkanBackend::beginView(View view)
+{
+	VulkanViewSingleThread* vulkan_view = (VulkanViewSingleThread*)view;
+	vulkan_view->start(this->frame_index);
+	return vulkan_view->getCommandBuffer(this->frame_index);
+}
+
+void VulkanBackend::endView(View view)
+{
+	VulkanViewSingleThread* vulkan_view = (VulkanViewSingleThread*)view;
+	vulkan_view->end();
+
+	//TODO submit
 }
 
 void VulkanBackend::waitTillDone()

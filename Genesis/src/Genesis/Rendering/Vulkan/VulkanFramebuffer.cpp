@@ -2,7 +2,7 @@
 
 using namespace Genesis;
 
-VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass)
+VulkanFramebuffer::VulkanFramebuffer(VulkanDevice* device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass)
 {
 	this->device = device;
 	this->size = size;
@@ -28,8 +28,7 @@ VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VkExtent2D size, List<VkFo
 		image_info.samples = VK_SAMPLE_COUNT_1_BIT;
 		image_info.flags = 0;
 
-		//VmaAllocationInfo info;
-		//this->allocator->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &this->images[i].image, &this->images[i].image_memory, &info);
+		this->device->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &this->images[i].image, &this->images[i].image_memory, nullptr);
 	
 		VkImageViewCreateInfo view_info = {};
 		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -42,7 +41,7 @@ VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VkExtent2D size, List<VkFo
 		view_info.subresourceRange.baseArrayLayer = 0;
 		view_info.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(this->device, &view_info, nullptr, &this->images[i].image_view) != VK_SUCCESS)
+		if (vkCreateImageView(this->device->get(), &view_info, nullptr, &this->images[i].image_view) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create color image view!");
 		}
@@ -68,7 +67,7 @@ VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VkExtent2D size, List<VkFo
 		image_info.samples = VK_SAMPLE_COUNT_1_BIT;
 		image_info.flags = 0;
 
-		//this->allocator->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &this->depth_image.image, &this->depth_image.image_memory, nullptr);
+		this->device->createImage(&image_info, VMA_MEMORY_USAGE_GPU_ONLY, &this->depth_image.image, &this->depth_image.image_memory, nullptr);
 
 		VkImageViewCreateInfo view_info = {};
 		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -81,7 +80,7 @@ VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VkExtent2D size, List<VkFo
 		view_info.subresourceRange.baseArrayLayer = 0;
 		view_info.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(this->device, &view_info, nullptr, &this->depth_image.image_view) != VK_SUCCESS)
+		if (vkCreateImageView(this->device->get(), &view_info, nullptr, &this->depth_image.image_view) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create depth image view!");
 		}
@@ -101,7 +100,7 @@ VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VkExtent2D size, List<VkFo
 	framebufferInfo.height = this->size.height;
 	framebufferInfo.layers = 1;
 
-	if (vkCreateFramebuffer(this->device, &framebufferInfo, nullptr, &this->framebuffer) != VK_SUCCESS)
+	if (vkCreateFramebuffer(this->device->get(), &framebufferInfo, nullptr, &this->framebuffer) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to create framebuffer!");
 	}
@@ -109,17 +108,50 @@ VulkanFramebuffer::VulkanFramebuffer(VkDevice device, VkExtent2D size, List<VkFo
 
 VulkanFramebuffer::~VulkanFramebuffer()
 {
-	vkDestroyFramebuffer(this->device, this->framebuffer, nullptr);
+	vkDestroyFramebuffer(this->device->get(), this->framebuffer, nullptr);
 
 	if (this->depth_image.image_format != VK_FORMAT_UNDEFINED)
 	{
-		vkDestroyImageView(this->device, this->depth_image.image_view, nullptr);
-		//this->allocator->destroyImage(this->depth_image.image, this->depth_image.image_memory);
+		vkDestroyImageView(this->device->get(), this->depth_image.image_view, nullptr);
+		this->device->destroyImage(this->depth_image.image, this->depth_image.image_memory);
 	}
 
 	for (size_t i = 0; i < this->images.size(); i++)
 	{
-		vkDestroyImageView(this->device, this->images[i].image_view, nullptr);
-		//this->allocator->destroyImage(this->images[i].image, this->images[i].image_memory);
+		vkDestroyImageView(this->device->get(), this->images[i].image_view, nullptr);
+		this->device->destroyImage(this->images[i].image, this->images[i].image_memory);
 	}
 }
+
+/*VulkanFramebufferSet::VulkanFramebufferSet(VulkanDevice* device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, uint32_t frame_count)
+{
+	this->device = device;
+	this->size = size;
+	this->color_formats = color_formats;
+	this->depth_format = depth_format;
+	this->render_pass = render_pass;
+
+	this->frame_buffers.resize(frame_count);
+	for (size_t i = 0; i < this->frame_buffers.size(); i++)
+	{
+		this->frame_buffers[i] = new VulkanFramebuffer(device, size, color_formats, depth_format, render_pass);
+	}
+}
+
+VulkanFramebufferSet::~VulkanFramebufferSet()
+{
+	for (size_t i = 0; i < this->frame_buffers.size(); i++)
+	{
+		delete this->frame_buffers[i];
+	}
+}
+
+void VulkanFramebufferSet::startFrame(uint32_t frame)
+{
+	VkExtent2D current_size = this->frame_buffers[frame]->getSize();
+	if (current_size.width != this->size.width || current_size.height != this->size.height)
+	{
+		delete this->frame_buffers[frame];
+		this->frame_buffers[frame] = new VulkanFramebuffer(this->device, this->size, this->color_formats, this->depth_format, this->render_pass);
+	}
+}*/

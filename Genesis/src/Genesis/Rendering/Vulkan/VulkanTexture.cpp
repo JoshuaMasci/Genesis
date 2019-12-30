@@ -7,7 +7,10 @@ using namespace Genesis;
 VulkanTexture::VulkanTexture(VulkanDevice* device, VkExtent2D size, VmaMemoryUsage memory_usage)
 {
 	this->device = device;
+
 	this->size = size;
+	this->format = VK_FORMAT_R8G8B8A8_UNORM;
+	this->initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 	VkImageCreateInfo image_info = {};
 	image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -18,9 +21,9 @@ VulkanTexture::VulkanTexture(VulkanDevice* device, VkExtent2D size, VmaMemoryUsa
 	image_info.mipLevels = 1;
 	image_info.arrayLayers = 1;
 	image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-	image_info.format = VK_FORMAT_R8G8B8A8_UNORM;
+	image_info.format = this->format;
 	image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-	image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	image_info.initialLayout = this->initial_layout;
 	image_info.samples = VK_SAMPLE_COUNT_1_BIT;
 	image_info.flags = 0;
 	this->device->createImage(&image_info, memory_usage, &this->image, &this->image_memory, &this->image_memory_info);
@@ -44,7 +47,7 @@ VulkanTexture::~VulkanTexture()
 	this->device->destroyImage(this->image, this->image_memory);
 }
 
-void VulkanTexture::fillTexture(VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size)
+/*void VulkanTexture::fillTexture(VulkanCommandPool* transfer_pool, VkQueue transfer_queue, void* data, uint64_t data_size)
 {
 	const uint32_t bytes_per_pixel = 4;
 	if (data_size != this->size.width * this->size.height * bytes_per_pixel)
@@ -71,4 +74,4 @@ void VulkanTexture::fillTexture(VulkanCommandPool* transfer_pool, VkQueue transf
 	transitionImageLayout(transfer_pool, transfer_queue, this->image, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 	this->device->destroyBuffer(staging_buffer, staging_buffer_memory);
-}
+}*/

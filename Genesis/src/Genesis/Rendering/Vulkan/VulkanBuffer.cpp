@@ -17,12 +17,15 @@ VulkanBuffer::VulkanBuffer(VulkanDevice* device, uint64_t size_bytes, VkBufferUs
 
 VulkanBuffer::~VulkanBuffer()
 {
-	this->device->destroyBuffer(this->buffer, this->buffer_memory);
+	if (this->buffer != VK_NULL_HANDLE)
+	{
+		this->device->destroyBuffer(this->buffer, this->buffer_memory);
+	}
 }
 
 void VulkanBuffer::fillBuffer(void* data, uint64_t data_size)
 {
-	assert(this->device->isMemoryHostVisible(this->buffer_memory_info));
+	assert(this->host_visable);
 
 	void* mapped_data;
 	this->device->mapMemory(this->buffer_memory, &mapped_data);
@@ -51,6 +54,8 @@ VulkanUniformBuffer::VulkanUniformBuffer(VulkanDevice* device, uint64_t data_siz
 	{
 		this->buffers[i] = new VulkanBuffer(device, data_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, memory_usage);
 	}
+
+	this->size = data_size;
 }
 
 VulkanUniformBuffer::~VulkanUniformBuffer()
@@ -59,4 +64,9 @@ VulkanUniformBuffer::~VulkanUniformBuffer()
 	{
 		delete this->buffers[i];
 	}
+}
+
+void VulkanUniformBuffer::incrementIndex()
+{
+	this->current_index = ((this->current_index + 1) % this->buffers.size());
 }

@@ -1,5 +1,7 @@
 #include "VulkanTransferBuffer.hpp"
 
+#include "Genesis/Rendering/Vulkan/VulkanImageUtils.hpp"
+
 using namespace Genesis;
 
 VulkanTransferBuffer::VulkanTransferBuffer(VulkanDevice* device, VulkanCommandPool* transfer_pool)
@@ -9,6 +11,7 @@ VulkanTransferBuffer::VulkanTransferBuffer(VulkanDevice* device, VulkanCommandPo
 
 	this->copy_buffer_list.resize(1000);//TEMP SIZE
 	this->delete_list.resize(1000);
+	this->fill_texture_list.resize(1000);
 
 	this->transfer_buffer = this->transfer_pool->getCommandBuffer();
 
@@ -33,7 +36,9 @@ void VulkanTransferBuffer::reset()
 
 	this->delete_list_index = 0;
 	this->transfer_count = 0;
-	this->copy_buffer_list = 0;
+
+	this->copy_buffer_list_index = 0;
+	this->fill_texture_list_index = 0;
 
 	this->buffer_lock.unlock();
 }
@@ -60,6 +65,13 @@ bool VulkanTransferBuffer::SubmitTransfers(VkQueue queue)
 		for (size_t i = 0; i < this->copy_buffer_list_index; i++)
 		{
 			vkCmdCopyBuffer(this->transfer_buffer, this->copy_buffer_list[i].source, this->copy_buffer_list[i].destination, 1, &this->copy_buffer_list[i].region);
+		}
+
+		for (size_t i = 0; i < this->fill_texture_list_index; i++)
+		{
+			transitionImageLayout(this->transfer_buffer, this->fill_texture_list[i].destination, this->fill_texture_list[i].format, this->fill_texture_list[i].old_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+			copyBufferToImage(this->transfer_buffer, this->fill_texture_list[i].source, this->fill_texture_list[i].destination, this->fill_texture_list[i].size);
+			transitionImageLayout(this->transfer_buffer, this->fill_texture_list[i].destination, this->fill_texture_list[i].format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, this->fill_texture_list[i].new_layout);
 		}
 
 		vkEndCommandBuffer(this->transfer_buffer);
@@ -92,7 +104,7 @@ void VulkanTransferBuffer::copyBuffer(VulkanBuffer* source, uint64_t source_offs
 	copy_region.srcOffset = source_offset;
 	copy_region.dstOffset = destination_offset;
 	copy_region.size = copy_size;
-	//vkCmdCopyBuffer(this->transfer_buffer, source->get(), destination->get(), 1, &copy_region);
+
 	this->copy_buffer_list[this->copy_buffer_list_index] = { source->get(), destination->get(), copy_region };
 	this->copy_buffer_list_index++;
 
@@ -103,6 +115,22 @@ void VulkanTransferBuffer::copyBuffer(VulkanBuffer* source, uint64_t source_offs
 	}
 
 	this->transfer_count++;
+	this->buffer_lock.unlock();
+}
 
+void VulkanTransferBuffer::fillTexture(VulkanBuffer* source, VulkanTexture* destination)
+{
+	this->buffer_lock.lock();
+
+	this->fill_texture_list[this->fill_texture_list_index] = {source->get(), destination->get(), destination->getSize(), destination->getFormat(), destination->getInitialLayout(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+	this->fill_texture_list_index++;
+
+	//Delete Source
+	{
+		this->delete_list[this->delete_list_index] = source;
+		this->delete_list_index++;
+	}
+
+	this->transfer_count++;
 	this->buffer_lock.unlock();
 }

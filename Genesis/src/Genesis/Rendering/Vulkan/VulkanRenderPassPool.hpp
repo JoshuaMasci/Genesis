@@ -19,7 +19,7 @@ namespace Genesis
 		VkRenderPass getRenderPass(uint32_t hash, List<VkFormat>& color_formats, VkFormat depth_format);
 
 	private:
-		std::mutex map_lock;
+		std::mutex descriptor_map_lock;
 
 		VkDevice device = VK_NULL_HANDLE;
 

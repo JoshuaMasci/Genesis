@@ -3,6 +3,8 @@
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 #include "Genesis/Core/Types.hpp"
 
+#include <mutex>
+
 namespace Genesis
 {
 	class VulkanDescriptorPool

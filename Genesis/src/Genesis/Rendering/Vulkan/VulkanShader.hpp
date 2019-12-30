@@ -3,55 +3,23 @@
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
 
+#include "Genesis/Rendering/Vulkan/VulkanLayoutPool.hpp"
+
 namespace Genesis
 {
-	struct ShaderBindingVariable
+	struct DescriptorSetBindingModule
 	{
-		string name;
-		uint32_t offset;
-		uint32_t size;
-		uint32_t padded_size;
-	};
-
-	struct ShaderBinding
-	{
-		string name;
-		uint32_t binding_location;
 		VkDescriptorType type;
-		VkShaderStageFlagBits shader_stage;
-
-		//buffer info
-		uint32_t total_size;
+		uint32_t count = 0;
+		uint64_t size = 0;
 	};
 
-
-	struct ShaderPushConstant
+	struct DescriptorSetBinding
 	{
-		string name;
-		VkShaderStageFlagBits shader_stage;
-
-		//buffer info
-		uint32_t total_size;
-		List<ShaderBindingVariable> variables;
-	};
-
-	enum class ShaderVariableType
-	{
-		Binding,
-		PushConstant
-	};
-
-	struct ShaderVariableLocation
-	{
-		ShaderVariableType type;
-		uint32_t variable_size;
-		uint32_t variable_offset;
-
-		union
-		{
-			uint32_t binding_index;
-			VkShaderStageFlagBits variable_stage;
-		} location;
+		VkDescriptorType type;
+		VkShaderStageFlags stage;
+		uint32_t count = 0;
+		uint64_t size = 0;
 	};
 
 	class VulkanShaderModule
@@ -60,17 +28,12 @@ namespace Genesis
 		VulkanShaderModule(VkDevice device, string& shader_data);
 		~VulkanShaderModule();
 
-		void addVariables(map<string, ShaderVariableLocation>& variable_loactions);
-
 		VkPipelineShaderStageCreateInfo getStageInfo();
 
 		VkShaderModule shader_module;
-		List<ShaderBinding> shader_bindings;
 		VkShaderStageFlagBits shader_stage;
 
-		ShaderPushConstant push_constant;
-
-		map<string, ShaderVariableLocation> variable_loactions;
+		List<List<DescriptorSetBindingModule>> descriptor_sets;
 
 	protected:
 		VkDevice device;
@@ -79,18 +42,14 @@ namespace Genesis
 	class VulkanShader
 	{
 	public:
-		VulkanShader(VkDevice device, string& vert_data, string& frag_data);
+		VulkanShader(VkDevice device, string& vert_data, string& frag_data, VulkanLayoutPool* layout_pool);
 		~VulkanShader();
 
 		inline vector<VkPipelineShaderStageCreateInfo> getShaderStages() { return this->shader_stages; };
-		inline VkDescriptorSetLayout getDescriptorSetLayout() { return this->descriptor_layout; };
 		inline VkPipelineLayout getPipelineLayout() { return this->pipeline_layout; };
 
-
-		ShaderVariableLocation getVariableLocation(string name);
-
-		map<string, ShaderBinding*> name_bindings;
-		map<string, ShaderPushConstant*> name_constants;
+		inline const List<List<DescriptorSetBinding>>& getDescriptorSetBindings() { return this->descriptor_set_bindings; };
+		inline const List<VkDescriptorSetLayout>& getDescriptorSetLayouts() { return this->descriptor_layouts; };
 
 	private:
 		VkDevice device;
@@ -98,10 +57,11 @@ namespace Genesis
 		VulkanShaderModule* vert_module = nullptr;
 		VulkanShaderModule* frag_module = nullptr;
 
-		VkDescriptorSetLayout descriptor_layout = VK_NULL_HANDLE;
-		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
-		vector<VkPipelineShaderStageCreateInfo> shader_stages;
+		List<List<DescriptorSetBinding>> descriptor_set_bindings;
 
-		map<string, ShaderVariableLocation> name_variable_loaction_cache;
+		List<VkDescriptorSetLayout> descriptor_layouts;
+		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
+
+		vector<VkPipelineShaderStageCreateInfo> shader_stages;
 	};
 }

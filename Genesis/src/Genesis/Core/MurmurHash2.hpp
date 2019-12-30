@@ -28,7 +28,7 @@ namespace Genesis
 			m_size = 0;
 		}
 
-		void addData(const unsigned char* data, int len)
+		void addData(const uint8_t* data, uint32_t len)
 		{
 			m_size += len;
 
@@ -50,7 +50,7 @@ namespace Genesis
 		template<typename T>
 		void add(T value)
 		{
-			this->addData((const unsigned char*)&value, sizeof(T));
+			this->addData((const uint8_t*)&value, sizeof(T));
 		};
 
 		uint32_t end(void)
@@ -70,7 +70,7 @@ namespace Genesis
 		static const uint32_t m = 0x5bd1e995;
 		static const int r = 24;
 
-		void mixTail(const unsigned char * & data, int & len)
+		void mixTail(const uint8_t*& data, uint32_t& len)
 		{
 			while (len && ((len < 4) || m_count))
 			{

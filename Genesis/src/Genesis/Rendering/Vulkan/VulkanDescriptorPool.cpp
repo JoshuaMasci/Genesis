@@ -1,6 +1,7 @@
 #include "VulkanDescriptorPool.hpp"
 
 #include "Genesis/Core/List.hpp"
+#include "Genesis/Core/MurmurHash2.hpp"
 
 #include <stdexcept>
 
@@ -33,7 +34,6 @@ VulkanDescriptorPool::~VulkanDescriptorPool()
 {
 	vkDestroyDescriptorPool(this->device, this->pool, nullptr);
 }
-
 
 VkDescriptorSet VulkanDescriptorPool::getDescriptorSet(VkDescriptorSetLayout layout, uint32_t frame_index)
 {
@@ -70,4 +70,3 @@ void VulkanDescriptorPool::resetFrame(uint32_t frame_index)
 	vkFreeDescriptorSets(this->device, this->pool, frame->descriptor_set_count, frame->used_descriptor_set.data());
 	frame->descriptor_set_count = 0;
 }
-

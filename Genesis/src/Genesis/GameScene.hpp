@@ -36,6 +36,8 @@ namespace Genesis
 		ImGuiRenderer* ui_renderer = nullptr;
 
 		Shader screen_shader = nullptr;
+		List<UniformBuffer> uniform_buffers;
+
 
 		//Temp stuff
 		EntityId temp;

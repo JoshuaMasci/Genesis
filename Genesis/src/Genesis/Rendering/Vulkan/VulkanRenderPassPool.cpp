@@ -17,7 +17,7 @@ VulkanRenderPassPool::~VulkanRenderPassPool()
 
 VkRenderPass VulkanRenderPassPool::getRenderPass(uint32_t hash, List<VkFormat>& color_formats, VkFormat depth_format)
 {
-	this->map_lock.lock();
+	this->descriptor_map_lock.lock();
 
 	if (this->render_passes.find(hash) != this->render_passes.end())
 	{
@@ -116,7 +116,7 @@ VkRenderPass VulkanRenderPassPool::getRenderPass(uint32_t hash, List<VkFormat>& 
 
 	this->render_passes[hash] = render_pass;
 
-	this->map_lock.unlock();
+	this->descriptor_map_lock.unlock();
 
 	return render_pass;
 }

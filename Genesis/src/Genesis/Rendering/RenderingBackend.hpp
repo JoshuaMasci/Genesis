@@ -27,34 +27,30 @@ namespace Genesis
 		virtual void destroyIndexBuffer(IndexBuffer index_buffer) = 0;
 
 		virtual UniformBuffer createUniformBuffer(uint64_t data_size, MemoryUsage memory_usage = MemoryUsage::CPU_Visable) = 0;
-		virtual void destroyUniformBuffer(UniformBuffer* uniform_buffer) = 0;
+		virtual void destroyUniformBuffer(UniformBuffer uniform_buffer) = 0;
+		virtual void setUniform(UniformBuffer uniform_buffer, void* data, uint64_t data_size) = 0;
 
 		virtual Texture createTexture(vector2U size, void* data, uint64_t data_size) = 0;
-		virtual void destroyTexture(Texture texture_index) = 0;
+		virtual void destroyTexture(Texture texture) = 0;
 
 		virtual Shader createShader(string& vert_data, string& frag_data) = 0;
 		virtual void destroyShader(Shader shader) = 0;
 
-		/*virtual FrameBuffer createFrameBuffer(FramebufferLayout& layout, vector2U size) = 0;
-		virtual void destroyFrameBuffer(FrameBuffer frame_buffer) = 0;
-		virtual void resizeFrameBuffer(FrameBuffer frame_buffer, vector2U size) = 0;
+		/*virtual Framebuffer createFramebuffer(FramebufferLayout& layout, vector2U size) = 0;
+		virtual void destroyFramebuffer(Framebuffer frame_buffer) = 0;
+		virtual void resizeFramebuffer(Framebuffer frame_buffer, vector2U size) = 0;
 
-		virtual CommandBufferSingle createCommandBuffer() = 0;
-		virtual void destroyCommandBuffer(CommandBufferSingle command_buffer) = 0;
-		virtual CommandBuffer* getCommandBuffer() = 0;
+		virtual CommandBuffer* createCommandBuffer() = 0;
+		virtual void destroyCommandBuffer(CommandBuffer* command_buffer) = 0;
+		virtual void beginCommandBuffer(CommandBuffer* command_buffer, Framebuffer target) = 0;
+		virtual void endCommandBuffer(CommandBuffer* command_buffer) = 0;
+		virtual void submitCommandBuffer(CommandBuffer* command_buffer) = 0;*/
 
-		virtual void beginCommandBuffer(CommandBufferSingle command_buffer) = 0;
-		virtual void endCommandBuffer(CommandBufferSingle command_buffer) = 0;
-		virtual void submitCommandBuffer(CommandBufferSingle command_buffer) = 0;
-
-		virtual CommandBufferMulti createCommandBufferMulti() = 0;
-		virtual void destroyCommandBufferMulti(CommandBufferMulti command_buffer) = 0;
-		virtual CommandBuffer* getCommandBufferMulti(uint32_t index) = 0;
-
-		virtual void beginCommandBufferMulti(CommandBufferMulti command_buffer) = 0;
-		virtual void endCommandBufferMulti(CommandBufferMulti command_buffer) = 0;
-		virtual void submitCommandBufferMulti(CommandBufferMulti command_buffer) = 0;*/
-
+		virtual View createView(FramebufferLayout& layout, vector2U size) = 0;
+		virtual void destroyView(View view) = 0;
+		virtual void resizeView(View view, vector2U size) = 0;
+		virtual CommandBuffer* beginView(View view) = 0;
+		virtual void endView(View view) = 0;
 
 		//Wait until all GPU proccessing is done
 		virtual void waitTillDone() = 0;

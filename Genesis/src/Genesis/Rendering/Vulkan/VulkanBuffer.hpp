@@ -11,6 +11,7 @@ namespace Genesis
 	class VulkanBuffer
 	{
 	public:
+		VulkanBuffer() {};
 		VulkanBuffer(VulkanDevice* device, uint64_t size_bytes, VkBufferUsageFlags type, VmaMemoryUsage memory_usage);
 		virtual ~VulkanBuffer();
 
@@ -23,11 +24,11 @@ namespace Genesis
 	protected:
 		VulkanDevice* device = nullptr;
 
-		VkBuffer buffer;
-		VmaAllocation buffer_memory;
-		VmaAllocationInfo buffer_memory_info;
-		uint64_t size;
-		bool host_visable;
+		VkBuffer buffer = VK_NULL_HANDLE;
+		VmaAllocation buffer_memory = VK_NULL_HANDLE;
+		VmaAllocationInfo buffer_memory_info = {};
+		uint64_t size = 0;
+		bool host_visable = false;
 	};
 
 	class VulkanVertexBuffer : public VulkanBuffer
@@ -61,9 +62,15 @@ namespace Genesis
 		VulkanUniformBuffer(VulkanDevice* device, uint64_t data_size, VmaMemoryUsage memory_usage, uint32_t frame_count);
 		~VulkanUniformBuffer();
 
+		void incrementIndex();
+
+		inline VulkanBuffer* getCurrentBuffer() { return this->buffers[this->current_index]; };
+		inline uint64_t getSize() { return this->size; };
+
 	protected:
 		List<VulkanBuffer*> buffers;
 		uint32_t current_index;
+		uint64_t size = 0;
 		bool has_changed;
 	};
 }

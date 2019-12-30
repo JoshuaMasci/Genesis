@@ -2,25 +2,28 @@
 
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanInclude.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanDevice.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanPipline.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanShader.hpp"
+
+#include "Genesis/Rendering/PipelineSettings.hpp"
+#include "Genesis/Rendering/VertexInputDescription.hpp"
 
 namespace Genesis
 {
-	typedef map<uint32_t, VulkanPipline*> pipeline_map;
+	typedef map<uint32_t, VkPipeline> pipeline_map;
 	typedef map<VulkanShader*, pipeline_map> shader_pipeline_map;
+
+	class VulkanThreadPipelinePool;
 
 	class VulkanPipelinePool
 	{
+
 	public:
-		 VulkanPipelinePool(VkDevice device, uint32_t thread_count);
+		 VulkanPipelinePool(VkDevice device);
 		~VulkanPipelinePool();
 
 		void update();
 
-		VulkanPipline* getPipeline(uint32_t thread_id, VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription& vertex_description, VkExtent2D extent);
-
-	private:
+	protected:
 		VkDevice device = VK_NULL_HANDLE;
 
 		shader_pipeline_map pipelines;
@@ -29,15 +32,32 @@ namespace Genesis
 		{
 			uint32_t pipeline_hash;
 			VulkanShader* shader;
-			VulkanPipline* pipeline;
+			VkPipeline pipeline;
 		};
 
-		struct ThreadPipelinePool
-		{
-			shader_pipeline_map temp_map;
-			queue<PipelineAddInfo> new_pipelines;
-		};
+		vector<VulkanThreadPipelinePool*> thread_pools;
 
-		List<ThreadPipelinePool> thread_pools;
+		friend class VulkanThreadPipelinePool;
+	};
+
+	class VulkanThreadPipelinePool
+	{
+	public:
+		VulkanThreadPipelinePool(VkDevice device, VulkanPipelinePool* main_pool);
+		~VulkanThreadPipelinePool();
+
+		VkPipeline getPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription* vertex_description);
+
+	protected:
+		VkDevice device = VK_NULL_HANDLE;
+		VulkanPipelinePool* main_pool = nullptr;
+		size_t main_pool_index;
+
+		shader_pipeline_map temp_map;
+		queue<VulkanPipelinePool::PipelineAddInfo> new_pipelines;
+
+		VkPipeline createPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription* vertex_description);
+
+		friend class VulkanPipelinePool;
 	};
 }

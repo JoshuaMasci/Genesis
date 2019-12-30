@@ -14,6 +14,15 @@
 #include "Genesis/Rendering/Vulkan/VulkanPipelinePool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanRenderPassPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanTransferBuffer.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanLayoutPool.hpp"
+
+#include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanTexture.hpp"
+//#include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
+//#include "Genesis/Rendering/Vulkan/VulkanCommanBuffer.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanView.hpp"
+
+#include "Genesis/Rendering/DelayedResourceDeleter.hpp"
 
 namespace Genesis
 {
@@ -30,19 +39,36 @@ namespace Genesis
 		virtual void endFrame() override;
 
 		virtual VertexBuffer createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryUsage memory_usage = MemoryUsage::GPU_Only) override;
-		virtual void destroyVertexBuffer(VertexBuffer vertex_buffer_index) override;
+		virtual void destroyVertexBuffer(VertexBuffer vertex_buffer) override;
 
 		virtual IndexBuffer createIndexBuffer(void* data, uint64_t data_size, IndexType type, MemoryUsage memory_usage = MemoryUsage::GPU_Only) override;
-		virtual void destroyIndexBuffer(IndexBuffer index_buffer_index) override;
+		virtual void destroyIndexBuffer(IndexBuffer index_buffer) override;
 
 		virtual UniformBuffer createUniformBuffer(uint64_t data_size, MemoryUsage memory_usage = MemoryUsage::CPU_Visable) override;
-		virtual void destroyUniformBuffer(UniformBuffer* uniform_buffer) override;
+		virtual void destroyUniformBuffer(UniformBuffer uniform_buffer) override;
+		virtual void setUniform(UniformBuffer uniform_buffer, void* data, uint64_t data_size) override;
 
 		virtual Texture createTexture(vector2U size, void* data, uint64_t data_size) override;
-		virtual void destroyTexture(Texture texture_handle) override;
+		virtual void destroyTexture(Texture texture) override;
 
 		virtual Shader createShader(string& vert_data, string& frag_data) override;
-		virtual void destroyShader(Shader shader_handle) override;
+		virtual void destroyShader(Shader shader) override;
+
+		/*virtual Framebuffer createFramebuffer(FramebufferLayout& layout, vector2U size) override;
+		virtual void destroyFramebuffer(Framebuffer frame_buffer) override;
+		virtual void resizeFramebuffer(Framebuffer frame_buffer, vector2U size) override;
+
+		virtual CommandBuffer* createCommandBuffer() override;
+		virtual void destroyCommandBuffer(CommandBuffer* command_buffer) override;
+		virtual void beginCommandBuffer(CommandBuffer* command_buffer, Framebuffer target) override;
+		virtual void endCommandBuffer(CommandBuffer* command_buffer) override;
+		virtual void submitCommandBuffer(CommandBuffer* command_buffer) override;*/
+
+		virtual View createView(FramebufferLayout& layout, vector2U size) override;
+		virtual void destroyView(View view) override;
+		virtual void resizeView(View view, vector2U size) override;
+		virtual CommandBuffer* beginView(View view) override;
+		virtual void endView(View view) override;
 
 		virtual void waitTillDone() override;
 
@@ -84,11 +110,22 @@ namespace Genesis
 
 		//Descriptor Pools
 		List<VulkanDescriptorPool*> descriptor_pools;
+		VulkanLayoutPool* layout_pool = nullptr;
 
 		//Pipeline Pool
 		VulkanPipelinePool* pipeline_pool = nullptr;
+		List<VulkanThreadPipelinePool*> thread_pipeline_pools;
 
 		//RenderPass Pool
 		VulkanRenderPassPool* render_pass_pool = nullptr;
+
+		//Resource
+		DelayedResourceDeleter<VulkanBuffer>* buffer_deleter = nullptr;
+		DelayedResourceDeleter<VulkanUniformBuffer>* uniform_deleter = nullptr;
+		DelayedResourceDeleter<VulkanTexture>* texture_deleter = nullptr;
+		DelayedResourceDeleter<VulkanShader>* shader_deleter = nullptr;
+		//DelayedResourceDeleter<VulkanFramebufferSet>* framebuffer_set_deleter = nullptr;
+		//DelayedResourceDeleter<VulkanCommandBufferSingle>* single_command_buffer_deleter = nullptr;
+		DelayedResourceDeleter<VulkanViewSingleThread>* view_deleter = nullptr;
 	};
 }

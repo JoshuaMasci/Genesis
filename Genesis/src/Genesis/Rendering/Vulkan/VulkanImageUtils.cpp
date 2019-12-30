@@ -1,13 +1,7 @@
 #include "VulkanImageUtils.hpp"
 
-void Genesis::transitionImageLayout(VulkanCommandPool* command_pool, VkQueue queue, VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout)
+void Genesis::transitionImageLayout(VkCommandBuffer transfer_buffer, VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout)
 {
-	VkCommandBuffer command_buffer = command_pool->getCommandBuffer();
-	VkCommandBufferBeginInfo begin_info = {};
-	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	vkBeginCommandBuffer(command_buffer, &begin_info);
-
 	VkImageMemoryBarrier barrier = {};
 	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 	barrier.oldLayout = old_layout;
@@ -46,33 +40,17 @@ void Genesis::transitionImageLayout(VulkanCommandPool* command_pool, VkQueue que
 	}
 
 	vkCmdPipelineBarrier(
-		command_buffer,
+		transfer_buffer,
 		source_stage, destination_stage,
 		0,
 		0, nullptr,
 		0, nullptr,
 		1, &barrier
 	);
-
-	vkEndCommandBuffer(command_buffer);
-	VkSubmitInfo submit_info = {};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &command_buffer;
-
-	vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
-	vkQueueWaitIdle(queue);
-	command_pool->freeCommandBuffer(command_buffer);
 }
 
-void Genesis::copyBufferToImage(VulkanCommandPool* command_pool, VkQueue queue, VkBuffer buffer, VkImage image, VkExtent2D size)
+void Genesis::copyBufferToImage(VkCommandBuffer transfer_buffer, VkBuffer buffer, VkImage image, VkExtent2D size)
 {
-	VkCommandBuffer command_buffer = command_pool->getCommandBuffer();
-	VkCommandBufferBeginInfo begin_info = {};
-	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	vkBeginCommandBuffer(command_buffer, &begin_info);
-
 	VkBufferImageCopy region = {};
 	region.bufferOffset = 0;
 	region.bufferRowLength = 0;
@@ -84,15 +62,5 @@ void Genesis::copyBufferToImage(VulkanCommandPool* command_pool, VkQueue queue, 
 	region.imageOffset = { 0, 0, 0 };
 	region.imageExtent = { size.width, size.height, 1 };
 
-	vkCmdCopyBufferToImage(command_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-
-	vkEndCommandBuffer(command_buffer);
-	VkSubmitInfo submit_info = {};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &command_buffer;
-
-	vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE);
-	vkQueueWaitIdle(queue);
-	command_pool->freeCommandBuffer(command_buffer);
+	vkCmdCopyBufferToImage(transfer_buffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }

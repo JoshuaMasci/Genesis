@@ -129,7 +129,7 @@ void VulkanDevice::createBuffer(VkBufferCreateInfo* buffer_create, VmaMemoryUsag
 	VkResult result = vmaCreateBuffer(this->allocator, buffer_create, &alloc_info, buffer, memory, memory_info);
 	if (result != VK_SUCCESS)
 	{
-		printf("Error\n");
+		throw std::runtime_error("failed to create buffer!");
 	}
 }
 
@@ -146,7 +146,7 @@ void VulkanDevice::createImage(VkImageCreateInfo* image_create, VmaMemoryUsage m
 	VkResult result = vmaCreateImage(this->allocator, image_create, &alloc_info, image, memory, memory_info);
 	if (result != VK_SUCCESS)
 	{
-		printf("Error\n");
+		throw std::runtime_error("failed to create image!");
 	}
 }
 
