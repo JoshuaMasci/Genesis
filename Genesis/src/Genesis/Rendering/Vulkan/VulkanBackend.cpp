@@ -62,7 +62,7 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 
 	vector<const char*> layers;
 	layers.push_back("VK_LAYER_LUNARG_standard_validation");
-	layers.push_back("VK_LAYER_RENDERDOC_Capture");
+	//layers.push_back("VK_LAYER_RENDERDOC_Capture");
 
 	this->instance = VulkanInstance::create(VK_API_VERSION_1_1, "Sandbox", VK_MAKE_VERSION(0, 0, 0), "Genesis_Engine", VK_MAKE_VERSION(0, 0, 0), extensions, layers);
 
@@ -114,11 +114,14 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 	//RenderPass pool
 	this->render_pass_pool = new VulkanRenderPassPool(this->device->get());
 
+	//Sampler pool
+	this->sampler_pool = new VulkanSamplerPool(this->device->get());
+
 	this->frames.resize(this->FRAME_COUNT);
 	for (size_t i = 0; i < this->frames.size(); i++)
 	{
 		this->frames[i].image_ready_semaphore = this->device->createSemaphore();
-		this->frames[i].command_buffer = new VulkanCommandBufferSingle(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], (uint32_t)i);
+		this->frames[i].command_buffer = new VulkanCommandBufferSingle(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->sampler_pool, (uint32_t)i);
 		this->frames[i].command_buffer_done_semaphore = this->device->createSemaphore();
 		this->frames[i].frame_done_fence = this->device->createFence();
 
@@ -141,7 +144,19 @@ VulkanBackend::~VulkanBackend()
 	delete this->shader_deleter;
 	delete this->view_deleter;
 
+	for (size_t i = 0; i < this->frames.size(); i++)
+	{
+		this->device->destroySemaphore(this->frames[i].image_ready_semaphore);
+		delete this->frames[i].command_buffer;
+		this->device->destroySemaphore(this->frames[i].command_buffer_done_semaphore);
+		this->device->destroyFence(this->frames[i].frame_done_fence);
+
+		delete this->frames[i].transfer_buffer;
+	}
+
 	delete this->render_pass_pool;
+
+	delete this->sampler_pool;
 
 	for (size_t i = 0; i < this->thread_pipeline_pools.size(); i++)
 	{
@@ -154,16 +169,6 @@ VulkanBackend::~VulkanBackend()
 	for (size_t i = 0; i < this->descriptor_pools.size(); i++)
 	{
 		delete this->descriptor_pools[i];
-	}
-
-	for (size_t i = 0; i < this->frames.size(); i++)
-	{
-		this->device->destroySemaphore(this->frames[i].image_ready_semaphore);
-		delete this->frames[i].command_buffer;
-		this->device->destroySemaphore(this->frames[i].command_buffer_done_semaphore);
-		this->device->destroyFence(this->frames[i].frame_done_fence);
-
-		delete this->frames[i].transfer_buffer;
 	}
 
 	delete this->transfer_pool;
@@ -192,7 +197,8 @@ void VulkanBackend::setScreenSize(vector2U size)
 
 vector2U VulkanBackend::getScreenSize()
 {
-	return vector2U();
+	VkExtent2D size = this->swapchain->getSwapchainExtent();
+	return vector2U(size.width, size.height);
 }
 
 CommandBuffer* VulkanBackend::beginFrame()
@@ -394,7 +400,7 @@ View VulkanBackend::createView(FramebufferLayout& layout, vector2U size)
 
 	VkRenderPass render_pass = this->render_pass_pool->getRenderPass(layout.getHash(), color, depth);
 
-	return (View*) new VulkanViewSingleThread(this->device, this->FRAME_COUNT, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], {size.x, size.y}, color, depth, render_pass);
+	return (View*) new VulkanViewSingleThread(this->device, this->FRAME_COUNT, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->sampler_pool, {size.x, size.y}, color, depth, render_pass);
 
 }
 

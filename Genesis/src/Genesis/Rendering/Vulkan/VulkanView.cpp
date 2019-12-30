@@ -7,7 +7,7 @@
 
 using namespace Genesis;
 
-VulkanViewSingleThread::VulkanViewSingleThread(VulkanDevice* device, uint32_t frame_count, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass)
+VulkanViewSingleThread::VulkanViewSingleThread(VulkanDevice* device, uint32_t frame_count, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass)
 {
 	this->device = device;
 
@@ -33,7 +33,7 @@ VulkanViewSingleThread::VulkanViewSingleThread(VulkanDevice* device, uint32_t fr
 	for (size_t i = 0; i < this->frames.size(); i++)
 	{
 		this->frames[i].framebuffer = new VulkanFramebuffer(this->device, this->size, this->color_formats, this->depth_format, this->render_pass);
-		this->frames[i].command_buffer = new VulkanCommandBufferSingle(this->device, command_pool, pipeline_pool, descriptor_pool, (uint32_t)i);
+		this->frames[i].command_buffer = new VulkanCommandBufferSingle(this->device, command_pool, pipeline_pool, descriptor_pool, sampler_pool, (uint32_t)i);
 		this->frames[i].command_buffer_semaphore = this->device->createSemaphore();
 	}
 }

@@ -4,6 +4,7 @@
 #include "Genesis/Rendering/Vulkan/VulkanCommandPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanPipelinePool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanSamplerPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
 
 #include "Genesis/Rendering/CommandBuffer.hpp"
@@ -98,20 +99,23 @@ namespace Genesis
 	class VulkanCommandBufferSingle : public CommandBuffer
 	{
 	public:
-		VulkanCommandBufferSingle(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, uint32_t frame_index);
+		VulkanCommandBufferSingle(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, uint32_t frame_index);
 		~VulkanCommandBufferSingle();
 
 		virtual void setShader(Shader shader) override;
 		virtual void setPipelineSettings(PipelineSettings & settings) override;
 		virtual void setScissor(vector2I offset, vector2U extent) override;
 		virtual void setUniformBuffer(uint32_t set, uint32_t binding, UniformBuffer buffer) override;
-		virtual void setUniformTexture(uint32_t set, uint32_t binding, Texture texture) override;
-		virtual void setUniformView(uint32_t set, uint32_t binding, View view, uint8_t view_image_index) override;
+		virtual void setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler& sampler) override;
+		virtual void setUniformView(uint32_t set, uint32_t binding, View view, uint8_t view_image_index, Sampler& sampler) override;
 		virtual void setUniformConstant(void * data, uint32_t data_size) override;
 		virtual void setVertexBuffer(VertexBuffer vertex, VertexInputDescription& vertex_description) override;
 		virtual void setIndexBuffer(IndexBuffer index, IndexType type) override;
 		virtual void drawIndexed(uint32_t index_count, uint32_t index_offset = 0, uint32_t instance_count = 1, uint32_t instance_offset = 0) override;
 
 		VulkanCommandBuffer command_buffer;
+
+	private:
+		VulkanSamplerPool* sampler_pool = nullptr;
 	};
 }

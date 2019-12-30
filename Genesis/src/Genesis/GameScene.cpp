@@ -48,6 +48,8 @@ GameScene::GameScene(Application* app)
 
 	this->vertex = this->application->rendering_backend->createVertexBuffer((void*)vertices.data(), vertices.size() * sizeof(Vertex), vertex_description);
 	this->index = this->application->rendering_backend->createIndexBuffer((void*)indices.data(), indices.size() * sizeof(uint16_t), IndexType::uint16);
+
+	this->ui_renderer = new ImGuiRenderer(this->application->rendering_backend, &this->application->input_manager);
 }
 
 GameScene::~GameScene()
@@ -93,6 +95,10 @@ void GameScene::drawWorld(double delta_time)
 		command_buffer->setVertexBuffer(this->vertex, VertexInputDescription());
 		command_buffer->setIndexBuffer(this->index, IndexType::uint16);
 		command_buffer->drawIndexed(3, 0, 1, 0);
+
+		this->ui_renderer->startFrame();
+		this->ui_renderer->drawFrame(command_buffer);
+
 		this->application->rendering_backend->endFrame();
 	}
 }

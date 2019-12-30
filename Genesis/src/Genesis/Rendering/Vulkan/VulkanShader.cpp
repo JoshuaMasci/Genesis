@@ -225,8 +225,9 @@ VulkanShader::VulkanShader(VkDevice device, string& vert_data, string& frag_data
 	}
 
 	List<List<VkDescriptorSetLayoutBinding>> descriptor_sets(this->descriptor_set_bindings.size());
-	for (size_t set = 0; set < this->descriptor_layouts.size(); set++)
+	for (size_t set = 0; set < this->descriptor_set_bindings.size(); set++)
 	{
+		descriptor_sets[set].resize(this->descriptor_set_bindings[set].size());
 		for (size_t binding = 0; binding < this->descriptor_set_bindings[set].size(); binding++)
 		{
 			descriptor_sets[set][binding].binding = (uint32_t)binding;

@@ -15,11 +15,10 @@
 #include "Genesis/Rendering/Vulkan/VulkanRenderPassPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanTransferBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanLayoutPool.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanSamplerPool.hpp"
 
 #include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanTexture.hpp"
-//#include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
-//#include "Genesis/Rendering/Vulkan/VulkanCommanBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanView.hpp"
 
 #include "Genesis/Rendering/DelayedResourceDeleter.hpp"
@@ -108,6 +107,8 @@ namespace Genesis
 
 		//RenderPass Pool
 		VulkanRenderPassPool* render_pass_pool = nullptr;
+
+		VulkanSamplerPool* sampler_pool = nullptr;
 
 		//Resource
 		DelayedResourceDeleter<VulkanBuffer>* buffer_deleter = nullptr;

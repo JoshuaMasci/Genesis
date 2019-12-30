@@ -77,6 +77,11 @@ namespace Genesis
 
 		void resize(size_t new_size)
 		{
+			if (new_size == this->array_size)
+			{
+				return;
+			}
+
 			if (new_size == 0)
 			{
 				delete this->array_data;

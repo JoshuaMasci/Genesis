@@ -292,9 +292,10 @@ void VulkanCommandBuffer::bindDescriptors()
 	}
 }
 
-VulkanCommandBufferSingle::VulkanCommandBufferSingle(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, uint32_t frame_index)
+VulkanCommandBufferSingle::VulkanCommandBufferSingle(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, uint32_t frame_index)
 	:command_buffer(device, command_pool, pipeline_pool, descriptor_pool, frame_index)
 {
+	this->sampler_pool = sampler_pool;
 }
 
 VulkanCommandBufferSingle::~VulkanCommandBufferSingle()
@@ -326,16 +327,17 @@ void VulkanCommandBufferSingle::setUniformBuffer(uint32_t set, uint32_t binding,
 	this->command_buffer.setUniformBuffer(set, binding, uniform->get(), uniform->getSize());
 }
 
-void VulkanCommandBufferSingle::setUniformTexture(uint32_t set, uint32_t binding, Texture texture)
+void VulkanCommandBufferSingle::setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler& sampler)
 {
-	this->command_buffer.setUniformTexture(set, binding, ((VulkanTexture*)texture)->getImageView(), VK_NULL_HANDLE);
+
+	this->command_buffer.setUniformTexture(set, binding, ((VulkanTexture*)texture)->getImageView(), this->sampler_pool->getSampler(sampler));
 }
 
-void VulkanCommandBufferSingle::setUniformView(uint32_t set, uint32_t binding, View view, uint8_t view_image_index)
+void VulkanCommandBufferSingle::setUniformView(uint32_t set, uint32_t binding, View view, uint8_t view_image_index, Sampler& sampler)
 {
 	VulkanViewSingleThread* vulkan_view = (VulkanViewSingleThread*)view;
 	VkImageView image_view = vulkan_view->getFramebuffer(this->command_buffer.getFrameIndex())->getImageView(view_image_index);
-	this->command_buffer.setUniformTexture(set, binding, image_view, VK_NULL_HANDLE);
+	this->command_buffer.setUniformTexture(set, binding, image_view, this->sampler_pool->getSampler(sampler));
 }
 
 void VulkanCommandBufferSingle::setUniformConstant(void* data, uint32_t data_size)
