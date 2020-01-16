@@ -1,13 +1,4 @@
 // MurmurHash2A, by Austin Appleby
-
-// This is a variant of MurmurHash2 modified to use the Merkle-Damgard 
-// construction. Bulk speed should be identical to Murmur2, small-key speed 
-// will be 10%-20% slower due to the added overhead at the end of the hash.
-
-// This variant fixes a minor issue where null keys were more likely to
-// collide with each other than expected, and also makes the function
-// more amenable to incremental implementations.
-
 #pragma once
 
 #include <stdint.h>
@@ -19,6 +10,10 @@ namespace Genesis
 	class MurmurHash2
 	{
 	public:
+		MurmurHash2(uint32_t seed = 0)
+		{
+			this->begin(seed);
+		};
 
 		void begin(uint32_t seed = 0)
 		{
@@ -26,7 +21,7 @@ namespace Genesis
 			m_tail = 0;
 			m_count = 0;
 			m_size = 0;
-		}
+		};
 
 		void addData(const uint8_t* data, uint32_t len)
 		{
@@ -45,7 +40,7 @@ namespace Genesis
 			}
 
 			mixTail(data, len);
-		}
+		};
 
 		template<typename T>
 		void add(T value)
@@ -63,7 +58,7 @@ namespace Genesis
 			m_hash ^= m_hash >> 15;
 
 			return m_hash;
-		}
+		};
 
 	private:
 
@@ -86,7 +81,7 @@ namespace Genesis
 					m_count = 0;
 				}
 			}
-		}
+		};
 
 		uint32_t m_hash;
 		uint32_t m_tail;

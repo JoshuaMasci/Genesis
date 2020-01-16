@@ -2,40 +2,42 @@
 
 using namespace Genesis;
 
-Transform::Transform(vector3D position, quaternionD orientation)
+TransformF::TransformF(vector3F& position, quaternionF& orientation, vector3F& scale)
 {
 	this->setPosition(position);
 	this->setOrientation(orientation);
+	this->setScale(scale);
 }
 
-vector3D Transform::getPosition() const { return this->position; }
-quaternionD Transform::getOrientation() const { return this->orientation; }
-
-//Getters for the directional vectors.
-vector3D Transform::getForward() const { return this->orientation * vector3D(0.0f, 0.0f, 1.0f); }
-vector3D Transform::getUp() const { return this->orientation * vector3D(0.0f, 1.0f, 0.0f); }
-vector3D Transform::getLeft() const { return this->orientation * vector3D(1.0f, 0.0f, 0.0f); }
-
-void Transform::setPosition(const vector3D& vec) 
-{ 
-	this->position = vec;
-}
-void Transform::setOrientation(const quaternionD& quat) 
-{ 
-	this->orientation = quat;
-}
-
-void Transform::setTransform(const Transform& trans) { this->setPosition(trans.getPosition()); this->setOrientation(trans.getOrientation()); }
-
-Transform Transform::transformBy(const Transform& transform1) const
+TransformF TransformF::transformBy(const TransformF& transform1) const
 {
-	Transform result;
-	result.setOrientation(transform1.getOrientation() * this->getOrientation());
-	result.setPosition(transform1.getPosition() + (transform1.getOrientation() * this->getPosition()));
+	TransformF result;
+	result.position = transform1.position + (transform1.orientation * (this->position * transform1.scale));
+	result.orientation = transform1.orientation * this->orientation;
+	result.scale = transform1.scale * this->scale;
 	return result;
 }
 
- /*void Genesis::Transform::updateModelMatrix()
+matrix4F TransformF::calcMatrix4F() const
 {
-	this->model_matrix = glm::toMat4((quaternionF)this->orientation);//Scale does not exist right now
-}*/
+	matrix4F translate = glm::translate(matrix4F(1.0f), this->position);
+	matrix4F orientation = glm::toMat4(this->orientation);
+	matrix4F scale = glm::scale(matrix4F(1.0f), this->scale);
+	return translate * orientation * scale;
+}
+
+TransformD::TransformD(vector3D position, quaternionD orientation, vector3D scale)
+{
+	this->setPosition(position);
+	this->setOrientation(orientation);
+	this->setScale(scale);
+}
+
+TransformD TransformD::transformBy(const TransformD& transform1) const
+{
+	TransformD result;
+	result.position = transform1.position + (transform1.orientation * (this->position * transform1.scale));
+	result.orientation = transform1.orientation * this->orientation;
+	result.scale = transform1.scale * this->scale;
+	return result;
+}

@@ -26,7 +26,7 @@ file(GLOB_RECURSE GENESIS_JOB "src/Genesis/Job/*.*")
 source_group("Job" FILES ${GENESIS_JOB})
 
 if(INCLUDE_VULKAN)
-	file(GLOB GENESIS_SPIRV "${CMAKE_SOURCE_DIR}/submodules/spirv-reflect/spirv_reflect.c" "${CMAKE_SOURCE_DIR}/submodules/spirv-reflect/spirv_reflect.h")
+	file(GLOB GENESIS_SPIRV "${CMAKE_SOURCE_DIR}/lib/spirv-reflect/spirv_reflect.c" "${CMAKE_SOURCE_DIR}/lib/spirv-reflect/spirv_reflect.h")
 	source_group("SPIRV UTILS" FILES ${GENESIS_SPIRV})
 endif()
 
@@ -37,22 +37,23 @@ source_group("Platform" FILES ${GENESIS_PLATFORM})
 file(GLOB_RECURSE GENESIS_PHYSICS "src/Genesis/Physics/*.*")
 source_group("Physics" FILES ${GENESIS_PHYSICS})
 
+
+file(GLOB_RECURSE GENESIS_GLTF "src/Tiny_GLTF/*.*")
+source_group("Tiny_GLTF" FILES ${GENESIS_GLTF})
+
 #Create Libary
-add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_RENDERING} ${GENESIS_RENDERING_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM} ${GENESIS_SPIRV})
+add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_RENDERING} ${GENESIS_RENDERING_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM} ${GENESIS_SPIRV} ${GENESIS_GLTF})
 
 #GLM
-include_directories(${CMAKE_SOURCE_DIR}/submodules/glm/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
 
 #SDL2
 include_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/include/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 target_link_libraries(Genesis PRIVATE SDL2)
 
-#ENTT
-include_directories(${CMAKE_SOURCE_DIR}/submodules/entt/src/)
-
 #Concurrent Queue
-include_directories(${CMAKE_SOURCE_DIR}/submodules/concurrent_queue/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
 
 #OPENGL
 #include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
@@ -61,22 +62,22 @@ include_directories(${CMAKE_SOURCE_DIR}/submodules/concurrent_queue/)
 #target_link_libraries (Genesis PRIVATE opengl32)
 #target_link_libraries (Genesis PRIVATE glu32)
 
+#TEMP ASSIMP
+link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/code/Debug/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/contrib/zlib/Debug/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/include/)
+target_link_libraries (Genesis PRIVATE zlibstaticd)
+target_link_libraries (Genesis PRIVATE assimp-vc140-mt)
 
 if(INCLUDE_VULKAN)
 	find_package(Vulkan REQUIRED FATAL_ERROR)
 	include_directories(${Vulkan_INCLUDE_DIR})	
 	target_link_libraries(Genesis PRIVATE Vulkan::Vulkan)
 	
-	include_directories(${CMAKE_SOURCE_DIR}/submodules/vulkan_memory_allocator/src/)
-	include_directories(${CMAKE_SOURCE_DIR}/submodules/spirv-reflect/)
+	include_directories(${CMAKE_SOURCE_DIR}/lib/vulkan_memory_allocator/src/)
+	include_directories(${CMAKE_SOURCE_DIR}/lib/spirv-reflect/)
 endif()
 
-#STB
-include_directories(${CMAKE_SOURCE_DIR}/submodules/stb/)
-
-#TINYOBJ
-include_directories(${CMAKE_SOURCE_DIR}/submodules/tinyobj/)
-
-#ImGUI
-include_directories(${CMAKE_SOURCE_DIR}/submodules/imgui/)
-
+include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/imgui/)

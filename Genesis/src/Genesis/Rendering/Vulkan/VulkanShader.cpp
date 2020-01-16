@@ -156,6 +156,11 @@ void fillDescriptorSetLayouts(List<List<VkDescriptorSetLayoutBinding>>& destinat
 
 void fillDescriptorSetBindings(List<List<DescriptorSetBinding>>& destination, List<List<DescriptorSetBindingModule>>& source, VkShaderStageFlags stage)
 {
+	if (source.size() <= 0)
+	{
+		return;
+	}
+
 	if (destination.size() < source.size())
 	{
 		destination.resize(source.size());

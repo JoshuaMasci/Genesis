@@ -4,32 +4,62 @@
 
 namespace Genesis
 {
-	class Transform
+	class TransformF
 	{
 	public:
-		Transform(vector3D position = vector3D(0.0), quaternionD orientation = quaternionD(1.0, 0.0, 0.0, 0.0));
+		TransformF(vector3F& position = vector3F(0.0f), quaternionF& orientation = quaternionF(1.0f, 0.0f, 0.0f, 0.0f), vector3F& scale = vector3F(1.0f));
 
 		//Getters
-		vector3D getPosition() const;
-		quaternionD getOrientation() const;
-		vector3D getForward() const;
-		vector3D getUp() const;
-		vector3D getLeft() const;
+		inline vector3F getPosition() const { return this->position; };
+		inline quaternionF getOrientation() const { return this->orientation; };
+		inline vector3F getScale() const { return this->scale; };
+
+		inline vector3F getLeft() const { return this->orientation * vector3F(1.0f, 0.0f, 0.0f); };
+		inline vector3F getUp() const { return this->orientation * vector3F(0.0f, 1.0f, 0.0f); };
+		inline vector3F getForward() const { return this->orientation * vector3F(0.0f, 0.0f, 1.0f); };
 
 		//Setters
-		void setPosition(const vector3D& vec);
-		void setOrientation(const quaternionD& quat);
-		void setTransform(const Transform& trans);
+		inline void setPosition(const vector3F& vec) { this->position = vec; };
+		inline void setOrientation(const quaternionF& quat) { this->orientation = quat; };
+		inline void setScale(const vector3F& vec) { this->scale = vec; };
 
 		//Utils
-		Transform transformBy(const Transform& transform1) const;
+		TransformF transformBy(const TransformF& transform1) const;
+		matrix4F calcMatrix4F() const;
 
 	private:
-		//void updateModelMatrix();
+		vector3F position;
+		quaternionF orientation;
+		vector3F scale;
+	};
 
+	class TransformD
+	{
+	public:
+		TransformD(vector3D position = vector3D(0.0), quaternionD orientation = quaternionD(1.0, 0.0, 0.0, 0.0), vector3D scale = vector3D(1.0));
+
+		//Getters
+		inline vector3D getPosition() const { return this->position; };
+		inline quaternionD getOrientation() const { return this->orientation; };
+		inline vector3D getScale() const { return this->scale; };
+
+		inline vector3D getLeft() const { return this->orientation * vector3D(1.0, 0.0, 0.0); };
+		inline vector3D getUp() const { return this->orientation * vector3D(0.0, 1.0, 0.0); };
+		inline vector3D getForward() const { return this->orientation * vector3D(0.0, 0.0, 1.0); };
+
+		//Setters
+		inline void setPosition(const vector3D& vec) { this->position = vec; };
+		inline void setOrientation(const quaternionD& quat) { this->orientation = quat; };
+		inline void setScale(const vector3D& vec) { this->scale = vec; };
+
+		//Utils
+		TransformD transformBy(const TransformD& transform1) const;
+
+	private:
 		vector3D position;
 		quaternionD orientation;
-		
-		//matrix4F model_matrix;
+		vector3D scale;
 	};
+
+
 };

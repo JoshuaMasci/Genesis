@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Genesis/Entity.hpp"
-
 #include "Genesis/Rendering/Renderer.hpp"
 #include "Genesis/Rendering/ImGuiRenderer.hpp"
 #include "Genesis/Rendering/Lighting.hpp"
+#include "Genesis/Rendering/Skeleton.hpp"
+#include "Genesis/Rendering/ResourceLoaders.hpp"
 
 namespace Genesis
 {
@@ -25,9 +25,6 @@ namespace Genesis
 	protected:
 		Application* application;
 
-		//EnTT
-		EntityRegistry entity_registry;
-		
 		//Physics
 		//PhysicsSystem physics_system;
 
@@ -36,13 +33,9 @@ namespace Genesis
 		ImGuiRenderer* ui_renderer = nullptr;
 
 		Shader screen_shader = nullptr;
-		VertexBuffer vertex;
-		IndexBuffer index;
-
-		//Temp stuff
-		EntityId temp;
-		EntityId camera;
-		EntityId directional_light;
+		VertexBuffer screen_vertex;
+		IndexBuffer screen_index;
+		Sampler screen_sampler;
 
 		//Game Systems
 			//Pre-Frame Update

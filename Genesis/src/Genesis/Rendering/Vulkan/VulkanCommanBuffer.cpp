@@ -99,7 +99,7 @@ void VulkanCommandBuffer::end()
 	this->current_pipeline = VK_NULL_HANDLE;
 }
 
-void VulkanCommandBuffer::submit(VkQueue queue, List<VkSemaphore>& wait_semaphores, List<VkPipelineStageFlags>& wait_states, List<VkSemaphore>& signal_semaphores, VkFence trigger_fence)
+/*void VulkanCommandBuffer::submit(VkQueue queue, List<VkSemaphore>& wait_semaphores, List<VkPipelineStageFlags>& wait_states, List<VkSemaphore>& signal_semaphores, VkFence trigger_fence)
 {
 	VkSubmitInfo submit_info = {};
 	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -118,11 +118,21 @@ void VulkanCommandBuffer::submit(VkQueue queue, List<VkSemaphore>& wait_semaphor
 	{
 		throw std::runtime_error("failed to submit command buffer!");
 	}
-}
+}*/
 
 void VulkanCommandBuffer::executeSecondary(List<VkCommandBuffer>& secondary_command_buffers)
 {
 	vkCmdExecuteCommands(this->command_buffer, (uint32_t)secondary_command_buffers.size(), secondary_command_buffers.data());
+}
+
+void VulkanCommandBuffer::setEvent(VkEvent trigger_event, VkPipelineStageFlags trigger_stage)
+{
+	vkCmdSetEvent(this->command_buffer, trigger_event, trigger_stage);
+}
+
+void VulkanCommandBuffer::waitEvent(VkEvent trigger_event)
+{
+	
 }
 
 void VulkanCommandBuffer::setShader(VulkanShader* new_shader)
@@ -187,6 +197,7 @@ void VulkanCommandBuffer::setUniformBuffer(uint32_t set, uint32_t binding, VkBuf
 
 	this->current_descriptor_sets[set].bindings[binding].data.uniform_buffer.buffer = buffer;
 	this->current_descriptor_sets[set].bindings[binding].data.uniform_buffer.size = buffer_size;
+	this->current_descriptor_sets[set].has_changed = true;
 }
 
 void VulkanCommandBuffer::setUniformTexture(uint32_t set, uint32_t binding, VkImageView texture, VkSampler sampler)
@@ -196,6 +207,7 @@ void VulkanCommandBuffer::setUniformTexture(uint32_t set, uint32_t binding, VkIm
 
 	this->current_descriptor_sets[set].bindings[binding].data.image_sampler.image = texture;
 	this->current_descriptor_sets[set].bindings[binding].data.image_sampler.sampler = sampler;
+	this->current_descriptor_sets[set].has_changed = true;
 }
 
 void VulkanCommandBuffer::setUniformConstant(void* data, uint32_t data_size)
@@ -292,14 +304,52 @@ void VulkanCommandBuffer::bindDescriptors()
 	}
 }
 
-VulkanCommandBufferSingle::VulkanCommandBufferSingle(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, uint32_t frame_index)
+VulkanCommandBufferSingle::VulkanCommandBufferSingle(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index)
 	:command_buffer(device, command_pool, pipeline_pool, descriptor_pool, frame_index)
 {
 	this->sampler_pool = sampler_pool;
+
+	this->transfer_buffer = transfer_buffer;
 }
 
 VulkanCommandBufferSingle::~VulkanCommandBufferSingle()
 {
+}
+
+void VulkanCommandBufferSingle::start(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area, List<VkClearValue>& clear_values, VkSubpassContents content)
+{
+	this->command_buffer.startPrimary(framebuffer, render_pass, render_area, clear_values, content);
+}
+
+void VulkanCommandBufferSingle::end()
+{
+	this->command_buffer.end();
+}
+
+/*void VulkanCommandBufferSingle::submit(VkQueue queue, List<VkSemaphore>& wait_semaphores, List<VkPipelineStageFlags>& wait_states, List<VkSemaphore>& signal_semaphores, VkFence trigger_fence)
+{
+	size_t internal_size = this->wait_size;
+	size_t temp_size = internal_size + wait_semaphores.size();
+	List<VkSemaphore> wait_semaphores_temp(temp_size);
+	List<VkPipelineStageFlags> wait_states_temp(temp_size);
+
+	for (size_t i = 0; i < internal_size; i++)
+	{
+		wait_semaphores_temp[i] = this->wait_semaphores_internal[i];
+		wait_states_temp[i] = this->wait_stages_internal[i];
+	}
+	for (size_t i = internal_size; i < temp_size; i++)
+	{
+		wait_semaphores_temp[i] = wait_semaphores[i - internal_size];
+		wait_states_temp[i] = wait_states[i - internal_size];
+	}
+
+	this->command_buffer.submit(queue, wait_semaphores_temp, wait_states_temp, signal_semaphores, trigger_fence);
+}*/
+
+void VulkanCommandBufferSingle::setEvent(VkEvent trigger_event, VkPipelineStageFlags trigger_stage)
+{
+	this->command_buffer.setEvent(trigger_event, trigger_stage);
 }
 
 void VulkanCommandBufferSingle::setShader(Shader shader)
@@ -329,15 +379,17 @@ void VulkanCommandBufferSingle::setUniformBuffer(uint32_t set, uint32_t binding,
 
 void VulkanCommandBufferSingle::setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler& sampler)
 {
-
 	this->command_buffer.setUniformTexture(set, binding, ((VulkanTexture*)texture)->getImageView(), this->sampler_pool->getSampler(sampler));
 }
 
 void VulkanCommandBufferSingle::setUniformView(uint32_t set, uint32_t binding, View view, uint8_t view_image_index, Sampler& sampler)
 {
 	VulkanViewSingleThread* vulkan_view = (VulkanViewSingleThread*)view;
+
 	VkImageView image_view = vulkan_view->getFramebuffer(this->command_buffer.getFrameIndex())->getImageView(view_image_index);
 	this->command_buffer.setUniformTexture(set, binding, image_view, this->sampler_pool->getSampler(sampler));
+
+	//TODO Synchronization 
 }
 
 void VulkanCommandBufferSingle::setUniformConstant(void* data, uint32_t data_size)

@@ -9,25 +9,26 @@ source_group("Sandbox" FILES ${SANDBOX_SOURCES})
 source_group("Sandbox_Headers" FILES ${SANDBOX_HEADERS})
 
 include_directories(${Genesis_SOURCE_DIR}/src)
-include_directories(${CMAKE_SOURCE_DIR}/submodules/glm/)
-include_directories(${CMAKE_SOURCE_DIR}/submodules/entt/src/)
-include_directories(${CMAKE_SOURCE_DIR}/submodules/concurrent_queue/)
-include_directories(${CMAKE_SOURCE_DIR}/submodules/stb/)
-include_directories(${CMAKE_SOURCE_DIR}/submodules/tinyobj/)
-include_directories(${CMAKE_SOURCE_DIR}/submodules/imgui/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/imgui/)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
-link_directories(${CMAKE_SOURCE_DIR}/submodules/bullet_physics/lib/)
 
 #OPENGL
 #include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
 #link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
 
+link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/code/Debug/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/contrib/zlib/Debug/)
+
 if(INCLUDE_VULKAN)
 	find_package(Vulkan REQUIRED FATAL_ERROR)
 	include_directories(${Vulkan_INCLUDE_DIR})	
-	include_directories(${CMAKE_SOURCE_DIR}/submodules/vulkan_memory_allocator/src/)
-	include_directories(${CMAKE_SOURCE_DIR}/submodules/spirv-reflect/)
+	include_directories(${CMAKE_SOURCE_DIR}/lib/vulkan_memory_allocator/src/)
+	include_directories(${CMAKE_SOURCE_DIR}/lib/spirv-reflect/)
 endif()
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})

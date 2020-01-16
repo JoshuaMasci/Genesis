@@ -18,6 +18,7 @@ namespace Genesis
 		inline VkExtent2D getSize() { return this->size; };
 		inline VkFormat getFormat() { return this->format; };
 		inline VkImageLayout getInitialLayout() { return this->initial_layout; };
+		inline bool inTransfer() { return this->in_transfer; };
 
 	private:
 		VulkanDevice* device;
@@ -30,5 +31,9 @@ namespace Genesis
 		VmaAllocation image_memory;
 		VmaAllocationInfo image_memory_info;
 		VkImageView image_view;
+
+		bool in_transfer = false;
+
+		friend class VulkanTransferBuffer;
 	};
 }

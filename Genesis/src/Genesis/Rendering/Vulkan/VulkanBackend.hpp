@@ -78,6 +78,8 @@ namespace Genesis
 		uint32_t swapchain_image_index = 0;
 		uint32_t frame_index = 0;
 
+		vector<VkCommandBuffer> graphics_command_buffers;
+
 		struct Frame
 		{
 			VkSemaphore image_ready_semaphore = VK_NULL_HANDLE;
@@ -85,8 +87,6 @@ namespace Genesis
 			VulkanCommandBufferSingle* command_buffer = nullptr;
 			VkSemaphore command_buffer_done_semaphore = VK_NULL_HANDLE;
 			VkFence frame_done_fence = VK_NULL_HANDLE;
-
-			VulkanTransferBuffer* transfer_buffer = nullptr;
 		};
 		List<Frame> frames;
 
@@ -96,6 +96,7 @@ namespace Genesis
 
 		//Transfer Command Pool
 		VulkanCommandPool* transfer_pool = nullptr;
+		List <VulkanTransferBuffer*> transfer_buffers;
 
 		//Descriptor Pools
 		List<VulkanDescriptorPool*> descriptor_pools;
@@ -115,8 +116,6 @@ namespace Genesis
 		DelayedResourceDeleter<VulkanUniformBuffer>* uniform_deleter = nullptr;
 		DelayedResourceDeleter<VulkanTexture>* texture_deleter = nullptr;
 		DelayedResourceDeleter<VulkanShader>* shader_deleter = nullptr;
-		//DelayedResourceDeleter<VulkanFramebufferSet>* framebuffer_set_deleter = nullptr;
-		//DelayedResourceDeleter<VulkanCommandBufferSingle>* single_command_buffer_deleter = nullptr;
 		DelayedResourceDeleter<VulkanViewSingleThread>* view_deleter = nullptr;
 	};
 }

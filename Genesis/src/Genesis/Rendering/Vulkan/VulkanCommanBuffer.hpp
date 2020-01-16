@@ -5,6 +5,8 @@
 #include "Genesis/Rendering/Vulkan/VulkanPipelinePool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanDescriptorPool.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanSamplerPool.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanTransferBuffer.hpp"
+
 #include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
 
 #include "Genesis/Rendering/CommandBuffer.hpp"
@@ -17,12 +19,17 @@ namespace Genesis
 		VulkanCommandBuffer(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, uint32_t frame_index);
 		~VulkanCommandBuffer();
 
+		inline VkCommandBuffer getCommandBuffer() { return this->command_buffer; };
+
 		void startPrimary(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area, List<VkClearValue>& clear_values, VkSubpassContents content);
 		void startSecondary(VkFramebuffer framebuffer, VkRenderPass render_pass);
 		void end();
-		void submit(VkQueue queue, List<VkSemaphore>& wait_semaphores, List<VkPipelineStageFlags>& wait_states, List<VkSemaphore>& signal_semaphores, VkFence trigger_fence);
+		//void submit(VkQueue queue, List<VkSemaphore>& wait_semaphores, List<VkPipelineStageFlags>& wait_states, List<VkSemaphore>& signal_semaphores, VkFence trigger_fence);
 
 		void executeSecondary(List<VkCommandBuffer>& secondary_command_buffers);
+
+		void setEvent(VkEvent trigger_event, VkPipelineStageFlags trigger_stage);
+		void waitEvent(VkEvent trigger_event);
 
 		void setShader(VulkanShader* shader);
 		void setPipelineSettings(PipelineSettings& settings);
@@ -99,8 +106,16 @@ namespace Genesis
 	class VulkanCommandBufferSingle : public CommandBuffer
 	{
 	public:
-		VulkanCommandBufferSingle(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, uint32_t frame_index);
+		VulkanCommandBufferSingle(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index);
 		~VulkanCommandBufferSingle();
+
+		inline VkCommandBuffer getCommandBuffer() { return this->command_buffer.getCommandBuffer(); };
+
+		void start(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area, List<VkClearValue>& clear_values, VkSubpassContents content);
+		void end();
+		//void submit(VkQueue queue, List<VkSemaphore>& wait_semaphores, List<VkPipelineStageFlags>& wait_states, List<VkSemaphore>& signal_semaphores, VkFence trigger_fence);
+
+		void setEvent(VkEvent trigger_event, VkPipelineStageFlags trigger_stage);
 
 		virtual void setShader(Shader shader) override;
 		virtual void setPipelineSettings(PipelineSettings & settings) override;
@@ -112,10 +127,10 @@ namespace Genesis
 		virtual void setVertexBuffer(VertexBuffer vertex, VertexInputDescription& vertex_description) override;
 		virtual void setIndexBuffer(IndexBuffer index, IndexType type) override;
 		virtual void drawIndexed(uint32_t index_count, uint32_t index_offset = 0, uint32_t instance_count = 1, uint32_t instance_offset = 0) override;
-
+	private:
 		VulkanCommandBuffer command_buffer;
 
-	private:
 		VulkanSamplerPool* sampler_pool = nullptr;
+		VulkanTransferBuffer* transfer_buffer = nullptr;
 	};
 }

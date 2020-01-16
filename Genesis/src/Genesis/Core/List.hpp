@@ -33,6 +33,19 @@ namespace Genesis
 			}
 		}
 
+		List(std::initializer_list<T> list)
+		{
+			this->array_size = list.size();
+			this->array_data = new T[this->array_size];
+
+			size_t temp_index = 0;
+			for (auto i = list.begin(); i != list.end(); i++) 
+			{
+				this->array_data[temp_index] = *i;
+				temp_index++;
+			}
+		}
+
 		~List()
 		{
 			if (this->array_data != nullptr)

@@ -20,6 +20,7 @@ namespace Genesis
 		inline VkBuffer get() { return this->buffer; };
 		inline uint64_t getSize() { return this->size; };
 		inline bool isHostVisable() { return this->host_visable; };
+		inline bool inTransfer() { return this->in_transfer; };
 
 	protected:
 		VulkanDevice* device = nullptr;
@@ -29,6 +30,9 @@ namespace Genesis
 		VmaAllocationInfo buffer_memory_info = {};
 		uint64_t size = 0;
 		bool host_visable = false;
+		bool in_transfer = false;
+
+		friend class VulkanTransferBuffer;
 	};
 
 	class VulkanVertexBuffer : public VulkanBuffer

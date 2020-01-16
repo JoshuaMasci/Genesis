@@ -38,7 +38,7 @@ Mesh ObjLoader::loadMesh(RenderingBackend * backend, string mesh_file_path)
 				// Loop over vertices in the face
 				for (size_t v = 0; v < fv; v++)
 				{
-					// access to vertex
+					// access to vertices[i]
 					tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
 					vector3F position = vector3F(attrib.vertices[3 * idx.vertex_index + 0], attrib.vertices[3 * idx.vertex_index + 1], attrib.vertices[3 * idx.vertex_index + 2]);
 					vector3F normal = vector3F(attrib.normals[3 * idx.normal_index + 0], attrib.normals[3 * idx.normal_index + 1], attrib.normals[3 * idx.normal_index + 2]);
@@ -62,6 +62,7 @@ Mesh ObjLoader::loadMesh(RenderingBackend * backend, string mesh_file_path)
 
 		mesh.vertex_buffer = backend->createVertexBuffer(vertices.data(), sizeof(TexturedVertex) * vertices.size(), vertex_description);
 		mesh.index_buffer = backend->createIndexBuffer(indices.data(), sizeof(uint32_t) * indices.size(), IndexType::uint32);
+		mesh.index_count = (uint32_t)indices.size();
 	}
 	else
 	{
@@ -103,7 +104,7 @@ Mesh ObjLoader::loadMesh_CalcTangent(RenderingBackend* backend, string mesh_file
 				// Loop over vertices in the face
 				for (size_t v = 0; v < fv; v++)
 				{
-					// access to vertex
+					// access to vertices[i]
 					tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
 					vector3F position = vector3F(attrib.vertices[3 * idx.vertex_index + 0], attrib.vertices[3 * idx.vertex_index + 1], attrib.vertices[3 * idx.vertex_index + 2]);
 					vector3F normal = vector3F(attrib.normals[3 * idx.normal_index + 0], attrib.normals[3 * idx.normal_index + 1], attrib.normals[3 * idx.normal_index + 2]);
@@ -156,6 +157,7 @@ Mesh ObjLoader::loadMesh_CalcTangent(RenderingBackend* backend, string mesh_file
 
 		mesh.vertex_buffer = backend->createVertexBuffer(vertices.data(), sizeof(TexturedVertex) * vertices.size(), vertex_description);
 		mesh.index_buffer = backend->createIndexBuffer(indices.data(), sizeof(uint32_t) * indices.size(), IndexType::uint32);
+		mesh.index_count = (uint32_t)indices.size();
 	}
 	else
 	{
@@ -166,7 +168,6 @@ Mesh ObjLoader::loadMesh_CalcTangent(RenderingBackend* backend, string mesh_file
 }
 
 #define STB_IMAGE_IMPLEMENTATION
-#define STBI_ONLY_PNG
 #include <stb_image.h>
 
 Texture PngLoader::loadTexture(RenderingBackend * backend, string texture_file_path)
@@ -184,6 +185,7 @@ Texture PngLoader::loadTexture(RenderingBackend * backend, string texture_file_p
 	Texture texture = backend->createTexture(vector2U((uint32_t)width, (uint32_t)height), (void*)data, data_size);
 	stbi_image_free(data);
 	return texture;
+	return nullptr;
 }
 
 Shader ShaderLoader::loadShader(RenderingBackend* backend, string vert_file_path, string frag_file_path)
@@ -217,4 +219,227 @@ Shader ShaderLoader::loadShader(RenderingBackend* backend, string vert_file_path
 Shader ShaderLoader::loadShaderSingle(RenderingBackend* backend, string shader_file_path)
 {
 	return ShaderLoader::loadShader(backend, shader_file_path + ".vert.spv", shader_file_path + ".frag.spv");
+}
+
+/*#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "tiny_gltf.h"
+
+void GLTF_Loader::loadGLTF(RenderingBackend* backend, string file_path)
+{
+	using namespace tinygltf;
+
+	Model model;
+	TinyGLTF loader;
+	std::string err;
+	std::string warn;
+
+	//bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, argv[1]);
+	bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, file_path);
+
+	if (!warn.empty()) 
+	{
+		printf("Warn: %s\n", warn.c_str());
+	}
+
+	if (!err.empty()) 
+	{
+		printf("Err: %s\n", err.c_str());
+	}
+
+	if (!ret) 
+	{
+		printf("Failed to parse glTF\n");
+		return;
+	}
+
+	tinygltf::Mesh* mesh = &model.meshes[0];
+	tinygltf::Primitive primitive = mesh->primitives[0];
+	tinygltf::Accessor indexAccessor = model.accessors[primitive.indices];
+	
+	int i = 1 + 7;
+}*/
+
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include "Genesis/Rendering/Model.hpp"
+
+
+matrix4F toMat4(aiMatrix4x4 matrix)
+{
+	matrix4F mat4;
+	assert(sizeof(matrix4F) == sizeof(aiMatrix4x4));
+	memcpy(&mat4, &matrix, sizeof(aiMatrix4x4));
+	return glm::transpose(mat4);
+}
+
+void addWeight(AnimatedModel::AnimatedModelVertex* vertex, aiVertexWeight* weight, uint8_t bone_id)
+{
+	for (uint8_t i = 0; i < 4; i++)
+	{
+		if (vertex->joint_weights[i] == 0.0f)
+		{
+			vertex->joint_ids[i] = bone_id;
+			vertex->joint_weights[i] = weight->mWeight;
+			return;
+		}
+	}
+
+	printf("Error: too many weights!!!\n");
+}
+
+Mesh AssimpLoader::loadMesh(RenderingBackend* backend, string file_path)
+{
+	Assimp::Importer import;
+	const aiScene *scene = import.ReadFile(file_path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_LimitBoneWeights | aiProcess_CalcTangentSpace | aiProcess_OptimizeGraph);
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+		//cout << "ERROR::ASSIMP::" << import.GetErrorString() << endl;
+	}
+
+	Mesh animated_mesh;
+	matrix4F rotation = toMat4(scene->mRootNode->mChildren[1]->mChildren[0]->mTransformation);
+
+	if (scene->HasMeshes())
+	{
+		aiMesh* mesh = scene->mMeshes[0];
+		vector<AnimatedModel::AnimatedModelVertex> vertices(mesh->mNumVertices);
+		vector<uint32_t> indices(mesh->mNumFaces * 3);
+
+		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+		{
+			vertices[i].position.x = mesh->mVertices[i].x;
+			vertices[i].position.y = mesh->mVertices[i].y;
+			vertices[i].position.z = mesh->mVertices[i].z;
+			vertices[i].position = (rotation * vector4F(vertices[i].position, 1.0f));
+		
+			vertices[i].uv.x = mesh->mTextureCoords[0][i].x;
+			vertices[i].uv.y = mesh->mTextureCoords[0][i].y;
+
+			vertices[i].normal.x = mesh->mNormals[i].x;
+			vertices[i].normal.y = mesh->mNormals[i].y;
+			vertices[i].normal.z = mesh->mNormals[i].z;
+			vertices[i].normal = (rotation * vector4F(vertices[i].normal, 1.0f));
+
+			vertices[i].tangent.x = mesh->mTangents[i].x;
+			vertices[i].tangent.y = mesh->mTangents[i].y;
+			vertices[i].tangent.z = mesh->mTangents[i].z;
+			vertices[i].tangent = (rotation * vector4F(vertices[i].tangent, 1.0f));
+
+			vertices[i].bitangent.x = mesh->mBitangents[i].x;
+			vertices[i].bitangent.y = mesh->mBitangents[i].y;
+			vertices[i].bitangent.z = mesh->mBitangents[i].z;
+			vertices[i].bitangent = (rotation * vector4F(vertices[i].bitangent, 1.0f));
+
+			vertices[i].joint_ids = vector4U(0);
+			vertices[i].joint_weights = vector4F(0.0f);
+		}
+
+		for (unsigned int i = 0; i < mesh->mNumBones; i++)
+		{
+			aiBone* bone = mesh->mBones[i];
+
+			for (unsigned int j = 0; j < bone->mNumWeights; j++)
+			{
+				aiVertexWeight* weight = &bone->mWeights[j];
+				addWeight(&vertices[weight->mVertexId], weight, i);
+			}
+		}
+
+		for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+		{
+			aiFace face = mesh->mFaces[i];
+			uint32_t index = i * 3;
+
+			indices[index + 0] = face.mIndices[0];
+			indices[index + 1] = face.mIndices[1];
+			indices[index + 2] = face.mIndices[2];
+		}
+
+		for (size_t i = 0; i < vertices.size(); i++)
+		{
+			vertices[i].joint_weights = glm::normalize(vertices[i].joint_weights);
+		}
+
+		animated_mesh.vertex_buffer = backend->createVertexBuffer(vertices.data(), sizeof(AnimatedModel::AnimatedModelVertex) * vertices.size(), AnimatedModel::getVertexDescription());
+		animated_mesh.index_buffer = backend->createIndexBuffer(indices.data(), sizeof(uint32_t) * indices.size(), IndexType::uint32);
+		animated_mesh.index_count = (uint32_t)indices.size();
+	}
+
+	return animated_mesh;
+}
+
+Skeleton* AssimpLoader::loadSkeleton(RenderingBackend* backend, string file_path)
+{
+	Assimp::Importer import;
+	const aiScene *scene = import.ReadFile(file_path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_LimitBoneWeights | aiProcess_CalcTangentSpace);
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+		//cout << "ERROR::ASSIMP::" << import.GetErrorString() << endl;
+	}
+
+	Skeleton* skeleton = nullptr;
+	aiMatrix4x4 rotation = scene->mRootNode->mChildren[0]->mTransformation;
+
+
+	if (scene->HasMeshes())
+	{
+		aiMesh* mesh = scene->mMeshes[0];
+
+		skeleton = new Skeleton(mesh->mNumBones);
+
+		for (unsigned int i = 0; i < mesh->mNumBones; i++)
+		{
+			Bone* bone = skeleton->getBone(i);
+			bone->name = mesh->mBones[i]->mName.C_Str();
+			bone->inverse_bind_transform = glm::inverse(toMat4(rotation * mesh->mBones[i]->mOffsetMatrix));
+		}
+
+		for (unsigned int i = 0; i < mesh->mNumBones; i++)
+		{
+			Bone* bone = skeleton->getBone(i);
+			aiNode* node = scene->mRootNode->FindNode(mesh->mBones[i]->mName);
+
+			aiVector3D ai_position;
+			aiQuaternion ai_orientation;
+			aiVector3D ai_scale;
+			aiMatrix4x4 ai_matrix = rotation * node->mTransformation;
+			ai_matrix.Decompose(ai_scale, ai_orientation, ai_position);
+
+			vector3F position = vector3F(ai_position.x, ai_position.y, ai_position.z);
+			quaternionF orientation = quaternionF(ai_orientation.w, ai_orientation.x, ai_orientation.y, ai_orientation.z);
+			vector3F scale = vector3F(ai_scale.x, ai_scale.y, ai_scale.z);
+
+			bone->local_transform = TransformF(position, orientation, scale);
+
+			size_t bone_count = 0;
+
+			for (unsigned int j = 0; j < node->mNumChildren; j++)
+			{
+				if (skeleton->getBone(node->mChildren[j]->mName.C_Str()) != nullptr)
+				{
+					bone_count++;
+				}
+			}
+
+			bone->child_bones.resize(bone_count);
+			size_t bone_index = 0;
+			for (unsigned int j = 0; j < node->mNumChildren; j++)
+			{
+				Bone* child_bone = skeleton->getBone(node->mChildren[j]->mName.C_Str());
+				if (child_bone != nullptr)
+				{
+					bone->child_bones[bone_index] = child_bone;
+					bone_index++;
+				}
+			}
+		}
+
+	}
+
+	return skeleton;
 }

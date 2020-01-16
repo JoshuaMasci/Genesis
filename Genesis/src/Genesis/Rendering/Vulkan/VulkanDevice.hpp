@@ -34,6 +34,9 @@ namespace Genesis
 		VkFence createFence();
 		void destroyFence(VkFence fence);
 
+		VkEvent createEvent();
+		void destroyEvent(VkEvent vk_event);
+
 		//Device Queues
 		inline VkQueue getGraphicsQueue() { return this->graphics_queue; };
 		inline uint32_t getGraphicsFamilyIndex() { return this->graphics_family_index; };

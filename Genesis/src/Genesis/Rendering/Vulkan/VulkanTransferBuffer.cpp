@@ -10,7 +10,6 @@ VulkanTransferBuffer::VulkanTransferBuffer(VulkanDevice* device, VulkanCommandPo
 	this->transfer_pool = transfer_pool;
 
 	this->copy_buffer_list.resize(1000);//TEMP SIZE
-	this->delete_list.resize(1000);
 	this->fill_texture_list.resize(1000);
 
 	this->transfer_buffer = this->transfer_pool->getCommandBuffer();
@@ -28,18 +27,8 @@ void VulkanTransferBuffer::reset()
 {
 	this->buffer_lock.lock();
 
-	//Reset only if all transfers have taken place
 	if (this->transfer_count == 0)
 	{
-		//Delete buffers
-		for (size_t i = 0; i < (size_t)this->delete_list_index; i++)
-		{
-			delete this->delete_list[i];
-		}
-
-		this->delete_list_index = 0;
-		this->transfer_count = 0;
-
 		this->copy_buffer_list_index = 0;
 		this->fill_texture_list_index = 0;
 	}
@@ -54,11 +43,11 @@ bool VulkanTransferBuffer::SubmitTransfers(VkQueue queue)
 {
 	this->buffer_lock.lock();
 
+	vkResetCommandBuffer(this->transfer_buffer, 0);
+
 	bool submitted = false;
 	if (this->transfer_count > 0)
 	{
-		vkResetCommandBuffer(this->transfer_buffer, 0);
-
 		VkCommandBufferBeginInfo begin_info = {};
 		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		if (vkBeginCommandBuffer(this->transfer_buffer, &begin_info) != VK_SUCCESS)
@@ -69,6 +58,7 @@ bool VulkanTransferBuffer::SubmitTransfers(VkQueue queue)
 		for (size_t i = 0; i < this->copy_buffer_list_index; i++)
 		{
 			vkCmdCopyBuffer(this->transfer_buffer, this->copy_buffer_list[i].source, this->copy_buffer_list[i].destination, 1, &this->copy_buffer_list[i].region);
+			this->copy_buffer_list[i].destination_ptr->in_transfer = false;
 		}
 
 		for (size_t i = 0; i < this->fill_texture_list_index; i++)
@@ -76,6 +66,7 @@ bool VulkanTransferBuffer::SubmitTransfers(VkQueue queue)
 			transitionImageLayout(this->transfer_buffer, this->fill_texture_list[i].destination, this->fill_texture_list[i].format, this->fill_texture_list[i].old_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 			copyBufferToImage(this->transfer_buffer, this->fill_texture_list[i].source, this->fill_texture_list[i].destination, this->fill_texture_list[i].size);
 			transitionImageLayout(this->transfer_buffer, this->fill_texture_list[i].destination, this->fill_texture_list[i].format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, this->fill_texture_list[i].new_layout);
+			this->fill_texture_list[i].destination_ptr->in_transfer = false;
 		}
 
 		vkEndCommandBuffer(this->transfer_buffer);
@@ -101,7 +92,7 @@ bool VulkanTransferBuffer::SubmitTransfers(VkQueue queue)
 	return submitted;
 }
 
-void VulkanTransferBuffer::copyBuffer(VulkanBuffer* source, uint64_t source_offset, VulkanBuffer* destination, uint64_t destination_offset, uint64_t copy_size, bool delete_source)
+void VulkanTransferBuffer::copyBuffer(VulkanBuffer* source, uint64_t source_offset, VulkanBuffer* destination, uint64_t destination_offset, uint64_t copy_size)
 {
 	this->buffer_lock.lock();
 
@@ -110,32 +101,26 @@ void VulkanTransferBuffer::copyBuffer(VulkanBuffer* source, uint64_t source_offs
 	copy_region.dstOffset = destination_offset;
 	copy_region.size = copy_size;
 
-	this->copy_buffer_list[this->copy_buffer_list_index] = { source->get(), destination->get(), copy_region };
+	this->copy_buffer_list[this->copy_buffer_list_index] = {source->get(), destination->get(), copy_region, destination};
 	this->copy_buffer_list_index++;
-
-	if (delete_source == true)
-	{
-		this->delete_list[this->delete_list_index] = source;
-		this->delete_list_index++;
-	}
 
 	this->transfer_count++;
 	this->buffer_lock.unlock();
+
+	//Set the buffer flag for tranfer
+	destination->in_transfer = true;
 }
 
 void VulkanTransferBuffer::fillTexture(VulkanBuffer* source, VulkanTexture* destination)
 {
 	this->buffer_lock.lock();
 
-	this->fill_texture_list[this->fill_texture_list_index] = {source->get(), destination->get(), destination->getSize(), destination->getFormat(), destination->getInitialLayout(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL };
+	this->fill_texture_list[this->fill_texture_list_index] = {source->get(), destination->get(), destination->getSize(), destination->getFormat(), destination->getInitialLayout(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, destination};
 	this->fill_texture_list_index++;
-
-	//Delete Source
-	{
-		this->delete_list[this->delete_list_index] = source;
-		this->delete_list_index++;
-	}
 
 	this->transfer_count++;
 	this->buffer_lock.unlock();
+
+	//Set the texture flag for tranfer
+	destination->in_transfer = true;
 }

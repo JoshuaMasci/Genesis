@@ -62,7 +62,7 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 
 	vector<const char*> layers;
 	layers.push_back("VK_LAYER_LUNARG_standard_validation");
-	//layers.push_back("VK_LAYER_RENDERDOC_Capture");
+	layers.push_back("VK_LAYER_RENDERDOC_Capture");
 
 	this->instance = VulkanInstance::create(VK_API_VERSION_1_1, "Sandbox", VK_MAKE_VERSION(0, 0, 0), "Genesis_Engine", VK_MAKE_VERSION(0, 0, 0), extensions, layers);
 
@@ -86,7 +86,7 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 	}
 
 	//Transfer Command Pool
-	this->transfer_pool = new VulkanCommandPool(this->device->get(), this->device->getTransferFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+	this->transfer_pool = new VulkanCommandPool(this->device->get(), this->device->getGraphicsFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
 	//Descriptor Pools
 	this->descriptor_pools.resize(this->THREAD_COUNT);
@@ -117,15 +117,19 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 	//Sampler pool
 	this->sampler_pool = new VulkanSamplerPool(this->device->get());
 
+	this->transfer_buffers.resize(this->FRAME_COUNT);
+	for (size_t i = 0; i < this->transfer_buffers.size(); i++)
+	{
+		this->transfer_buffers[i] = new VulkanTransferBuffer(this->device, this->transfer_pool);
+	}
+
 	this->frames.resize(this->FRAME_COUNT);
 	for (size_t i = 0; i < this->frames.size(); i++)
 	{
 		this->frames[i].image_ready_semaphore = this->device->createSemaphore();
-		this->frames[i].command_buffer = new VulkanCommandBufferSingle(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->sampler_pool, (uint32_t)i);
+		this->frames[i].command_buffer = new VulkanCommandBufferSingle(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->sampler_pool, this->transfer_buffers[i], (uint32_t)i);
 		this->frames[i].command_buffer_done_semaphore = this->device->createSemaphore();
 		this->frames[i].frame_done_fence = this->device->createFence();
-
-		this->frames[i].transfer_buffer = new VulkanTransferBuffer(this->device, this->transfer_pool);
 	}
 
 	const uint8_t delay_cycles = (uint8_t)this->FRAME_COUNT + 1;
@@ -150,8 +154,11 @@ VulkanBackend::~VulkanBackend()
 		delete this->frames[i].command_buffer;
 		this->device->destroySemaphore(this->frames[i].command_buffer_done_semaphore);
 		this->device->destroyFence(this->frames[i].frame_done_fence);
+	}
 
-		delete this->frames[i].transfer_buffer;
+	for (size_t i = 0; i < this->transfer_buffers.size(); i++)
+	{
+		delete this->transfer_buffers[i];
 	}
 
 	delete this->render_pass_pool;
@@ -222,43 +229,65 @@ CommandBuffer* VulkanBackend::beginFrame()
 	vkResetFences(this->device->get(), 1, &this->frames[this->frame_index].frame_done_fence);
 
 	//Start TransferPool for this frame
-	this->frames[this->frame_index].transfer_buffer->reset();
+	this->transfer_buffers[this->frame_index]->reset();
 
 	List<VkClearValue> clear_values(1);
 	clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 	VkRect2D render_area = {};
 	render_area.offset = { 0, 0 };
 	render_area.extent = this->swapchain->getSwapchainExtent();
-	this->frames[this->frame_index].command_buffer->command_buffer.startPrimary(this->swapchain->getFramebuffer(this->swapchain_image_index), this->swapchain->getRenderPass(), render_area, clear_values, VK_SUBPASS_CONTENTS_INLINE);
+	this->frames[this->frame_index].command_buffer->start(this->swapchain->getFramebuffer(this->swapchain_image_index), this->swapchain->getRenderPass(), render_area, clear_values, VK_SUBPASS_CONTENTS_INLINE);
 
 	return this->frames[this->frame_index].command_buffer;
 }
 
 void VulkanBackend::endFrame()
 {
-	bool transfer_required = this->frames[this->frame_index].transfer_buffer->SubmitTransfers(this->device->getTransferQueue());
+	//End main command buffer
+	this->frames[this->frame_index].command_buffer->end();
 
-	this->frames[this->frame_index].command_buffer->command_buffer.end();
+	//Add main command buffer to list
+	this->graphics_command_buffers.push_back(this->frames[this->frame_index].command_buffer->getCommandBuffer());
+
+	//Excute pending transfers
+	bool has_transfers = this->transfer_buffers[this->frame_index]->SubmitTransfers(this->device->getTransferQueue());
 
 	List<VkSemaphore> wait_semaphores(1);
-	List<VkPipelineStageFlags> wait_states(1);
+	List<VkPipelineStageFlags> wait_stages(1);
+
+	wait_semaphores[0] = this->frames[this->frame_index].image_ready_semaphore;
+	wait_stages[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+
+	if (has_transfers)
+	{
+		wait_semaphores.resize(2);
+		wait_stages.resize(2);
+
+		wait_semaphores[1] = this->transfer_buffers[this->frame_index]->getTransferDoneSemaphore();
+		wait_stages[1] = VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
+	}
 
 	List<VkSemaphore> signal_semaphores(1);
 	signal_semaphores[0] = this->frames[this->frame_index].command_buffer_done_semaphore;
 
-	wait_semaphores[0] = this->frames[this->frame_index].image_ready_semaphore;
-	wait_states[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	//Create submition info
+	VkSubmitInfo graphics_submit_info = {};
+	graphics_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	graphics_submit_info.waitSemaphoreCount = (uint32_t)wait_semaphores.size();
+	graphics_submit_info.pWaitSemaphores = wait_semaphores.data();
+	graphics_submit_info.pWaitDstStageMask = wait_stages.data();
 
-	if (transfer_required == true)
+	graphics_submit_info.signalSemaphoreCount = (uint32_t)signal_semaphores.size();
+	graphics_submit_info.pSignalSemaphores = signal_semaphores.data();
+
+	graphics_submit_info.commandBufferCount = (uint32_t)this->graphics_command_buffers.size();
+	graphics_submit_info.pCommandBuffers = this->graphics_command_buffers.data();
+
+	//Submit command buffers
+	if (vkQueueSubmit(this->device->getGraphicsQueue(), 1, &graphics_submit_info, this->frames[this->frame_index].frame_done_fence) != VK_SUCCESS)
 	{
-		wait_semaphores.resize(2);
-		wait_states.resize(2);
-
-		wait_semaphores[1] = this->frames[this->frame_index].transfer_buffer->getTransferDoneSemaphore();
-		wait_states[1] = VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT;
+		throw std::runtime_error("failed to submit command buffer!");
 	}
-
-	this->frames[this->frame_index].command_buffer->command_buffer.submit(this->device->getGraphicsQueue(), wait_semaphores, wait_states, signal_semaphores, this->frames[this->frame_index].frame_done_fence);
 
 	//Present the image to the screen
 	VkPresentInfoKHR present_info = {};
@@ -272,6 +301,9 @@ void VulkanBackend::endFrame()
 	present_info.pImageIndices = &this->swapchain_image_index;
 
 	VkResult result = vkQueuePresentKHR(this->device->getPresentQueue(), &present_info);
+
+	//Clear the command buffers
+	this->graphics_command_buffers.clear();
 
 	this->frame_index = (this->frame_index + 1) % this->FRAME_COUNT;
 
@@ -293,7 +325,8 @@ VertexBuffer VulkanBackend::createVertexBuffer(void* data, uint64_t data_size, V
 		VulkanBuffer* staging_buffer = new VulkanBuffer(this->device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
 		staging_buffer->fillBuffer(data, data_size);
 
-		this->frames[this->frame_index].transfer_buffer->copyBuffer(staging_buffer, 0, (VulkanBuffer*)vertex_buffer, 0, data_size);
+		this->transfer_buffers[this->frame_index]->copyBuffer(staging_buffer, 0, (VulkanBuffer*)vertex_buffer, 0, data_size);
+		this->buffer_deleter->addToQueue(staging_buffer);
 	}
 	else
 	{
@@ -317,7 +350,8 @@ IndexBuffer VulkanBackend::createIndexBuffer(void* data, uint64_t data_size, Ind
 		VulkanBuffer* staging_buffer = new VulkanBuffer(this->device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
 		staging_buffer->fillBuffer(data, data_size);
 
-		this->frames[this->frame_index].transfer_buffer->copyBuffer(staging_buffer, 0, (VulkanBuffer*)index_buffer, 0, data_size);
+		this->transfer_buffers[this->frame_index]->copyBuffer(staging_buffer, 0, (VulkanBuffer*)index_buffer, 0, data_size);
+		this->buffer_deleter->addToQueue(staging_buffer);
 	}
 	else
 	{
@@ -357,7 +391,8 @@ void VulkanBackend::setUniform(UniformBuffer uniform_buffer, void* data, uint64_
 		VulkanBuffer* staging_buffer = new VulkanBuffer(this->device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
 		staging_buffer->fillBuffer(data, data_size);
 
-		this->frames[this->frame_index].transfer_buffer->copyBuffer(staging_buffer, 0, buffer, 0, data_size);
+		this->transfer_buffers[this->frame_index]->copyBuffer(staging_buffer, 0, buffer, 0, data_size);
+		this->buffer_deleter->addToQueue(staging_buffer);
 	}
 }
 
@@ -368,7 +403,8 @@ Texture VulkanBackend::createTexture(vector2U size, void* data, uint64_t data_si
 	VulkanBuffer* staging_buffer = new VulkanBuffer(this->device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
 	staging_buffer->fillBuffer(data, data_size);
 
-	this->frames[this->frame_index].transfer_buffer->fillTexture(staging_buffer, texture);
+	this->transfer_buffers[this->frame_index]->fillTexture(staging_buffer, texture);
+	this->buffer_deleter->addToQueue(staging_buffer);
 
 	return texture;
 }
@@ -400,7 +436,7 @@ View VulkanBackend::createView(FramebufferLayout& layout, vector2U size)
 
 	VkRenderPass render_pass = this->render_pass_pool->getRenderPass(layout.getHash(), color, depth);
 
-	return (View*) new VulkanViewSingleThread(this->device, this->FRAME_COUNT, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->sampler_pool, {size.x, size.y}, color, depth, render_pass);
+	return (View*) new VulkanViewSingleThread(this->device, this->FRAME_COUNT, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->sampler_pool, this->transfer_buffers, {size.x, size.y}, color, depth, render_pass);
 
 }
 
@@ -425,8 +461,8 @@ void VulkanBackend::endView(View view)
 {
 	VulkanViewSingleThread* vulkan_view = (VulkanViewSingleThread*)view;
 	vulkan_view->end();
-
-	//TODO submit
+	//vulkan_view->submit(this->device->getGraphicsQueue());
+	this->graphics_command_buffers.push_back(vulkan_view->getCommandBuffer(this->frame_index)->getCommandBuffer());
 }
 
 void VulkanBackend::waitTillDone()

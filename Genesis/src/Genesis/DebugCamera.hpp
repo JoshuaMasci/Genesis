@@ -19,7 +19,7 @@ namespace Genesis
 
 		static void update(InputManager* input_manager, DebugCamera* debug_camera, WorldTransform* world_transform, double delta_time)
 		{
-			Transform& transform = world_transform->current_transform;
+			TransformD& transform = world_transform->current_transform;
 
 			vector3D position = transform.getPosition();
 			position += (transform.getForward() * input_manager->getButtonAxisCombo("Debug_ForwardBackward", "Debug_Forward", "Debug_Backward")) * debug_camera->linear_speed * delta_time;

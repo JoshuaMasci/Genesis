@@ -12,17 +12,17 @@ using namespace Genesis;
 #include "imgui_internal.h"
 
 Genesis::ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* input_manager)
+	:RenderLayer(backend)
 {
 	this->backend = backend;
 	this->input_manager = input_manager;
 
 	this->view_size = backend->getScreenSize();
 
-	/*List<ImageFormat> color(1);
+	List<ImageFormat> color(1);
 	color[0] = ImageFormat::RGBA_8_Unorm;
 	this->layout = FramebufferLayout(color, ImageFormat::Invalid);
-
-	this->view = this->backend->createView(this->view_size, this->layout, CommandBufferType::SingleThread);*/
+	this->view = this->backend->createView(this->layout, this->view_size);
 
 	ImGui::CreateContext();
 	{
@@ -73,16 +73,17 @@ Genesis::ImGuiRenderer::~ImGuiRenderer()
 {
 	this->backend->destroyTexture(this->texture_atlas);
 	this->backend->destroyShader(this->shader);
+	this->backend->destroyView(this->view);
 }
 
-void Genesis::ImGuiRenderer::startFrame()
+void Genesis::ImGuiRenderer::startLayer()
 {
-	/*vector2U temp_size = this->backend->getScreenSize();
+	vector2U temp_size = this->backend->getScreenSize();
 	if (temp_size != this->view_size)
 	{
 		this->view_size = temp_size;
 		this->backend->resizeView(this->view, this->view_size);
-	}*/
+	}
 
 	this->view_size = this->backend->getScreenSize();
 
@@ -110,17 +111,15 @@ void Genesis::ImGuiRenderer::startFrame()
 	}
 
 	ImGui::NewFrame();
-
-	bool temp = true;
-	ImGui::ShowDemoWindow(&temp);
 }
 
-void Genesis::ImGuiRenderer::drawFrame(CommandBuffer* command_buffer)
+void Genesis::ImGuiRenderer::endLayer()
 {
 	ImGui::EndFrame();
 	ImGui::Render();
 	ImDrawData* draw_data = ImGui::GetDrawData();
 
+	CommandBuffer* command_buffer = this->backend->beginView(this->view);
 	command_buffer->setPipelineSettings(this->settings);
 	command_buffer->setShader(this->shader);
 
@@ -189,4 +188,7 @@ void Genesis::ImGuiRenderer::drawFrame(CommandBuffer* command_buffer)
 		this->backend->destroyVertexBuffer(vertex_buffer);
 		this->backend->destroyIndexBuffer(index_buffer);
 	}
+
+	this->backend->endView(this->view);
 }
+

@@ -18,7 +18,7 @@ namespace Genesis
 		void reset();
 		bool SubmitTransfers(VkQueue queue);
 
-		void copyBuffer(VulkanBuffer* source, uint64_t source_offset, VulkanBuffer* destination, uint64_t destination_offset, uint64_t copy_size, bool delete_source = true);
+		void copyBuffer(VulkanBuffer* source, uint64_t source_offset, VulkanBuffer* destination, uint64_t destination_offset, uint64_t copy_size);
 		void fillTexture(VulkanBuffer* source, VulkanTexture* destination);
 
 		inline VkSemaphore getTransferDoneSemaphore() { return this->transfer_done_semaphore; };
@@ -29,6 +29,8 @@ namespace Genesis
 			VkBuffer source;
 			VkBuffer destination;
 			VkBufferCopy region;
+
+			VulkanBuffer* destination_ptr = nullptr;
 		};
 
 		struct FillTexture
@@ -40,6 +42,8 @@ namespace Genesis
 			VkFormat format; 
 			VkImageLayout old_layout; 
 			VkImageLayout new_layout;
+
+			VulkanTexture* destination_ptr = nullptr;
 		};
 
 		VulkanDevice* device = nullptr;
@@ -49,9 +53,6 @@ namespace Genesis
 
 		VkCommandBuffer transfer_buffer;
 		uint32_t transfer_count = 0;
-
-		uint32_t delete_list_index = 0;
-		List<VulkanBuffer*> delete_list;
 
 		uint32_t copy_buffer_list_index = 0;
 		List<CopyBuffer> copy_buffer_list;
