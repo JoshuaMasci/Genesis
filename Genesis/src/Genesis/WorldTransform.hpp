@@ -11,16 +11,16 @@ namespace Genesis
 	*/
 	struct WorldTransform
 	{
-		WorldTransform(Transform& transform = Transform())
+		WorldTransform(TransformD& transform = TransformD())
 		{
 			this->current_transform = transform;
 			this->previous_transform = transform;
 		};
 
-		WorldTransform(vector3D position, quaternionD orientation = quaternionD())
-		: WorldTransform(Transform(position, orientation)){};
+		WorldTransform(vector3D position, quaternionD orientation = quaternionD(1.0, 0.0, 0.0, 0.0))
+		: WorldTransform(TransformD(position, orientation)){};
 
-		Transform current_transform;
-		Transform previous_transform;
+		TransformD current_transform;
+		TransformD previous_transform;
 	};
 }

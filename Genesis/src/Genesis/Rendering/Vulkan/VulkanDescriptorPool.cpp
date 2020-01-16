@@ -1,0 +1,72 @@
+#include "VulkanDescriptorPool.hpp"
+
+#include "Genesis/Core/List.hpp"
+#include "Genesis/Core/MurmurHash2.hpp"
+
+#include <stdexcept>
+
+using namespace Genesis;
+
+VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, uint32_t frame_count, uint32_t max_sets, vector<VkDescriptorPoolSize> types)
+{
+	this->device = device;
+
+	VkDescriptorPoolCreateInfo pool_info = {};
+	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	pool_info.poolSizeCount = (uint32_t)types.size();
+	pool_info.pPoolSizes = types.data();
+	pool_info.maxSets = max_sets;
+	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+
+	if (vkCreateDescriptorPool(this->device, &pool_info, nullptr, &this->pool) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to create descriptor pool!");
+	}
+
+	this->frame_data = List<FrameData>(frame_count);
+	for (size_t i = 0; i < this->frame_data.size(); i++)
+	{
+		this->frame_data[i].used_descriptor_set = List<VkDescriptorSet>(MAX_PER_FRAME_DESCRIPTOR_SETS);
+	}
+}
+
+VulkanDescriptorPool::~VulkanDescriptorPool()
+{
+	vkDestroyDescriptorPool(this->device, this->pool, nullptr);
+}
+
+VkDescriptorSet VulkanDescriptorPool::getDescriptorSet(VkDescriptorSetLayout layout, uint32_t frame_index)
+{
+	VkDescriptorSet descriptor_set;
+
+	VkDescriptorSetAllocateInfo set_alloc_info = {};
+	set_alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	set_alloc_info.descriptorPool = this->pool;
+	set_alloc_info.descriptorSetCount = 1;
+	set_alloc_info.pSetLayouts = &layout;
+
+	if (vkAllocateDescriptorSets(this->device, &set_alloc_info, &descriptor_set) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to allocate descriptor sets!");
+	}
+
+	//TODO: bounds check and grow array if needed
+	FrameData* frame = &this->frame_data[frame_index];
+	frame->used_descriptor_set[frame->descriptor_set_count] = descriptor_set;
+	frame->descriptor_set_count++;
+
+	return descriptor_set;
+}
+
+void VulkanDescriptorPool::resetFrame(uint32_t frame_index)
+{
+	FrameData* frame = &this->frame_data[frame_index];
+
+	if (frame->descriptor_set_count == 0)
+	{
+		return;
+	}
+
+	vkFreeDescriptorSets(this->device, this->pool, frame->descriptor_set_count, frame->used_descriptor_set.data());
+	frame->descriptor_set_count = 0;
+}

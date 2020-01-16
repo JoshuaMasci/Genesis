@@ -1,5 +1,7 @@
 #include "InputManager.hpp"
 
+#include "Genesis/Input/MouseDevice.hpp"
+
 using namespace Genesis;
 
 InputManager::InputManager(string config_folder_path)
@@ -52,6 +54,43 @@ double InputManager::getAxis(string name)
 	return value.value;
 }
 
+double InputManager::getButtonAxisCombo(string axis_name, string pos_button_name, string neg_button_name, bool clamp_value)
+{
+	bool pos_button = this->getButtonDown(pos_button_name);
+	bool neg_button = this->getButtonDown(neg_button_name);
+
+	if (pos_button && neg_button)
+	{
+		return 0.0;
+	}
+	else if (pos_button && !neg_button)
+	{
+		return 1.0;
+	}
+	else if (!pos_button && neg_button)
+	{
+		return -1.0;
+	}
+	else
+	{
+		double value = this->getAxis(axis_name);
+
+		if (clamp_value)
+		{
+			if (value > 1.0)
+			{
+				value = 1.0;
+			}
+			else if(value < -1.0)
+			{
+				value = -1.0;
+			}
+		}
+
+		return value;
+	}
+}
+
 void InputManager::update()
 {
 	for (auto device : this->devices)
@@ -68,4 +107,14 @@ void InputManager::addInputDevice(InputDevice* device)
 void InputManager::removeInputDevice(InputDevice* device)
 {
 	this->devices.erase(device);
+}
+
+void InputManager::setMousePosition(vector2F position)
+{
+	this->current_mouse_position = position;
+}
+
+vector2F InputManager::getMousePosition()
+{
+	return this->current_mouse_position;
 }

@@ -20,10 +20,6 @@ void Genesis::KeyboardDevice::updateKeyboardButton(KeyboardButton button, bool s
 	}
 }
 
-void KeyboardDevice::updateValues()
-{
-}
-
 string KeyboardDevice::getAxisName(uint16_t index)
 {
 	return string();

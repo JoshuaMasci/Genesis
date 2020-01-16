@@ -1,12 +1,14 @@
 #include "JobSystem.hpp"
 
+#include "Genesis/Core/Log.hpp"
+
 #define sleep_time_milliseconds 2
 
 using namespace Genesis;
 
-void workerthread(unsigned int thread_id, JobSystem* job_system)
+void workerthread(uint32_t thread_id, JobSystem* job_system)
 {
-	printf("Thread %d Start\n", thread_id);
+	GENESIS_ENGINE_INFO("Thread {} Start", thread_id);
 
 	while (job_system->shouldThreadsRun())
 	{
@@ -14,7 +16,7 @@ void workerthread(unsigned int thread_id, JobSystem* job_system)
 		bool got_job = job_system->job_queue.try_dequeue(job);
 		if (got_job && job != nullptr)
 		{
-			job->run();
+			job->run(thread_id);
 			job->finish(); //Returns the value to indicate the job is done
 		}
 		else
@@ -24,16 +26,15 @@ void workerthread(unsigned int thread_id, JobSystem* job_system)
 		}
 	}
 
-	printf("Thread %d Exit\n", thread_id);
+	GENESIS_ENGINE_INFO("Thread {} Exit", thread_id);
 }
 
 JobSystem::JobSystem()
 {
-	unsigned int cores = std::thread::hardware_concurrency();
+	uint32_t cores = std::thread::hardware_concurrency();
 	assert(cores >= 4);//Need 4 or more cores for the engine
-	cores -= 2;//Leave 2 threads for OS and other tasks
 
-	for (unsigned int i = 0; i < cores; i++)
+	for (uint32_t i = 0; i < cores; i++)
 	{
 		this->threads.push_back(std::thread(&workerthread, i, this));
 	}
@@ -43,12 +44,12 @@ JobSystem::~JobSystem()
 {
 	should_threads_run = false;
 
-	for (int i = 0; i < this->threads.size(); i++)
+	for (uint32_t i = 0; i < this->threads.size(); i++)
 	{
 		this->job_queue.enqueue(nullptr);//Push empty jobs to trigger exiting
 	}
 
-	for (int i = 0; i < this->threads.size(); i++)
+	for (uint32_t i = 0; i < this->threads.size(); i++)
 	{
 		this->threads[i].join();
 	}
@@ -83,7 +84,7 @@ void JobSystem::addJobsAndWait(vector<Job*> jobs)
 	}
 }
 
-void JobSystem::addJobsAndWait(Array<Job>& jobs)
+void JobSystem::addJobsAndWait(List<Job>& jobs)
 {
 	for (size_t i = 0; i < jobs.size(); i++)
 	{

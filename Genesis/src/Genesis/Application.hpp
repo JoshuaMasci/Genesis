@@ -5,6 +5,7 @@
 
 #include "Genesis/Platform/Platform.hpp"
 #include "Genesis/Platform/Window.hpp"
+#include <Genesis/Rendering/RenderingBackend.hpp>
 
 #include "Genesis/GameScene.hpp"
 
@@ -17,7 +18,7 @@ namespace Genesis
 		virtual ~Application();
 
 		virtual void runSimulation(double delta_time);
-		virtual void drawFrame(double delta_time);
+		virtual void drawWorld(double delta_time);
 
 		void close();
 		bool isRunning();
@@ -28,6 +29,7 @@ namespace Genesis
 
 		Platform* platform = nullptr;
 		Window* window = nullptr;
+		RenderingBackend* rendering_backend = nullptr;
 
 		GameScene* scene = nullptr;
 

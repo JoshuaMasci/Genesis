@@ -242,8 +242,6 @@ namespace Genesis
 
 		void updateKeyboardButton(KeyboardButton button, bool state, Timestamp time);
 
-		virtual void updateValues();
-
 		virtual string getAxisName(uint16_t index) override;
 		virtual string getButtonName(uint16_t index) override;
 

@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Genesis/Entity.hpp"
-
-#include "Genesis/Physics/PhysicsSystem.hpp"
-#include "Genesis/Graphics/OpenGL/RenderSystem.hpp"
+#include "Genesis/Rendering/Renderer.hpp"
+#include "Genesis/Rendering/ImGuiRenderer.hpp"
+#include "Genesis/Rendering/Lighting.hpp"
+#include "Genesis/Rendering/Skeleton.hpp"
+#include "Genesis/Rendering/ResourceLoaders.hpp"
 
 namespace Genesis
 {
@@ -19,22 +20,22 @@ namespace Genesis
 
 		virtual void runSimulation(double delta_time);
 
-		virtual void drawFrame(double delta_time);
+		virtual void drawWorld(double delta_time);
 
 	protected:
 		Application* application;
 
-		//EnTT
-		EntityRegistry entity_registry;
-		
 		//Physics
-		PhysicsSystem physics_system;
+		//PhysicsSystem physics_system;
 
-		//Temp stuff
-		EntityId temp;
-		EntityId camera;
+		//Rendering
+		Renderer* renderer = nullptr;
+		ImGuiRenderer* ui_renderer = nullptr;
 
-		RenderSystem* render_system;
+		Shader screen_shader = nullptr;
+		VertexBuffer screen_vertex;
+		IndexBuffer screen_index;
+		Sampler screen_sampler;
 
 		//Game Systems
 			//Pre-Frame Update

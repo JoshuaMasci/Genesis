@@ -1,6 +1,6 @@
 #pragma once
 
-#include <future>
+#include <stdint.h>
 
 namespace Genesis
 {
@@ -9,30 +9,36 @@ namespace Genesis
 	public:
 		Job()
 		{
-			this->finish_future = this->finish_promise.get_future();
+			
 		};
 
-		virtual void run() = 0;
+		virtual void run(uint32_t thread_id) = 0;
 
 		void finish()
 		{
-			this->finish_promise.set_value(true);//May allow to change value later
+			this->finished = true;
 		};
 
 		bool IsFinished()
 		{
-			return this->finish_future.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+			return this->finished;
 		};
 
-		bool waitTillFinished() 
+		void waitTillFinished() 
 		{ 
-			return this->finish_future.get(); 
+			//Spin lock
+			while (!this->IsFinished())
+			{
+				//TODO maybe sleep
+			}
 		};
 
 		//Job* getNext(); TODO use for Job Fibers
 
 	private:
-		std::promise<bool> finish_promise;
-		std::future<bool> finish_future;
+		//Finished Flag
+		//Using a bool because it will only ever be written from one thread and read from another
+		//Because there is no case that 2 threads could ever write to it at the same time, so there is no reason to put a lock on it.
+		bool finished = false;
 	};
 };

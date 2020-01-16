@@ -10,8 +10,14 @@ file(GLOB_RECURSE GENESIS_CORE "src/Genesis/Core/*.*")
 source_group("Core" FILES ${GENESIS_CORE})
 
 #TODO Select Subdirectories
-file(GLOB_RECURSE GENESIS_GRAPHICS "src/Genesis/Graphics/*.*")
-source_group("Graphics" FILES ${GENESIS_GRAPHICS})
+file(GLOB GENESIS_RENDERING "src/Genesis/Rendering/*.*")
+source_group("Rendering Core" FILES ${GENESIS_RENDERING})
+
+#file(GLOB_RECURSE GENESIS_RENDERING_OPENGL "src/Genesis/Rendering/OpenGL/*.*")
+#source_group("Rendering OpenGL" FILES ${GENESIS_RENDERING_OPENGL})
+
+file(GLOB_RECURSE GENESIS_RENDERING_VULKAN "src/Genesis/Rendering/Vulkan/*.*")
+source_group("Rendering Vulkan" FILES ${GENESIS_RENDERING_VULKAN})
 
 file(GLOB_RECURSE GENESIS_INPUT "src/Genesis/Input/*.*")
 source_group("Input" FILES ${GENESIS_INPUT})
@@ -19,47 +25,52 @@ source_group("Input" FILES ${GENESIS_INPUT})
 file(GLOB_RECURSE GENESIS_JOB "src/Genesis/Job/*.*")
 source_group("Job" FILES ${GENESIS_JOB})
 
-file(GLOB_RECURSE GENESIS_PHYSICS "src/Genesis/Physics/*.*")
-source_group("Physics" FILES ${GENESIS_PHYSICS})
+if(INCLUDE_VULKAN)
+	file(GLOB GENESIS_SPIRV "${CMAKE_SOURCE_DIR}/lib/spirv-reflect/spirv_reflect.c" "${CMAKE_SOURCE_DIR}/lib/spirv-reflect/spirv_reflect.h")
+	source_group("SPIRV UTILS" FILES ${GENESIS_SPIRV})
+endif()
 
 #TODO Select Subdirectories
 file(GLOB_RECURSE GENESIS_PLATFORM "src/Genesis/Platform/*.*")
 source_group("Platform" FILES ${GENESIS_PLATFORM})
 
-#Create Libary
-add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_GRAPHICS} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM})
+file(GLOB_RECURSE GENESIS_PHYSICS "src/Genesis/Physics/*.*")
+source_group("Physics" FILES ${GENESIS_PHYSICS})
 
-#GLM
+#Create Libary
+add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_RENDERING} ${GENESIS_RENDERING_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM} ${GENESIS_SPIRV} ${GENESIS_GLTF})
+
 include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/imgui/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/spdlog-1.5.0/include)
 
 #SDL2
 include_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/include/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 target_link_libraries(Genesis PRIVATE SDL2)
 
-#Bullet
-include_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/src/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/bullet_physics/lib/)
-target_link_libraries(Genesis PRIVATE debug BulletCollision_Debug optimized BulletCollision)
-target_link_libraries(Genesis PRIVATE debug BulletDynamics_Debug optimized BulletDynamics)
-target_link_libraries(Genesis PRIVATE debug LinearMath_Debug optimized LinearMath)
-target_compile_definitions(Genesis PUBLIC BT_USE_DOUBLE_PRECISION)
+#TEMP ASSIMP
+link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/code/Debug/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/contrib/zlib/Debug/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/include/)
+target_link_libraries (Genesis PRIVATE zlibstaticd)
+target_link_libraries (Genesis PRIVATE assimp-vc140-mt)
 
-#ENTT
-include_directories(${CMAKE_SOURCE_DIR}/lib/entt/src/)
+if(INCLUDE_VULKAN)
+	find_package(Vulkan REQUIRED FATAL_ERROR)
+	include_directories(${Vulkan_INCLUDE_DIR})	
+	target_link_libraries(Genesis PRIVATE Vulkan::Vulkan)
+	
+	include_directories(${CMAKE_SOURCE_DIR}/lib/vulkan_memory_allocator/src/)
+	include_directories(${CMAKE_SOURCE_DIR}/lib/spirv-reflect/)
+endif()
 
-#Concurrent Queue
-include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
-
-#OPENGL
-include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
-target_link_libraries (Genesis PRIVATE glew32)
-target_link_libraries (Genesis PRIVATE opengl32)
-target_link_libraries (Genesis PRIVATE glu32)
-
-#STB
-include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
-
-#TINYOBJ
-include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)
+if(INCLUDE_EASY_PROFILER)
+	include_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/include/)
+	link_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/lib)
+	target_link_libraries(Genesis PRIVATE easy_profiler)
+	add_definitions(-DGENESIS_PROFILER_ENABLED)
+endif()

@@ -16,9 +16,32 @@ SDL2_Platform::SDL2_Platform(Application* app)
 	this->keyboard_device = new KeyboardDevice("SDL2 Keyboard");
 	this->application->input_manager.addInputDevice(this->keyboard_device);
 
+	this->keyboard_device->addButton("Debug_Forward", (ButtonIndex) KeyboardButton::W);
+	this->keyboard_device->addButton("Debug_Backward", (ButtonIndex)KeyboardButton::S);
+	this->keyboard_device->addButton("Debug_Up", (ButtonIndex)KeyboardButton::LShift);
+	this->keyboard_device->addButton("Debug_Down", (ButtonIndex)KeyboardButton::LCtrl);
+	this->keyboard_device->addButton("Debug_Left", (ButtonIndex)KeyboardButton::A);
+	this->keyboard_device->addButton("Debug_Right", (ButtonIndex)KeyboardButton::D);
+
+	this->keyboard_device->addButton("Debug_PitchUp", (ButtonIndex)KeyboardButton::Up);
+	this->keyboard_device->addButton("Debug_PitchDown", (ButtonIndex)KeyboardButton::Down);
+	this->keyboard_device->addButton("Debug_YawLeft", (ButtonIndex)KeyboardButton::Left);
+	this->keyboard_device->addButton("Debug_YawRight", (ButtonIndex)KeyboardButton::Right);
+	this->keyboard_device->addButton("Debug_RollLeft", (ButtonIndex)KeyboardButton::Q);
+	this->keyboard_device->addButton("Debug_RollRight", (ButtonIndex)KeyboardButton::E);
+
+
 	//Create Mouse Device
 	this->mouse_device = new MouseDevice("SDL2 Mouse");
 	this->application->input_manager.addInputDevice(this->mouse_device);
+
+	this->mouse_device->addButton("Mouse_Left", (ButtonIndex)MouseButton::Left);
+	this->mouse_device->addButton("Mouse_Middle", (ButtonIndex)MouseButton::Middle);
+	this->mouse_device->addButton("Mouse_Right", (ButtonIndex)MouseButton::Right);
+	this->mouse_device->addButton("Mouse_X1", (ButtonIndex)MouseButton::Extra1);
+	this->mouse_device->addButton("Mouse_X2", (ButtonIndex)MouseButton::Extra2);
+	this->mouse_device->addButton("Mouse_ForwardScroll", (ButtonIndex)MouseButton::ForwardScroll);
+	this->mouse_device->addButton("Mouse_BackwardScroll", (ButtonIndex)MouseButton::BackwardScroll);
 }
 
 SDL2_Platform::~SDL2_Platform()
@@ -326,8 +349,13 @@ void SDL2_Platform::onUpdate(double delta_time)
 				//Only works when mouse is captued and is not in menu mode
 				if (true)
 				{
+					//Capture Mode
 					this->mouse_device->updateMouseAxis(MouseAxis::X, event.motion.xrel, event.motion.timestamp);
 					this->mouse_device->updateMouseAxis(MouseAxis::Y, event.motion.yrel, event.motion.timestamp);
+
+					//Menu Mode
+					vector2F pos = { (float)event.motion.x , (float)event.motion.y };
+					this->application->input_manager.setMousePosition(pos);
 				}
 			}
 		}
