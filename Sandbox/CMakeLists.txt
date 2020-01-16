@@ -31,6 +31,7 @@ endif()
 if(INCLUDE_EASY_PROFILER)
 	include_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/include/)
 	link_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/lib)
+	add_definitions(-DGENESIS_PROFILER_ENABLED)
 endif()
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})
