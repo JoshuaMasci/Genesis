@@ -9,7 +9,6 @@
 
 namespace Genesis
 {
-	//Only a class to privide static variables
 	class Logging
 	{
 	public:
@@ -23,8 +22,8 @@ namespace Genesis
 		static std::shared_ptr<spdlog::logger> engine_logger;
 		static std::shared_ptr<spdlog::logger> client_logger;
 	};
+}
 
-	
 #define GENESIS_ENGINE_TRACE(...) Genesis::Logging::GetEngineLogger()->trace(__VA_ARGS__)
 #define GENESIS_ENGINE_DEBUG(...) Genesis::Logging::GetEngineLogger()->debug(__VA_ARGS__)
 #define GENESIS_ENGINE_INFO(...) Genesis::Logging::GetEngineLogger()->info(__VA_ARGS__)
@@ -38,4 +37,3 @@ namespace Genesis
 #define GENESIS_WARN(...) Genesis::Logging::GetClientLogger()->warn(__VA_ARGS__)
 #define GENESIS_ERROR(...) Genesis::Logging::GetClientLogger()->error(__VA_ARGS__)
 #define GENESIS_CRITICAL(...) Genesis::Logging::GetClientLogger()->critical(__VA_ARGS__)
-};

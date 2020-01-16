@@ -4,21 +4,20 @@
 
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Core/Log.hpp"
+#include "Genesis/Core/Profiler.hpp"
 
 int main(int argc, char** argv)
 {
+	GENESIS_PROFILE_START();
+
+	Genesis::Logging::inti_engine_logging("");
 	Genesis::Logging::inti_client_logging("Sandbox", "");
 	GENESIS_INFO("Sandbox Started");
 
-	//Used for debugging
-	bool temp = true;
-	while (!temp)
-	{
-		int i = 1 + 2;
-	}
-
+	GENESIS_PROFILE_BLOCK_START("Sandbox_Load");
 	//ALPHA
 	SandboxApplication* sandbox = new SandboxApplication();
+	GENESIS_PROFILE_BLOCK_END();
 
 	//Fixed Timestep Stuff
 	//double time_step = 1.0 / 240.0;
@@ -33,6 +32,8 @@ int main(int argc, char** argv)
 
 	while (sandbox->isRunning())
 	{
+		GENESIS_PROFILE_BLOCK_START("Sandbox_Loop");
+
 		time_current = clock::now();
 		auto delta = std::chrono::duration_cast<std::chrono::duration<double>>(time_current - time_last);
 		double delta_time = delta.count();
@@ -54,9 +55,18 @@ int main(int argc, char** argv)
 			frames = 0;
 			time_last_frame = time_last;
 		}
+
+		GENESIS_PROFILE_BLOCK_END();
 	}
 
+	GENESIS_PROFILE_BLOCK_START("Sandbox_Exit");
 	delete sandbox;
+	GENESIS_PROFILE_BLOCK_END();
+
+
+	GENESIS_INFO("Sandbox Closed");
+
+	GENESIS_PROFILE_WRITE_TO_FILE("Genesis_profile.prof");
 
 	//Wait till enter
 	getchar();

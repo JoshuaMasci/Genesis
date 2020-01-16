@@ -10,6 +10,7 @@ option (BUILD_SANDBOX "Creates the Sandbox app" ON)
 option (INCLUDE_VULKAN "Includes the Vulkan Graphics API" ON)
 option (INCLUDE_OPENGL "Includes the OpenGl Graphics API" OFF)
 option (INCLUDE_DX12 "Includes the DX12 Graphics API" OFF)
+option (INCLUDE_EASY_PROFILER "Includes Profiling tool" ON)
 
 add_definitions(-DGENESIS_PLATFORM_WIN)
 

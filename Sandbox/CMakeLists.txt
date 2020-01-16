@@ -18,10 +18,6 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/spdlog-1.5.0/include)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 
-#OPENGL
-#include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
-#link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
-
 link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/code/Debug/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/contrib/zlib/Debug/)
 
@@ -30,6 +26,11 @@ if(INCLUDE_VULKAN)
 	include_directories(${Vulkan_INCLUDE_DIR})	
 	include_directories(${CMAKE_SOURCE_DIR}/lib/vulkan_memory_allocator/src/)
 	include_directories(${CMAKE_SOURCE_DIR}/lib/spirv-reflect/)
+endif()
+
+if(INCLUDE_EASY_PROFILER)
+	include_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/include/)
+	link_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/lib)
 endif()
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})

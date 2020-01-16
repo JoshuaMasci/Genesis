@@ -1,12 +1,14 @@
 #include "JobSystem.hpp"
 
+#include "Genesis/Core/Log.hpp"
+
 #define sleep_time_milliseconds 2
 
 using namespace Genesis;
 
 void workerthread(uint32_t thread_id, JobSystem* job_system)
 {
-	//printf1("Thread %d Start\n", thread_id);
+	GENESIS_ENGINE_INFO("Thread {} Start", thread_id);
 
 	while (job_system->shouldThreadsRun())
 	{
@@ -24,7 +26,7 @@ void workerthread(uint32_t thread_id, JobSystem* job_system)
 		}
 	}
 
-	//printf1("Thread %d Exit\n", thread_id);
+	GENESIS_ENGINE_INFO("Thread {} Exit", thread_id);
 }
 
 JobSystem::JobSystem()

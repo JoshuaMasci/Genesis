@@ -37,10 +37,6 @@ source_group("Platform" FILES ${GENESIS_PLATFORM})
 file(GLOB_RECURSE GENESIS_PHYSICS "src/Genesis/Physics/*.*")
 source_group("Physics" FILES ${GENESIS_PHYSICS})
 
-
-file(GLOB_RECURSE GENESIS_GLTF "src/Tiny_GLTF/*.*")
-source_group("Tiny_GLTF" FILES ${GENESIS_GLTF})
-
 #Create Libary
 add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_RENDERING} ${GENESIS_RENDERING_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM} ${GENESIS_SPIRV} ${GENESIS_GLTF})
 
@@ -70,4 +66,10 @@ if(INCLUDE_VULKAN)
 	
 	include_directories(${CMAKE_SOURCE_DIR}/lib/vulkan_memory_allocator/src/)
 	include_directories(${CMAKE_SOURCE_DIR}/lib/spirv-reflect/)
+endif()
+
+if(INCLUDE_EASY_PROFILER)
+	include_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/include/)
+	link_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/lib)
+	target_link_libraries(Genesis PRIVATE easy_profiler)
 endif()
