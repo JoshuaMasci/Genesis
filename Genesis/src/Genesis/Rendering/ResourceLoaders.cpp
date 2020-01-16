@@ -2,6 +2,7 @@
 
 using namespace Genesis;
 
+#include "Genesis/Core/Log.hpp"
 #include <fstream>
 
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -66,7 +67,7 @@ Mesh ObjLoader::loadMesh(RenderingBackend * backend, string mesh_file_path)
 	}
 	else
 	{
-		printf("Error: Can't load Mesh: %s\n", mesh_file_path.c_str());
+		GENESIS_ENGINE_WARN("Can't load Mesh {}", mesh_file_path);
 	}
 
 	return mesh;
@@ -161,7 +162,7 @@ Mesh ObjLoader::loadMesh_CalcTangent(RenderingBackend* backend, string mesh_file
 	}
 	else
 	{
-		printf("Error: Can't load Mesh: %s\n", mesh_file_path.c_str());
+		GENESIS_ENGINE_WARN("Can't load Mesh {}", mesh_file_path);
 	}
 
 	return mesh;
@@ -178,7 +179,7 @@ Texture PngLoader::loadTexture(RenderingBackend * backend, string texture_file_p
 
 	if (data == NULL)
 	{
-		printf("Error: Can't load Texture: %s\n", texture_file_path.c_str());
+		GENESIS_ENGINE_WARN("Can't load Texture {}", texture_file_path);
 		return nullptr;
 	}
 
@@ -240,17 +241,17 @@ void GLTF_Loader::loadGLTF(RenderingBackend* backend, string file_path)
 
 	if (!warn.empty()) 
 	{
-		printf("Warn: %s\n", warn.c_str());
+		printf1("Warn: %s\n", warn.c_str());
 	}
 
 	if (!err.empty()) 
 	{
-		printf("Err: %s\n", err.c_str());
+		printf1("Err: %s\n", err.c_str());
 	}
 
 	if (!ret) 
 	{
-		printf("Failed to parse glTF\n");
+		printf1("Failed to parse glTF\n");
 		return;
 	}
 
@@ -287,7 +288,7 @@ void addWeight(AnimatedModel::AnimatedModelVertex* vertex, aiVertexWeight* weigh
 		}
 	}
 
-	printf("Error: too many weights!!!\n");
+	GENESIS_ENGINE_WARN("Too many weights on vertex");
 }
 
 Mesh AssimpLoader::loadMesh(RenderingBackend* backend, string file_path)

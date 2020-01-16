@@ -1,11 +1,13 @@
 #include "Application.hpp"
 
+#include "Genesis/Core/Log.hpp"
+
 using namespace Genesis;
 
 Application::Application()
 	:input_manager("config/input")
 {
-
+	Logging::inti_engine_logging("Genesis_Log.txt");
 }
 
 Application::~Application()

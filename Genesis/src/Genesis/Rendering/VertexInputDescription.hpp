@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Genesis/Core/Types.hpp"
-
+#include "Genesis/Core/Log.hpp"
 #include "Genesis/Core/MurmurHash2.hpp"
 
 namespace Genesis
@@ -135,7 +135,7 @@ namespace Genesis
 				return sizeof(uint32_t) * 4;
 			}
 
-			printf("Error: invalid input type\n");
+			GENESIS_ENGINE_ERROR("Error: invalid input type");
 			assert(false);
 			return 0;
 		};

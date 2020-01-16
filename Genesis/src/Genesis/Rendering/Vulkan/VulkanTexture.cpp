@@ -52,7 +52,7 @@ VulkanTexture::~VulkanTexture()
 	const uint32_t bytes_per_pixel = 4;
 	if (data_size != this->size.width * this->size.height * bytes_per_pixel)
 	{
-		printf("Error: image not correct size for texture\n");
+		printf1("Error: image not correct size for texture\n");
 		return;
 	}
 

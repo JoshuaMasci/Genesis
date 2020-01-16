@@ -14,6 +14,7 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/imgui/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/spdlog-1.5.0/include)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 

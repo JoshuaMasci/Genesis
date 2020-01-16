@@ -26,7 +26,7 @@ namespace Genesis
 		{
 			if (delay_cycles == 0)
 			{
-				printf("Error: delay must be at least 1\n");
+				GENESIS_ENGINE_WARN("Delay must be at least 1");
 				delay_cycles = 1;
 			}
 

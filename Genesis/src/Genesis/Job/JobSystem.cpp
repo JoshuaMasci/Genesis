@@ -6,7 +6,7 @@ using namespace Genesis;
 
 void workerthread(uint32_t thread_id, JobSystem* job_system)
 {
-	printf("Thread %d Start\n", thread_id);
+	//printf1("Thread %d Start\n", thread_id);
 
 	while (job_system->shouldThreadsRun())
 	{
@@ -24,7 +24,7 @@ void workerthread(uint32_t thread_id, JobSystem* job_system)
 		}
 	}
 
-	printf("Thread %d Exit\n", thread_id);
+	//printf1("Thread %d Exit\n", thread_id);
 }
 
 JobSystem::JobSystem()

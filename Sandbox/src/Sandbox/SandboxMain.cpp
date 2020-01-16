@@ -3,9 +3,13 @@
 #include "Sandbox/SandboxApplication.hpp"
 
 #include "Genesis/Core/Types.hpp"
+#include "Genesis/Core/Log.hpp"
 
 int main(int argc, char** argv)
 {
+	Genesis::Logging::inti_client_logging("Sandbox", "");
+	GENESIS_INFO("Sandbox Started");
+
 	//Used for debugging
 	bool temp = true;
 	while (!temp)

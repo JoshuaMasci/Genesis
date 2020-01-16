@@ -2,6 +2,7 @@
 
 #include "VulkanDevice.hpp"
 
+#include "Genesis/Core/Log.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanQueueFamily.hpp"
 
 using namespace Genesis;
@@ -13,8 +14,8 @@ VulkanDevice::VulkanDevice(VkPhysicalDevice device, VkSurfaceKHR surface, vector
 	vkGetPhysicalDeviceMemoryProperties(this->physical_device, &this->memory_properties);
 	vkGetPhysicalDeviceFeatures(this->physical_device, &this->features);
 
-	printf("GPU INFO:\n");
-	printf("Device: %s\n", this->properties.deviceName);
+	GENESIS_ENGINE_INFO("GPU INFO");
+	GENESIS_ENGINE_INFO("Device: {}", this->properties.deviceName);
 
 	VulkanQueueFamilyAllocator queue_allocator(this->physical_device, surface);
 	vector<VkDeviceQueueCreateInfo> queueCreateInfos;

@@ -1,6 +1,6 @@
 #include "VulkanDebugLayer.hpp"
 
-#include <stdio.h>
+#include "Genesis/Core/Log.hpp"
 
 using namespace Genesis;
 
@@ -12,8 +12,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityF
 		return VK_FALSE;
 	}
 
-	//TODO LOGGING
-	printf("Vulkan Validation Layer: %s\n", pCallbackData->pMessage);
+	GENESIS_ENGINE_DEBUG("Vulkan Validation Layer: {}", pCallbackData->pMessage);
 	return VK_FALSE;
 }
 
@@ -33,14 +32,12 @@ VulkanDebugLayer::VulkanDebugLayer(VkInstance instance)
 		VkResult result = func(this->instance, &create_info, nullptr, &this->debug_messenger);
 		if (result != VK_SUCCESS)
 		{
-			//throw std::runtime_error("failed to set up debug messenger!");
-			printf("failed to set up debug messenger!");
+			GENESIS_ENGINE_ERROR("Failed to set up debug messenger");
 		}
 	}
 	else
 	{
-		//throw std::runtime_error("failed to set up debug messenger!");
-		printf("failed to set up debug messenger!");
+		GENESIS_ENGINE_ERROR("Failed to set up debug messenger");
 	}
 }
 

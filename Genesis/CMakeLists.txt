@@ -44,23 +44,17 @@ source_group("Tiny_GLTF" FILES ${GENESIS_GLTF})
 #Create Libary
 add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_RENDERING} ${GENESIS_RENDERING_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM} ${GENESIS_SPIRV} ${GENESIS_GLTF})
 
-#GLM
 include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/imgui/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/spdlog-1.5.0/include)
 
 #SDL2
 include_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/include/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 target_link_libraries(Genesis PRIVATE SDL2)
-
-#Concurrent Queue
-include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
-
-#OPENGL
-#include_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
-#link_directories(${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/)
-#target_link_libraries (Genesis PRIVATE glew32)
-#target_link_libraries (Genesis PRIVATE opengl32)
-#target_link_libraries (Genesis PRIVATE glu32)
 
 #TEMP ASSIMP
 link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/code/Debug/)
@@ -77,7 +71,3 @@ if(INCLUDE_VULKAN)
 	include_directories(${CMAKE_SOURCE_DIR}/lib/vulkan_memory_allocator/src/)
 	include_directories(${CMAKE_SOURCE_DIR}/lib/spirv-reflect/)
 endif()
-
-include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/imgui/)
