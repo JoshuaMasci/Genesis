@@ -21,6 +21,9 @@ link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/code/Debug/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/contrib/zlib/Debug/)
 
+#TEMP ENTT
+include_directories(${CMAKE_SOURCE_DIR}/lib/entt-3.2.2/src/)
+
 if(INCLUDE_VULKAN)
 	find_package(Vulkan REQUIRED FATAL_ERROR)
 	include_directories(${Vulkan_INCLUDE_DIR})	

@@ -60,7 +60,6 @@ void Application::drawWorld(double delta_time)
 void Application::close()
 {
 	this->is_running = false;
-	//TODO emit event
 }
 
 bool Application::isRunning()

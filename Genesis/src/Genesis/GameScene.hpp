@@ -2,12 +2,19 @@
 
 #include "Genesis/Rendering/Renderer.hpp"
 #include "Genesis/Rendering/ImGuiRenderer.hpp"
-#include "Genesis/Rendering/Lighting.hpp"
-#include "Genesis/Rendering/Skeleton.hpp"
 #include "Genesis/Rendering/ResourceLoaders.hpp"
+
+#include "Genesis/Entity.hpp"
 
 namespace Genesis
 {
+	struct TempComponent
+	{
+		TransformF transform;
+		matrix4F model_matrix;
+	};
+
+
 	//Prototype
 	class Application;
 
@@ -27,6 +34,9 @@ namespace Genesis
 
 		//Physics
 		//PhysicsSystem physics_system;
+
+		//EnTT
+		EntityRegistry entity_registry;
 
 		//Rendering
 		Renderer* renderer = nullptr;

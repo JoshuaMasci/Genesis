@@ -5,10 +5,15 @@ using namespace Genesis;
 Renderer::Renderer(RenderingBackend* backend)
 	:RenderLayer(backend)
 {
+	this->view_size = this->backend->getScreenSize();
+
 	List<ImageFormat> color(1);
 	color[0] = ImageFormat::RGBA_8_Unorm;
 	this->layout = FramebufferLayout(color, ImageFormat::D_16_Unorm);
-	this->view = this->backend->createView(this->layout, this->backend->getScreenSize());
+	this->view = this->backend->createView(this->layout, this->view_size);
+
+	this->framebuffer = this->backend->createFramebuffer(this->layout, this->view_size);
+	this->mt_command_buffer = this->backend->createMTCommandBuffer();
 
 	this->shader = ShaderLoader::loadShaderSingle(this->backend, "res/temp_shaders/Model");
 	this->mesh = ObjLoader::loadMesh(this->backend, "res/cube.obj");
@@ -17,6 +22,9 @@ Renderer::Renderer(RenderingBackend* backend)
 Renderer::~Renderer()
 {
 	this->backend->destroyView(this->view);
+
+	this->backend->destroyFramebuffer(this->framebuffer);
+	this->backend->destroyMTCommandBuffer(this->mt_command_buffer);
 
 	this->backend->destroyVertexBuffer(this->mesh.vertex_buffer);
 	this->backend->destroyIndexBuffer(this->mesh.index_buffer);
@@ -30,9 +38,13 @@ void Renderer::startLayer()
 	{
 		this->view_size = temp_size;
 		this->backend->resizeView(this->view, this->view_size);
+		this->backend->resizeFramebuffer(this->framebuffer, this->view_size);
 	}
 
 	this->command_buffer = this->backend->beginView(this->view);
+
+	List<CommandBuffer*>& command_buffers = *this->backend->beginMTCommandBuffer(this->mt_command_buffer, this->framebuffer);
+	this->command_buffer = command_buffers[0];
 }
 
 void Renderer::endLayer()
@@ -61,12 +73,13 @@ void Renderer::endLayer()
 	assert(this->command_buffer != nullptr);
 
 	this->backend->endView(this->view);
+	this->backend->endMTCommandBuffer(this->mt_command_buffer);
 	this->command_buffer = nullptr;
 }
 
 View Renderer::getView()
 {
-	return this->view;
+	return (View)this->framebuffer;
 }
 
 uint32_t Renderer::getViewImageIndex()

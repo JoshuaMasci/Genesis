@@ -59,6 +59,9 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/include/)
 target_link_libraries (Genesis PRIVATE zlibstaticd)
 target_link_libraries (Genesis PRIVATE assimp-vc140-mt)
 
+#TEMP ENTT
+include_directories(${CMAKE_SOURCE_DIR}/lib/entt-3.2.2/src/)
+
 if(INCLUDE_VULKAN)
 	find_package(Vulkan REQUIRED FATAL_ERROR)
 	include_directories(${Vulkan_INCLUDE_DIR})	

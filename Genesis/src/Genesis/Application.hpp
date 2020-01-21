@@ -9,6 +9,9 @@
 
 #include "Genesis/GameScene.hpp"
 
+//#define TBB_SUPPRESS_DEPRECATED_MESSAGES 1
+//#include <tbb/tbb.h>
+
 namespace Genesis
 {
 	class Application
@@ -25,6 +28,8 @@ namespace Genesis
 
 		//Engine Systems
 		JobSystem job_system;
+		//tbb::task_scheduler_init* scheduler = nullptr;
+
 		InputManager input_manager;
 
 		Platform* platform = nullptr;

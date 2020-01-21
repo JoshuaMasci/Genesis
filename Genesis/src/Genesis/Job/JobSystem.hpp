@@ -6,9 +6,20 @@
 #include <concurrentqueue.h>
 #include <thread>
 #include <memory>
+#include <functional>
 
 namespace Genesis
 {
+	class LambdaJob : public Job
+	{
+	public:
+		LambdaJob() {};
+		LambdaJob(std::function<void(uint32_t)> function);
+		virtual void run(uint32_t thread_id) override;
+	private:
+		std::function<void(uint32_t)> function;
+	};
+
 	class JobSystem
 	{
 	public:
@@ -18,10 +29,8 @@ namespace Genesis
 		void addJob(Job* job);
 		void addJobAndWait(Job* job);
 
-		void addJobs(vector<Job*> jobs);
-		void addJobsAndWait(vector<Job*> jobs);
-
-		void addJobsAndWait(List<Job>& jobs);
+		void addJobs(Job* jobs, size_t job_count);
+		void addJobsAndWait(Job* jobs, size_t job_count);
 
 		inline bool shouldThreadsRun() { return this->should_threads_run; };
 		inline uint8_t getThreadWaitTimeMilliseconds() { return this->thread_wait_time_milli; };

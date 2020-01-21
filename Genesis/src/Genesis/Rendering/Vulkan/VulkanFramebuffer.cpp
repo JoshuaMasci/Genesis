@@ -89,20 +89,33 @@ VulkanFramebuffer::VulkanFramebuffer(VulkanDevice* device, VkExtent2D size, List
 		image_views.push_back(this->depth_image.image_view);
 	}
 
-	VkFramebufferCreateInfo framebufferInfo = {};
-	framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-	framebufferInfo.renderPass = this->render_pass;
+	VkFramebufferCreateInfo framebuffer_info = {};
+	framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	framebuffer_info.renderPass = this->render_pass;
 
-	framebufferInfo.attachmentCount = (uint32_t) image_views.size();
-	framebufferInfo.pAttachments = image_views.data();
+	framebuffer_info.attachmentCount = (uint32_t) image_views.size();
+	framebuffer_info.pAttachments = image_views.data();
 
-	framebufferInfo.width = this->size.width;
-	framebufferInfo.height = this->size.height;
-	framebufferInfo.layers = 1;
+	framebuffer_info.width = this->size.width;
+	framebuffer_info.height = this->size.height;
+	framebuffer_info.layers = 1;
 
-	if (vkCreateFramebuffer(this->device->get(), &framebufferInfo, nullptr, &this->framebuffer) != VK_SUCCESS)
+	if (vkCreateFramebuffer(this->device->get(), &framebuffer_info, nullptr, &this->framebuffer) != VK_SUCCESS)
 	{
-		throw std::runtime_error("failed to create framebuffer!");
+		throw std::runtime_error("failed to create frameBuffer!");
+	}
+
+	this->clear_values.resize(color_formats.size());
+	for (size_t i = 0; i < clear_values.size(); i++)
+	{
+		this->clear_values[i].color = { 0.f, 0.0f, 0.0f, 0.0f };
+	}
+
+	if (depth_format != VK_FORMAT_UNDEFINED)
+	{
+		size_t array_size = clear_values.size();
+		this->clear_values.resize(array_size + 1);
+		this->clear_values[array_size].depthStencil = { 1.0f, 0 };
 	}
 }
 
@@ -123,7 +136,7 @@ VulkanFramebuffer::~VulkanFramebuffer()
 	}
 }
 
-/*VulkanFramebufferSet::VulkanFramebufferSet(VulkanDevice* device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, uint32_t frame_count)
+VulkanFramebufferSet::VulkanFramebufferSet(VulkanDevice* device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, uint32_t frame_count)
 {
 	this->device = device;
 	this->size = size;
@@ -131,27 +144,27 @@ VulkanFramebuffer::~VulkanFramebuffer()
 	this->depth_format = depth_format;
 	this->render_pass = render_pass;
 
-	this->frame_buffers.resize(frame_count);
-	for (size_t i = 0; i < this->frame_buffers.size(); i++)
+	this->framebuffers.resize(frame_count);
+	for (size_t i = 0; i < this->framebuffers.size(); i++)
 	{
-		this->frame_buffers[i] = new VulkanFramebuffer(device, size, color_formats, depth_format, render_pass);
+		this->framebuffers[i] = new VulkanFramebuffer(device, size, color_formats, depth_format, render_pass);
 	}
 }
 
 VulkanFramebufferSet::~VulkanFramebufferSet()
 {
-	for (size_t i = 0; i < this->frame_buffers.size(); i++)
+	for (size_t i = 0; i < this->framebuffers.size(); i++)
 	{
-		delete this->frame_buffers[i];
+		delete this->framebuffers[i];
 	}
 }
 
-void VulkanFramebufferSet::startFrame(uint32_t frame)
+void VulkanFramebufferSet::updateFramebuffer(uint32_t frame)
 {
-	VkExtent2D current_size = this->frame_buffers[frame]->getSize();
+	VkExtent2D current_size = this->framebuffers[frame]->getSize();
 	if (current_size.width != this->size.width || current_size.height != this->size.height)
 	{
-		delete this->frame_buffers[frame];
-		this->frame_buffers[frame] = new VulkanFramebuffer(this->device, this->size, this->color_formats, this->depth_format, this->render_pass);
+		delete this->framebuffers[frame];
+		this->framebuffers[frame] = new VulkanFramebuffer(this->device, this->size, this->color_formats, this->depth_format, this->render_pass);
 	}
-}*/
+}

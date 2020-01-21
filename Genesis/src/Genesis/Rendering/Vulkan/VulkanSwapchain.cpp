@@ -241,8 +241,8 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 
 
 	//Swapchain Image Views
-	new_swapchain.imageviews.resize(new_swapchain.image_count);
-	for (size_t i = 0; i < new_swapchain.imageviews.size(); i++)
+	new_swapchain.image_views.resize(new_swapchain.image_count);
+	for (size_t i = 0; i < new_swapchain.image_views.size(); i++)
 	{
 		VkImageViewCreateInfo create_info = {};
 		create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -259,7 +259,7 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 		create_info.subresourceRange.baseArrayLayer = 0;
 		create_info.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(device->get(), &create_info, nullptr, &new_swapchain.imageviews[i]) != VK_SUCCESS)
+		if (vkCreateImageView(device->get(), &create_info, nullptr, &new_swapchain.image_views[i]) != VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to create image views!");
 		}
@@ -271,20 +271,20 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 	for (size_t i = 0; i < new_swapchain.framebuffers.size(); i++)
 	{
 		List<VkImageView> attachments(1);
-		attachments[0] = new_swapchain.imageviews[i];
+		attachments[0] = new_swapchain.image_views[i];
 
-		VkFramebufferCreateInfo framebufferInfo = {};
-		framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-		framebufferInfo.renderPass = new_swapchain.render_pass;
-		framebufferInfo.attachmentCount = (uint32_t)attachments.size();
-		framebufferInfo.pAttachments = attachments.data();
-		framebufferInfo.width = new_swapchain.size.width;
-		framebufferInfo.height = new_swapchain.size.height;
-		framebufferInfo.layers = 1;
+		VkFramebufferCreateInfo framebuffer_info = {};
+		framebuffer_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		framebuffer_info.renderPass = new_swapchain.render_pass;
+		framebuffer_info.attachmentCount = (uint32_t)attachments.size();
+		framebuffer_info.pAttachments = attachments.data();
+		framebuffer_info.width = new_swapchain.size.width;
+		framebuffer_info.height = new_swapchain.size.height;
+		framebuffer_info.layers = 1;
 
-		if (vkCreateFramebuffer(device->get(), &framebufferInfo, nullptr, &new_swapchain.framebuffers[i]) != VK_SUCCESS)
+		if (vkCreateFramebuffer(device->get(), &framebuffer_info, nullptr, &new_swapchain.framebuffers[i]) != VK_SUCCESS)
 		{
-			throw std::runtime_error("failed to create framebuffer!");
+			throw std::runtime_error("failed to create frameBuffer!");
 		}
 	}
 
@@ -298,7 +298,7 @@ void VulkanSwapchain::destroySwapchain(Swapchain& swapchain)
 	for (size_t i = 0; i < swapchain.image_count; i++)
 	{
 		vkDestroyFramebuffer(this->device->get(), swapchain.framebuffers[i], nullptr);
-		vkDestroyImageView(this->device->get(), swapchain.imageviews[i], nullptr);
+		vkDestroyImageView(this->device->get(), swapchain.image_views[i], nullptr);
 	}
 
 	vkDestroyRenderPass(this->device->get(), swapchain.render_pass, nullptr);

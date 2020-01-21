@@ -35,6 +35,8 @@ namespace Genesis
 			return this->images[image_index].image_view; 
 		};
 
+		inline List<VkClearValue>& getClearValues() { return this->clear_values; };
+
 	private:
 		VulkanDevice* device;
 		VkExtent2D size;
@@ -43,24 +45,21 @@ namespace Genesis
 		List<VulkanFramebufferImage> images;
 		VulkanFramebufferImage depth_image;
 		VkFramebuffer framebuffer;
-		
+		List<VkClearValue> clear_values;
 	};
 
-	/*class VulkanFramebufferSet
+	class VulkanFramebufferSet
 	{
 	public:
 		VulkanFramebufferSet(VulkanDevice* device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, uint32_t frame_count);
 		virtual ~VulkanFramebufferSet();
 
-		void startFrame(uint32_t frame);
+		void updateFramebuffer(uint32_t frame);
 
-		VulkanFramebuffer* getFrameBuffer(uint32_t frame) { return this->frame_buffers[frame]; };
+		VulkanFramebuffer* getFramebuffer(uint32_t frame) { return this->framebuffers[frame]; };
 
 		inline void setSize(VkExtent2D new_size) { this->size = new_size; };
 		inline VkExtent2D getSize() { this->size; };
-
-		inline void setClearValues(List<VkClearValue>& clear) { this->clear_values = clear; };
-		List<VkClearValue>& getClearValues() { return this->clear_values; };
 
 	private:
 		VulkanDevice* device;
@@ -69,8 +68,6 @@ namespace Genesis
 		VkFormat depth_format;
 		VkRenderPass render_pass;
 
-		List<VulkanFramebuffer*> frame_buffers;
-
-		List<VkClearValue> clear_values;
-	};*/
+		List<VulkanFramebuffer*> framebuffers;
+	};
 }

@@ -29,14 +29,25 @@ void workerthread(uint32_t thread_id, JobSystem* job_system)
 	GENESIS_ENGINE_INFO("Thread {} Exit", thread_id);
 }
 
+LambdaJob::LambdaJob(std::function<void(uint32_t)> function)
+{
+	this->function = function;
+}
+
+void LambdaJob::run(uint32_t thread_id)
+{
+	this->function(thread_id);
+}
+
 JobSystem::JobSystem()
 {
-	uint32_t cores = std::thread::hardware_concurrency();
-	assert(cores >= 4);//Need 4 or more cores for the engine
+	uint32_t thread_count = std::thread::hardware_concurrency();
+	assert(thread_count >= 4);//Need 4 or more cores for the engine
 
-	for (uint32_t i = 0; i < cores; i++)
+	this->threads.resize(thread_count);
+	for (uint32_t i = 0; i < thread_count; i++)
 	{
-		this->threads.push_back(std::thread(&workerthread, i, this));
+		this->threads[i] = std::thread(&workerthread, i, this);
 	}
 }
 
@@ -69,29 +80,22 @@ void JobSystem::addJobAndWait(Job* job)
 	job->waitTillFinished();
 }
 
-void JobSystem::addJobs(vector<Job*> jobs)
+void JobSystem::addJobs(Job* jobs, size_t job_count)
 {
-	this->job_queue.enqueue_bulk(jobs.begin(), jobs.size());
-}
-
-void JobSystem::addJobsAndWait(vector<Job*> jobs)
-{
-	this->job_queue.enqueue_bulk(jobs.begin(), jobs.size());
-
-	for (Job* job : jobs)
+	for (size_t i = 0; i < job_count; i++)
 	{
-		job->waitTillFinished();
+		this->job_queue.enqueue(jobs + i);
 	}
 }
 
-void JobSystem::addJobsAndWait(List<Job>& jobs)
+void JobSystem::addJobsAndWait(Job* jobs, size_t job_count)
 {
-	for (size_t i = 0; i < jobs.size(); i++)
+	for (size_t i = 0; i < job_count; i++)
 	{
-		this->job_queue.enqueue(&jobs[i]);
+		this->job_queue.enqueue(jobs + i);
 	}
 
-	for (size_t i = 0; i < jobs.size(); i++)
+	for (size_t i = 0; i < job_count; i++)
 	{
 		jobs[i].waitTillFinished();
 	}

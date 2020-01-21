@@ -87,6 +87,12 @@ GameScene::GameScene(Application* app)
 	}
 
 	this->bones = this->application->rendering_backend->createUniformBuffer(sizeof(matrix4F) * 64);*/
+
+	for (size_t i = 0; i < 1001; i++)
+	{
+		auto entity = this->entity_registry.create();
+		this->entity_registry.assign<TempComponent>(entity);
+	}
 }
 
 GameScene::~GameScene()
@@ -105,10 +111,51 @@ GameScene::~GameScene()
 	this->application->rendering_backend->destroyIndexBuffer(this->screen_index);
 	this->application->rendering_backend->destroyShader(this->screen_shader);
 }
-
+ 
 void GameScene::runSimulation(double delta_time)
 {
+	auto view = this->entity_registry.view<TempComponent>();
 
+	/*for (auto entity : view) 
+	{
+		auto& temp = view.get<TempComponent>(entity);
+		temp.model_matrix = temp.transform.calcMatrix4F();
+	}*/
+
+	size_t count = view.size();
+
+	size_t elements_per_job = 100;
+	size_t number_of_jobs = count / elements_per_job;
+	List<LambdaJob> jobs(number_of_jobs);
+	for (size_t i = 0; i < jobs.size(); i++)
+	{
+		size_t start = i * elements_per_job;
+		size_t end = (i + 1) * elements_per_job;
+
+		if (i == (jobs.size() - 1))
+		{
+			end = count;
+		}
+
+		jobs[i] = LambdaJob([=](size_t thread)
+		{
+			//GENESIS_INFO("Run on thread: {}", thread);
+			for (size_t i = start; i < end; i++)
+			{
+				auto& temp = view.get<TempComponent>(view[i]);
+				temp.model_matrix = temp.transform.calcMatrix4F();
+			}
+		});
+		this->application->job_system.addJob(&jobs[i]);
+	}
+
+	//Could Do stuff here
+
+	for (size_t i = 0; i < jobs.size(); i++)
+	{
+		//Blocking call
+		jobs[i].waitTillFinished();
+	}
 }
 
 #include "imgui.h"
@@ -166,7 +213,7 @@ void GameScene::drawWorld(double delta_time)
 		command_buffer->setVertexBuffer(this->screen_vertex, VertexInputDescription());
 		command_buffer->setIndexBuffer(this->screen_index, IndexType::uint16);
 
-		command_buffer->setUniformView(0, 0, this->renderer->getView(), this->renderer->getViewImageIndex(), this->screen_sampler);
+		command_buffer->setUniformFramebuffer(0, 0, (Framebuffer)this->renderer->getView(), this->renderer->getViewImageIndex(), this->screen_sampler);
 		command_buffer->drawIndexed(6, 0, 1, 0);
 
 		command_buffer->setUniformView(0, 0, this->ui_renderer->getView(), this->ui_renderer->getViewImageIndex(), this->screen_sampler);

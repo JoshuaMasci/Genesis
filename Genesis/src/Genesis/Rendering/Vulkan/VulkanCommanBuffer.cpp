@@ -8,7 +8,7 @@
 
 using namespace Genesis;
 
-VulkanCommandBuffer::VulkanCommandBuffer(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, uint32_t frame_index)
+VulkanCommandBufferInternal::VulkanCommandBufferInternal(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, uint32_t frame_index)
 	:FRAME_INDEX(frame_index)
 {
 	this->device = device;
@@ -19,12 +19,12 @@ VulkanCommandBuffer::VulkanCommandBuffer(VulkanDevice* device, VulkanCommandPool
 	this->command_buffer = this->command_pool->getCommandBuffer();
 }
 
-VulkanCommandBuffer::~VulkanCommandBuffer()
+VulkanCommandBufferInternal::~VulkanCommandBufferInternal()
 {
 	this->command_pool->freeCommandBuffer(this->command_buffer);
 }
 
-void VulkanCommandBuffer::startPrimary(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area, List<VkClearValue>& clear_values, VkSubpassContents content)
+void VulkanCommandBufferInternal::startPrimary(VkFramebuffer frameBuffer, VkRenderPass render_pass, VkRect2D render_area, List<VkClearValue>& clear_values, VkSubpassContents content)
 {
 	vkResetCommandBuffer(this->command_buffer, 0);
 
@@ -48,7 +48,7 @@ void VulkanCommandBuffer::startPrimary(VkFramebuffer framebuffer, VkRenderPass r
 
 	VkRenderPassBeginInfo render_pass_info = {};
 	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	render_pass_info.framebuffer = framebuffer;
+	render_pass_info.framebuffer = frameBuffer;
 	render_pass_info.renderPass = render_pass;
 	render_pass_info.renderArea = render_area;
 	render_pass_info.clearValueCount = (uint32_t)clear_values.size();
@@ -56,34 +56,51 @@ void VulkanCommandBuffer::startPrimary(VkFramebuffer framebuffer, VkRenderPass r
 
 	vkCmdBeginRenderPass(this->command_buffer, &render_pass_info, content);
 
-	this->current_framebuffer = framebuffer;
+	this->current_framebuffer = frameBuffer;
 	this->current_render_pass = render_pass;
 }
 
-void VulkanCommandBuffer::startSecondary(VkFramebuffer framebuffer, VkRenderPass render_pass)
+void VulkanCommandBufferInternal::startSecondary(VkFramebuffer frameBuffer, VkRenderPass render_pass, VkRect2D render_area)
 {
 	vkResetCommandBuffer(this->command_buffer, 0);
 
 	VkCommandBufferInheritanceInfo inheritance_info = {};
 	inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-	inheritance_info.framebuffer = framebuffer;
+	inheritance_info.framebuffer = frameBuffer;
 	inheritance_info.renderPass = render_pass;
 
 	VkCommandBufferBeginInfo begin_info = {};
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	begin_info.pInheritanceInfo = &inheritance_info;
+	begin_info.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
 	if (vkBeginCommandBuffer(this->command_buffer, &begin_info) != VK_SUCCESS)
 	{
 		throw std::runtime_error("failed to begin recording command buffer!");
 	}
 
-	this->current_framebuffer = framebuffer;
+	this->current_framebuffer = frameBuffer;
 	this->current_render_pass = render_pass;
+
+	//Setup Default Dynamic States
+	VkViewport viewport = {};
+	viewport.x = (float)render_area.offset.x;
+	viewport.y = (float)render_area.offset.y;
+	viewport.width = (float)render_area.extent.width;
+	viewport.height = (float)render_area.extent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(this->command_buffer, 0, 1, &viewport);
+	vkCmdSetScissor(this->command_buffer, 0, 1, &render_area);
 }
 
-void VulkanCommandBuffer::end()
+void VulkanCommandBufferInternal::endPrimary()
 {
 	vkCmdEndRenderPass(this->command_buffer);
+	this->endSecondary();
+}
+
+void VulkanCommandBufferInternal::endSecondary()
+{
 	vkEndCommandBuffer(this->command_buffer);
 
 	//Reset
@@ -99,43 +116,7 @@ void VulkanCommandBuffer::end()
 	this->current_pipeline = VK_NULL_HANDLE;
 }
 
-/*void VulkanCommandBuffer::submit(VkQueue queue, List<VkSemaphore>& wait_semaphores, List<VkPipelineStageFlags>& wait_states, List<VkSemaphore>& signal_semaphores, VkFence trigger_fence)
-{
-	VkSubmitInfo submit_info = {};
-	submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-	submit_info.waitSemaphoreCount = (uint32_t)wait_semaphores.size();
-	submit_info.pWaitSemaphores = wait_semaphores.data();
-	submit_info.pWaitDstStageMask = wait_states.data();
-
-	submit_info.commandBufferCount = 1;
-	submit_info.pCommandBuffers = &this->command_buffer;
-
-	submit_info.signalSemaphoreCount = (uint32_t)signal_semaphores.size();
-	submit_info.pSignalSemaphores = signal_semaphores.data();
-
-	if (vkQueueSubmit(queue, 1, &submit_info, trigger_fence) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to submit command buffer!");
-	}
-}*/
-
-void VulkanCommandBuffer::executeSecondary(List<VkCommandBuffer>& secondary_command_buffers)
-{
-	vkCmdExecuteCommands(this->command_buffer, (uint32_t)secondary_command_buffers.size(), secondary_command_buffers.data());
-}
-
-void VulkanCommandBuffer::setEvent(VkEvent trigger_event, VkPipelineStageFlags trigger_stage)
-{
-	vkCmdSetEvent(this->command_buffer, trigger_event, trigger_stage);
-}
-
-void VulkanCommandBuffer::waitEvent(VkEvent trigger_event)
-{
-	
-}
-
-void VulkanCommandBuffer::setShader(VulkanShader* new_shader)
+void VulkanCommandBufferInternal::setShader(VulkanShader* new_shader)
 {
 	if (this->current_shader == new_shader)
 	{
@@ -180,17 +161,17 @@ void VulkanCommandBuffer::setShader(VulkanShader* new_shader)
 	}
 }
 
-void VulkanCommandBuffer::setPipelineSettings(PipelineSettings& settings)
+void VulkanCommandBufferInternal::setPipelineSettings(PipelineSettings& settings)
 {
 	this->current_pipeline_settings = settings;
 }
 
-void VulkanCommandBuffer::setScissor(VkRect2D& scissor_rect)
+void VulkanCommandBufferInternal::setScissor(VkRect2D& scissor_rect)
 {
 	vkCmdSetScissor(this->command_buffer, 0, 1, &scissor_rect);
 }
 
-void VulkanCommandBuffer::setUniformBuffer(uint32_t set, uint32_t binding, VkBuffer buffer, uint64_t buffer_size)
+void VulkanCommandBufferInternal::setUniformBuffer(uint32_t set, uint32_t binding, VkBuffer buffer, uint64_t buffer_size)
 {
 	assert(set < this->current_descriptor_sets.size() && binding < this->current_descriptor_sets[set].bindings.size());
 	assert(this->current_descriptor_sets[set].bindings[binding].type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
@@ -200,7 +181,7 @@ void VulkanCommandBuffer::setUniformBuffer(uint32_t set, uint32_t binding, VkBuf
 	this->current_descriptor_sets[set].has_changed = true;
 }
 
-void VulkanCommandBuffer::setUniformTexture(uint32_t set, uint32_t binding, VkImageView texture, VkSampler sampler)
+void VulkanCommandBufferInternal::setUniformTexture(uint32_t set, uint32_t binding, VkImageView texture, VkSampler sampler)
 {
 	assert(set < this->current_descriptor_sets.size() && binding < this->current_descriptor_sets[set].bindings.size());
 	assert(this->current_descriptor_sets[set].bindings[binding].type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
@@ -210,12 +191,12 @@ void VulkanCommandBuffer::setUniformTexture(uint32_t set, uint32_t binding, VkIm
 	this->current_descriptor_sets[set].has_changed = true;
 }
 
-void VulkanCommandBuffer::setUniformConstant(void* data, uint32_t data_size)
+void VulkanCommandBufferInternal::setUniformConstant(void* data, uint32_t data_size)
 {
 	vkCmdPushConstants(this->command_buffer, this->current_pipeline_layout, VK_SHADER_STAGE_ALL, 0, data_size, data); //TODO use specific stage flags
 }
 
-void VulkanCommandBuffer::setVertexBuffer(VkBuffer vertex_buffer, VertexInputDescription* vertex_description)
+void VulkanCommandBufferInternal::setVertexBuffer(VkBuffer vertex_buffer, VertexInputDescription* vertex_description)
 {
 	this->current_vertex_description = vertex_description;
 
@@ -223,12 +204,12 @@ void VulkanCommandBuffer::setVertexBuffer(VkBuffer vertex_buffer, VertexInputDes
 	vkCmdBindVertexBuffers(this->command_buffer, 0, 1, &vertex_buffer, offsets);
 }
 
-void VulkanCommandBuffer::setIndexBuffer(VkBuffer index_buffer, IndexType type)
+void VulkanCommandBufferInternal::setIndexBuffer(VkBuffer index_buffer, IndexType type)
 {
 	vkCmdBindIndexBuffer(this->command_buffer, index_buffer, 0, (type == IndexType::uint16) ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
 }
 
-void VulkanCommandBuffer::drawIndexed(uint32_t index_count, uint32_t index_offset, uint32_t instance_count, uint32_t instance_offset)
+void VulkanCommandBufferInternal::drawIndexed(uint32_t index_count, uint32_t index_offset, uint32_t instance_count, uint32_t instance_offset)
 {
 	this->bindDescriptors();
 
@@ -243,7 +224,7 @@ void VulkanCommandBuffer::drawIndexed(uint32_t index_count, uint32_t index_offse
 	vkCmdDrawIndexed(this->command_buffer, index_count, instance_count, index_offset, 0, instance_offset);
 }
 
-void VulkanCommandBuffer::bindDescriptors()
+void VulkanCommandBufferInternal::bindDescriptors()
 {
 	for (size_t set_index = 0; set_index < this->current_descriptor_sets.size(); set_index++)
 	{
@@ -304,7 +285,7 @@ void VulkanCommandBuffer::bindDescriptors()
 	}
 }
 
-VulkanCommandBufferSingle::VulkanCommandBufferSingle(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index)
+VulkanCommandBuffer::VulkanCommandBuffer(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index)
 	:command_buffer(device, command_pool, pipeline_pool, descriptor_pool, frame_index)
 {
 	this->sampler_pool = sampler_pool;
@@ -312,57 +293,41 @@ VulkanCommandBufferSingle::VulkanCommandBufferSingle(VulkanDevice* device, Vulka
 	this->transfer_buffer = transfer_buffer;
 }
 
-VulkanCommandBufferSingle::~VulkanCommandBufferSingle()
+VulkanCommandBuffer::~VulkanCommandBuffer()
 {
 }
 
-void VulkanCommandBufferSingle::start(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area, List<VkClearValue>& clear_values, VkSubpassContents content)
+void VulkanCommandBuffer::startPrimary(VkFramebuffer frameBuffer, VkRenderPass render_pass, VkRect2D render_area, List<VkClearValue>& clear_values, VkSubpassContents content)
 {
-	this->command_buffer.startPrimary(framebuffer, render_pass, render_area, clear_values, content);
+	this->command_buffer.startPrimary(frameBuffer, render_pass, render_area, clear_values, content);
 }
 
-void VulkanCommandBufferSingle::end()
+void VulkanCommandBuffer::startSecondary(VkFramebuffer frameBuffer, VkRenderPass render_pass, VkRect2D render_area)
 {
-	this->command_buffer.end();
+	this->command_buffer.startSecondary(frameBuffer, render_pass, render_area);
 }
 
-/*void VulkanCommandBufferSingle::submit(VkQueue queue, List<VkSemaphore>& wait_semaphores, List<VkPipelineStageFlags>& wait_states, List<VkSemaphore>& signal_semaphores, VkFence trigger_fence)
+void VulkanCommandBuffer::endPrimary()
 {
-	size_t internal_size = this->wait_size;
-	size_t temp_size = internal_size + wait_semaphores.size();
-	List<VkSemaphore> wait_semaphores_temp(temp_size);
-	List<VkPipelineStageFlags> wait_states_temp(temp_size);
-
-	for (size_t i = 0; i < internal_size; i++)
-	{
-		wait_semaphores_temp[i] = this->wait_semaphores_internal[i];
-		wait_states_temp[i] = this->wait_stages_internal[i];
-	}
-	for (size_t i = internal_size; i < temp_size; i++)
-	{
-		wait_semaphores_temp[i] = wait_semaphores[i - internal_size];
-		wait_states_temp[i] = wait_states[i - internal_size];
-	}
-
-	this->command_buffer.submit(queue, wait_semaphores_temp, wait_states_temp, signal_semaphores, trigger_fence);
-}*/
-
-void VulkanCommandBufferSingle::setEvent(VkEvent trigger_event, VkPipelineStageFlags trigger_stage)
-{
-	this->command_buffer.setEvent(trigger_event, trigger_stage);
+	this->command_buffer.endPrimary();
 }
 
-void VulkanCommandBufferSingle::setShader(Shader shader)
+void VulkanCommandBuffer::endSecondary()
+{
+	this->command_buffer.endSecondary();
+}
+
+void VulkanCommandBuffer::setShader(Shader shader)
 {
 	this->command_buffer.setShader((VulkanShader*)shader);
 }
 
-void VulkanCommandBufferSingle::setPipelineSettings(PipelineSettings& settings)
+void VulkanCommandBuffer::setPipelineSettings(PipelineSettings& settings)
 {
 	this->command_buffer.setPipelineSettings(settings);
 }
 
-void VulkanCommandBufferSingle::setScissor(vector2I offset, vector2U extent)
+void VulkanCommandBuffer::setScissor(vector2I offset, vector2U extent)
 {
 	VkRect2D rect = {};
 	rect.offset = { offset.x, offset.y };
@@ -370,46 +335,162 @@ void VulkanCommandBufferSingle::setScissor(vector2I offset, vector2U extent)
 	this->command_buffer.setScissor(rect);
 }
 
-void VulkanCommandBufferSingle::setUniformBuffer(uint32_t set, uint32_t binding, UniformBuffer buffer)
+void VulkanCommandBuffer::setUniformBuffer(uint32_t set, uint32_t binding, UniformBuffer buffer)
 {
 	VulkanBuffer* uniform = ((VulkanUniformBuffer*)buffer)->getCurrentBuffer();
 
 	this->command_buffer.setUniformBuffer(set, binding, uniform->get(), uniform->getSize());
 }
 
-void VulkanCommandBufferSingle::setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler& sampler)
+void VulkanCommandBuffer::setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler& sampler)
 {
 	this->command_buffer.setUniformTexture(set, binding, ((VulkanTexture*)texture)->getImageView(), this->sampler_pool->getSampler(sampler));
 }
 
-void VulkanCommandBufferSingle::setUniformView(uint32_t set, uint32_t binding, View view, uint8_t view_image_index, Sampler& sampler)
+void VulkanCommandBuffer::setUniformView(uint32_t set, uint32_t binding, View view, uint8_t view_image_index, Sampler& sampler)
 {
 	VulkanViewSingleThread* vulkan_view = (VulkanViewSingleThread*)view;
 
 	VkImageView image_view = vulkan_view->getFramebuffer(this->command_buffer.getFrameIndex())->getImageView(view_image_index);
 	this->command_buffer.setUniformTexture(set, binding, image_view, this->sampler_pool->getSampler(sampler));
-
-	//TODO Synchronization 
 }
 
-void VulkanCommandBufferSingle::setUniformConstant(void* data, uint32_t data_size)
+void VulkanCommandBuffer::setUniformFramebuffer(uint32_t set, uint32_t binding, Framebuffer framebuffer, uint8_t framebuffer_image_index, Sampler& sampler)
+{
+	VulkanFramebufferSet* vulkan_framebuffer = (VulkanFramebufferSet*)framebuffer;
+
+	VkImageView image_view = vulkan_framebuffer->getFramebuffer(this->command_buffer.getFrameIndex())->getImageView(framebuffer_image_index);
+	this->command_buffer.setUniformTexture(set, binding, image_view, this->sampler_pool->getSampler(sampler));
+}
+
+void VulkanCommandBuffer::setUniformConstant(void* data, uint32_t data_size)
 {
 	this->command_buffer.setUniformConstant(data, data_size);
 }
 
-void VulkanCommandBufferSingle::setVertexBuffer(VertexBuffer vertex, VertexInputDescription& vertex_description)
+void VulkanCommandBuffer::setVertexBuffer(VertexBuffer vertex, VertexInputDescription& vertex_description)
 {
 	VulkanVertexBuffer* vertex_buffer = (VulkanVertexBuffer*)vertex;
 	this->command_buffer.setVertexBuffer(vertex_buffer->get(), &(vertex_buffer->getVertexDescription()));
 }
 
-void VulkanCommandBufferSingle::setIndexBuffer(IndexBuffer index, IndexType type)
+void VulkanCommandBuffer::setIndexBuffer(IndexBuffer index, IndexType type)
 {
 	VulkanIndexBuffer* index_buffer = (VulkanIndexBuffer*)index;
 	this->command_buffer.setIndexBuffer(index_buffer->get(), index_buffer->getIndicesType());
 }
 
-void VulkanCommandBufferSingle::drawIndexed(uint32_t index_count, uint32_t index_offset, uint32_t instance_count, uint32_t instance_offset)
+void VulkanCommandBuffer::drawIndexed(uint32_t index_count, uint32_t index_offset, uint32_t instance_count, uint32_t instance_offset)
 {
 	this->command_buffer.drawIndexed(index_count, index_offset, instance_count, instance_offset);
+}
+
+VulkanCommandBufferMultithread::VulkanCommandBufferMultithread(VulkanDevice* device, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, VulkanSamplerPool * sampler_pool, VulkanTransferBuffer * transfer_buffer, uint32_t frame_index)
+{
+	this->primary_pool = primary_pool;
+	this->primary_buffer = this->primary_pool->getCommandBuffer();
+
+	this->secondary_buffers.resize(thread_count);
+	for (size_t i = 0; i < this->secondary_buffers.size(); i++)
+	{
+		this->secondary_buffers[i] = new VulkanCommandBuffer(device, secondary_pools[i], pipeline_pools[i], descriptor_pools[i], sampler_pool, transfer_buffer, frame_index);
+	}
+}
+
+VulkanCommandBufferMultithread::~VulkanCommandBufferMultithread()
+{
+	this->primary_pool->freeCommandBuffer(this->primary_buffer);
+
+	for (size_t i = 0; i < this->secondary_buffers.size(); i++)
+	{
+		delete this->secondary_buffers[i];
+	}
+}
+
+void VulkanCommandBufferMultithread::start(VulkanFramebuffer* framebuffer_target)
+{
+	vkResetCommandBuffer(this->primary_buffer, 0);
+
+	VkCommandBufferBeginInfo begin_info = {};
+	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	if (vkBeginCommandBuffer(this->primary_buffer, &begin_info) != VK_SUCCESS)
+	{
+		throw std::runtime_error("failed to begin recording command buffer!");
+	}
+
+	VkFramebuffer frameBuffer = framebuffer_target->get();
+	VkRenderPass render_pass = framebuffer_target->getRenderPass();
+	VkRect2D render_area = { {0, 0}, framebuffer_target->getSize() };
+
+	//TODO clear values
+	List<VkClearValue>& clear_values = framebuffer_target->getClearValues();
+
+	//Setup Default Dynamic States
+	VkViewport viewport = {};
+	viewport.x = (float)render_area.offset.x;
+	viewport.y = (float)render_area.offset.y;
+	viewport.width = (float)render_area.extent.width;
+	viewport.height = (float)render_area.extent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(this->primary_buffer, 0, 1, &viewport);
+	vkCmdSetScissor(this->primary_buffer, 0, 1, &render_area);
+
+	VkRenderPassBeginInfo render_pass_info = {};
+	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	render_pass_info.framebuffer = frameBuffer;
+	render_pass_info.renderPass = render_pass;
+	render_pass_info.renderArea = render_area;
+	render_pass_info.clearValueCount = (uint32_t)clear_values.size();
+	render_pass_info.pClearValues = clear_values.data();
+
+	vkCmdBeginRenderPass(this->primary_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+
+	for (size_t i = 0; i < this->secondary_buffers.size(); i++)
+	{
+		this->secondary_buffers[i]->startSecondary(frameBuffer, render_pass, render_area);
+	}
+}
+
+void VulkanCommandBufferMultithread::end()
+{
+	List<VkCommandBuffer> secondary(this->secondary_buffers.size());
+	for (size_t i = 0; i < this->secondary_buffers.size(); i++)
+	{
+		this->secondary_buffers[i]->endSecondary();
+		secondary[i] = this->secondary_buffers[i]->getCommandBuffer();
+	}
+
+	vkCmdExecuteCommands(this->primary_buffer, (uint32_t)secondary.size(), secondary.data());
+
+	vkCmdEndRenderPass(this->primary_buffer);
+	vkEndCommandBuffer(this->primary_buffer);
+}
+
+VulkanCommandBufferMultithreadSet::VulkanCommandBufferMultithreadSet(VulkanDevice* device, uint32_t frame_count, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, VulkanSamplerPool* sampler_pool, List<VulkanTransferBuffer*> transfer_buffers)
+{
+	this->command_buffers.resize(frame_count);
+	for (size_t i = 0; i < this->command_buffers.size(); i++)
+	{
+		this->command_buffers[i] = new VulkanCommandBufferMultithread(device, thread_count, primary_pool, secondary_pools, pipeline_pools, descriptor_pools, sampler_pool, transfer_buffers[i], (uint32_t)i);
+	}
+}
+
+VulkanCommandBufferMultithreadSet::~VulkanCommandBufferMultithreadSet()
+{
+	for (size_t i = 0; i < this->command_buffers.size(); i++)
+	{
+		delete this->command_buffers[i];
+	}
+}
+
+void VulkanCommandBufferMultithreadSet::start(uint32_t frame_index, VulkanFramebuffer* framebuffer_target)
+{
+	this->frame_index = frame_index;
+	this->command_buffers[this->frame_index]->start(framebuffer_target);
+}
+
+void VulkanCommandBufferMultithreadSet::end()
+{
+	this->command_buffers[this->frame_index]->end();
 }

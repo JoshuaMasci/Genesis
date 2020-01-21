@@ -14,10 +14,9 @@ namespace Genesis
 
 		void start(uint32_t frame_index);
 		void end();
-		//void submit(VkQueue queue);
 
-		inline VulkanFramebuffer* getFramebuffer(uint32_t frame_index) { return this->frames[frame_index].framebuffer; };
-		inline VulkanCommandBufferSingle* getCommandBuffer(uint32_t frame_index) { return this->frames[frame_index].command_buffer; };
+		inline VulkanFramebuffer* getFramebuffer(uint32_t frame_index) { return this->frames[frame_index].frameBuffer; };
+		inline VulkanCommandBuffer* getCommandBuffer(uint32_t frame_index) { return this->frames[frame_index].command_buffer; };
 
 		inline void setSize(VkExtent2D new_size) { this->size = new_size; };
 
@@ -28,8 +27,8 @@ namespace Genesis
 
 		struct ViewFrame
 		{
-			VulkanFramebuffer* framebuffer = nullptr;
-			VulkanCommandBufferSingle* command_buffer = nullptr;
+			VulkanFramebuffer* frameBuffer = nullptr;
+			VulkanCommandBuffer* command_buffer = nullptr;
 		};
 
 		List<ViewFrame> frames;
@@ -39,5 +38,19 @@ namespace Genesis
 		VkFormat depth_format;
 		List<VkClearValue> clear_values;
 		VkRenderPass render_pass = VK_NULL_HANDLE;
+	};
+
+	class VulkanViewMultithread
+	{
+	private:
+		VulkanDevice* device = nullptr;
+
+		uint32_t frame_index;
+
+		struct ViewFrame
+		{
+			VulkanFramebuffer* frameBuffer = nullptr;
+			VulkanCommandBuffer* command_buffer;
+		};
 	};
 }

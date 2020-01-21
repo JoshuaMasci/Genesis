@@ -42,6 +42,20 @@ namespace Genesis
 		virtual CommandBuffer* beginView(View view) = 0;
 		virtual void endView(View view) = 0;
 
+		virtual Framebuffer createFramebuffer(FramebufferLayout& layout, vector2U size) = 0;
+		virtual void destroyFramebuffer(Framebuffer framebuffer) = 0;
+		virtual void resizeFramebuffer(Framebuffer framebuffer, vector2U size) = 0;
+
+		virtual STCommandBuffer createSTCommandBuffer() = 0;
+		virtual void destroySTCommandBuffer(STCommandBuffer st_command_buffer) = 0;
+		virtual CommandBuffer* beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer) = 0;
+		virtual void endSTCommandBuffer(STCommandBuffer st_command_buffer) = 0;
+
+		virtual MTCommandBuffer createMTCommandBuffer() = 0;
+		virtual void destroyMTCommandBuffer(MTCommandBuffer mt_command_buffer) = 0;
+		virtual List<CommandBuffer*>* beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer) = 0;
+		virtual void endMTCommandBuffer(MTCommandBuffer mt_command_buffer) = 0;
+
 		//Wait until all GPU proccessing is done
 		virtual void waitTillDone() = 0;
 	};

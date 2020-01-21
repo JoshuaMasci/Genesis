@@ -21,6 +21,7 @@ VkRenderPass VulkanRenderPassPool::getRenderPass(uint32_t hash, List<VkFormat>& 
 
 	if (this->render_passes.find(hash) != this->render_passes.end())
 	{
+		this->descriptor_map_lock.unlock();
 		return this->render_passes[hash];
 	}
 

@@ -40,7 +40,7 @@ namespace Genesis
 			VkExtent2D size;
 			VkRenderPass render_pass;
 			List<VkImage> images;
-			List<VkImageView> imageviews;
+			List<VkImageView> image_views;
 			List<VkFramebuffer> framebuffers;
 		};
 

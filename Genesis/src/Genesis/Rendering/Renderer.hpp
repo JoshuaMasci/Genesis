@@ -26,6 +26,9 @@ namespace Genesis
 		FramebufferLayout layout;
 		View view = nullptr;
 
+		Framebuffer framebuffer;
+		MTCommandBuffer mt_command_buffer;
+
 		CommandBuffer* command_buffer = nullptr;
 
 		//TEMP

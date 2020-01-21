@@ -13,23 +13,18 @@
 
 namespace Genesis
 {
-	class VulkanCommandBuffer
+	class VulkanCommandBufferInternal
 	{
 	public:
-		VulkanCommandBuffer(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, uint32_t frame_index);
-		~VulkanCommandBuffer();
+		VulkanCommandBufferInternal(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, uint32_t frame_index);
+		~VulkanCommandBufferInternal();
 
 		inline VkCommandBuffer getCommandBuffer() { return this->command_buffer; };
 
 		void startPrimary(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area, List<VkClearValue>& clear_values, VkSubpassContents content);
-		void startSecondary(VkFramebuffer framebuffer, VkRenderPass render_pass);
-		void end();
-		//void submit(VkQueue queue, List<VkSemaphore>& wait_semaphores, List<VkPipelineStageFlags>& wait_states, List<VkSemaphore>& signal_semaphores, VkFence trigger_fence);
-
-		void executeSecondary(List<VkCommandBuffer>& secondary_command_buffers);
-
-		void setEvent(VkEvent trigger_event, VkPipelineStageFlags trigger_stage);
-		void waitEvent(VkEvent trigger_event);
+		void startSecondary(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area);
+		void endPrimary();
+		void endSecondary();
 
 		void setShader(VulkanShader* shader);
 		void setPipelineSettings(PipelineSettings& settings);
@@ -103,19 +98,18 @@ namespace Genesis
 		VkPipeline current_pipeline = VK_NULL_HANDLE;
 	};
 
-	class VulkanCommandBufferSingle : public CommandBuffer
+	class VulkanCommandBuffer : public CommandBuffer
 	{
 	public:
-		VulkanCommandBufferSingle(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index);
-		~VulkanCommandBufferSingle();
+		VulkanCommandBuffer(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index);
+		~VulkanCommandBuffer();
 
 		inline VkCommandBuffer getCommandBuffer() { return this->command_buffer.getCommandBuffer(); };
 
-		void start(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area, List<VkClearValue>& clear_values, VkSubpassContents content);
-		void end();
-		//void submit(VkQueue queue, List<VkSemaphore>& wait_semaphores, List<VkPipelineStageFlags>& wait_states, List<VkSemaphore>& signal_semaphores, VkFence trigger_fence);
-
-		void setEvent(VkEvent trigger_event, VkPipelineStageFlags trigger_stage);
+		void startPrimary(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area, List<VkClearValue>& clear_values, VkSubpassContents content);
+		void startSecondary(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area);
+		void endPrimary();
+		void endSecondary();
 
 		virtual void setShader(Shader shader) override;
 		virtual void setPipelineSettings(PipelineSettings & settings) override;
@@ -123,14 +117,54 @@ namespace Genesis
 		virtual void setUniformBuffer(uint32_t set, uint32_t binding, UniformBuffer buffer) override;
 		virtual void setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler& sampler) override;
 		virtual void setUniformView(uint32_t set, uint32_t binding, View view, uint8_t view_image_index, Sampler& sampler) override;
+		virtual void setUniformFramebuffer(uint32_t set, uint32_t binding, Framebuffer framebuffer, uint8_t framebuffer_image_index, Sampler& sampler) override;
 		virtual void setUniformConstant(void * data, uint32_t data_size) override;
 		virtual void setVertexBuffer(VertexBuffer vertex, VertexInputDescription& vertex_description) override;
 		virtual void setIndexBuffer(IndexBuffer index, IndexType type) override;
 		virtual void drawIndexed(uint32_t index_count, uint32_t index_offset = 0, uint32_t instance_count = 1, uint32_t instance_offset = 0) override;
 	private:
-		VulkanCommandBuffer command_buffer;
+		VulkanCommandBufferInternal command_buffer;
 
 		VulkanSamplerPool* sampler_pool = nullptr;
 		VulkanTransferBuffer* transfer_buffer = nullptr;
+	};
+
+	class VulkanCommandBufferMultithread
+	{
+	public:
+		VulkanCommandBufferMultithread(VulkanDevice* device, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index);
+		~VulkanCommandBufferMultithread();
+
+		void start(VulkanFramebuffer* framebuffer_target);
+		void end();
+
+		inline VkCommandBuffer getCommandBuffer() { return this->primary_buffer; };
+		inline List<VulkanCommandBuffer*>* getSecondaryCommandBuffers()
+		{
+			return &this->secondary_buffers;
+		};
+
+	private:
+		VulkanCommandPool* primary_pool;
+		VkCommandBuffer primary_buffer;
+
+		List<VulkanCommandBuffer*> secondary_buffers;
+	};
+
+	class VulkanCommandBufferMultithreadSet
+	{
+	public:
+		VulkanCommandBufferMultithreadSet(VulkanDevice* device, uint32_t frame_count, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, VulkanSamplerPool* sampler_pool, List<VulkanTransferBuffer*> transfer_buffers);
+		~VulkanCommandBufferMultithreadSet();
+
+		void start(uint32_t frame_index, VulkanFramebuffer* framebuffer_target);
+		void end();
+
+		inline VkCommandBuffer getCommandBuffer() { return this->command_buffers[this->frame_index]->getCommandBuffer(); };
+		inline List<VulkanCommandBuffer*>* getSecondaryCommandBuffers() { return this->command_buffers[this->frame_index]->getSecondaryCommandBuffers(); };
+
+	private:
+		uint32_t frame_index;
+		List<VulkanCommandBufferMultithread*> command_buffers;
 	};
 }

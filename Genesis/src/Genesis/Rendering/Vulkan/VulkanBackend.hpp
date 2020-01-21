@@ -59,6 +59,20 @@ namespace Genesis
 		virtual CommandBuffer* beginView(View view) override;
 		virtual void endView(View view) override;
 
+		virtual Framebuffer createFramebuffer(FramebufferLayout& layout, vector2U size) override;
+		virtual void destroyFramebuffer(Framebuffer framebuffer) override;
+		virtual void resizeFramebuffer(Framebuffer framebuffer, vector2U size) override;
+
+		virtual STCommandBuffer createSTCommandBuffer() override;
+		virtual void destroySTCommandBuffer(STCommandBuffer st_command_buffer) override;
+		virtual CommandBuffer* beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer) override;
+		virtual void endSTCommandBuffer(STCommandBuffer st_command_buffer) override;
+
+		virtual MTCommandBuffer createMTCommandBuffer() override;
+		virtual void destroyMTCommandBuffer(MTCommandBuffer mt_command_buffer) override;
+		virtual List<CommandBuffer*>* beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer) override;
+		virtual void endMTCommandBuffer(MTCommandBuffer mt_command_buffer) override;
+
 		virtual void waitTillDone() override;
 
 	private:
@@ -84,7 +98,7 @@ namespace Genesis
 		{
 			VkSemaphore image_ready_semaphore = VK_NULL_HANDLE;
 
-			VulkanCommandBufferSingle* command_buffer = nullptr;
+			VulkanCommandBuffer* command_buffer = nullptr;
 			VkSemaphore command_buffer_done_semaphore = VK_NULL_HANDLE;
 			VkFence frame_done_fence = VK_NULL_HANDLE;
 		};
@@ -117,5 +131,8 @@ namespace Genesis
 		DelayedResourceDeleter<VulkanTexture>* texture_deleter = nullptr;
 		DelayedResourceDeleter<VulkanShader>* shader_deleter = nullptr;
 		DelayedResourceDeleter<VulkanViewSingleThread>* view_deleter = nullptr;
+
+		DelayedResourceDeleter<VulkanFramebufferSet>* frame_deleter = nullptr;
+		DelayedResourceDeleter<VulkanCommandBufferMultithreadSet>* multithread_deleter = nullptr;
 	};
 }
