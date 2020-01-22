@@ -101,7 +101,6 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 	}
 	create_info.minImageCount = new_swapchain.image_count;
 
-
 	//Format
 	VkSurfaceFormatKHR format;
 	{
@@ -128,7 +127,6 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 
 	create_info.imageArrayLayers = 1;
 	create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
 
 	//Present Mode
 	{
@@ -232,7 +230,6 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 			throw std::runtime_error("failed to create screen render pass!");
 		}
 	}
-
 
 	//Swapchain Images
 	vkGetSwapchainImagesKHR(this->device->get(), new_swapchain.swapchain, &new_swapchain.image_count, nullptr);

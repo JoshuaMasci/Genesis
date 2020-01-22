@@ -37,7 +37,7 @@ namespace Genesis
 
 		inline List<VkClearValue>& getClearValues() { return this->clear_values; };
 
-	private:
+	protected:
 		VulkanDevice* device;
 		VkExtent2D size;
 		VkRenderPass render_pass;
@@ -46,28 +46,34 @@ namespace Genesis
 		VulkanFramebufferImage depth_image;
 		VkFramebuffer framebuffer;
 		List<VkClearValue> clear_values;
+
+		friend struct VulkanFramebufferSet;
 	};
 
-	class VulkanFramebufferSet
+	struct VulkanFramebufferSet
 	{
-	public:
 		VulkanFramebufferSet(VulkanDevice* device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, uint32_t frame_count);
-		virtual ~VulkanFramebufferSet();
+		~VulkanFramebufferSet();
+		List<VulkanFramebuffer*> framebuffers;
 
-		void updateFramebuffer(uint32_t frame);
-
-		VulkanFramebuffer* getFramebuffer(uint32_t frame) { return this->framebuffers[frame]; };
-
-		inline void setSize(VkExtent2D new_size) { this->size = new_size; };
-		inline VkExtent2D getSize() { this->size; };
-
-	private:
 		VulkanDevice* device;
 		VkExtent2D size;
 		List<VkFormat> color_formats;
 		VkFormat depth_format;
 		VkRenderPass render_pass;
 
-		List<VulkanFramebuffer*> framebuffers;
+		inline VulkanFramebuffer* buildFramebuffer()
+		{
+			return new VulkanFramebuffer(this->device, this->size, this->color_formats, this->depth_format, this->render_pass);
+		};
+
+		inline void rebuildFramebuffer(uint32_t frame_index)
+		{
+			if (this->framebuffers[frame_index]->size.width != this->size.width || this->framebuffers[frame_index]->size.height != this->size.height)
+			{
+				delete this->framebuffers[frame_index];
+				this->framebuffers[frame_index] = this->buildFramebuffer();
+			}
+		};
 	};
 }

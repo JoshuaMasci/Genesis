@@ -147,7 +147,7 @@ VulkanFramebufferSet::VulkanFramebufferSet(VulkanDevice* device, VkExtent2D size
 	this->framebuffers.resize(frame_count);
 	for (size_t i = 0; i < this->framebuffers.size(); i++)
 	{
-		this->framebuffers[i] = new VulkanFramebuffer(device, size, color_formats, depth_format, render_pass);
+		this->framebuffers[i] = this->buildFramebuffer();
 	}
 }
 
@@ -156,15 +156,5 @@ VulkanFramebufferSet::~VulkanFramebufferSet()
 	for (size_t i = 0; i < this->framebuffers.size(); i++)
 	{
 		delete this->framebuffers[i];
-	}
-}
-
-void VulkanFramebufferSet::updateFramebuffer(uint32_t frame)
-{
-	VkExtent2D current_size = this->framebuffers[frame]->getSize();
-	if (current_size.width != this->size.width || current_size.height != this->size.height)
-	{
-		delete this->framebuffers[frame];
-		this->framebuffers[frame] = new VulkanFramebuffer(this->device, this->size, this->color_formats, this->depth_format, this->render_pass);
 	}
 }

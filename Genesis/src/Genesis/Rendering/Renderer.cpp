@@ -10,7 +10,6 @@ Renderer::Renderer(RenderingBackend* backend)
 	List<ImageFormat> color(1);
 	color[0] = ImageFormat::RGBA_8_Unorm;
 	this->layout = FramebufferLayout(color, ImageFormat::D_16_Unorm);
-	this->view = this->backend->createView(this->layout, this->view_size);
 
 	this->framebuffer = this->backend->createFramebuffer(this->layout, this->view_size);
 	this->mt_command_buffer = this->backend->createMTCommandBuffer();
@@ -21,8 +20,6 @@ Renderer::Renderer(RenderingBackend* backend)
 
 Renderer::~Renderer()
 {
-	this->backend->destroyView(this->view);
-
 	this->backend->destroyFramebuffer(this->framebuffer);
 	this->backend->destroyMTCommandBuffer(this->mt_command_buffer);
 
@@ -37,11 +34,8 @@ void Renderer::startLayer()
 	if (temp_size != this->view_size)
 	{
 		this->view_size = temp_size;
-		this->backend->resizeView(this->view, this->view_size);
 		this->backend->resizeFramebuffer(this->framebuffer, this->view_size);
 	}
-
-	this->command_buffer = this->backend->beginView(this->view);
 
 	List<CommandBuffer*>& command_buffers = *this->backend->beginMTCommandBuffer(this->mt_command_buffer, this->framebuffer);
 	this->command_buffer = command_buffers[0];
@@ -72,19 +66,8 @@ void Renderer::endLayer()
 
 	assert(this->command_buffer != nullptr);
 
-	this->backend->endView(this->view);
 	this->backend->endMTCommandBuffer(this->mt_command_buffer);
 	this->command_buffer = nullptr;
-}
-
-View Renderer::getView()
-{
-	return (View)this->framebuffer;
-}
-
-uint32_t Renderer::getViewImageIndex()
-{
-	return 0;
 }
 
 void Renderer::drawModel(Shader shader, PipelineSettings& settings, Mesh& mesh, void* uniform_const, uint32_t uniform_const_size)

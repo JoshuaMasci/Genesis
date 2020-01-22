@@ -36,24 +36,18 @@ namespace Genesis
 		virtual Shader createShader(string& vert_data, string& frag_data) = 0;
 		virtual void destroyShader(Shader shader) = 0;
 
-		virtual View createView(FramebufferLayout& layout, vector2U size) = 0;
-		virtual void destroyView(View view) = 0;
-		virtual void resizeView(View view, vector2U size) = 0;
-		virtual CommandBuffer* beginView(View view) = 0;
-		virtual void endView(View view) = 0;
-
 		virtual Framebuffer createFramebuffer(FramebufferLayout& layout, vector2U size) = 0;
 		virtual void destroyFramebuffer(Framebuffer framebuffer) = 0;
 		virtual void resizeFramebuffer(Framebuffer framebuffer, vector2U size) = 0;
 
 		virtual STCommandBuffer createSTCommandBuffer() = 0;
 		virtual void destroySTCommandBuffer(STCommandBuffer st_command_buffer) = 0;
-		virtual CommandBuffer* beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer) = 0;
+		virtual CommandBuffer* beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer_target) = 0;
 		virtual void endSTCommandBuffer(STCommandBuffer st_command_buffer) = 0;
 
 		virtual MTCommandBuffer createMTCommandBuffer() = 0;
 		virtual void destroyMTCommandBuffer(MTCommandBuffer mt_command_buffer) = 0;
-		virtual List<CommandBuffer*>* beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer) = 0;
+		virtual List<CommandBuffer*>* beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer_target) = 0;
 		virtual void endMTCommandBuffer(MTCommandBuffer mt_command_buffer) = 0;
 
 		//Wait until all GPU proccessing is done

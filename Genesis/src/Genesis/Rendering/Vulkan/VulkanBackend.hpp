@@ -19,7 +19,7 @@
 
 #include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanTexture.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanView.hpp"
+#include "Genesis/Rendering/Vulkan/VulkanCommanBuffer.hpp"
 
 #include "Genesis/Rendering/DelayedResourceDeleter.hpp"
 
@@ -53,24 +53,18 @@ namespace Genesis
 		virtual Shader createShader(string& vert_data, string& frag_data) override;
 		virtual void destroyShader(Shader shader) override;
 
-		virtual View createView(FramebufferLayout& layout, vector2U size) override;
-		virtual void destroyView(View view) override;
-		virtual void resizeView(View view, vector2U size) override;
-		virtual CommandBuffer* beginView(View view) override;
-		virtual void endView(View view) override;
-
 		virtual Framebuffer createFramebuffer(FramebufferLayout& layout, vector2U size) override;
 		virtual void destroyFramebuffer(Framebuffer framebuffer) override;
 		virtual void resizeFramebuffer(Framebuffer framebuffer, vector2U size) override;
 
 		virtual STCommandBuffer createSTCommandBuffer() override;
 		virtual void destroySTCommandBuffer(STCommandBuffer st_command_buffer) override;
-		virtual CommandBuffer* beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer) override;
+		virtual CommandBuffer* beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer_target) override;
 		virtual void endSTCommandBuffer(STCommandBuffer st_command_buffer) override;
 
 		virtual MTCommandBuffer createMTCommandBuffer() override;
 		virtual void destroyMTCommandBuffer(MTCommandBuffer mt_command_buffer) override;
-		virtual List<CommandBuffer*>* beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer) override;
+		virtual List<CommandBuffer*>* beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer_target) override;
 		virtual void endMTCommandBuffer(MTCommandBuffer mt_command_buffer) override;
 
 		virtual void waitTillDone() override;
@@ -130,9 +124,8 @@ namespace Genesis
 		DelayedResourceDeleter<VulkanUniformBuffer>* uniform_deleter = nullptr;
 		DelayedResourceDeleter<VulkanTexture>* texture_deleter = nullptr;
 		DelayedResourceDeleter<VulkanShader>* shader_deleter = nullptr;
-		DelayedResourceDeleter<VulkanViewSingleThread>* view_deleter = nullptr;
-
 		DelayedResourceDeleter<VulkanFramebufferSet>* frame_deleter = nullptr;
-		DelayedResourceDeleter<VulkanCommandBufferMultithreadSet>* multithread_deleter = nullptr;
+		DelayedResourceDeleter<VulkanCommandBufferSet>* st_command_buffer_deleter = nullptr;
+		DelayedResourceDeleter<VulkanCommandBufferMultithreadSet>* mt_command_buffer_deleter = nullptr;
 	};
 }

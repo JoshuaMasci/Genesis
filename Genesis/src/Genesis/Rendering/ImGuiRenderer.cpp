@@ -22,7 +22,8 @@ Genesis::ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* i
 	List<ImageFormat> color(1);
 	color[0] = ImageFormat::RGBA_8_Unorm;
 	this->layout = FramebufferLayout(color, ImageFormat::Invalid);
-	this->view = this->backend->createView(this->layout, this->view_size);
+	this->framebuffer = this->backend->createFramebuffer(this->layout, this->view_size);
+	this->st_command_buffer = this->backend->createSTCommandBuffer();
 
 	ImGui::CreateContext();
 	{
@@ -73,7 +74,8 @@ Genesis::ImGuiRenderer::~ImGuiRenderer()
 {
 	this->backend->destroyTexture(this->texture_atlas);
 	this->backend->destroyShader(this->shader);
-	this->backend->destroyView(this->view);
+	this->backend->destroyFramebuffer(this->framebuffer);
+	this->backend->destroySTCommandBuffer(this->st_command_buffer);
 }
 
 void Genesis::ImGuiRenderer::startLayer()
@@ -82,10 +84,10 @@ void Genesis::ImGuiRenderer::startLayer()
 	if (temp_size != this->view_size)
 	{
 		this->view_size = temp_size;
-		this->backend->resizeView(this->view, this->view_size);
+		this->backend->resizeFramebuffer(this->framebuffer, this->view_size);
 	}
 
-	this->view_size = this->backend->getScreenSize();
+	this->view_size = temp_size;
 
 	ImGuiIO& io = ImGui::GetIO();
 
@@ -119,7 +121,7 @@ void Genesis::ImGuiRenderer::endLayer()
 	ImGui::Render();
 	ImDrawData* draw_data = ImGui::GetDrawData();
 
-	CommandBuffer* command_buffer = this->backend->beginView(this->view);
+	CommandBuffer* command_buffer = this->backend->beginSTCommandBuffer(this->st_command_buffer, this->framebuffer);
 	command_buffer->setPipelineSettings(this->settings);
 	command_buffer->setShader(this->shader);
 
@@ -189,6 +191,6 @@ void Genesis::ImGuiRenderer::endLayer()
 		this->backend->destroyIndexBuffer(index_buffer);
 	}
 
-	this->backend->endView(this->view);
+	this->backend->endSTCommandBuffer(this->st_command_buffer);
 }
 

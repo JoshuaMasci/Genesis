@@ -17,7 +17,6 @@ namespace Genesis
 
 		virtual void setUniformBuffer(uint32_t set, uint32_t binding, UniformBuffer buffer) = 0;
 		virtual void setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler& sampler) = 0;
-		virtual void setUniformView(uint32_t set, uint32_t binding, View view, uint8_t view_image_index, Sampler& sampler) = 0;
 		virtual void setUniformFramebuffer(uint32_t set, uint32_t binding, Framebuffer framebuffer, uint8_t framebuffer_image_index, Sampler& sampler) = 0;
 
 		virtual void setUniformConstant(void* data, uint32_t data_size) = 0;

@@ -16,15 +16,16 @@ namespace Genesis
 		virtual void startLayer();
 		virtual void endLayer();
 
-		virtual inline View getView() { return this->view; };
-		virtual inline uint32_t getViewImageIndex() { return 0; };
+		virtual inline Framebuffer getFramebuffer() { return this->framebuffer; };
+		virtual inline uint32_t getFramebufferIndex() { return 0; };
 
 	private:
 		InputManager* input_manager;
 
 		vector2U view_size;
 		FramebufferLayout layout;
-		View view = nullptr;
+		Framebuffer framebuffer = nullptr;
+		STCommandBuffer st_command_buffer;
 		
 		Texture texture_atlas = nullptr;
 		Shader shader = nullptr;

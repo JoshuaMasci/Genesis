@@ -116,7 +116,6 @@ namespace Genesis
 		virtual void setScissor(vector2I offset, vector2U extent) override;
 		virtual void setUniformBuffer(uint32_t set, uint32_t binding, UniformBuffer buffer) override;
 		virtual void setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler& sampler) override;
-		virtual void setUniformView(uint32_t set, uint32_t binding, View view, uint8_t view_image_index, Sampler& sampler) override;
 		virtual void setUniformFramebuffer(uint32_t set, uint32_t binding, Framebuffer framebuffer, uint8_t framebuffer_image_index, Sampler& sampler) override;
 		virtual void setUniformConstant(void * data, uint32_t data_size) override;
 		virtual void setVertexBuffer(VertexBuffer vertex, VertexInputDescription& vertex_description) override;
@@ -151,20 +150,19 @@ namespace Genesis
 		List<VulkanCommandBuffer*> secondary_buffers;
 	};
 
-	class VulkanCommandBufferMultithreadSet
+	struct VulkanCommandBufferMultithreadSet
 	{
-	public:
 		VulkanCommandBufferMultithreadSet(VulkanDevice* device, uint32_t frame_count, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, VulkanSamplerPool* sampler_pool, List<VulkanTransferBuffer*> transfer_buffers);
 		~VulkanCommandBufferMultithreadSet();
 
-		void start(uint32_t frame_index, VulkanFramebuffer* framebuffer_target);
-		void end();
-
-		inline VkCommandBuffer getCommandBuffer() { return this->command_buffers[this->frame_index]->getCommandBuffer(); };
-		inline List<VulkanCommandBuffer*>* getSecondaryCommandBuffers() { return this->command_buffers[this->frame_index]->getSecondaryCommandBuffers(); };
-
-	private:
-		uint32_t frame_index;
 		List<VulkanCommandBufferMultithread*> command_buffers;
+	};
+
+	struct VulkanCommandBufferSet
+	{
+		VulkanCommandBufferSet(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_count);
+		~VulkanCommandBufferSet();
+
+		List<VulkanCommandBuffer*> command_buffers;
 	};
 }

@@ -61,7 +61,7 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 #endif
 
 	vector<const char*> layers;
-	layers.push_back("VK_LAYER_LUNARG_standard_validation");
+	//layers.push_back("VK_LAYER_LUNARG_standard_validation");
 	//layers.push_back("VK_LAYER_RENDERDOC_Capture");
 
 	this->instance = VulkanInstance::create(VK_API_VERSION_1_1, "Sandbox", VK_MAKE_VERSION(0, 0, 0), "Genesis_Engine", VK_MAKE_VERSION(0, 0, 0), extensions, layers);
@@ -137,10 +137,9 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 	this->uniform_deleter = new DelayedResourceDeleter<VulkanUniformBuffer>(delay_cycles);
 	this->texture_deleter = new DelayedResourceDeleter<VulkanTexture>(delay_cycles);
 	this->shader_deleter = new DelayedResourceDeleter<VulkanShader>(delay_cycles);
-	this->view_deleter = new DelayedResourceDeleter<VulkanViewSingleThread>(delay_cycles);
-
 	this->frame_deleter = new DelayedResourceDeleter<VulkanFramebufferSet>(delay_cycles);
-	this->multithread_deleter = new DelayedResourceDeleter<VulkanCommandBufferMultithreadSet>(delay_cycles);
+	this->st_command_buffer_deleter = new DelayedResourceDeleter<VulkanCommandBufferSet>(delay_cycles);
+	this->mt_command_buffer_deleter = new DelayedResourceDeleter<VulkanCommandBufferMultithreadSet>(delay_cycles);
 }
 
 VulkanBackend::~VulkanBackend()
@@ -149,10 +148,8 @@ VulkanBackend::~VulkanBackend()
 	delete this->uniform_deleter;
 	delete this->texture_deleter;
 	delete this->shader_deleter;
-	delete this->view_deleter;
-
 	delete this->frame_deleter;
-	delete this->multithread_deleter;
+	delete this->mt_command_buffer_deleter;
 
 	for (size_t i = 0; i < this->frames.size(); i++)
 	{
@@ -237,6 +234,11 @@ CommandBuffer* VulkanBackend::beginFrame()
 	//Start TransferPool for this frame
 	this->transfer_buffers[this->frame_index]->reset();
 
+	for (size_t i = 0; i < this->descriptor_pools.size(); i++)
+	{
+		this->descriptor_pools[i]->resetFrame(this->frame_index);
+	}
+
 	List<VkClearValue> clear_values(1);
 	clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 	VkRect2D render_area = {};
@@ -317,10 +319,9 @@ void VulkanBackend::endFrame()
 	this->uniform_deleter->cycle();
 	this->texture_deleter->cycle();
 	this->shader_deleter->cycle();
-	this->view_deleter->cycle();
-
 	this->frame_deleter->cycle();
-	this->multithread_deleter->cycle();
+	this->st_command_buffer_deleter->cycle();
+	this->mt_command_buffer_deleter->cycle();
 
 	this->pipeline_pool->update();
 }
@@ -433,47 +434,6 @@ void VulkanBackend::destroyShader(Shader shader)
 	this->shader_deleter->addToQueue((VulkanShader*)shader);
 }
 
-View VulkanBackend::createView(FramebufferLayout& layout, vector2U size)
-{
-	List<VkFormat> color(layout.getColorCount());
-	List<VkClearValue> clear_colors(color.size());
-	for (size_t i = 0; i < color.size(); i++)
-	{
-		color[i] = getImageFormat(layout.getColor(i));
-	}
-	VkFormat depth = getImageFormat(layout.getDepth());
-
-	VkRenderPass render_pass = this->render_pass_pool->getRenderPass(layout.getHash(), color, depth);
-
-	return (View*) new VulkanViewSingleThread(this->device, this->FRAME_COUNT, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->sampler_pool, this->transfer_buffers, {size.x, size.y}, color, depth, render_pass);
-
-}
-
-void VulkanBackend::destroyView(View view)
-{
-	this->view_deleter->addToQueue((VulkanViewSingleThread*) view);
-}
-
-void VulkanBackend::resizeView(View view, vector2U size)
-{
-	((VulkanViewSingleThread*)view)->setSize({ size.x, size.y });
-}
-
-CommandBuffer* VulkanBackend::beginView(View view)
-{
-	VulkanViewSingleThread* vulkan_view = (VulkanViewSingleThread*)view;
-	vulkan_view->start(this->frame_index);
-	return vulkan_view->getCommandBuffer(this->frame_index);
-}
-
-void VulkanBackend::endView(View view)
-{
-	VulkanViewSingleThread* vulkan_view = (VulkanViewSingleThread*)view;
-	vulkan_view->end();
-	//vulkan_view->submit(this->device->getGraphicsQueue());
-	this->graphics_command_buffers.push_back(vulkan_view->getCommandBuffer(this->frame_index)->getCommandBuffer());
-}
-
 Framebuffer VulkanBackend::createFramebuffer(FramebufferLayout& layout, vector2U size)
 {
 	List<VkFormat> color(layout.getColorCount());
@@ -496,25 +456,34 @@ void VulkanBackend::destroyFramebuffer(Framebuffer framebuffer)
 
 void VulkanBackend::resizeFramebuffer(Framebuffer framebuffer, vector2U size)
 {
-	((VulkanFramebufferSet*)framebuffer)->setSize({size.x, size.y});
+	((VulkanFramebufferSet*)framebuffer)->size = {size.x, size.y};
 }
 
 STCommandBuffer VulkanBackend::createSTCommandBuffer()
 {
-	return STCommandBuffer();
+	return (STCommandBuffer)new VulkanCommandBufferSet(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->sampler_pool, this->transfer_buffers[0], this->FRAME_COUNT);
 }
 
 void VulkanBackend::destroySTCommandBuffer(STCommandBuffer st_command_buffer)
 {
+	this->st_command_buffer_deleter->addToQueue((VulkanCommandBufferSet*)st_command_buffer);
 }
 
-CommandBuffer* VulkanBackend::beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer)
+CommandBuffer* VulkanBackend::beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer_target)
 {
-	return nullptr;
+	VulkanCommandBufferSet* command_buffer = (VulkanCommandBufferSet*)st_command_buffer;
+	((VulkanFramebufferSet*)framebuffer_target)->rebuildFramebuffer(this->frame_index);
+	VulkanFramebuffer* framebuffer = ((VulkanFramebufferSet*)framebuffer_target)->framebuffers[this->frame_index];
+
+	command_buffer->command_buffers[this->frame_index]->startPrimary(framebuffer->get(), framebuffer->getRenderPass(), { {0, 0}, framebuffer->getSize() }, framebuffer->getClearValues(), VK_SUBPASS_CONTENTS_INLINE);
+	return command_buffer->command_buffers[this->frame_index];
 }
 
 void VulkanBackend::endSTCommandBuffer(STCommandBuffer st_command_buffer)
 {
+	VulkanCommandBufferSet* command_buffer = (VulkanCommandBufferSet*)st_command_buffer;
+	command_buffer->command_buffers[this->frame_index]->endPrimary();
+	this->graphics_command_buffers.push_back(command_buffer->command_buffers[this->frame_index]->getCommandBuffer());
 }
 
 MTCommandBuffer VulkanBackend::createMTCommandBuffer()
@@ -524,23 +493,25 @@ MTCommandBuffer VulkanBackend::createMTCommandBuffer()
 
 void VulkanBackend::destroyMTCommandBuffer(MTCommandBuffer mt_command_buffer)
 {
-	this->multithread_deleter->addToQueue((VulkanCommandBufferMultithreadSet*)mt_command_buffer);
+	this->mt_command_buffer_deleter->addToQueue((VulkanCommandBufferMultithreadSet*)mt_command_buffer);
 }
 
-List<CommandBuffer*>* VulkanBackend::beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer)
+List<CommandBuffer*>* VulkanBackend::beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer_target)
 {
 	VulkanCommandBufferMultithreadSet* command_buffer = (VulkanCommandBufferMultithreadSet*)mt_command_buffer;
-	VulkanFramebufferSet* framebuffer_set = (VulkanFramebufferSet*)framebuffer;
-	framebuffer_set->updateFramebuffer(this->frame_index);
-	command_buffer->start(this->frame_index, framebuffer_set->getFramebuffer(this->frame_index));
-	return (List<CommandBuffer*>*)command_buffer->getSecondaryCommandBuffers();
+
+	((VulkanFramebufferSet*)framebuffer_target)->rebuildFramebuffer(this->frame_index);
+	VulkanFramebuffer* vulkan_framebuffer = ((VulkanFramebufferSet*)framebuffer_target)->framebuffers[this->frame_index];
+
+	command_buffer->command_buffers[this->frame_index]->start(vulkan_framebuffer);
+	return (List<CommandBuffer*>*)command_buffer->command_buffers[this->frame_index]->getSecondaryCommandBuffers();
 }
 
 void VulkanBackend::endMTCommandBuffer(MTCommandBuffer mt_command_buffer)
 {
 	VulkanCommandBufferMultithreadSet* command_buffer = (VulkanCommandBufferMultithreadSet*)mt_command_buffer;
-	command_buffer->end();
-	this->graphics_command_buffers.push_back(command_buffer->getCommandBuffer());
+	command_buffer->command_buffers[this->frame_index]->end();
+	this->graphics_command_buffers.push_back(command_buffer->command_buffers[this->frame_index]->getCommandBuffer());
 }
 
 void VulkanBackend::waitTillDone()

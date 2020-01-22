@@ -20,7 +20,7 @@ namespace Genesis
 		void resetFrame(uint32_t frame_index);
 
 	private:
-		static const size_t MAX_PER_FRAME_DESCRIPTOR_SETS = 100000;
+		static const size_t MAX_PER_FRAME_DESCRIPTOR_SETS = 100;
 
 		VkDevice device;
 		VkDescriptorPool pool;

@@ -14,8 +14,8 @@ namespace Genesis
 		virtual void startLayer() override;
 		virtual void endLayer() override;
 
-		virtual View getView() override;
-		virtual uint32_t getViewImageIndex() override;
+		virtual inline Framebuffer getFramebuffer() { return this->framebuffer; };
+		virtual inline uint32_t getFramebufferIndex() { return 0; };
 
 		void drawModel(Shader shader, PipelineSettings& settings, Mesh& mesh, void* uniform_const = nullptr, uint32_t uniform_const_size = 0);
 
@@ -24,7 +24,6 @@ namespace Genesis
 	protected:
 		vector2U view_size;
 		FramebufferLayout layout;
-		View view = nullptr;
 
 		Framebuffer framebuffer;
 		MTCommandBuffer mt_command_buffer;

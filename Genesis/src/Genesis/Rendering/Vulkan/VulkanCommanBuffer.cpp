@@ -4,7 +4,6 @@
 #include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanTexture.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanFramebuffer.hpp"
-#include "Genesis/Rendering/Vulkan/VulkanView.hpp"
 
 using namespace Genesis;
 
@@ -97,6 +96,17 @@ void VulkanCommandBufferInternal::endPrimary()
 {
 	vkCmdEndRenderPass(this->command_buffer);
 	this->endSecondary();
+
+	this->current_framebuffer = VK_NULL_HANDLE;
+	this->current_render_pass = VK_NULL_HANDLE;
+
+	this->current_shader = nullptr;
+	this->current_descriptor_sets.clear();
+
+	this->current_vertex_description = nullptr;
+
+	this->current_pipeline_layout = VK_NULL_HANDLE;
+	this->current_pipeline = VK_NULL_HANDLE;
 }
 
 void VulkanCommandBufferInternal::endSecondary()
@@ -347,19 +357,11 @@ void VulkanCommandBuffer::setUniformTexture(uint32_t set, uint32_t binding, Text
 	this->command_buffer.setUniformTexture(set, binding, ((VulkanTexture*)texture)->getImageView(), this->sampler_pool->getSampler(sampler));
 }
 
-void VulkanCommandBuffer::setUniformView(uint32_t set, uint32_t binding, View view, uint8_t view_image_index, Sampler& sampler)
-{
-	VulkanViewSingleThread* vulkan_view = (VulkanViewSingleThread*)view;
-
-	VkImageView image_view = vulkan_view->getFramebuffer(this->command_buffer.getFrameIndex())->getImageView(view_image_index);
-	this->command_buffer.setUniformTexture(set, binding, image_view, this->sampler_pool->getSampler(sampler));
-}
-
 void VulkanCommandBuffer::setUniformFramebuffer(uint32_t set, uint32_t binding, Framebuffer framebuffer, uint8_t framebuffer_image_index, Sampler& sampler)
 {
 	VulkanFramebufferSet* vulkan_framebuffer = (VulkanFramebufferSet*)framebuffer;
 
-	VkImageView image_view = vulkan_framebuffer->getFramebuffer(this->command_buffer.getFrameIndex())->getImageView(framebuffer_image_index);
+	VkImageView image_view = vulkan_framebuffer->framebuffers[this->command_buffer.getFrameIndex()]->getImageView(framebuffer_image_index);
 	this->command_buffer.setUniformTexture(set, binding, image_view, this->sampler_pool->getSampler(sampler));
 }
 
@@ -385,7 +387,7 @@ void VulkanCommandBuffer::drawIndexed(uint32_t index_count, uint32_t index_offse
 	this->command_buffer.drawIndexed(index_count, index_offset, instance_count, instance_offset);
 }
 
-VulkanCommandBufferMultithread::VulkanCommandBufferMultithread(VulkanDevice* device, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, VulkanSamplerPool * sampler_pool, VulkanTransferBuffer * transfer_buffer, uint32_t frame_index)
+VulkanCommandBufferMultithread::VulkanCommandBufferMultithread(VulkanDevice* device, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index)
 {
 	this->primary_pool = primary_pool;
 	this->primary_buffer = this->primary_pool->getCommandBuffer();
@@ -484,13 +486,19 @@ VulkanCommandBufferMultithreadSet::~VulkanCommandBufferMultithreadSet()
 	}
 }
 
-void VulkanCommandBufferMultithreadSet::start(uint32_t frame_index, VulkanFramebuffer* framebuffer_target)
+VulkanCommandBufferSet::VulkanCommandBufferSet(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_count)
 {
-	this->frame_index = frame_index;
-	this->command_buffers[this->frame_index]->start(framebuffer_target);
+	this->command_buffers.resize(frame_count);
+	for (size_t i = 0; i < this->command_buffers.size(); i++)
+	{
+		this->command_buffers[i] = new VulkanCommandBuffer(device, command_pool, pipeline_pool, descriptor_pool, sampler_pool, transfer_buffer, (uint32_t)i);
+	}
 }
 
-void VulkanCommandBufferMultithreadSet::end()
+VulkanCommandBufferSet::~VulkanCommandBufferSet()
 {
-	this->command_buffers[this->frame_index]->end();
+	for (size_t i = 0; i < this->command_buffers.size(); i++)
+	{
+		delete this->command_buffers[i];
+	}
 }

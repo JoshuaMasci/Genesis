@@ -122,7 +122,7 @@ void GameScene::runSimulation(double delta_time)
 		temp.model_matrix = temp.transform.calcMatrix4F();
 	}*/
 
-	size_t count = view.size();
+	/*size_t count = view.size();
 
 	size_t elements_per_job = 100;
 	size_t number_of_jobs = count / elements_per_job;
@@ -155,7 +155,7 @@ void GameScene::runSimulation(double delta_time)
 	{
 		//Blocking call
 		jobs[i].waitTillFinished();
-	}
+	}*/
 }
 
 #include "imgui.h"
@@ -213,10 +213,10 @@ void GameScene::drawWorld(double delta_time)
 		command_buffer->setVertexBuffer(this->screen_vertex, VertexInputDescription());
 		command_buffer->setIndexBuffer(this->screen_index, IndexType::uint16);
 
-		command_buffer->setUniformFramebuffer(0, 0, (Framebuffer)this->renderer->getView(), this->renderer->getViewImageIndex(), this->screen_sampler);
+		command_buffer->setUniformFramebuffer(0, 0, this->renderer->getFramebuffer(), this->renderer->getFramebufferIndex(), this->screen_sampler);
 		command_buffer->drawIndexed(6, 0, 1, 0);
 
-		command_buffer->setUniformView(0, 0, this->ui_renderer->getView(), this->ui_renderer->getViewImageIndex(), this->screen_sampler);
+		command_buffer->setUniformFramebuffer(0, 0, this->ui_renderer->getFramebuffer(), this->ui_renderer->getFramebufferIndex(), this->screen_sampler);
 		command_buffer->drawIndexed(6, 0, 1, 0);
 
 		this->application->rendering_backend->endFrame();

@@ -44,8 +44,6 @@ namespace Genesis
 	typedef void* Texture;
 	typedef void* Shader;
 
-	typedef void* View;
-
 	typedef void* Framebuffer;
 	typedef void* STCommandBuffer;
 	typedef void* MTCommandBuffer;
