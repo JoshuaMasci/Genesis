@@ -1,5 +1,7 @@
 #include "VulkanRenderPassPool.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 using namespace Genesis;
 
 VulkanRenderPassPool::VulkanRenderPassPool(VkDevice device)
@@ -110,10 +112,7 @@ VkRenderPass VulkanRenderPassPool::getRenderPass(uint32_t hash, List<VkFormat>& 
 
 	VkRenderPass render_pass;
 
-	if (vkCreateRenderPass(device, &render_pass_info, nullptr, &render_pass) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create render pass!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateRenderPass(device, &render_pass_info, nullptr, &render_pass) == VK_SUCCESS), "failed to create render pass!");
 
 	this->render_passes[hash] = render_pass;
 

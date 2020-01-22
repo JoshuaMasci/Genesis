@@ -1,5 +1,7 @@
 #include "VulkanPipelinePool.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 using namespace Genesis;
 
 VulkanPipelinePool::VulkanPipelinePool(VkDevice device)
@@ -362,11 +364,6 @@ VkPipeline VulkanThreadPipelinePool::createPipeline(VulkanShader* shader, VkRend
 	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
 	VkPipeline pipeline = VK_NULL_HANDLE;
-
-	if (vkCreateGraphicsPipelines(this->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create graphics pipeline!");
-	}
-
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateGraphicsPipelines(this->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) == VK_SUCCESS), "failed to create graphics pipeline");
 	return pipeline;
 }

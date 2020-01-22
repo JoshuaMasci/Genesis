@@ -1,5 +1,7 @@
 #include "Renderer.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 using namespace Genesis;
 
 Renderer::Renderer(RenderingBackend* backend)
@@ -43,6 +45,8 @@ void Renderer::startLayer()
 
 void Renderer::endLayer()
 {
+	GENESIS_ENGINE_ASSERT_ERROR((this->command_buffer != nullptr), "Command buffer not valid");
+
 	{
 		vector2U size = this->backend->getScreenSize();
 		float aspect_ratio = ((float)size.x) / ((float) size.y);
@@ -64,15 +68,13 @@ void Renderer::endLayer()
 		this->drawModel(this->shader, mesh_settings, this->mesh, &uniform, (uint32_t)sizeof(ColorUniform));
 	}
 
-	assert(this->command_buffer != nullptr);
-
 	this->backend->endMTCommandBuffer(this->mt_command_buffer);
 	this->command_buffer = nullptr;
 }
 
 void Renderer::drawModel(Shader shader, PipelineSettings& settings, Mesh& mesh, void* uniform_const, uint32_t uniform_const_size)
 {
-	assert(this->command_buffer != nullptr);
+	GENESIS_ENGINE_ASSERT_ERROR((this->command_buffer != nullptr), "Command buffer not valid");
 	this->command_buffer->setShader(shader);
 	this->command_buffer->setPipelineSettings(settings);
 	if(uniform_const_size > 0)

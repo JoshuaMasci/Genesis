@@ -1,5 +1,7 @@
 #include "VulkanBackend.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 #include "Genesis/Rendering/Vulkan/VulkanPhysicalDevicePicker.hpp"
 
 using namespace Genesis;
@@ -292,10 +294,7 @@ void VulkanBackend::endFrame()
 	graphics_submit_info.pCommandBuffers = this->graphics_command_buffers.data();
 
 	//Submit command buffers
-	if (vkQueueSubmit(this->device->getGraphicsQueue(), 1, &graphics_submit_info, this->frames[this->frame_index].frame_done_fence) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to submit command buffer!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR((vkQueueSubmit(this->device->getGraphicsQueue(), 1, &graphics_submit_info, this->frames[this->frame_index].frame_done_fence) == VK_SUCCESS), "failed to submit command buffer");
 
 	//Present the image to the screen
 	VkPresentInfoKHR present_info = {};

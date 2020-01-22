@@ -1,5 +1,7 @@
 #include "VulkanPhysicalDevicePicker.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 #include "Genesis/Rendering/Vulkan/VulkanQueueFamily.hpp"
 
 using namespace Genesis;
@@ -18,10 +20,7 @@ VkPhysicalDevice VulkanPhysicalDevicePicker::pickDevice(VkInstance instance, VkS
 	uint32_t deviceCount = 0;
 	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
-	if (deviceCount == 0)
-	{
-		throw std::runtime_error("failed to find GPUs with Vulkan support!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR((deviceCount != 0), "failed to find GPUs with Vulkan support");
 
 	vector<VkPhysicalDevice> devices(deviceCount);
 	vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
@@ -35,10 +34,7 @@ VkPhysicalDevice VulkanPhysicalDevicePicker::pickDevice(VkInstance instance, VkS
 		}
 	}
 
-	if (physicalDevice == VK_NULL_HANDLE)
-	{
-		throw std::runtime_error("failed to find a suitable GPU!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR(physicalDevice != VK_NULL_HANDLE, "failed to find a suitable GPU");
 
 	return physicalDevice;
 }

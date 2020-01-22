@@ -2,7 +2,7 @@
 
 using namespace Genesis;
 
-#include "Genesis/Core/Log.hpp"
+#include "Genesis/Debug/Log.hpp"
 #include <fstream>
 
 #define TINYOBJLOADER_IMPLEMENTATION

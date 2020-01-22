@@ -1,5 +1,7 @@
 #include "VulkanCommandPool.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 #include <stdexcept>
 
 using namespace Genesis;
@@ -15,10 +17,7 @@ VulkanCommandPool::VulkanCommandPool(VkDevice device, uint32_t queue_family_inde
 	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	pool_info.queueFamilyIndex = queue_family_index;
 	pool_info.flags = flags;
-	if (vkCreateCommandPool(this->device, &pool_info, nullptr, &this->command_pool) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create graphics command pool!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateCommandPool(this->device, &pool_info, nullptr, &this->command_pool) == VK_SUCCESS), "failed to create graphics command pool");
 }
 
 VulkanCommandPool::~VulkanCommandPool()
@@ -38,10 +37,7 @@ VkCommandBuffer VulkanCommandPool::getCommandBuffer()
 		alloc_info.commandPool = this->command_pool;
 		alloc_info.level = this->command_buffer_level;
 		alloc_info.commandBufferCount = 1;
-		if (vkAllocateCommandBuffers(this->device, &alloc_info, &buffer) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to allocate command buffers!");
-		}
+		GENESIS_ENGINE_ASSERT_ERROR((vkAllocateCommandBuffers(this->device, &alloc_info, &buffer) == VK_SUCCESS), "failed to allocate command buffers")
 	}
 
 	return buffer;

@@ -1,5 +1,7 @@
 #include "VulkanFramebuffer.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 using namespace Genesis;
 
 VulkanFramebuffer::VulkanFramebuffer(VulkanDevice* device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass)
@@ -41,10 +43,7 @@ VulkanFramebuffer::VulkanFramebuffer(VulkanDevice* device, VkExtent2D size, List
 		view_info.subresourceRange.baseArrayLayer = 0;
 		view_info.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(this->device->get(), &view_info, nullptr, &this->images[i].image_view) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create color image view!");
-		}
+		GENESIS_ENGINE_ASSERT_ERROR((vkCreateImageView(this->device->get(), &view_info, nullptr, &this->images[i].image_view) == VK_SUCCESS), "failed to create color image view");
 
 		this->images[i].image_format = color_formats[i];
 		image_views.push_back(this->images[i].image_view);
@@ -80,10 +79,7 @@ VulkanFramebuffer::VulkanFramebuffer(VulkanDevice* device, VkExtent2D size, List
 		view_info.subresourceRange.baseArrayLayer = 0;
 		view_info.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(this->device->get(), &view_info, nullptr, &this->depth_image.image_view) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create depth image view!");
-		}
+		GENESIS_ENGINE_ASSERT_ERROR((vkCreateImageView(this->device->get(), &view_info, nullptr, &this->depth_image.image_view) == VK_SUCCESS), "failed to create depth image view");
 
 		this->depth_image.image_format = depth_format;
 		image_views.push_back(this->depth_image.image_view);
@@ -100,10 +96,7 @@ VulkanFramebuffer::VulkanFramebuffer(VulkanDevice* device, VkExtent2D size, List
 	framebuffer_info.height = this->size.height;
 	framebuffer_info.layers = 1;
 
-	if (vkCreateFramebuffer(this->device->get(), &framebuffer_info, nullptr, &this->framebuffer) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create frameBuffer!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateFramebuffer(this->device->get(), &framebuffer_info, nullptr, &this->framebuffer) == VK_SUCCESS), "failed to create frameBuffer");
 
 	this->clear_values.resize(color_formats.size());
 	for (size_t i = 0; i < clear_values.size(); i++)

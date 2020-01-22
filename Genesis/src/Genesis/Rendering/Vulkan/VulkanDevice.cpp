@@ -1,8 +1,10 @@
 #define VMA_IMPLEMENTATION
 
+#include "Genesis/Debug/Assert.hpp"
+
 #include "VulkanDevice.hpp"
 
-#include "Genesis/Core/Log.hpp"
+#include "Genesis/Debug/Log.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanQueueFamily.hpp"
 
 using namespace Genesis;
@@ -78,10 +80,7 @@ VulkanDevice::VulkanDevice(VkPhysicalDevice device, VkSurfaceKHR surface, vector
 		create_info.enabledLayerCount = 0;
 	}
 
-	if (vkCreateDevice(this->physical_device, &create_info, nullptr, &this->logical_device) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create logical device!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateDevice(this->physical_device, &create_info, nullptr, &this->logical_device) == VK_SUCCESS), "failed to create logical device");
 
 	vkGetDeviceQueue(this->logical_device, queue_allocator.graphics.queue_family, queue_allocator.graphics.queue_index, &this->graphics_queue);
 	vkGetDeviceQueue(this->logical_device, queue_allocator.present.queue_family, queue_allocator.present.queue_index, &this->present_queue);
@@ -127,11 +126,7 @@ void VulkanDevice::createBuffer(VkBufferCreateInfo* buffer_create, VmaMemoryUsag
 	VmaAllocationCreateInfo alloc_info = {};
 	alloc_info.usage = memory_usage;
 
-	VkResult result = vmaCreateBuffer(this->allocator, buffer_create, &alloc_info, buffer, memory, memory_info);
-	if (result != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create buffer!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR((vmaCreateBuffer(this->allocator, buffer_create, &alloc_info, buffer, memory, memory_info) == VK_SUCCESS), "failed to create buffer");
 }
 
 void VulkanDevice::destroyBuffer(VkBuffer buffer, VmaAllocation memory)
@@ -143,12 +138,7 @@ void VulkanDevice::createImage(VkImageCreateInfo* image_create, VmaMemoryUsage m
 {
 	VmaAllocationCreateInfo alloc_info = {};
 	alloc_info.usage = memory_usage;
-
-	VkResult result = vmaCreateImage(this->allocator, image_create, &alloc_info, image, memory, memory_info);
-	if (result != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create image!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR((vmaCreateImage(this->allocator, image_create, &alloc_info, image, memory, memory_info) == VK_SUCCESS), "failed to create image");
 }
 
 void VulkanDevice::destroyImage(VkImage image, VmaAllocation memory)
@@ -158,16 +148,10 @@ void VulkanDevice::destroyImage(VkImage image, VmaAllocation memory)
 
 VkSemaphore VulkanDevice::createSemaphore()
 {
+	VkSemaphore semaphore;
 	VkSemaphoreCreateInfo semaphore_info = {};
 	semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-	VkSemaphore semaphore;
-
-	if (vkCreateSemaphore(this->logical_device, &semaphore_info, nullptr, &semaphore) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create semaphore");
-	}
-
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateSemaphore(this->logical_device, &semaphore_info, nullptr, &semaphore) == VK_SUCCESS), "failed to create semaphore");
 	return semaphore;
 }
 
@@ -178,17 +162,11 @@ void VulkanDevice::destroySemaphore(VkSemaphore semaphore)
 
 VkFence VulkanDevice::createFence()
 {
+	VkFence fence;
 	VkFenceCreateInfo fence_info = {};
 	fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 	fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-	VkFence fence;
-
-	if (vkCreateFence(this->logical_device, &fence_info, nullptr, &fence) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create fence");
-	}
-
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateFence(this->logical_device, &fence_info, nullptr, &fence) == VK_SUCCESS), "failed to create fence");
 	return fence;
 }
 

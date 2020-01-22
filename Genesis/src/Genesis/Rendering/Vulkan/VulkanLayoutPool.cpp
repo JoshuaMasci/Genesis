@@ -1,5 +1,7 @@
 #include "VulkanLayoutPool.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 #include "Genesis/Core/MurmurHash2.hpp"
 
 #include <stdexcept>
@@ -44,11 +46,7 @@ VkDescriptorSetLayout VulkanLayoutPool::getDescriptorLayout(List<VkDescriptorSet
 		descriptor_set_layout_info.flags = 0;
 		descriptor_set_layout_info.bindingCount = (uint32_t)bindings.size();
 		descriptor_set_layout_info.pBindings = bindings.data();
-
-		if (vkCreateDescriptorSetLayout(this->device, &descriptor_set_layout_info, nullptr, &layout) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create descriptor set layout!");
-		}
+		GENESIS_ENGINE_ASSERT_ERROR((vkCreateDescriptorSetLayout(this->device, &descriptor_set_layout_info, nullptr, &layout) == VK_SUCCESS), "failed to create descriptor set layout");
 
 		this->descriptor_layouts[hash_value] = layout;
 	}
@@ -73,17 +71,11 @@ VkPipelineLayout VulkanLayoutPool::getPipelineLayout(List<VkDescriptorSetLayout>
 	{
 		VkPipelineLayoutCreateInfo pipeline_layout_info = {};
 		pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-
 		pipeline_layout_info.setLayoutCount = (uint32_t)layouts.size();
 		pipeline_layout_info.pSetLayouts = layouts.data();
-
 		pipeline_layout_info.pushConstantRangeCount = (uint32_t)ranges.size();
 		pipeline_layout_info.pPushConstantRanges = ranges.data();
-
-		if (vkCreatePipelineLayout(this->device, &pipeline_layout_info, nullptr, &layout) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create pipeline layout!");
-		}
+		GENESIS_ENGINE_ASSERT_ERROR((vkCreatePipelineLayout(this->device, &pipeline_layout_info, nullptr, &layout) == VK_SUCCESS), "failed to create pipeline layout");
 
 		this->pipeline_layouts[hash_value] = layout;
 	}

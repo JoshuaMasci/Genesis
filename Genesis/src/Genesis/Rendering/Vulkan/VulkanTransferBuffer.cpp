@@ -1,5 +1,7 @@
 #include "VulkanTransferBuffer.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 #include "Genesis/Rendering/Vulkan/VulkanImageUtils.hpp"
 
 using namespace Genesis;
@@ -50,10 +52,7 @@ bool VulkanTransferBuffer::SubmitTransfers(VkQueue queue)
 	{
 		VkCommandBufferBeginInfo begin_info = {};
 		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		if (vkBeginCommandBuffer(this->transfer_buffer, &begin_info) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to begin recording primary command buffer!");
-		}
+		GENESIS_ENGINE_ASSERT_ERROR((vkBeginCommandBuffer(this->transfer_buffer, &begin_info) == VK_SUCCESS), "failed to begin recording transfer buffer");
 
 		for (size_t i = 0; i < this->copy_buffer_list_index; i++)
 		{
@@ -79,10 +78,7 @@ bool VulkanTransferBuffer::SubmitTransfers(VkQueue queue)
 		submit_info.signalSemaphoreCount = 1;
 		submit_info.pSignalSemaphores = &this->transfer_done_semaphore;
 
-		if (vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to submit command buffer!");
-		}
+		GENESIS_ENGINE_ASSERT_ERROR((vkQueueSubmit(queue, 1, &submit_info, VK_NULL_HANDLE) == VK_SUCCESS), "failed to submit transfer buffer");
 
 		this->transfer_count = 0;
 		submitted = true;

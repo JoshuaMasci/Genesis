@@ -1,5 +1,7 @@
 #include "VulkanCommanBuffer.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 #include "Genesis/Rendering/Vulkan/VulkanShader.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanBuffer.hpp"
 #include "Genesis/Rendering/Vulkan/VulkanTexture.hpp"
@@ -29,10 +31,7 @@ void VulkanCommandBufferInternal::startPrimary(VkFramebuffer frameBuffer, VkRend
 
 	VkCommandBufferBeginInfo begin_info = {};
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	if (vkBeginCommandBuffer(this->command_buffer, &begin_info) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to begin recording command buffer!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR(vkBeginCommandBuffer(this->command_buffer, &begin_info) == VK_SUCCESS, "failed to begin recording command buffer");
 
 	//Setup Default Dynamic States
 	VkViewport viewport = {};
@@ -72,10 +71,8 @@ void VulkanCommandBufferInternal::startSecondary(VkFramebuffer frameBuffer, VkRe
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	begin_info.pInheritanceInfo = &inheritance_info;
 	begin_info.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-	if (vkBeginCommandBuffer(this->command_buffer, &begin_info) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to begin recording command buffer!");
-	}
+
+	GENESIS_ENGINE_ASSERT_ERROR(vkBeginCommandBuffer(this->command_buffer, &begin_info) == VK_SUCCESS, "failed to begin recording command buffer");
 
 	this->current_framebuffer = frameBuffer;
 	this->current_render_pass = render_pass;
@@ -183,8 +180,8 @@ void VulkanCommandBufferInternal::setScissor(VkRect2D& scissor_rect)
 
 void VulkanCommandBufferInternal::setUniformBuffer(uint32_t set, uint32_t binding, VkBuffer buffer, uint64_t buffer_size)
 {
-	assert(set < this->current_descriptor_sets.size() && binding < this->current_descriptor_sets[set].bindings.size());
-	assert(this->current_descriptor_sets[set].bindings[binding].type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+	GENESIS_ENGINE_ASSERT_ERROR((set < this->current_descriptor_sets.size() && binding < this->current_descriptor_sets[set].bindings.size()), "Binding index out of range");
+	GENESIS_ENGINE_ASSERT_ERROR((this->current_descriptor_sets[set].bindings[binding].type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER), "Incorrect binding type");
 
 	this->current_descriptor_sets[set].bindings[binding].data.uniform_buffer.buffer = buffer;
 	this->current_descriptor_sets[set].bindings[binding].data.uniform_buffer.size = buffer_size;
@@ -193,8 +190,8 @@ void VulkanCommandBufferInternal::setUniformBuffer(uint32_t set, uint32_t bindin
 
 void VulkanCommandBufferInternal::setUniformTexture(uint32_t set, uint32_t binding, VkImageView texture, VkSampler sampler)
 {
-	assert(set < this->current_descriptor_sets.size() && binding < this->current_descriptor_sets[set].bindings.size());
-	assert(this->current_descriptor_sets[set].bindings[binding].type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+	GENESIS_ENGINE_ASSERT_ERROR((set < this->current_descriptor_sets.size() && binding < this->current_descriptor_sets[set].bindings.size()), "Binding index out of range");
+	GENESIS_ENGINE_ASSERT_ERROR((this->current_descriptor_sets[set].bindings[binding].type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER), "Incorrect binding type");
 
 	this->current_descriptor_sets[set].bindings[binding].data.image_sampler.image = texture;
 	this->current_descriptor_sets[set].bindings[binding].data.image_sampler.sampler = sampler;
@@ -415,10 +412,7 @@ void VulkanCommandBufferMultithread::start(VulkanFramebuffer* framebuffer_target
 
 	VkCommandBufferBeginInfo begin_info = {};
 	begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	if (vkBeginCommandBuffer(this->primary_buffer, &begin_info) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to begin recording command buffer!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR(vkBeginCommandBuffer(this->primary_buffer, &begin_info) == VK_SUCCESS, "failed to begin recording command buffer");
 
 	VkFramebuffer frameBuffer = framebuffer_target->get();
 	VkRenderPass render_pass = framebuffer_target->getRenderPass();

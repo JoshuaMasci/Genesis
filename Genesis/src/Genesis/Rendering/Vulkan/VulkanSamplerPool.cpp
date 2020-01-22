@@ -1,5 +1,7 @@
 #include "VulkanSamplerPool.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 using namespace Genesis;
 
 VulkanSamplerPool::VulkanSamplerPool(VkDevice device)
@@ -118,11 +120,7 @@ VkSampler VulkanSamplerPool::getSampler(Sampler& sampler)
 		sampler_info.minLod = sampler.min_lod;
 		sampler_info.maxLod = sampler.max_lod;
 		sampler_info.borderColor = getBorderColor(sampler.border_color);
-
-		if (vkCreateSampler(this->device, &sampler_info, nullptr, &return_sampler) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create texture sampler!");
-		}
+		GENESIS_ENGINE_ASSERT_ERROR((vkCreateSampler(this->device, &sampler_info, nullptr, &return_sampler) == VK_SUCCESS), "failed to create texture sampler");
 
 		this->samplers[hash_value] = return_sampler;
 	}

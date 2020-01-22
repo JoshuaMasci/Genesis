@@ -1,5 +1,7 @@
 #include "VulkanSwapchain.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 #include "Genesis/Rendering/Vulkan/VulkanQueueFamily.hpp"
 #include <algorithm>
 
@@ -178,12 +180,7 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 	create_info.clipped = VK_TRUE;
 	create_info.oldSwapchain = old_swapchain;
 
-	VkResult result = vkCreateSwapchainKHR(this->device->get(), &create_info, nullptr, &new_swapchain.swapchain);
-	if (result != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create swap chain!");
-	}
-
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateSwapchainKHR(this->device->get(), &create_info, nullptr, &new_swapchain.swapchain) == VK_SUCCESS), "failed to create swap chain");
 
 	//Render Pass
 	{
@@ -225,10 +222,7 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 		renderPassInfo.dependencyCount = 1;
 		renderPassInfo.pDependencies = &dependency;
 
-		if (vkCreateRenderPass(this->device->get(), &renderPassInfo, nullptr, &new_swapchain.render_pass) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create screen render pass!");
-		}
+		GENESIS_ENGINE_ASSERT_ERROR((vkCreateRenderPass(this->device->get(), &renderPassInfo, nullptr, &new_swapchain.render_pass) == VK_SUCCESS), "failed to create screen render pass");
 	}
 
 	//Swapchain Images
@@ -256,10 +250,7 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 		create_info.subresourceRange.baseArrayLayer = 0;
 		create_info.subresourceRange.layerCount = 1;
 
-		if (vkCreateImageView(device->get(), &create_info, nullptr, &new_swapchain.image_views[i]) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create image views!");
-		}
+		GENESIS_ENGINE_ASSERT_ERROR((vkCreateImageView(device->get(), &create_info, nullptr, &new_swapchain.image_views[i]) == VK_SUCCESS), "failed to create image views");
 	}
 
 
@@ -279,10 +270,7 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 		framebuffer_info.height = new_swapchain.size.height;
 		framebuffer_info.layers = 1;
 
-		if (vkCreateFramebuffer(device->get(), &framebuffer_info, nullptr, &new_swapchain.framebuffers[i]) != VK_SUCCESS)
-		{
-			throw std::runtime_error("failed to create frameBuffer!");
-		}
+		GENESIS_ENGINE_ASSERT_ERROR((vkCreateFramebuffer(device->get(), &framebuffer_info, nullptr, &new_swapchain.framebuffers[i]) == VK_SUCCESS), "failed to create framebuffer");
 	}
 
 	return new_swapchain;

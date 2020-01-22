@@ -1,6 +1,7 @@
 #include "VulkanDebugLayer.hpp"
 
-#include "Genesis/Core/Log.hpp"
+#include "Genesis/Debug/Assert.hpp"
+#include "Genesis/Debug/Log.hpp"
 
 using namespace Genesis;
 
@@ -29,15 +30,11 @@ VulkanDebugLayer::VulkanDebugLayer(VkInstance instance)
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(this->instance, "vkCreateDebugUtilsMessengerEXT");
 	if (func != nullptr)
 	{
-		VkResult result = func(this->instance, &create_info, nullptr, &this->debug_messenger);
-		if (result != VK_SUCCESS)
-		{
-			GENESIS_ENGINE_ERROR("Failed to set up debug messenger");
-		}
+		GENESIS_ENGINE_ASSERT_ERROR((func(this->instance, &create_info, nullptr, &this->debug_messenger) == VK_SUCCESS), "failed to set up debug messenger");
 	}
 	else
 	{
-		GENESIS_ENGINE_ERROR("Failed to set up debug messenger");
+		GENESIS_ENGINE_ERROR("failed to set up debug messenger");
 	}
 }
 

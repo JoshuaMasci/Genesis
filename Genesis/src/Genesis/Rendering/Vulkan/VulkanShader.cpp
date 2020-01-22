@@ -1,5 +1,7 @@
 #include "VulkanShader.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 #include "spirv_reflect.h"
 
 using namespace Genesis;
@@ -13,10 +15,7 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string& shader_data)
 	createInfo.codeSize = shader_data.length();
 	createInfo.pCode = (uint32_t*)shader_data.data();
 
-	if (vkCreateShaderModule(this->device, &createInfo, nullptr, &this->shader_module) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create shader module!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateShaderModule(this->device, &createInfo, nullptr, &this->shader_module) == VK_SUCCESS), "failed to create shader module");
 
 	SpvReflectShaderModule module;
 	SpvReflectResult result = spvReflectCreateShaderModule(shader_data.length(), (uint32_t*)shader_data.data(), &module);
@@ -136,11 +135,7 @@ void fillDescriptorSetLayouts(List<List<VkDescriptorSetLayoutBinding>>& destinat
 			{
 				if (destination[i][j].descriptorCount > 0)
 				{
-					if ((destination[i][j].descriptorType != source[i][j].type) || (destination[i][j].descriptorCount != source[i][j].count))
-					{
-						throw std::runtime_error("Shader type mismatch");
-					}
-
+					GENESIS_ENGINE_ASSERT_ERROR(((destination[i][j].descriptorType == source[i][j].type) && (destination[i][j].descriptorCount == source[i][j].count)), "Shader type mismatch");
 					destination[i][j].stageFlags |= stage;
 				}
 				else
@@ -184,11 +179,7 @@ void fillDescriptorSetBindings(List<List<DescriptorSetBinding>>& destination, Li
 			{
 				if (destination[i][j].count > 0)
 				{
-					if ((destination[i][j].type != source[i][j].type) || (destination[i][j].count != source[i][j].count))
-					{
-						throw std::runtime_error("Shader type mismatch");
-					}
-
+					GENESIS_ENGINE_ASSERT_ERROR(((destination[i][j].type == source[i][j].type) && (destination[i][j].count == source[i][j].count)), "Shader type mismatch");
 					destination[i][j].stage |= stage;
 				}
 				else

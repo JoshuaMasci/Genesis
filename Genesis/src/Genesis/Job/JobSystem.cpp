@@ -1,6 +1,6 @@
 #include "JobSystem.hpp"
 
-#include "Genesis/Core/Log.hpp"
+#include "Genesis/Debug/Log.hpp"
 
 #define sleep_time_milliseconds 2
 

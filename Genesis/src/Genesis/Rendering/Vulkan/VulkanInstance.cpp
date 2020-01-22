@@ -1,5 +1,7 @@
 #include "VulkanInstance.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 VkInstance Genesis::VulkanInstance::create(uint32_t vulkan_version, const char* app_name, uint32_t app_version, const char* engine_name, uint32_t engine_version, vector<const char*>& extensions, vector<const char*>& layers)
 {
 	VkInstance instance = VK_NULL_HANDLE;
@@ -36,12 +38,7 @@ VkInstance Genesis::VulkanInstance::create(uint32_t vulkan_version, const char* 
 		create_info.enabledLayerCount = 0;
 	}
 
-	VkResult result = vkCreateInstance(&create_info, nullptr, &instance);
-
-	if (result != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create Vulkan Instance!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateInstance(&create_info, nullptr, &instance) == VK_SUCCESS), "failed to create Vulkan Instance");
 
 	return instance;
 }
@@ -50,7 +47,7 @@ VkInstance Genesis::VulkanInstance::create(uint32_t vulkan_version, const char* 
 
 VkSurfaceKHR Genesis::VulkanSurface::create(VkInstance instance, Window* window)
 {
-	VkResult result = (VkResult)1;//Not Success
+	VkResult result = VK_ERROR_INITIALIZATION_FAILED;
 	VkSurfaceKHR surface = VK_NULL_HANDLE;
 
 #ifdef VK_USE_PLATFORM_WIN32_KHR
@@ -60,10 +57,6 @@ VkSurfaceKHR Genesis::VulkanSurface::create(VkInstance instance, Window* window)
 	result = vkCreateWin32SurfaceKHR(instance, &surfaceCreateInfo, NULL, &surface);
 #endif
 
-	if (result != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to attach to surface");
-	}
-
+	GENESIS_ENGINE_ASSERT_ERROR((result == VK_SUCCESS), "failed to create to surface");
 	return surface;
 }

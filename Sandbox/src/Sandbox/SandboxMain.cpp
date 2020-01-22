@@ -3,8 +3,6 @@
 #include "Sandbox/SandboxApplication.hpp"
 
 #include "Genesis/Core/Types.hpp"
-#include "Genesis/Core/Log.hpp"
-#include "Genesis/Core/Profiler.hpp"
 
 int main(int argc, char** argv)
 {

@@ -9,6 +9,10 @@ source_group("Main" FILES ${GENESIS_MAIN})
 file(GLOB_RECURSE GENESIS_CORE "src/Genesis/Core/*.*")
 source_group("Core" FILES ${GENESIS_CORE})
 
+file(GLOB_RECURSE GENESIS_DEBUG "src/Genesis/Debug/*.*")
+source_group("Debug" FILES ${GENESIS_DEBUG})
+
+
 #TODO Select Subdirectories
 file(GLOB GENESIS_RENDERING "src/Genesis/Rendering/*.*")
 source_group("Rendering Core" FILES ${GENESIS_RENDERING})
@@ -16,7 +20,7 @@ source_group("Rendering Core" FILES ${GENESIS_RENDERING})
 #file(GLOB_RECURSE GENESIS_RENDERING_OPENGL "src/Genesis/Rendering/OpenGL/*.*")
 #source_group("Rendering OpenGL" FILES ${GENESIS_RENDERING_OPENGL})
 
-file(GLOB_RECURSE GENESIS_RENDERING_VULKAN "src/Genesis/Rendering/Vulkan/*.*")
+file(GLOB GENESIS_RENDERING_VULKAN "src/Genesis/Rendering/Vulkan/*.*")
 source_group("Rendering Vulkan" FILES ${GENESIS_RENDERING_VULKAN})
 
 file(GLOB_RECURSE GENESIS_INPUT "src/Genesis/Input/*.*")
@@ -38,7 +42,7 @@ file(GLOB_RECURSE GENESIS_PHYSICS "src/Genesis/Physics/*.*")
 source_group("Physics" FILES ${GENESIS_PHYSICS})
 
 #Create Libary
-add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_RENDERING} ${GENESIS_RENDERING_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM} ${GENESIS_SPIRV} ${GENESIS_GLTF})
+add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_DEBUG} ${GENESIS_RENDERING} ${GENESIS_RENDERING_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM} ${GENESIS_SPIRV} ${GENESIS_GLTF})
 
 include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)

@@ -1,5 +1,7 @@
 #include "VulkanDescriptorPool.hpp"
 
+#include "Genesis/Debug/Assert.hpp"
+
 #include "Genesis/Core/List.hpp"
 #include "Genesis/Core/MurmurHash2.hpp"
 
@@ -17,11 +19,7 @@ VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, uint32_t frame_count
 	pool_info.pPoolSizes = types.data();
 	pool_info.maxSets = max_sets;
 	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-
-	if (vkCreateDescriptorPool(this->device, &pool_info, nullptr, &this->pool) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to create descriptor pool!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateDescriptorPool(this->device, &pool_info, nullptr, &this->pool) == VK_SUCCESS), "failed to create descriptor pool");
 
 	this->frame_data = List<FrameData>(frame_count);
 	for (size_t i = 0; i < this->frame_data.size(); i++)
@@ -44,11 +42,7 @@ VkDescriptorSet VulkanDescriptorPool::getDescriptorSet(VkDescriptorSetLayout lay
 	set_alloc_info.descriptorPool = this->pool;
 	set_alloc_info.descriptorSetCount = 1;
 	set_alloc_info.pSetLayouts = &layout;
-
-	if (vkAllocateDescriptorSets(this->device, &set_alloc_info, &descriptor_set) != VK_SUCCESS)
-	{
-		throw std::runtime_error("failed to allocate descriptor sets!");
-	}
+	GENESIS_ENGINE_ASSERT_ERROR((vkAllocateDescriptorSets(this->device, &set_alloc_info, &descriptor_set) == VK_SUCCESS), "failed to allocate descriptor sets");
 
 	//TODO: bounds check and grow array if needed
 	FrameData* frame = &this->frame_data[frame_index];
