@@ -1,5 +1,7 @@
 #include "GameScene.hpp"
 
+#include "Genesis/Debug/Profiler.hpp"
+
 #include "Genesis/Application.hpp"
 #include "Genesis/WorldTransform.hpp"
 #include "Genesis/Rendering/Renderer.hpp"
@@ -114,6 +116,7 @@ GameScene::~GameScene()
  
 void GameScene::runSimulation(double delta_time)
 {
+	GENESIS_PROFILE_FUNCTION("GameScene_runSimulation");
 	auto view = this->entity_registry.view<TempComponent>();
 
 	/*for (auto entity : view) 
@@ -122,9 +125,9 @@ void GameScene::runSimulation(double delta_time)
 		temp.model_matrix = temp.transform.calcMatrix4F();
 	}*/
 
-	/*size_t count = view.size();
+	size_t count = view.size();
 
-	size_t elements_per_job = 100;
+	size_t elements_per_job = 50;
 	size_t number_of_jobs = count / elements_per_job;
 	List<LambdaJob> jobs(number_of_jobs);
 	for (size_t i = 0; i < jobs.size(); i++)
@@ -139,6 +142,7 @@ void GameScene::runSimulation(double delta_time)
 
 		jobs[i] = LambdaJob([=](size_t thread)
 		{
+			GENESIS_PROFILE_FUNCTION("LambdaJob_Test");
 			//GENESIS_INFO("Run on thread: {}", thread);
 			for (size_t i = start; i < end; i++)
 			{
@@ -155,13 +159,14 @@ void GameScene::runSimulation(double delta_time)
 	{
 		//Blocking call
 		jobs[i].waitTillFinished();
-	}*/
+	}
 }
 
 #include "imgui.h"
 
 void GameScene::drawWorld(double delta_time)
 {
+	GENESIS_PROFILE_FUNCTION("GameScene_drawWorld");
 	CommandBuffer* command_buffer = this->application->rendering_backend->beginFrame();
 	if (command_buffer != nullptr)
 	{

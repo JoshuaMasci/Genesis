@@ -1,6 +1,7 @@
 #include "VulkanBackend.hpp"
 
 #include "Genesis/Debug/Assert.hpp"
+#include "Genesis/Debug/Profiler.hpp"
 
 #include "Genesis/Rendering/Vulkan/VulkanPhysicalDevicePicker.hpp"
 
@@ -215,6 +216,8 @@ vector2U VulkanBackend::getScreenSize()
 
 CommandBuffer* VulkanBackend::beginFrame()
 {
+	GENESIS_PROFILE_FUNCTION("VulkanBackend_beginFrame");
+
 	if (this->swapchain->invalid())
 	{
 		vector2U surface_size = this->window->getWindowSize();
@@ -253,6 +256,8 @@ CommandBuffer* VulkanBackend::beginFrame()
 
 void VulkanBackend::endFrame()
 {
+	GENESIS_PROFILE_FUNCTION("VulkanBackend_endFrame");
+
 	//End main command buffer
 	this->frames[this->frame_index].command_buffer->endPrimary();
 

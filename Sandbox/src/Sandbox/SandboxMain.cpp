@@ -6,9 +6,8 @@
 
 int main(int argc, char** argv)
 {
-	GENESIS_PROFILE_START();
+	GENESIS_ENGINE_DEBUG_START();
 
-	Genesis::Logging::inti_engine_logging("");
 	Genesis::Logging::inti_client_logging("Sandbox", "");
 	GENESIS_INFO("Sandbox Started");
 
@@ -60,7 +59,6 @@ int main(int argc, char** argv)
 	GENESIS_PROFILE_BLOCK_START("Sandbox_Exit");
 	delete sandbox;
 	GENESIS_PROFILE_BLOCK_END();
-
 
 	GENESIS_INFO("Sandbox Closed");
 
