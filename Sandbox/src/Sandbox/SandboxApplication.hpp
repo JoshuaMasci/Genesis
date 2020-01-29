@@ -8,7 +8,8 @@ public:
 	SandboxApplication();
 	virtual ~SandboxApplication();
 
-	virtual void drawWorld(double delta_time);
+	virtual void update(double delta_time) override;
+	virtual void render(double delta_time) override;
 protected:
 };
 
