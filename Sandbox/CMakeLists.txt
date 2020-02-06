@@ -17,6 +17,10 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/spdlog-1.5.0/include)
 link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/code/Debug/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/contrib/zlib/Debug/)
 
+include_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/src/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/build/lib/)
+add_definitions(-DIS_DOUBLE_PRECISION_ENABLED)
+
 #TEMP ENTT
 include_directories(${CMAKE_SOURCE_DIR}/lib/entt-3.2.2/src/)
 

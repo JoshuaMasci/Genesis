@@ -18,6 +18,8 @@
 
 namespace Genesis
 {
+	typedef double TimeStep;
+
 	//Puts string in the Genesis namespace
 	typedef std::string string;
 

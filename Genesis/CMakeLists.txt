@@ -53,6 +53,12 @@ target_link_libraries (Genesis assimp-vc140-mt)
 #TEMP ENTT
 include_directories(${CMAKE_SOURCE_DIR}/lib/entt-3.2.2/src/)
 
+#ReactPhysics3D
+include_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/src/)
+link_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/build/lib/)
+target_link_libraries (Genesis reactphysics3d)
+add_definitions(-DIS_DOUBLE_PRECISION_ENABLED)
+
 if(INCLUDE_EASY_PROFILER)
 	include_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/include/)
 	link_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/lib)

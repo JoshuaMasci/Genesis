@@ -4,7 +4,6 @@
 
 namespace Genesis
 {
-	typedef entt::registry EntityRegistry;
 	typedef entt::entity EntityId;
-
+	typedef entt::registry EntityRegistry;
 } 

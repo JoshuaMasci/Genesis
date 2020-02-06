@@ -30,7 +30,6 @@ SDL2_Platform::SDL2_Platform(Application* app)
 	this->keyboard_device->addButton("Debug_RollLeft", (ButtonIndex)KeyboardButton::Q);
 	this->keyboard_device->addButton("Debug_RollRight", (ButtonIndex)KeyboardButton::E);
 
-
 	//Create Mouse Device
 	this->mouse_device = new MouseDevice("SDL2 Mouse");
 	this->application->input_manager.addInputDevice(this->mouse_device);
@@ -286,7 +285,7 @@ KeyboardButton getGenesisKeyboardButton(SDL_Scancode scancode)
 	}
 }
 
-void SDL2_Platform::onUpdate(double delta_time)
+void SDL2_Platform::onUpdate(TimeStep time_step)
 {
 	//Event Loop
 	SDL_Event event;

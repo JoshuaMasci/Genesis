@@ -20,8 +20,8 @@ namespace Genesis
 
 		void run();
 
-		virtual void update(double delta_time);
-		virtual void render(double delta_time);
+		virtual void update(TimeStep time_step);
+		virtual void render(TimeStep time_step);
 
 		void close();
 		bool isRunning();

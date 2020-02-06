@@ -3,6 +3,8 @@
 #include "Genesis/Entity/Entity.hpp"
 
 #include "Genesis/Core/Application.hpp"
+#include "Genesis/Physics/PhysicsWorld.hpp"
+
 
 namespace Genesis
 {
@@ -12,9 +14,12 @@ namespace Genesis
 		World();
 		~World();
 
-		void runSimulation(Application* application, double delta_time);
+		void runSimulation(Application* application, TimeStep time_step);
 
 		EntityRegistry entity_registry;
 		EntityId camera;
+
+	private:
+		Physics::PhysicsWorld* physics_world = nullptr;
 	};
 }

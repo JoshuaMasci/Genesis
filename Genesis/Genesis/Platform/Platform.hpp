@@ -14,7 +14,7 @@ namespace Genesis
 	public:
 		Platform(Application* app): application(app) {};
 
-		virtual void onUpdate(double delta_time) = 0;
+		virtual void onUpdate(TimeStep time_step) = 0;
 
 	protected:
 		Application* const application;

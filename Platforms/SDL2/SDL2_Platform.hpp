@@ -15,7 +15,7 @@ namespace Genesis
 		SDL2_Platform(Application* app);
 		virtual ~SDL2_Platform();
 
-		virtual void onUpdate(double delta_time) override;
+		virtual void onUpdate(TimeStep time_step) override;
 		
 	private:
 

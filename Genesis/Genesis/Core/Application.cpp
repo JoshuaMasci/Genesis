@@ -59,10 +59,10 @@ void Application::run()
 
 		time_current = clock::now();
 		auto delta = std::chrono::duration_cast<std::chrono::duration<double>>(time_current - time_last);
-		double delta_time = delta.count();
+		TimeStep time_step = (TimeStep)delta.count();
 
-		this->update(delta_time);
-		this->render(delta_time);
+		this->update(time_step);
+		this->render(time_step);
 
 		time_last = time_current;
 
@@ -81,19 +81,19 @@ void Application::run()
 
 }
 
-void Application::update(double delta_time)
+void Application::update(TimeStep time_step)
 {
 	GENESIS_PROFILE_FUNCTION("Application::update");
 	this->input_manager.update();
 
 	if (this->platform != nullptr)
 	{
-		this->platform->onUpdate(delta_time);
+		this->platform->onUpdate(time_step);
 	}
 
 }
 
-void Application::render(double delta_time)
+void Application::render(TimeStep time_step)
 {
 	GENESIS_PROFILE_FUNCTION("Application::render");
 
