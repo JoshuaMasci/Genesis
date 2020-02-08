@@ -8,6 +8,8 @@
 #include "Genesis/Rendering/RenderingBackend.hpp"
 #include "Genesis/Rendering/RenderSystem.hpp"
 
+#include "Genesis/Scene/SceneRenderer.hpp"
+
 namespace Genesis
 {
 	class GameScene;
@@ -35,6 +37,9 @@ namespace Genesis
 		Window* window = nullptr;
 		RenderingBackend* rendering_backend = nullptr;
 		RenderSystem* render_system = nullptr;
+
+		Scene scene;
+		SceneRenderer* scene_renderer = nullptr;
 
 	protected:
 		bool is_running = true;

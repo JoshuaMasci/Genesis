@@ -12,7 +12,7 @@ SandboxApplication::SandboxApplication()
 	this->rendering_backend = new Genesis::VulkanBackend(this->window, this->job_system.getNumberOfJobThreads());
 	this->render_system = new Genesis::RenderSystem(this->rendering_backend);
 
-	this->world = new Genesis::World();
+	this->scene_renderer = new Genesis::SceneRenderer(this->rendering_backend);
 }
 
 SandboxApplication::~SandboxApplication()
@@ -23,8 +23,6 @@ SandboxApplication::~SandboxApplication()
 void SandboxApplication::update(Genesis::TimeStep time_step)
 {
 	Genesis::Application::update(time_step);
-
-	this->world->runSimulation(this, time_step);
 }
 
 void SandboxApplication::render(Genesis::TimeStep time_step)

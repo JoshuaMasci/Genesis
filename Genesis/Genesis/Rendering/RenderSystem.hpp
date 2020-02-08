@@ -22,9 +22,11 @@ namespace Genesis
 		CommandBuffer* command_buffer = nullptr;
 
 		Shader screen_shader = nullptr;
-		VertexBuffer screen_vertex;
-		IndexBuffer screen_index;
+		StaticBuffer screen_vertex;
+		StaticBuffer screen_index;
 		Sampler screen_sampler;
 		PipelineSettings screen_settings;
+
+		VertexInputDescription vertex_description;
 	};
 }

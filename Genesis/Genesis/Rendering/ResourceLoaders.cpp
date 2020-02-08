@@ -5,7 +5,41 @@ using namespace Genesis;
 #include "Genesis/Debug/Log.hpp"
 #include <fstream>
 
-#define TINYOBJLOADER_IMPLEMENTATION
+
+Shader ShaderLoader::loadShader(RenderingBackend* backend, string vert_file_path, string frag_file_path)
+{
+	string vert_data = "";
+	string frag_data = "";
+
+	std::ifstream vert_file(vert_file_path, std::ios::ate | std::ios::binary);
+	if (vert_file.is_open())
+	{
+		size_t fileSize = (size_t)vert_file.tellg();
+		vert_file.seekg(0);
+		vert_data.resize(fileSize);
+		vert_file.read(vert_data.data(), vert_data.size());
+		vert_file.close();
+	}
+
+	std::ifstream frag_file(frag_file_path, std::ios::ate | std::ios::binary);
+	if (frag_file.is_open())
+	{
+		size_t fileSize = (size_t)frag_file.tellg();
+		frag_file.seekg(0);
+		frag_data.resize(fileSize);
+		frag_file.read(frag_data.data(), frag_data.size());
+		frag_file.close();
+	}
+
+	return backend->createShader(vert_data, frag_data);
+}
+
+Shader ShaderLoader::loadShaderSingle(RenderingBackend* backend, string shader_file_path)
+{
+	return ShaderLoader::loadShader(backend, shader_file_path + ".vert.spv", shader_file_path + ".frag.spv");
+}
+
+/*#define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
 MeshTemp ObjLoader::loadMesh(RenderingBackend * backend, string mesh_file_path)
@@ -189,84 +223,10 @@ Texture PngLoader::loadTexture(RenderingBackend * backend, string texture_file_p
 	return nullptr;
 }
 
-Shader ShaderLoader::loadShader(RenderingBackend* backend, string vert_file_path, string frag_file_path)
-{
-	string vert_data = "";
-	string frag_data = "";
-
-	std::ifstream vert_file(vert_file_path, std::ios::ate | std::ios::binary);
-	if (vert_file.is_open())
-	{
-		size_t fileSize = (size_t)vert_file.tellg();
-		vert_file.seekg(0);
-		vert_data.resize(fileSize);
-		vert_file.read(vert_data.data(), vert_data.size());
-		vert_file.close();
-	}
-
-	std::ifstream frag_file(frag_file_path, std::ios::ate | std::ios::binary);
-	if (frag_file.is_open())
-	{
-		size_t fileSize = (size_t)frag_file.tellg();
-		frag_file.seekg(0);
-		frag_data.resize(fileSize);
-		frag_file.read(frag_data.data(), frag_data.size());
-		frag_file.close();
-	}
-
-	return backend->createShader(vert_data, frag_data);
-}
-
-Shader ShaderLoader::loadShaderSingle(RenderingBackend* backend, string shader_file_path)
-{
-	return ShaderLoader::loadShader(backend, shader_file_path + ".vert.spv", shader_file_path + ".frag.spv");
-}
-
-/*#define TINYGLTF_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "tiny_gltf.h"
-
-void GLTF_Loader::loadGLTF(RenderingBackend* backend, string file_path)
-{
-	using namespace tinygltf;
-
-	Model model;
-	TinyGLTF loader;
-	std::string err;
-	std::string warn;
-
-	//bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, argv[1]);
-	bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, file_path);
-
-	if (!warn.empty()) 
-	{
-		printf1("Warn: %s\n", warn.c_str());
-	}
-
-	if (!err.empty()) 
-	{
-		printf1("Err: %s\n", err.c_str());
-	}
-
-	if (!ret) 
-	{
-		printf1("Failed to parse glTF\n");
-		return;
-	}
-
-	tinygltf::Mesh* mesh = &model.meshes[0];
-	tinygltf::Primitive primitive = mesh->primitives[0];
-	tinygltf::Accessor indexAccessor = model.accessors[primitive.indices];
-	
-	int i = 1 + 7;
-}*/
-
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include "Genesis/Rendering/Model.hpp"
-
 
 matrix4F toMat4(aiMatrix4x4 matrix)
 {
@@ -443,4 +403,4 @@ Skeleton* AssimpLoader::loadSkeleton(RenderingBackend* backend, string file_path
 	}
 
 	return skeleton;
-}
+}*/

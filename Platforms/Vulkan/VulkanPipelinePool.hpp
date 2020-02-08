@@ -3,9 +3,9 @@
 #include "Genesis/Core/Types.hpp"
 #include "VulkanInclude.hpp"
 #include "VulkanShader.hpp"
+#include "VulkanVertexInputPool.hpp"
 
 #include "Genesis/Rendering/PipelineSettings.hpp"
-#include "Genesis/Rendering/VertexInputDescription.hpp"
 
 namespace Genesis
 {
@@ -46,7 +46,7 @@ namespace Genesis
 		VulkanThreadPipelinePool(VkDevice device, VulkanPipelinePool* main_pool);
 		~VulkanThreadPipelinePool();
 
-		VkPipeline getPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription* vertex_description);
+		VkPipeline getPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VulkanVertexInputDescription* vertex_description);
 
 	protected:
 		VkDevice device = VK_NULL_HANDLE;
@@ -56,7 +56,7 @@ namespace Genesis
 		shader_pipeline_map temp_map;
 		queue<VulkanPipelinePool::PipelineAddInfo> new_pipelines;
 
-		VkPipeline createPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription* vertex_description);
+		VkPipeline createPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VulkanVertexInputDescription* vertex_description);
 
 		friend class VulkanPipelinePool;
 	};

@@ -5,6 +5,7 @@
 #include "Genesis/Rendering/VertexInputDescription.hpp"
 #include "Genesis/Rendering/FramebufferLayout.hpp"
 #include "Genesis/Rendering/CommandBuffer.hpp"
+#include "Genesis/Rendering/Sampler.hpp"
 
 namespace Genesis
 {
@@ -19,15 +20,15 @@ namespace Genesis
 		virtual CommandBuffer* beginFrame() = 0;
 		virtual void endFrame() = 0;
 
-		virtual VertexBuffer createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryType memory_usage = MemoryType::GPU_Only) = 0;
-		virtual void destroyVertexBuffer(VertexBuffer vertex_buffer) = 0;
+		virtual Sampler createSampler(SamplerCreateInfo& create_info) = 0;
+		virtual VertexInputDescription createVertexInputDescription(vector<VertexElementType> input_elements) = 0;
 
-		virtual IndexBuffer createIndexBuffer(void* data, uint64_t data_size, IndexType type, MemoryType memory_usage = MemoryType::GPU_Only) = 0;
-		virtual void destroyIndexBuffer(IndexBuffer index_buffer) = 0;
+		virtual StaticBuffer createStaticBuffer(void* data, uint64_t data_size, BufferUsage buffer_usage, MemoryType memory_usage = MemoryType::GPU_Only) = 0;
+		virtual void destroyStaticBuffer(StaticBuffer buffer) = 0;
 
-		virtual UniformBuffer createUniformBuffer(uint64_t data_size, MemoryType memory_usage = MemoryType::CPU_Visable) = 0;
-		virtual void destroyUniformBuffer(UniformBuffer uniform_buffer) = 0;
-		virtual void setUniform(UniformBuffer uniform_buffer, void* data, uint64_t data_size) = 0;
+		virtual DynamicBuffer createDynamicBuffer(uint64_t data_size, BufferUsage buffer_usage, MemoryType memory_usage = MemoryType::CPU_Visable) = 0;
+		virtual void destroyDynamicBuffer(DynamicBuffer buffer) = 0;
+		virtual void writeDynamicBuffer(DynamicBuffer buffer, void* data, uint64_t data_size) = 0;
 
 		virtual Texture createTexture(vector2U size, void* data, uint64_t data_size) = 0;
 		virtual void destroyTexture(Texture texture) = 0;

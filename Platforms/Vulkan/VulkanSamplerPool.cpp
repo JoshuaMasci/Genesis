@@ -1,6 +1,7 @@
 #include "VulkanSamplerPool.hpp"
 
 #include "Genesis/Debug/Assert.hpp"
+#include "Genesis/Core/MurmurHash2.hpp"
 
 using namespace Genesis;
 
@@ -96,9 +97,13 @@ VkBorderColor getBorderColor(BorderColor color)
 	return VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
 }
 
-VkSampler VulkanSamplerPool::getSampler(Sampler& sampler)
+VkSampler VulkanSamplerPool::getSampler(SamplerCreateInfo& create_info)
 {
-	uint32_t hash_value = sampler.getHash();
+	MurmurHash2 hash;
+	hash.begin();
+	hash.add(create_info);
+	uint32_t hash_value = hash.end();
+
 	VkSampler return_sampler = VK_NULL_HANDLE;
 
 	this->map_lock.lock();
@@ -106,20 +111,20 @@ VkSampler VulkanSamplerPool::getSampler(Sampler& sampler)
 	{
 		VkSamplerCreateInfo sampler_info = {};
 		sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		sampler_info.magFilter = getFilterMode(sampler.mag_filter);
-		sampler_info.minFilter = getFilterMode(sampler.min_filter);
-		sampler_info.mipmapMode = getMipmapMode(sampler.mipmap_mode);
-		sampler_info.addressModeU = getAddressMode(sampler.U_address_mode);
-		sampler_info.addressModeV = getAddressMode(sampler.V_address_mode);
-		sampler_info.addressModeW = getAddressMode(sampler.W_address_mode);
-		sampler_info.mipLodBias = sampler.mip_lod_bias;
-		sampler_info.anisotropyEnable = (sampler.max_anisotropy == 0) ? VK_FALSE : VK_TRUE;
-		sampler_info.maxAnisotropy = (float)sampler.max_anisotropy;
-		sampler_info.compareEnable = (sampler.compare_op == CompareOp::Never) ? VK_FALSE : VK_TRUE;
-		sampler_info.compareOp = getCompareOp(sampler.compare_op);
-		sampler_info.minLod = sampler.min_lod;
-		sampler_info.maxLod = sampler.max_lod;
-		sampler_info.borderColor = getBorderColor(sampler.border_color);
+		sampler_info.magFilter = getFilterMode(create_info.mag_filter);
+		sampler_info.minFilter = getFilterMode(create_info.min_filter);
+		sampler_info.mipmapMode = getMipmapMode(create_info.mipmap_mode);
+		sampler_info.addressModeU = getAddressMode(create_info.U_address_mode);
+		sampler_info.addressModeV = getAddressMode(create_info.V_address_mode);
+		sampler_info.addressModeW = getAddressMode(create_info.W_address_mode);
+		sampler_info.mipLodBias = create_info.mip_lod_bias;
+		sampler_info.anisotropyEnable = (create_info.max_anisotropy == 0) ? VK_FALSE : VK_TRUE;
+		sampler_info.maxAnisotropy = (float)create_info.max_anisotropy;
+		sampler_info.compareEnable = (create_info.compare_op == CompareOp::Never) ? VK_FALSE : VK_TRUE;
+		sampler_info.compareOp = getCompareOp(create_info.compare_op);
+		sampler_info.minLod = create_info.min_lod;
+		sampler_info.maxLod = create_info.max_lod;
+		sampler_info.borderColor = getBorderColor(create_info.border_color);
 		GENESIS_ENGINE_ASSERT_ERROR((vkCreateSampler(this->device, &sampler_info, nullptr, &return_sampler) == VK_SUCCESS), "failed to create texture sampler");
 
 		this->samplers[hash_value] = return_sampler;
@@ -127,5 +132,6 @@ VkSampler VulkanSamplerPool::getSampler(Sampler& sampler)
 
 	return_sampler = this->samplers[hash_value];
 	this->map_lock.unlock();
+
 	return return_sampler;
 }

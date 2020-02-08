@@ -36,7 +36,7 @@ namespace Genesis
 			alignas(16) matrix4F view_projection_matrix;
 		};
 		SceneUniform scene_uniform;
-		UniformBuffer scene_uniform_buffer;
+		DynamicBuffer scene_uniform_buffer;
 
 		//Material: Binding Set 1
 		//Textures

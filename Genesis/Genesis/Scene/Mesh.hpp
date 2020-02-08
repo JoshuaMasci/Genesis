@@ -8,10 +8,10 @@ namespace Genesis
 {
 	struct Mesh
 	{
-		VertexBuffer vertex_buffer;
+		StaticBuffer vertex_buffer;
 		VertexInputDescription* vertex_description;
 
-		IndexBuffer index_buffer;
+		StaticBuffer index_buffer;
 		IndexType index_type;
 		uint32_t index_count;
 

@@ -7,10 +7,17 @@
 
 namespace Genesis
 {
-	struct MeshTemp
+	class ShaderLoader
 	{
-		VertexBuffer vertex_buffer;
-		IndexBuffer index_buffer;
+	public:
+		static Shader loadShader(RenderingBackend* backend, string vert_file_path, string frag_file_path);
+		static Shader loadShaderSingle(RenderingBackend* backend, string shader_file_path);
+	};
+	
+	/*struct MeshTemp
+	{
+		StaticBuffer vertex_buffer_buffer;
+		StaticBuffer index_buffer_buffer;
 		uint32_t index_count;
 	};
 
@@ -28,23 +35,10 @@ namespace Genesis
 		static Texture loadTexture(RenderingBackend* backend, string texture_file_path);
 	};
 
-	class ShaderLoader
-	{
-	public:
-		static Shader loadShader(RenderingBackend* backend, string vert_file_path, string frag_file_path);
-		static Shader loadShaderSingle(RenderingBackend* backend, string shader_file_path);
-	};
-
-	/*class GLTF_Loader
-	{
-	public:
-		static void loadGLTF(RenderingBackend* backend, string file_path);
-	};*/
-
 	class AssimpLoader
 	{
 	public:
 		static MeshTemp loadMesh(RenderingBackend* backend, string file_path);
 		static Skeleton* loadSkeleton(RenderingBackend* backend, string file_path);
-	};
+	};*/
 }

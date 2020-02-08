@@ -26,27 +26,24 @@ RenderSystem::RenderSystem(RenderingBackend* backend)
 		3, 2, 1 // Second Tri
 	};
 
-	VertexInputDescription vertex_description
-	({
-		{"in_position", VertexElementType::float_2},
-		{"in_uv", VertexElementType::float_2},
-		});
+	this->vertex_description = this->backend->createVertexInputDescription({ VertexElementType::float_2, VertexElementType::float_2 });
 
-	this->screen_vertex = this->backend->createVertexBuffer((void*)vertices.data(), vertices.size() * sizeof(vector2F), vertex_description);
-	this->screen_index = this->backend->createIndexBuffer((void*)indices.data(), indices.size() * sizeof(uint16_t), IndexType::uint16);
-
-	this->screen_sampler.min_filter = FilterMode::Nearest;
-	this->screen_sampler.mag_filter = FilterMode::Nearest;
-	this->screen_sampler.mipmap_mode = FilterMode::Nearest;
-	this->screen_sampler.U_address_mode = AddressMode::Clamp_Border;
-	this->screen_sampler.V_address_mode = AddressMode::Clamp_Border;
-	this->screen_sampler.W_address_mode = AddressMode::Clamp_Border;
-	this->screen_sampler.mip_lod_bias = 0.0f;
-	this->screen_sampler.max_anisotropy = 0;
-	this->screen_sampler.compare_op = CompareOp::Never;
-	this->screen_sampler.min_lod = 0.0f;
-	this->screen_sampler.max_lod = 0.0f;
-	this->screen_sampler.border_color = BorderColor::Transparent_Black;
+	this->screen_vertex = this->backend->createStaticBuffer((void*)vertices.data(), vertices.size() * sizeof(vector2F), BufferUsage::Vertex_Buffer);
+	this->screen_index = this->backend->createStaticBuffer((void*)indices.data(), indices.size() * sizeof(uint16_t), BufferUsage::Index_Buffer);
+	SamplerCreateInfo sampler_create_info = {};
+	sampler_create_info.min_filter = FilterMode::Nearest;
+	sampler_create_info.mag_filter = FilterMode::Nearest;
+	sampler_create_info.mipmap_mode = FilterMode::Nearest;
+	sampler_create_info.U_address_mode = AddressMode::Clamp_Border;
+	sampler_create_info.V_address_mode = AddressMode::Clamp_Border;
+	sampler_create_info.W_address_mode = AddressMode::Clamp_Border;
+	sampler_create_info.mip_lod_bias = 0.0f;
+	sampler_create_info.max_anisotropy = 0;
+	sampler_create_info.compare_op = CompareOp::Never;
+	sampler_create_info.min_lod = 0.0f;
+	sampler_create_info.max_lod = 0.0f;
+	sampler_create_info.border_color = BorderColor::Transparent_Black;
+	this->screen_sampler = this->backend->createSampler(sampler_create_info);
 
 	screen_settings.cull_mode = CullMode::None;
 	screen_settings.depth_test = DepthTest::None;
@@ -57,8 +54,8 @@ RenderSystem::RenderSystem(RenderingBackend* backend)
 
 RenderSystem::~RenderSystem()
 {
-	this->backend->destroyVertexBuffer(this->screen_vertex);
-	this->backend->destroyIndexBuffer(this->screen_index);
+	this->backend->destroyStaticBuffer(this->screen_vertex);
+	this->backend->destroyStaticBuffer(this->screen_index);
 	this->backend->destroyShader(this->screen_shader);
 }
 
@@ -73,7 +70,7 @@ bool RenderSystem::startFrame()
 	command_buffer->setPipelineSettings(screen_settings);
 	command_buffer->setShader(this->screen_shader);
 
-	command_buffer->setVertexBuffer(this->screen_vertex, VertexInputDescription());
+	command_buffer->setVertexBuffer(this->screen_vertex, this->vertex_description);
 	command_buffer->setIndexBuffer(this->screen_index, IndexType::uint16);
 
 	return true;

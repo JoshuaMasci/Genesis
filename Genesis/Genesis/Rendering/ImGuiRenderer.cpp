@@ -41,13 +41,7 @@ Genesis::ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* i
 	}
 
 	this->shader = ShaderLoader::loadShaderSingle(this->backend, "res/imgui/vulkan");
-
-	this->vertex_input = VertexInputDescription
-	({
-		{"in_position", VertexElementType::float_2},
-		{"in_uv", VertexElementType::float_2},
-		{"in_color", VertexElementType::unorm8_4}
-		});
+	this->vertex_input = this->backend->createVertexInputDescription({ VertexElementType::float_2, VertexElementType::float_2, VertexElementType::unorm8_4 });
 
 	this->settings.cull_mode = CullMode::None;
 	this->settings.depth_test = DepthTest::None;
@@ -56,18 +50,20 @@ Genesis::ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* i
 	this->settings.src_factor = BlendFactor::Alpha_Src;
 	this->settings.dst_factor = BlendFactor::One_Minus_Alpha_Src;
 
-	this->sampler.min_filter = FilterMode::Nearest;
-	this->sampler.mag_filter = FilterMode::Nearest;
-	this->sampler.mipmap_mode = FilterMode::Nearest;
-	this->sampler.U_address_mode = AddressMode::Repeat;
-	this->sampler.V_address_mode = AddressMode::Repeat;
-	this->sampler.W_address_mode = AddressMode::Repeat;
-	this->sampler.mip_lod_bias = 0.0f;
-	this->sampler.max_anisotropy = 0;
-	this->sampler.compare_op = CompareOp::Never;
-	this->sampler.min_lod = 0.0f;
-	this->sampler.max_lod = 0.0f;
-	this->sampler.border_color = BorderColor::Transparent_Black;
+	SamplerCreateInfo sampler_create_info = {};
+	sampler_create_info.min_filter = FilterMode::Nearest;
+	sampler_create_info.mag_filter = FilterMode::Nearest;
+	sampler_create_info.mipmap_mode = FilterMode::Nearest;
+	sampler_create_info.U_address_mode = AddressMode::Repeat;
+	sampler_create_info.V_address_mode = AddressMode::Repeat;
+	sampler_create_info.W_address_mode = AddressMode::Repeat;
+	sampler_create_info.mip_lod_bias = 0.0f;
+	sampler_create_info.max_anisotropy = 0;
+	sampler_create_info.compare_op = CompareOp::Never;
+	sampler_create_info.min_lod = 0.0f;
+	sampler_create_info.max_lod = 0.0f;
+	sampler_create_info.border_color = BorderColor::Transparent_Black;
+	this->sampler = this->backend->createSampler(sampler_create_info);
 }
 
 Genesis::ImGuiRenderer::~ImGuiRenderer()
@@ -145,8 +141,8 @@ void Genesis::ImGuiRenderer::endLayer()
 		const ImDrawList* cmd_list = draw_data->CmdLists[n];
 		const ImDrawIdx* idx_buffer = cmd_list->IdxBuffer.Data;
 
-		VertexBuffer vertex_buffer = this->backend->createVertexBuffer(cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.size_in_bytes(), this->vertex_input, MemoryType::CPU_Visable);
-		IndexBuffer index_buffer = this->backend->createIndexBuffer(cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.size_in_bytes(), IndexType::uint16, MemoryType::CPU_Visable);
+		StaticBuffer vertex_buffer = this->backend->createStaticBuffer(cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.size_in_bytes(), BufferUsage::Vertex_Buffer, MemoryType::CPU_Visable);
+		StaticBuffer index_buffer = this->backend->createStaticBuffer(cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.size_in_bytes(), BufferUsage::Index_Buffer, MemoryType::CPU_Visable);
 
 		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
 		{
@@ -187,8 +183,8 @@ void Genesis::ImGuiRenderer::endLayer()
 				}
 			}
 		}
-		this->backend->destroyVertexBuffer(vertex_buffer);
-		this->backend->destroyIndexBuffer(index_buffer);
+		this->backend->destroyStaticBuffer(vertex_buffer);
+		this->backend->destroyStaticBuffer(index_buffer);
 	}
 
 	this->backend->endSTCommandBuffer(this->st_command_buffer);

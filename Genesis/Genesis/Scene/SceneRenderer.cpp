@@ -1,7 +1,7 @@
 #include "SceneRenderer.hpp"
 
 #include "Genesis/Debug/Assert.hpp"
-
+#include "Genesis/Scene/Frustum.hpp"
 using namespace Genesis;
 
 SceneRenderer::SceneRenderer(RenderingBackend* backend)
@@ -16,7 +16,7 @@ SceneRenderer::SceneRenderer(RenderingBackend* backend)
 	this->framebuffer = this->backend->createFramebuffer(this->layout, this->view_size);
 	this->mt_command_buffer = this->backend->createMTCommandBuffer();
 
-	this->scene_uniform_buffer = this->backend->createUniformBuffer(sizeof(SceneUniform), MemoryType::CPU_Visable);
+	this->scene_uniform_buffer = this->backend->createDynamicBuffer(sizeof(SceneUniform), BufferUsage::Uniform_Buffer, MemoryType::CPU_Visable);
 }
 
 SceneRenderer::~SceneRenderer()
@@ -24,7 +24,7 @@ SceneRenderer::~SceneRenderer()
 	this->backend->destroyFramebuffer(this->framebuffer);
 	this->backend->destroyMTCommandBuffer(this->mt_command_buffer);
 
-	this->backend->destroyUniformBuffer(this->scene_uniform_buffer);
+	this->backend->destroyDynamicBuffer(this->scene_uniform_buffer);
 }
 
 void SceneRenderer::startLayer()
@@ -53,16 +53,28 @@ void SceneRenderer::drawScene(Scene* scene)
 	//STEP 3: CULL OBJECTS AND RENDER (MT)
 
 	GENESIS_ENGINE_ASSERT_ERROR((scene != nullptr), "Null Scene");
-	GENESIS_ENGINE_ASSERT_ERROR((scene->camera.camera != nullptr), "Null Camera");
-	GENESIS_ENGINE_ASSERT_ERROR((scene->camera.transform != nullptr), "Null Camera Transform");
+	//GENESIS_ENGINE_ASSERT_ERROR((scene-camera.camera != nullptr), "Null Camera");
+	//GENESIS_ENGINE_ASSERT_ERROR((scene->camera.transform != nullptr), "Null Camera Transform");
 
 	float aspect_ratio = ((float)this->view_size.x) / ((float)this->view_size.y);
 
-	Camera* camera = scene->camera.camera;
-	TransformF* camera_transform = scene->camera.transform;
-	matrix4F view_projection_matrix = camera_transform->getViewMatirx() * camera->getProjectionMatrix(aspect_ratio);
+	Camera camera = scene->camera.camera;
+	TransformF camera_transform = scene->camera.transform;
+	matrix4F view_projection_matrix = camera_transform.getViewMatirx() * camera.getProjectionMatrix(aspect_ratio);
+	Frustum frustum(view_projection_matrix);
+	for (size_t i = 0; i < scene->meshes.size(); i++)
+	{
+		if (frustum.sphereTest(scene->meshes[i].transform.getPosition(), scene->meshes[i].radius))
+		{
+			GENESIS_ENGINE_INFO("Mesh {} inside", i);
+		}
+		else
+		{
+			GENESIS_ENGINE_INFO("Mesh {} outside", i);
+		}
+	}
 
-	//Update Scene Uniform
+	/*//Update Scene Uniform
 	SceneUniform temp_uniform;
 	temp_uniform.camera_position = camera_transform->getPosition();
 	temp_uniform.ambient_light = scene->ambient_light;
@@ -94,5 +106,5 @@ void SceneRenderer::drawScene(Scene* scene)
 			this->command_buffer->setVertexBuffer(mesh.mesh->vertex_buffer, *mesh.mesh->vertex_description);
 			this->command_buffer->drawIndexed(mesh.mesh->index_count);
 		}
-	}
+	}*/
 }

@@ -16,6 +16,7 @@
 #include "VulkanTransferBuffer.hpp"
 #include "VulkanLayoutPool.hpp"
 #include "VulkanSamplerPool.hpp"
+#include "VulkanVertexInputPool.hpp"
 
 #include "VulkanBuffer.hpp"
 #include "VulkanTexture.hpp"
@@ -37,15 +38,15 @@ namespace Genesis
 		virtual CommandBuffer* beginFrame() override;
 		virtual void endFrame() override;
 
-		virtual VertexBuffer createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryType memory_usage = MemoryType::GPU_Only) override;
-		virtual void destroyVertexBuffer(VertexBuffer vertex_buffer) override;
+		virtual Sampler createSampler(SamplerCreateInfo& create_info) override;
+		virtual VertexInputDescription createVertexInputDescription(vector<VertexElementType> input_elements) override;
 
-		virtual IndexBuffer createIndexBuffer(void* data, uint64_t data_size, IndexType type, MemoryType memory_usage = MemoryType::GPU_Only) override;
-		virtual void destroyIndexBuffer(IndexBuffer index_buffer) override;
+		virtual StaticBuffer createStaticBuffer(void* data, uint64_t data_size, BufferUsage buffer_usage, MemoryType memory_usage = MemoryType::GPU_Only) override;
+		virtual void destroyStaticBuffer(StaticBuffer buffer) override;
 
-		virtual UniformBuffer createUniformBuffer(uint64_t data_size, MemoryType memory_usage = MemoryType::CPU_Visable) override;
-		virtual void destroyUniformBuffer(UniformBuffer uniform_buffer) override;
-		virtual void setUniform(UniformBuffer uniform_buffer, void* data, uint64_t data_size) override;
+		virtual DynamicBuffer createDynamicBuffer(uint64_t data_size, BufferUsage buffer_usage, MemoryType memory_usage = MemoryType::CPU_Visable) override;
+		virtual void destroyDynamicBuffer(DynamicBuffer buffer) override;
+		virtual void writeDynamicBuffer(DynamicBuffer buffer, void* data, uint64_t data_size) override;
 
 		virtual Texture createTexture(vector2U size, void* data, uint64_t data_size) override;
 		virtual void destroyTexture(Texture texture) override;
@@ -118,10 +119,11 @@ namespace Genesis
 		VulkanRenderPassPool* render_pass_pool = nullptr;
 
 		VulkanSamplerPool* sampler_pool = nullptr;
+		VulkanVertexInputPool* vertex_input_pool = nullptr;
 
 		//Resource
 		DelayedResourceDeleter<VulkanBuffer>* buffer_deleter = nullptr;
-		DelayedResourceDeleter<VulkanUniformBuffer>* uniform_deleter = nullptr;
+		DelayedResourceDeleter<VulkanDynamicBuffer>* dynamic_deleter = nullptr;
 		DelayedResourceDeleter<VulkanTexture>* texture_deleter = nullptr;
 		DelayedResourceDeleter<VulkanShader>* shader_deleter = nullptr;
 		DelayedResourceDeleter<VulkanFramebufferSet>* frame_deleter = nullptr;

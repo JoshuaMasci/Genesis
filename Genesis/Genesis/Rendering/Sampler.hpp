@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/MurmurHash2.hpp"
 #include <cstdint>
 
 namespace Genesis
@@ -38,7 +37,7 @@ namespace Genesis
 		Opaque_White
 	};
 
-	struct Sampler
+	struct SamplerCreateInfo
 	{
 		FilterMode min_filter = FilterMode::Nearest;
 		FilterMode mag_filter = FilterMode::Nearest;
@@ -52,13 +51,5 @@ namespace Genesis
 		float min_lod = 0.0f;
 		float max_lod = 0.0f;
 		BorderColor border_color = BorderColor::Transparent_Black;
-
-		uint32_t getHash()
-		{
-			MurmurHash2 hash;
-			hash.begin();
-			hash.add(*this);
-			return hash.end();
-		};
 	};
 }

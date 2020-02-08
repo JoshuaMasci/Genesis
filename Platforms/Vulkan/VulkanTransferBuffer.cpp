@@ -57,7 +57,6 @@ bool VulkanTransferBuffer::SubmitTransfers(VkQueue queue)
 		for (size_t i = 0; i < this->copy_buffer_list_index; i++)
 		{
 			vkCmdCopyBuffer(this->transfer_buffer, this->copy_buffer_list[i].source, this->copy_buffer_list[i].destination, 1, &this->copy_buffer_list[i].region);
-			this->copy_buffer_list[i].destination_ptr->in_transfer = false;
 		}
 
 		for (size_t i = 0; i < this->fill_texture_list_index; i++)
@@ -65,7 +64,6 @@ bool VulkanTransferBuffer::SubmitTransfers(VkQueue queue)
 			transitionImageLayout(this->transfer_buffer, this->fill_texture_list[i].destination, this->fill_texture_list[i].format, this->fill_texture_list[i].old_layout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 			copyBufferToImage(this->transfer_buffer, this->fill_texture_list[i].source, this->fill_texture_list[i].destination, this->fill_texture_list[i].size);
 			transitionImageLayout(this->transfer_buffer, this->fill_texture_list[i].destination, this->fill_texture_list[i].format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, this->fill_texture_list[i].new_layout);
-			this->fill_texture_list[i].destination_ptr->in_transfer = false;
 		}
 
 		vkEndCommandBuffer(this->transfer_buffer);
@@ -102,9 +100,6 @@ void VulkanTransferBuffer::copyBuffer(VulkanBuffer* source, uint64_t source_offs
 
 	this->transfer_count++;
 	this->buffer_lock.unlock();
-
-	//Set the buffer flag for tranfer
-	destination->in_transfer = true;
 }
 
 void VulkanTransferBuffer::fillTexture(VulkanBuffer* source, VulkanTexture* destination)
@@ -116,7 +111,4 @@ void VulkanTransferBuffer::fillTexture(VulkanBuffer* source, VulkanTexture* dest
 
 	this->transfer_count++;
 	this->buffer_lock.unlock();
-
-	//Set the texture flag for tranfer
-	destination->in_transfer = true;
 }

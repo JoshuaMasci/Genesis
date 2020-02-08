@@ -8,6 +8,13 @@ Application::Application()
 	:input_manager("config/input")
 {
 
+	this->scene.camera.camera = Camera(77.0f);
+	this->scene.camera.transform = TransformF(vector3F(0.0f, 0.0f, -10.0f));
+
+	Scene::MeshTransform mesh;
+	mesh.radius = 1.0f;
+	mesh.transform = TransformF(vector3F(0.0f, 3.0f, 0.0f));
+	this->scene.meshes.push_back(mesh);
 }
 
 Application::~Application()
@@ -16,6 +23,11 @@ Application::~Application()
 	if (this->rendering_backend != nullptr)
 	{
 		this->rendering_backend->waitTillDone();
+	}
+
+	if (this->scene_renderer != nullptr)
+	{
+		delete this->scene_renderer;
 	}
 
 	if (this->render_system != nullptr)
@@ -99,6 +111,11 @@ void Application::render(TimeStep time_step)
 
 	if (this->render_system->startFrame())
 	{
+		this->scene_renderer->startLayer();
+		this->scene_renderer->drawScene(&this->scene);
+		this->scene_renderer->endLayer();
+
+		this->render_system->drawLayerWholeScreen(this->scene_renderer);
 		this->render_system->endFrame();
 	}
 }

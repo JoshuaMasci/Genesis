@@ -7,7 +7,6 @@ using namespace Genesis;
 VulkanPipelinePool::VulkanPipelinePool(VkDevice device)
 {
 	this->device = device;
-	//this->thread_pools.resize(thread_count);
 }
 
 VulkanPipelinePool::~VulkanPipelinePool()
@@ -53,13 +52,13 @@ VulkanThreadPipelinePool::~VulkanThreadPipelinePool()
 	this->main_pool->thread_pools[this->main_pool_index] = nullptr;
 }
 
-VkPipeline VulkanThreadPipelinePool::getPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription* vertex_description)
+VkPipeline VulkanThreadPipelinePool::getPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VulkanVertexInputDescription* vertex_description)
 {
 	MurmurHash2 murmur_hash;
 	murmur_hash.begin();
 	murmur_hash.add(renderpass);
 	murmur_hash.add(settings.getHash());
-	murmur_hash.add(vertex_description->getHash());
+	murmur_hash.add(vertex_description);
 	uint32_t pipeline_hash = murmur_hash.end();
 
 	if (has_value(this->temp_map, shader))
@@ -86,55 +85,6 @@ VkPipeline VulkanThreadPipelinePool::getPipeline(VulkanShader* shader, VkRenderP
 	this->temp_map[shader][pipeline_hash] = new_pipeline;
 
 	return new_pipeline;
-}
-
-VkFormat getVulkanType(VertexElementType type)
-{
-	switch (type)
-	{
-	case VertexElementType::float_1:
-		return VK_FORMAT_R32_SFLOAT;
-	case VertexElementType::float_2:
-		return VK_FORMAT_R32G32_SFLOAT;
-	case VertexElementType::float_3:
-		return VK_FORMAT_R32G32B32_SFLOAT;
-	case VertexElementType::float_4:
-		return VK_FORMAT_R32G32B32A32_SFLOAT;
-	case VertexElementType::unorm8_1:
-		return VK_FORMAT_R8_UNORM;
-	case VertexElementType::unorm8_2:
-		return VK_FORMAT_R8G8_UNORM;
-	case VertexElementType::unorm8_3:
-		return VK_FORMAT_R8G8B8_UNORM;
-	case VertexElementType::unorm8_4:
-		return VK_FORMAT_R8G8B8A8_UNORM;
-	case VertexElementType::uint8_1:
-		return VK_FORMAT_R8_UINT;
-	case VertexElementType::uint8_2:
-		return VK_FORMAT_R8G8_UINT;
-	case VertexElementType::uint8_3:
-		return VK_FORMAT_R8G8B8_UINT;
-	case VertexElementType::uint8_4:
-		return VK_FORMAT_R8G8B8A8_UINT;
-	case VertexElementType::uint16_1:
-		return VK_FORMAT_R16_UINT;
-	case VertexElementType::uint16_2:
-		return VK_FORMAT_R16G16_UINT;
-	case VertexElementType::uint16_3:
-		return VK_FORMAT_R16G16B16_UINT;
-	case VertexElementType::uint16_4:
-		return VK_FORMAT_R16G16B16A16_UINT;
-	case VertexElementType::uint32_1:
-		return VK_FORMAT_R32_UINT;
-	case VertexElementType::uint32_2:
-		return VK_FORMAT_R32G32_UINT;
-	case VertexElementType::uint32_3:
-		return VK_FORMAT_R32G32B32_UINT;
-	case VertexElementType::uint32_4:
-		return VK_FORMAT_R32G32B32A32_UINT;
-	default:
-		return VK_FORMAT_UNDEFINED;
-	}
 }
 
 VkBlendFactor getBlendFactor(BlendFactor blend_factor)
@@ -166,30 +116,16 @@ VkBlendFactor getBlendFactor(BlendFactor blend_factor)
 	}
 }
 
-VkPipeline VulkanThreadPipelinePool::createPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VertexInputDescription* vertex_description)
+VkPipeline VulkanThreadPipelinePool::createPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VulkanVertexInputDescription* vertex_description)
 {
-	VkVertexInputBindingDescription binding_description;
-	binding_description.binding = 0;
-	binding_description.stride = vertex_description->getSize();
-	binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-	List<VkVertexInputAttributeDescription> attribute_descriptions(vertex_description->getElementCount());
-	for (size_t i = 0; i < attribute_descriptions.size(); i++)
-	{
-		attribute_descriptions[i].binding = 0;
-		attribute_descriptions[i].location = (uint32_t)i;
-		attribute_descriptions[i].format = getVulkanType(vertex_description->getElementType(i));
-		attribute_descriptions[i].offset = vertex_description->getElementOffset(i);
-	}
-
 	VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
 	vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
 	vertex_input_info.vertexBindingDescriptionCount = 1;
-	vertex_input_info.pVertexBindingDescriptions = &binding_description;
+	vertex_input_info.pVertexBindingDescriptions = &vertex_description->binding_description;
 
-	vertex_input_info.vertexAttributeDescriptionCount = (uint32_t)attribute_descriptions.size();
-	vertex_input_info.pVertexAttributeDescriptions = attribute_descriptions.data();
+	vertex_input_info.vertexAttributeDescriptionCount = (uint32_t)vertex_description->attribute_descriptions.size();
+	vertex_input_info.pVertexAttributeDescriptions = vertex_description->attribute_descriptions.data();
 
 	VkPipelineInputAssemblyStateCreateInfo input_assembly = {};
 	input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

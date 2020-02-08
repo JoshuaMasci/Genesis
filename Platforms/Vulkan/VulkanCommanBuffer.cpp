@@ -203,7 +203,7 @@ void VulkanCommandBufferInternal::setUniformConstant(void* data, uint32_t data_s
 	vkCmdPushConstants(this->command_buffer, this->current_pipeline_layout, VK_SHADER_STAGE_ALL, 0, data_size, data); //TODO use specific stage flags
 }
 
-void VulkanCommandBufferInternal::setVertexBuffer(VkBuffer vertex_buffer, VertexInputDescription* vertex_description)
+void VulkanCommandBufferInternal::setVertexBuffer(VkBuffer vertex_buffer, VulkanVertexInputDescription* vertex_description)
 {
 	this->current_vertex_description = vertex_description;
 
@@ -211,9 +211,9 @@ void VulkanCommandBufferInternal::setVertexBuffer(VkBuffer vertex_buffer, Vertex
 	vkCmdBindVertexBuffers(this->command_buffer, 0, 1, &vertex_buffer, offsets);
 }
 
-void VulkanCommandBufferInternal::setIndexBuffer(VkBuffer index_buffer, IndexType type)
+void VulkanCommandBufferInternal::setIndexBuffer(VkBuffer index_buffer, VkIndexType type)
 {
-	vkCmdBindIndexBuffer(this->command_buffer, index_buffer, 0, (type == IndexType::uint16) ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
+	vkCmdBindIndexBuffer(this->command_buffer, index_buffer, 0, type);
 }
 
 void VulkanCommandBufferInternal::drawIndexed(uint32_t index_count, uint32_t index_offset, uint32_t instance_count, uint32_t instance_offset)
@@ -292,11 +292,9 @@ void VulkanCommandBufferInternal::bindDescriptors()
 	}
 }
 
-VulkanCommandBuffer::VulkanCommandBuffer(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index)
+VulkanCommandBuffer::VulkanCommandBuffer(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index)
 	:command_buffer(device, command_pool, pipeline_pool, descriptor_pool, frame_index)
 {
-	this->sampler_pool = sampler_pool;
-
 	this->transfer_buffer = transfer_buffer;
 }
 
@@ -342,24 +340,23 @@ void VulkanCommandBuffer::setScissor(vector2I offset, vector2U extent)
 	this->command_buffer.setScissor(rect);
 }
 
-void VulkanCommandBuffer::setUniformBuffer(uint32_t set, uint32_t binding, UniformBuffer buffer)
+void VulkanCommandBuffer::setUniformBuffer(uint32_t set, uint32_t binding, DynamicBuffer uniform_buffer)
 {
-	VulkanBuffer* uniform = ((VulkanUniformBuffer*)buffer)->getCurrentBuffer();
-
+	VulkanBuffer* uniform = ((VulkanDynamicBuffer*)uniform_buffer)->getCurrentBuffer();
 	this->command_buffer.setUniformBuffer(set, binding, uniform->get(), uniform->getSize());
 }
 
-void VulkanCommandBuffer::setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler& sampler)
+void VulkanCommandBuffer::setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler sampler)
 {
-	this->command_buffer.setUniformTexture(set, binding, ((VulkanTexture*)texture)->getImageView(), this->sampler_pool->getSampler(sampler));
+	this->command_buffer.setUniformTexture(set, binding, ((VulkanTexture*)texture)->getImageView(), (VkSampler)sampler);
 }
 
-void VulkanCommandBuffer::setUniformFramebuffer(uint32_t set, uint32_t binding, Framebuffer framebuffer, uint8_t framebuffer_image_index, Sampler& sampler)
+void VulkanCommandBuffer::setUniformFramebuffer(uint32_t set, uint32_t binding, Framebuffer framebuffer, uint8_t framebuffer_image_index, Sampler sampler)
 {
 	VulkanFramebufferSet* vulkan_framebuffer = (VulkanFramebufferSet*)framebuffer;
 
 	VkImageView image_view = vulkan_framebuffer->framebuffers[this->command_buffer.getFrameIndex()]->getImageView(framebuffer_image_index);
-	this->command_buffer.setUniformTexture(set, binding, image_view, this->sampler_pool->getSampler(sampler));
+	this->command_buffer.setUniformTexture(set, binding, image_view, (VkSampler)sampler);
 }
 
 void VulkanCommandBuffer::setUniformConstant(void* data, uint32_t data_size)
@@ -367,16 +364,14 @@ void VulkanCommandBuffer::setUniformConstant(void* data, uint32_t data_size)
 	this->command_buffer.setUniformConstant(data, data_size);
 }
 
-void VulkanCommandBuffer::setVertexBuffer(VertexBuffer vertex, VertexInputDescription& vertex_description)
+void VulkanCommandBuffer::setVertexBuffer(StaticBuffer vertex_buffer, VertexInputDescription& vertex_description)
 {
-	VulkanVertexBuffer* vertex_buffer = (VulkanVertexBuffer*)vertex;
-	this->command_buffer.setVertexBuffer(vertex_buffer->get(), &(vertex_buffer->getVertexDescription()));
+	this->command_buffer.setVertexBuffer(((VulkanBuffer*)vertex_buffer)->get(), (VulkanVertexInputDescription*)vertex_description);
 }
 
-void VulkanCommandBuffer::setIndexBuffer(IndexBuffer index, IndexType type)
+void VulkanCommandBuffer::setIndexBuffer(StaticBuffer index_buffer, IndexType type)
 {
-	VulkanIndexBuffer* index_buffer = (VulkanIndexBuffer*)index;
-	this->command_buffer.setIndexBuffer(index_buffer->get(), index_buffer->getIndicesType());
+	this->command_buffer.setIndexBuffer(((VulkanBuffer*)index_buffer)->get(), (type == IndexType::uint16) ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
 }
 
 void VulkanCommandBuffer::drawIndexed(uint32_t index_count, uint32_t index_offset, uint32_t instance_count, uint32_t instance_offset)
@@ -384,7 +379,7 @@ void VulkanCommandBuffer::drawIndexed(uint32_t index_count, uint32_t index_offse
 	this->command_buffer.drawIndexed(index_count, index_offset, instance_count, instance_offset);
 }
 
-VulkanCommandBufferMultithread::VulkanCommandBufferMultithread(VulkanDevice* device, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index)
+VulkanCommandBufferMultithread::VulkanCommandBufferMultithread(VulkanDevice* device, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index)
 {
 	this->primary_pool = primary_pool;
 	this->primary_buffer = this->primary_pool->getCommandBuffer();
@@ -392,7 +387,7 @@ VulkanCommandBufferMultithread::VulkanCommandBufferMultithread(VulkanDevice* dev
 	this->secondary_buffers.resize(thread_count);
 	for (size_t i = 0; i < this->secondary_buffers.size(); i++)
 	{
-		this->secondary_buffers[i] = new VulkanCommandBuffer(device, secondary_pools[i], pipeline_pools[i], descriptor_pools[i], sampler_pool, transfer_buffer, frame_index);
+		this->secondary_buffers[i] = new VulkanCommandBuffer(device, secondary_pools[i], pipeline_pools[i], descriptor_pools[i], transfer_buffer, frame_index);
 	}
 }
 
@@ -463,12 +458,12 @@ void VulkanCommandBufferMultithread::end()
 	vkEndCommandBuffer(this->primary_buffer);
 }
 
-VulkanCommandBufferMultithreadSet::VulkanCommandBufferMultithreadSet(VulkanDevice* device, uint32_t frame_count, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, VulkanSamplerPool* sampler_pool, List<VulkanTransferBuffer*> transfer_buffers)
+VulkanCommandBufferMultithreadSet::VulkanCommandBufferMultithreadSet(VulkanDevice* device, uint32_t frame_count, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, List<VulkanTransferBuffer*> transfer_buffers)
 {
 	this->command_buffers.resize(frame_count);
 	for (size_t i = 0; i < this->command_buffers.size(); i++)
 	{
-		this->command_buffers[i] = new VulkanCommandBufferMultithread(device, thread_count, primary_pool, secondary_pools, pipeline_pools, descriptor_pools, sampler_pool, transfer_buffers[i], (uint32_t)i);
+		this->command_buffers[i] = new VulkanCommandBufferMultithread(device, thread_count, primary_pool, secondary_pools, pipeline_pools, descriptor_pools, transfer_buffers[i], (uint32_t)i);
 	}
 }
 
@@ -480,12 +475,12 @@ VulkanCommandBufferMultithreadSet::~VulkanCommandBufferMultithreadSet()
 	}
 }
 
-VulkanCommandBufferSet::VulkanCommandBufferSet(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanSamplerPool* sampler_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_count)
+VulkanCommandBufferSet::VulkanCommandBufferSet(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_count)
 {
 	this->command_buffers.resize(frame_count);
 	for (size_t i = 0; i < this->command_buffers.size(); i++)
 	{
-		this->command_buffers[i] = new VulkanCommandBuffer(device, command_pool, pipeline_pool, descriptor_pool, sampler_pool, transfer_buffer, (uint32_t)i);
+		this->command_buffers[i] = new VulkanCommandBuffer(device, command_pool, pipeline_pool, descriptor_pool,  transfer_buffer, (uint32_t)i);
 	}
 }
 

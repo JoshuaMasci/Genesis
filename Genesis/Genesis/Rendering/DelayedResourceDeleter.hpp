@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Genesis/Debug/Log.hpp"
+
 #include <stdint.h>
 #include <queue>
 

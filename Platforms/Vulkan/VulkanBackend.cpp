@@ -7,19 +7,47 @@
 
 using namespace Genesis;
 
-VmaMemoryUsage getMemoryUsage(MemoryType memory_usage)
+inline VkBufferUsageFlags getBufferUseage(BufferUsage usage, MemoryType memory_usage)
+{
+	VkBufferUsageFlags buffer_usage = 0;
+
+	switch (usage)
+	{
+	case BufferUsage::Vertex_Buffer:
+		buffer_usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		break;
+	case BufferUsage::Index_Buffer:
+		buffer_usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+		break;
+	case BufferUsage::Uniform_Buffer:
+		buffer_usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		break;
+	case BufferUsage::Storage_Buffer:
+		buffer_usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+		break;
+	}
+
+	if (memory_usage == MemoryType::GPU_Only)
+	{
+		buffer_usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+	}
+
+	return buffer_usage;
+}
+
+inline VmaMemoryUsage getMemoryUsage(MemoryType memory_usage)
 {
 	switch (memory_usage)
 	{
 	case MemoryType::GPU_Only:
 		return VMA_MEMORY_USAGE_GPU_ONLY;
 	case MemoryType::CPU_Visable:
-		return VMA_MEMORY_USAGE_CPU_TO_GPU;//Subject To Change
+		return VMA_MEMORY_USAGE_CPU_TO_GPU;
 	}
 	return VMA_MEMORY_USAGE_UNKNOWN;
 }
 
-VkFormat getImageFormat(ImageFormat format)
+inline VkFormat getImageFormat(ImageFormat format)
 {
 	switch (format)
 	{
@@ -119,6 +147,7 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 
 	//Sampler pool
 	this->sampler_pool = new VulkanSamplerPool(this->device->get());
+	this->vertex_input_pool = new VulkanVertexInputPool();
 
 	this->transfer_buffers.resize(this->FRAME_COUNT);
 	for (size_t i = 0; i < this->transfer_buffers.size(); i++)
@@ -130,14 +159,14 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 	for (size_t i = 0; i < this->frames.size(); i++)
 	{
 		this->frames[i].image_ready_semaphore = this->device->createSemaphore();
-		this->frames[i].command_buffer = new VulkanCommandBuffer(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->sampler_pool, this->transfer_buffers[i], (uint32_t)i);
+		this->frames[i].command_buffer = new VulkanCommandBuffer(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->transfer_buffers[i], (uint32_t)i);
 		this->frames[i].command_buffer_done_semaphore = this->device->createSemaphore();
 		this->frames[i].frame_done_fence = this->device->createFence();
 	}
 
 	const uint8_t delay_cycles = (uint8_t)this->FRAME_COUNT + 1;
 	this->buffer_deleter = new DelayedResourceDeleter<VulkanBuffer>(delay_cycles);
-	this->uniform_deleter = new DelayedResourceDeleter<VulkanUniformBuffer>(delay_cycles);
+	this->dynamic_deleter = new DelayedResourceDeleter<VulkanDynamicBuffer>(delay_cycles);
 	this->texture_deleter = new DelayedResourceDeleter<VulkanTexture>(delay_cycles);
 	this->shader_deleter = new DelayedResourceDeleter<VulkanShader>(delay_cycles);
 	this->frame_deleter = new DelayedResourceDeleter<VulkanFramebufferSet>(delay_cycles);
@@ -148,7 +177,7 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 VulkanBackend::~VulkanBackend()
 {
 	delete this->buffer_deleter;
-	delete this->uniform_deleter;
+	delete this->dynamic_deleter;
 	delete this->texture_deleter;
 	delete this->shader_deleter;
 	delete this->frame_deleter;
@@ -169,6 +198,7 @@ VulkanBackend::~VulkanBackend()
 
 	delete this->render_pass_pool;
 
+	delete this->vertex_input_pool;
 	delete this->sampler_pool;
 
 	for (size_t i = 0; i < this->thread_pipeline_pools.size(); i++)
@@ -320,7 +350,7 @@ void VulkanBackend::endFrame()
 	this->frame_index = (this->frame_index + 1) % this->FRAME_COUNT;
 
 	this->buffer_deleter->cycle();
-	this->uniform_deleter->cycle();
+	this->dynamic_deleter->cycle();
 	this->texture_deleter->cycle();
 	this->shader_deleter->cycle();
 	this->frame_deleter->cycle();
@@ -330,73 +360,21 @@ void VulkanBackend::endFrame()
 	this->pipeline_pool->update();
 }
 
-VertexBuffer VulkanBackend::createVertexBuffer(void* data, uint64_t data_size, VertexInputDescription& vertex_input_description, MemoryType memory_usage)
+Sampler VulkanBackend::createSampler(SamplerCreateInfo& create_info)
 {
-	VulkanVertexBuffer* vertex_buffer = new VulkanVertexBuffer(this->device, data_size, getMemoryUsage(memory_usage), vertex_input_description);
-
-	if (memory_usage == MemoryType::GPU_Only)
-	{
-		VulkanBuffer* staging_buffer = new VulkanBuffer(this->device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
-		staging_buffer->fillBuffer(data, data_size);
-
-		this->transfer_buffers[this->frame_index]->copyBuffer(staging_buffer, 0, (VulkanBuffer*)vertex_buffer, 0, data_size);
-		this->buffer_deleter->addToQueue(staging_buffer);
-	}
-	else
-	{
-		vertex_buffer->fillBuffer(data, data_size);
-	}
-
-	return (VertexBuffer)vertex_buffer;
+	return (Sampler)this->sampler_pool->getSampler(create_info);
 }
 
-void VulkanBackend::destroyVertexBuffer(VertexBuffer vertex_buffer)
+VertexInputDescription VulkanBackend::createVertexInputDescription(vector<VertexElementType> input_elements)
 {
-	this->buffer_deleter->addToQueue((VulkanBuffer*)vertex_buffer);
+	return (VertexInputDescription)this->vertex_input_pool->getVertexInputDescription(input_elements);
 }
 
-IndexBuffer VulkanBackend::createIndexBuffer(void* data, uint64_t data_size, IndexType type, MemoryType memory_usage)
+StaticBuffer VulkanBackend::createStaticBuffer(void* data, uint64_t data_size, BufferUsage buffer_usage, MemoryType memory_usage)
 {
-	VulkanIndexBuffer* index_buffer = new VulkanIndexBuffer(this->device, data_size, getMemoryUsage(memory_usage), type);
+	VulkanBuffer* buffer = new VulkanBuffer(this->device, data_size, getBufferUseage(buffer_usage, memory_usage), getMemoryUsage(memory_usage));
 
-	if (memory_usage == MemoryType::GPU_Only)
-	{
-		VulkanBuffer* staging_buffer = new VulkanBuffer(this->device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
-		staging_buffer->fillBuffer(data, data_size);
-
-		this->transfer_buffers[this->frame_index]->copyBuffer(staging_buffer, 0, (VulkanBuffer*)index_buffer, 0, data_size);
-		this->buffer_deleter->addToQueue(staging_buffer);
-	}
-	else
-	{
-		index_buffer->fillBuffer(data, data_size);
-	}
-
-	return (IndexBuffer)index_buffer;
-}
-
-void VulkanBackend::destroyIndexBuffer(IndexBuffer index_buffer)
-{
-	this->buffer_deleter->addToQueue((VulkanBuffer*)index_buffer);
-}
-
-UniformBuffer VulkanBackend::createUniformBuffer(uint64_t data_size, MemoryType memory_usage)
-{
-	return (UniformBuffer)new VulkanUniformBuffer(this->device, data_size, getMemoryUsage(memory_usage), this->FRAME_COUNT);
-}
-
-void VulkanBackend::destroyUniformBuffer(UniformBuffer uniform_buffer)
-{
-	this->uniform_deleter->addToQueue((VulkanUniformBuffer*)uniform_buffer);
-}
-
-void VulkanBackend::setUniform(UniformBuffer uniform_buffer, void* data, uint64_t data_size)
-{
-	VulkanUniformBuffer* vulkan_uniform = (VulkanUniformBuffer*)uniform_buffer;
-	vulkan_uniform->incrementIndex();
-	VulkanBuffer* buffer = vulkan_uniform->getCurrentBuffer();
-
-	if (buffer->isHostVisable() == true)
+	if(buffer->isHostVisable())
 	{
 		buffer->fillBuffer(data, data_size);
 	}
@@ -405,7 +383,44 @@ void VulkanBackend::setUniform(UniformBuffer uniform_buffer, void* data, uint64_
 		VulkanBuffer* staging_buffer = new VulkanBuffer(this->device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
 		staging_buffer->fillBuffer(data, data_size);
 
-		this->transfer_buffers[this->frame_index]->copyBuffer(staging_buffer, 0, buffer, 0, data_size);
+		this->transfer_buffers[this->frame_index]->copyBuffer(staging_buffer, 0, (VulkanBuffer*)buffer, 0, data_size);
+		this->buffer_deleter->addToQueue(staging_buffer);
+	}
+
+	return (StaticBuffer) buffer;
+}
+
+void VulkanBackend::destroyStaticBuffer(StaticBuffer buffer)
+{
+	this->buffer_deleter->addToQueue((VulkanBuffer*)buffer);
+}
+
+DynamicBuffer VulkanBackend::createDynamicBuffer(uint64_t data_size, BufferUsage buffer_usage, MemoryType memory_usage)
+{
+	return (DynamicBuffer)new VulkanDynamicBuffer(this->device, data_size, getBufferUseage(buffer_usage, memory_usage), getMemoryUsage(memory_usage), this->FRAME_COUNT);
+}
+
+void VulkanBackend::destroyDynamicBuffer(DynamicBuffer buffer)
+{
+	this->dynamic_deleter->addToQueue((VulkanDynamicBuffer*)buffer);
+}
+
+void VulkanBackend::writeDynamicBuffer(DynamicBuffer buffer, void * data, uint64_t data_size)
+{
+	VulkanDynamicBuffer* dynamic_buffer = (VulkanDynamicBuffer*)buffer;
+	dynamic_buffer->incrementIndex();
+	VulkanBuffer* current_buffer = dynamic_buffer->getCurrentBuffer();
+
+	if (current_buffer->isHostVisable())
+	{
+		current_buffer->fillBuffer(data, data_size);
+	}
+	else
+	{
+		VulkanBuffer* staging_buffer = new VulkanBuffer(this->device, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+		staging_buffer->fillBuffer(data, data_size);
+
+		this->transfer_buffers[this->frame_index]->copyBuffer(staging_buffer, 0, current_buffer, 0, data_size);
 		this->buffer_deleter->addToQueue(staging_buffer);
 	}
 }
@@ -465,7 +480,7 @@ void VulkanBackend::resizeFramebuffer(Framebuffer framebuffer, vector2U size)
 
 STCommandBuffer VulkanBackend::createSTCommandBuffer()
 {
-	return (STCommandBuffer)new VulkanCommandBufferSet(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->sampler_pool, this->transfer_buffers[0], this->FRAME_COUNT);
+	return (STCommandBuffer)new VulkanCommandBufferSet(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->transfer_buffers[0], this->FRAME_COUNT);
 }
 
 void VulkanBackend::destroySTCommandBuffer(STCommandBuffer st_command_buffer)
@@ -492,7 +507,7 @@ void VulkanBackend::endSTCommandBuffer(STCommandBuffer st_command_buffer)
 
 MTCommandBuffer VulkanBackend::createMTCommandBuffer()
 {
-	return new VulkanCommandBufferMultithreadSet(this->device, this->FRAME_COUNT, this->THREAD_COUNT, this->primary_graphics_pool, this->secondary_graphics_pools, this->thread_pipeline_pools, this->descriptor_pools, this->sampler_pool, this->transfer_buffers);
+	return new VulkanCommandBufferMultithreadSet(this->device, this->FRAME_COUNT, this->THREAD_COUNT, this->primary_graphics_pool, this->secondary_graphics_pools, this->thread_pipeline_pools, this->descriptor_pools, this->transfer_buffers);
 }
 
 void VulkanBackend::destroyMTCommandBuffer(MTCommandBuffer mt_command_buffer)
