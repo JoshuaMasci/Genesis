@@ -26,7 +26,8 @@ namespace Genesis
 		//Utils
 		TransformF transformBy(const TransformF& transform1) const;
 		matrix4F getModelMatrix() const;
-		matrix4F getViewMatirx();
+		matrix4F getViewMatirx() const;
+		matrix3F getNormalMatrix() const;
 
 	private:
 		vector3F position;

@@ -1,0 +1,4 @@
+vec2 calcUV()
+{
+	return frag_uv;
+}

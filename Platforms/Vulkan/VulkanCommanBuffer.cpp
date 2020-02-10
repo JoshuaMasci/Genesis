@@ -288,7 +288,7 @@ void VulkanCommandBufferInternal::bindDescriptors()
 			set.has_changed = false;
 		}
 
-		vkCmdBindDescriptorSets(this->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->current_pipeline_layout, 0, 1, &set.last_set, 0, nullptr);
+		vkCmdBindDescriptorSets(this->command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->current_pipeline_layout, set_index, 1, &set.last_set, 0, nullptr);
 	}
 }
 

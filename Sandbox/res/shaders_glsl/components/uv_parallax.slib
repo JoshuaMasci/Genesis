@@ -1,0 +1,6 @@
+vec2 calcUV()
+{
+	vec3 view_direction = normalize(environment.eye_pos - frag_world_pos);
+	view_direction = transpose(tangent_space_matrix) * view_direction;
+	return ParallaxOcclusionMapping(height_map, frag_uv, view_direction, material.height_scale);
+}

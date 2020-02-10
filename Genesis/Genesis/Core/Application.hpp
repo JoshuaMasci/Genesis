@@ -9,6 +9,7 @@
 #include "Genesis/Rendering/RenderSystem.hpp"
 
 #include "Genesis/Scene/SceneRenderer.hpp"
+#include "Genesis/Rendering/ImGuiRenderer.hpp"
 
 namespace Genesis
 {
@@ -40,6 +41,8 @@ namespace Genesis
 
 		Scene scene;
 		SceneRenderer* scene_renderer = nullptr;
+		ImGuiRenderer* ui_renderer = nullptr;
+		
 
 	protected:
 		bool is_running = true;

@@ -2,6 +2,7 @@
 
 #include "Genesis/Rendering/RenderLayer.hpp"
 #include "Genesis/Scene/Scene.hpp"
+#include "Genesis/Scene/Material.hpp"
 
 namespace Genesis
 {
@@ -20,6 +21,15 @@ namespace Genesis
 		void drawScene(Scene* scene);
 
 	protected:
+
+		//TEMP
+		StaticBuffer vertex_buffer = nullptr;
+		StaticBuffer index_buffer = nullptr;
+		uint32_t index_count;
+		Shader mesh_shader = nullptr;
+		VertexInputDescription vertex_input = nullptr;
+		//END TEMP
+
 		vector2U view_size;
 		FramebufferLayout layout;
 
@@ -39,12 +49,15 @@ namespace Genesis
 		DynamicBuffer scene_uniform_buffer;
 
 		//Material: Binding Set 1
-		//Textures
+		DynamicBuffer material_buffer = nullptr;//Dynamic for now
+		Texture empty_texture = nullptr;
+		Sampler basic_sampler = nullptr;
 
 		//Object Transform: Push Constant
 		struct ObjectTransformUniform
 		{
 			matrix4F model_matrix;
+			glm::mat3x4 normal_matrix;
 		};
 	};
 }

@@ -54,6 +54,10 @@ VulkanThreadPipelinePool::~VulkanThreadPipelinePool()
 
 VkPipeline VulkanThreadPipelinePool::getPipeline(VulkanShader* shader, VkRenderPass renderpass, PipelineSettings& settings, VulkanVertexInputDescription* vertex_description)
 {
+	GENESIS_ENGINE_ASSERT_ERROR((shader != nullptr), "Shader Null");
+	GENESIS_ENGINE_ASSERT_ERROR((renderpass != VK_NULL_HANDLE), "RenderPass Null");
+	GENESIS_ENGINE_ASSERT_ERROR((vertex_description != nullptr), "VertexInputDescription Null");
+
 	MurmurHash2 murmur_hash;
 	murmur_hash.begin();
 	murmur_hash.add(renderpass);

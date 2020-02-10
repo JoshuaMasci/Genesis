@@ -13,6 +13,7 @@ SandboxApplication::SandboxApplication()
 	this->render_system = new Genesis::RenderSystem(this->rendering_backend);
 
 	this->scene_renderer = new Genesis::SceneRenderer(this->rendering_backend);
+	this->ui_renderer = new Genesis::ImGuiRenderer(this->rendering_backend, &this->input_manager);
 }
 
 SandboxApplication::~SandboxApplication()

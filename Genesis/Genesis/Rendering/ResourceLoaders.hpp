@@ -13,23 +13,17 @@ namespace Genesis
 		static Shader loadShader(RenderingBackend* backend, string vert_file_path, string frag_file_path);
 		static Shader loadShaderSingle(RenderingBackend* backend, string shader_file_path);
 	};
-	
-	/*struct MeshTemp
-	{
-		StaticBuffer vertex_buffer_buffer;
-		StaticBuffer index_buffer_buffer;
-		uint32_t index_count;
-	};
+
+
 
 	class ObjLoader
 	{
 	public:
-		static MeshTemp loadMesh(RenderingBackend* backend, string mesh_file_path);
-		static MeshTemp loadMesh_CalcTangent(RenderingBackend* backend, string mesh_file_path);
-
+		static void loadMesh(RenderingBackend* backend, string mesh_file_path, StaticBuffer& vertex_buffer, StaticBuffer& index_buffer, uint32_t& index_count);
+		//static MeshTemp loadMesh_CalcTangent(RenderingBackend* backend, string mesh_file_path);
 	};
 
-	class PngLoader
+	/*class PngLoader
 	{
 	public:
 		static Texture loadTexture(RenderingBackend* backend, string texture_file_path);

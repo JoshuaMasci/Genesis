@@ -92,8 +92,8 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 #endif
 
 	vector<const char*> layers;
-	//layers.push_back("VK_LAYER_LUNARG_standard_validation");
-	//layers.push_back("VK_LAYER_RENDERDOC_Capture");
+	layers.push_back("VK_LAYER_LUNARG_standard_validation");
+	layers.push_back("VK_LAYER_RENDERDOC_Capture");
 
 	this->instance = VulkanInstance::create(VK_API_VERSION_1_1, "Sandbox", VK_MAKE_VERSION(0, 0, 0), "Genesis_Engine", VK_MAKE_VERSION(0, 0, 0), extensions, layers);
 

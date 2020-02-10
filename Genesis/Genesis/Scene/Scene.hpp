@@ -5,6 +5,7 @@
 #include "Genesis/Scene/Mesh.hpp"
 #include "Genesis/Scene/Lighting.hpp"
 #include "Genesis/Scene/Camera.hpp"
+#include "Genesis/Scene/Material.hpp"
 
 namespace Genesis
 {
@@ -45,6 +46,8 @@ namespace Genesis
 		vector<DirectionalLightTransform> directional_lights;
 		vector<PointLightTransform> point_lights;
 		vector<SpotLightTransform> spot_lights;
+
+		vector<Material> materials;
 
 		CameraTransform camera;
 		vector3F ambient_light;

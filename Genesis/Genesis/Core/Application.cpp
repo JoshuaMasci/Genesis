@@ -7,13 +7,16 @@ using namespace Genesis;
 Application::Application()
 	:input_manager("config/input")
 {
-
+	this->scene.ambient_light = vector3F(1.0f);
 	this->scene.camera.camera = Camera(77.0f);
 	this->scene.camera.transform = TransformF(vector3F(0.0f, 0.0f, -10.0f));
 
 	Scene::MeshTransform mesh;
 	mesh.radius = 1.0f;
-	mesh.transform = TransformF(vector3F(0.0f, 3.0f, 0.0f));
+	mesh.transform = TransformF(vector3F(0.0f, 0.0f, 0.0f));
+	this->scene.meshes.push_back(mesh);
+
+	mesh.transform = TransformF(vector3F(0.0f, 4.9f, 0.0f));
 	this->scene.meshes.push_back(mesh);
 }
 
@@ -28,6 +31,10 @@ Application::~Application()
 	if (this->scene_renderer != nullptr)
 	{
 		delete this->scene_renderer;
+	}
+	if (this->ui_renderer != nullptr)
+	{
+		delete this->ui_renderer;
 	}
 
 	if (this->render_system != nullptr)
@@ -93,6 +100,7 @@ void Application::run()
 
 }
 
+#include "Genesis/Entity/DebugCamera.hpp"
 void Application::update(TimeStep time_step)
 {
 	GENESIS_PROFILE_FUNCTION("Application::update");
@@ -102,6 +110,16 @@ void Application::update(TimeStep time_step)
 	{
 		this->platform->onUpdate(time_step);
 	}
+
+	TransformD temp_transform;
+	temp_transform.setPosition((vector3D)this->scene.camera.transform.getPosition());
+	temp_transform.setOrientation((quaternionD)this->scene.camera.transform.getOrientation());
+
+	DebugCamera cam(3.0f, 0.5f);
+	DebugCamera::update(&this->input_manager, cam, temp_transform, time_step);
+
+	this->scene.camera.transform.setPosition((vector3F)temp_transform.getPosition());
+	this->scene.camera.transform.setOrientation((quaternionF)temp_transform.getOrientation());
 
 }
 

@@ -26,9 +26,14 @@ matrix4F TransformF::getModelMatrix() const
 	return translate * orientation * scale;
 }
 
-matrix4F Genesis::TransformF::getViewMatirx()
+matrix4F Genesis::TransformF::getViewMatirx() const
 {
 	return glm::lookAt(this->position, this->position + this->getForward(), this->getUp());
+}
+
+matrix3F TransformF::getNormalMatrix() const
+{
+	return glm::toMat3(this->orientation);
 }
 
 TransformD::TransformD(vector3D position, quaternionD orientation, vector3D scale)
