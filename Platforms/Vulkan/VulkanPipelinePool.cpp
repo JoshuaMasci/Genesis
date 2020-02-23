@@ -124,10 +124,8 @@ VkPipeline VulkanThreadPipelinePool::createPipeline(VulkanShader* shader, VkRend
 {
 	VkPipelineVertexInputStateCreateInfo vertex_input_info = {};
 	vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-
 	vertex_input_info.vertexBindingDescriptionCount = 1;
 	vertex_input_info.pVertexBindingDescriptions = &vertex_description->binding_description;
-
 	vertex_input_info.vertexAttributeDescriptionCount = (uint32_t)vertex_description->attribute_descriptions.size();
 	vertex_input_info.pVertexAttributeDescriptions = vertex_description->attribute_descriptions.data();
 

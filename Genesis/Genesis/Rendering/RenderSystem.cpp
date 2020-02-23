@@ -9,7 +9,7 @@ RenderSystem::RenderSystem(RenderingBackend* backend)
 {
 	this->backend = backend;
 
-	this->screen_shader = ShaderLoader::loadShaderSingle(this->backend, "res/temp_shaders/test");
+	this->screen_shader = ShaderLoader::loadShaderSingle(this->backend, "res/shaders_glsl/ScreenQuad");
 
 	const vector<vector2F> vertices =
 	{
