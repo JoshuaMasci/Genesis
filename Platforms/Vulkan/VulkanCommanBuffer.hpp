@@ -9,6 +9,7 @@
 
 #include "VulkanFramebuffer.hpp"
 
+#include "Genesis/Core/VectorTypes.hpp"
 #include "Genesis/Rendering/CommandBuffer.hpp"
 
 namespace Genesis
@@ -98,7 +99,7 @@ namespace Genesis
 		VkPipeline current_pipeline = VK_NULL_HANDLE;
 	};
 
-	class VulkanCommandBuffer : public CommandBuffer
+	class VulkanCommandBuffer : public CommandBufferInterface
 	{
 	public:
 		VulkanCommandBuffer(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index);

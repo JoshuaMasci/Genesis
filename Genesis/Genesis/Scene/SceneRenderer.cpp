@@ -21,8 +21,6 @@ SceneRenderer::SceneRenderer(RenderingBackend* backend)
 
 	this->scene_uniform_buffer = this->backend->createDynamicBuffer(sizeof(SceneUniform), BufferUsage::Uniform_Buffer, MemoryType::CPU_Visable);
 
-	this->vertex_input = this->backend->createVertexInputDescription({ VertexElementType::float_3, VertexElementType::float_2, VertexElementType::float_3, VertexElementType::float_3, VertexElementType::float_3});
-	ObjLoader::loadMesh(this->backend, "res/sphere.obj", this->vertex_buffer, this->index_buffer, this->index_count);
 	this->mesh_shader = ShaderLoader::loadShaderSingle(this->backend, "res/shaders_glsl/Model");
 
 	{
@@ -32,6 +30,7 @@ SceneRenderer::SceneRenderer(RenderingBackend* backend)
 		values.roughness = 0.0f;
 		values.ambient_occlusion = 0.0f;
 		values.height_scale = 0.0f;
+		values.has_albedo_map = true;
 
 		this->material_buffer = this->backend->createDynamicBuffer(sizeof(MaterialValues), BufferUsage::Uniform_Buffer, MemoryType::GPU_Only);
 		this->backend->writeDynamicBuffer(this->material_buffer, &values, sizeof(MaterialValues));
@@ -42,6 +41,8 @@ SceneRenderer::SceneRenderer(RenderingBackend* backend)
 
 		SamplerCreateInfo info = {};
 		this->basic_sampler = this->backend->createSampler(info);
+
+		this->temp_texture = PngLoader::loadTexture(this->backend, "res/1K_Grid.png");
 	}
 }
 
@@ -49,11 +50,9 @@ SceneRenderer::~SceneRenderer()
 {
 	this->backend->destroyDynamicBuffer(this->material_buffer);
 	this->backend->destroyTexture(this->empty_texture);
+	this->backend->destroyTexture(this->temp_texture);
 
-	this->backend->destroyStaticBuffer(this->vertex_buffer);
-	this->backend->destroyStaticBuffer(this->index_buffer);
 	this->backend->destroyShader(this->mesh_shader);
-
 
 	this->backend->destroyFramebuffer(this->framebuffer);
 	this->backend->destroyMTCommandBuffer(this->mt_command_buffer);
@@ -63,6 +62,8 @@ SceneRenderer::~SceneRenderer()
 
 void SceneRenderer::startLayer()
 {
+	this->draw_call_count = 0;
+
 	vector2U temp_size = this->backend->getScreenSize();
 	if (temp_size != this->view_size)
 	{
@@ -70,13 +71,22 @@ void SceneRenderer::startLayer()
 		this->backend->resizeFramebuffer(this->framebuffer, this->view_size);
 	}
 
-	List<CommandBuffer*>& command_buffers = *this->backend->beginMTCommandBuffer(this->mt_command_buffer, this->framebuffer);
+	List<CommandBufferInterface*>& command_buffers = *this->backend->beginMTCommandBuffer(this->mt_command_buffer, this->framebuffer);
 	this->command_buffer = command_buffers[0];
 }
 
 void SceneRenderer::endLayer()
 {
 	this->backend->endMTCommandBuffer(this->mt_command_buffer);
+}
+
+#include "imgui.h"
+void SceneRenderer::ImGuiDraw()
+{	
+	ImGui::Begin("SceneRenderer");
+	ImGui::LabelText(std::to_string(this->draw_call_count).c_str(), "Draw Calls");
+	ImGui::Checkbox("Use Frustrum Culling", &this->use_frustum_culling);
+	ImGui::End();
 }
 
 void SceneRenderer::drawScene(Scene* scene)
@@ -116,7 +126,7 @@ void SceneRenderer::drawScene(Scene* scene)
 
 	//Material
 	this->command_buffer->setUniformBuffer(1, 0, this->material_buffer);
-	this->command_buffer->setUniformTexture(1, 1, this->empty_texture, this->basic_sampler);
+	this->command_buffer->setUniformTexture(1, 1, this->temp_texture, this->basic_sampler);
 	this->command_buffer->setUniformTexture(1, 2, this->empty_texture, this->basic_sampler);
 	this->command_buffer->setUniformTexture(1, 3, this->empty_texture, this->basic_sampler);
 	this->command_buffer->setUniformTexture(1, 4, this->empty_texture, this->basic_sampler);
@@ -126,17 +136,19 @@ void SceneRenderer::drawScene(Scene* scene)
 	Frustum frustum(view_projection_matrix);
 	for (size_t i = 0; i < scene->meshes.size(); i++)
 	{
-		if (frustum.sphereTest(scene->meshes[i].transform.getPosition(), scene->meshes[i].radius))
+		if (!this->use_frustum_culling || frustum.sphereTest(scene->meshes[i].transform.getPosition(), scene->meshes[i].mesh.frustum_sphere_radius))
 		{
+			this->draw_call_count++;
+
 			ObjectTransformUniform matrices = {};
 			matrices.model_matrix = scene->meshes[i].transform.getModelMatrix();
 			matrices.normal_matrix = (glm::mat3x4)scene->meshes[i].transform.getNormalMatrix();
 
 			this->command_buffer->setUniformConstant(&matrices, sizeof(ObjectTransformUniform));
 
-			this->command_buffer->setVertexBuffer(this->vertex_buffer, this->vertex_input);
-			this->command_buffer->setIndexBuffer(this->index_buffer, IndexType::uint32);
-			this->command_buffer->drawIndexed(this->index_count);
+			this->command_buffer->setVertexBuffer(scene->meshes[i].mesh.vertex_buffer, *scene->meshes[i].mesh.vertex_description);
+			this->command_buffer->setIndexBuffer(scene->meshes[i].mesh.index_buffer, scene->meshes[i].mesh.index_type);
+			this->command_buffer->drawIndexed(scene->meshes[i].mesh.index_count);
 		}
 	}
 

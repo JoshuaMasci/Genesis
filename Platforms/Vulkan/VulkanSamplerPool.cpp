@@ -97,7 +97,7 @@ VkBorderColor getBorderColor(BorderColor color)
 	return VK_BORDER_COLOR_INT_TRANSPARENT_BLACK;
 }
 
-VkSampler VulkanSamplerPool::getSampler(SamplerCreateInfo& create_info)
+VkSampler VulkanSamplerPool::getSampler(const SamplerCreateInfo& create_info)
 {
 	MurmurHash2 hash;
 	hash.begin();

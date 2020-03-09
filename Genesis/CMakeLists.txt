@@ -50,8 +50,8 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/include/)
 target_link_libraries (Genesis zlibstaticd)
 target_link_libraries (Genesis assimp-vc140-mt)
 
-#TEMP ENTT
-include_directories(${CMAKE_SOURCE_DIR}/lib/entt-3.2.2/src/)
+#ENTT
+include_directories(${CMAKE_SOURCE_DIR}/lib/entt-3.3.1/src/)
 
 #ReactPhysics3D
 include_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/src/)

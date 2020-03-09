@@ -4,7 +4,7 @@
 
 #include "Genesis/Physics/RigidBody.hpp"
 #include "Genesis/Physics/ReactPhyscis.hpp"
-#include "Genesis/Core/Transform.hpp"
+#include "Genesis/Entity/TransformSystem.hpp"
 
 using namespace Genesis;
 using namespace Genesis::Physics;
@@ -12,38 +12,27 @@ using namespace Genesis::Physics;
 void PhysicsSystem::prePhysicsUpdate(EntityRegistry* registry, JobSystem* job_system)
 {
 	GENESIS_PROFILE_FUNCTION("PhysicsSystem::prePhysicsUpdate()");
-	auto view = registry->view<RigidBody, TransformD>();
+	auto view = registry->view<RigidBody, WorldTransform>();
 
 	for (auto entity : view)
 	{
-		auto& rigid_body = view.get<RigidBody>(entity);
-		auto& transform_d = view.get<TransformD>(entity);
-
-		if (rigid_body.rigid_body != nullptr)
-		{
-			reactphysics3d::Transform transform_r = rigid_body.rigid_body->getTransform();
-			transform_r.setPosition(toVec3R(transform_d.getPosition()));
-			transform_r.setOrientation(toQuatR(transform_d.getOrientation()));
-			rigid_body.rigid_body->setTransform(transform_r);
-		}
+		RigidBody& rigid_body = view.get<RigidBody>(entity);
+		WorldTransform& world_transform = view.get<WorldTransform>(entity);
+		rigid_body.setTransform(world_transform.current);
 	}
 }
 
 void PhysicsSystem::postPhysicsUpdate(EntityRegistry* registry, JobSystem* job_system)
 {
 	GENESIS_PROFILE_FUNCTION("PhysicsSystem::postPhysicsUpdate()");
-	auto view = registry->view<RigidBody, TransformD>();
+	auto view = registry->view<RigidBody, WorldTransform>();
 
 	for (auto entity : view)
 	{
-		auto& rigid_body = view.get<RigidBody>(entity);
-		auto& transform_d = view.get<TransformD>(entity);
-
-		if (rigid_body.rigid_body != nullptr)
-		{
-			const reactphysics3d::Transform& transform_r = rigid_body.rigid_body->getTransform();
-			transform_d.setPosition(toVec3D(transform_r.getPosition()));
-			transform_d.setOrientation(toQuatD(transform_r.getOrientation()));
-		}
+		RigidBody& rigid_body = view.get<RigidBody>(entity);
+		WorldTransform& world_transform = view.get<WorldTransform>(entity);
+		TransformD rigid_body_transform = rigid_body.getTransform();
+		world_transform.current.setPosition(rigid_body_transform.getPosition());
+		world_transform.current.setOrientation(rigid_body_transform.getOrientation());
 	}
 }

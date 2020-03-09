@@ -7,17 +7,7 @@ using namespace Genesis;
 Application::Application()
 	:input_manager("config/input")
 {
-	this->scene.ambient_light = vector3F(1.0f);
-	this->scene.camera.camera = Camera(77.0f);
-	this->scene.camera.transform = TransformF(vector3F(0.0f, 0.0f, -10.0f));
 
-	Scene::MeshTransform mesh;
-	mesh.radius = 1.0f;
-	mesh.transform = TransformF(vector3F(0.0f, 0.0f, 0.0f));
-	this->scene.meshes.push_back(mesh);
-
-	mesh.transform = TransformF(vector3F(0.0f, 4.9f, 0.0f));
-	this->scene.meshes.push_back(mesh);
 }
 
 Application::~Application()
@@ -28,10 +18,6 @@ Application::~Application()
 		this->rendering_backend->waitTillDone();
 	}
 
-	if (this->scene_renderer != nullptr)
-	{
-		delete this->scene_renderer;
-	}
 	if (this->ui_renderer != nullptr)
 	{
 		delete this->ui_renderer;
@@ -61,8 +47,8 @@ Application::~Application()
 void Application::run()
 {
 	//Fixed Timestep Stuff
-	//double time_step = 1.0 / 240.0;
-	//double accumulator = 0.0;
+	const double SimulationStep = 1.0 / (60.0 * 5);
+	const TimeStep MaxTimeStep = 1.0 / 4.0;
 
 	//Mode: Rendering and Simulation Linked
 	using clock = std::chrono::high_resolution_clock;
@@ -72,22 +58,38 @@ void Application::run()
 	auto time_last_frame = time_last;
 	size_t frames = 0;
 
+	double accumulator = 0.0;
+
 	while (this->isRunning())
 	{
 		GENESIS_PROFILE_BLOCK_START("Application_Loop");
 
 		time_current = clock::now();
-		auto delta = std::chrono::duration_cast<std::chrono::duration<double>>(time_current - time_last);
-		TimeStep time_step = (TimeStep)delta.count();
+		TimeStep time_step = (TimeStep)std::chrono::duration_cast<std::chrono::duration<double>>(time_current - time_last).count();
+		if (time_step > MaxTimeStep)
+		{
+			time_step = MaxTimeStep;
+		}
 
-		this->update(time_step);
-		this->render(time_step);
+		accumulator += time_step;
+
+		while (accumulator >= SimulationStep)
+		{
+			GENESIS_PROFILE_BLOCK_START("Application_SimulationStep");
+			this->update(SimulationStep);
+			accumulator -= SimulationStep;
+			GENESIS_PROFILE_BLOCK_END();
+		}
+
+		TimeStep interpolation_value = accumulator / SimulationStep;
+
+		this->render(interpolation_value);
 
 		time_last = time_current;
 
 		frames++;
-		auto frame_delta = std::chrono::duration_cast<std::chrono::duration<double>>(time_last - time_last_frame);
-		if (frame_delta.count() > 1.0)
+		double frame_delta = std::chrono::duration_cast<std::chrono::duration<double>>(time_last - time_last_frame).count();
+		if (frame_delta > 1.0)
 		{
 			this->window->setWindowTitle("Sandbox: FPS " + std::to_string(frames));
 
@@ -110,32 +112,33 @@ void Application::update(TimeStep time_step)
 	{
 		this->platform->onUpdate(time_step);
 	}
-
-	TransformD temp_transform;
-	temp_transform.setPosition((vector3D)this->scene.camera.transform.getPosition());
-	temp_transform.setOrientation((quaternionD)this->scene.camera.transform.getOrientation());
-
-	DebugCamera cam(3.0f, 0.5f);
-	DebugCamera::update(&this->input_manager, cam, temp_transform, time_step);
-
-	this->scene.camera.transform.setPosition((vector3F)temp_transform.getPosition());
-	this->scene.camera.transform.setOrientation((quaternionF)temp_transform.getOrientation());
-
 }
 
-void Application::render(TimeStep time_step)
+void Application::render(TimeStep interpolation_value)
 {
 	GENESIS_PROFILE_FUNCTION("Application::render");
+}
 
+bool Application::startFrame()
+{
 	if (this->render_system->startFrame())
 	{
-		this->scene_renderer->startLayer();
-		this->scene_renderer->drawScene(&this->scene);
-		this->scene_renderer->endLayer();
-
-		this->render_system->drawLayerWholeScreen(this->scene_renderer);
-		this->render_system->endFrame();
+		this->ui_renderer->startLayer();
+		return true;
 	}
+
+	return false;
+}
+
+void Application::endFrame()
+{
+	GENESIS_PROFILE_BLOCK_START("Application_ImGUI_Draw");
+	this->ui_renderer->endLayer();
+	this->render_system->drawLayerWholeScreen(this->ui_renderer);
+	GENESIS_PROFILE_BLOCK_END();
+
+
+	this->render_system->endFrame();
 }
 
 void Application::close()

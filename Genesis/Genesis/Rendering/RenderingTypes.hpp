@@ -37,39 +37,6 @@ namespace Genesis
 		D_32_Float,
 	};
 
-	enum class VertexElementType
-	{
-		//float
-		float_1,
-		float_2,
-		float_3,
-		float_4,
-
-		//unorm8
-		unorm8_1,
-		unorm8_2,
-		unorm8_3,
-		unorm8_4,
-
-		//uint8
-		uint8_1,
-		uint8_2,
-		uint8_3,
-		uint8_4,
-
-		//uint16
-		uint16_1,
-		uint16_2,
-		uint16_3,
-		uint16_4,
-
-		//uint32
-		uint32_1,
-		uint32_2,
-		uint32_3,
-		uint32_4,
-	};
-
 	enum class BufferUsage
 	{
 		Vertex_Buffer,
@@ -78,8 +45,14 @@ namespace Genesis
 		Storage_Buffer
 	};
 
-	typedef void* Sampler;
-	typedef void* VertexInputDescription;
+	enum class ShaderStageBits
+	{
+		VERTEX = 0x00000001,
+		GEOMETRY = 0x00000008,
+		FRAGMENT = 0x00000010,
+		COMPUTE = 0x00000020,
+	};
+	typedef uint32_t ShaderStage;
 
 	typedef void* StaticBuffer;
 	typedef void* DynamicBuffer;
@@ -91,5 +64,10 @@ namespace Genesis
 	typedef void* STCommandBuffer;
 	typedef void* MTCommandBuffer;
 
-	typedef void* Sampler;
+	typedef void* ShaderModule;
+	struct ShaderModuleCreateInfo
+	{
+		uint32_t* code = nullptr;
+		uint32_t code_size = 0;
+	};
 }

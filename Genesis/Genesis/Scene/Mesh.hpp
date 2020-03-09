@@ -15,6 +15,6 @@ namespace Genesis
 		IndexType index_type;
 		uint32_t index_count;
 
-		Texture texture;
+		float frustum_sphere_radius;
 	};
 }

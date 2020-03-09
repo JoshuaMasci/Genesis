@@ -4,6 +4,8 @@
 
 namespace Genesis
 {
+	typedef void* Sampler;
+
 	enum class FilterMode
 	{
 		Nearest,

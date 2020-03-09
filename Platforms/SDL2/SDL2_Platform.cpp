@@ -368,15 +368,32 @@ void SDL2_Platform::onUpdate(TimeStep time_step)
 			JoystickDevice* device = new JoystickDevice(SDL_JoystickName(joystick), SDL_JoystickNumButtons(joystick), SDL_JoystickNumHats(joystick), SDL_JoystickNumAxes(joystick));
 			this->joystick_devices[id] = device;
 
+			GENESIS_ENGINE_INFO("SDL Joystick Added: {}", device->getName());
+
 			//Settings
+			if (true)
+			{
+				device->addAxis("Debug_Pitch", AxisSettings(3, 0.1, false));
+				device->addAxis("Debug_Yaw", AxisSettings(2, 0.1, true));
+
+				device->addButton("Debug_RollLeft", (ButtonIndex)10);
+				device->addButton("Debug_RollRight", (ButtonIndex)9);
+
+				device->addAxis("Debug_ForwardBackward", AxisSettings(1, 0.1, true));
+				device->addAxis("Debug_LeftRight", AxisSettings(0, 0.1, true));
+			}
+
 
 			this->application->input_manager.addInputDevice(device);
 		}
 		else if (event.type == SDL_JOYDEVICEREMOVED)
 		{
+
 			//Destroy Joystick Device
 			int32_t id = event.jdevice.which;
 			JoystickDevice* device = this->joystick_devices[id];
+
+			GENESIS_ENGINE_INFO("SDL Joystick Removed: {}", device->getName());
 
 			this->application->input_manager.removeInputDevice(device);
 			this->joystick_devices.erase(id);

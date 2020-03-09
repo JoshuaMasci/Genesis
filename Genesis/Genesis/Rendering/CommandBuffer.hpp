@@ -7,7 +7,7 @@
 
 namespace Genesis
 {
-	class CommandBuffer
+	class CommandBufferInterface
 	{
 	public:
 		virtual void setShader(Shader shader) = 0;

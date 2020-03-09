@@ -14,7 +14,7 @@ namespace Genesis
 		uint64_t size = 0;
 	};
 
-	struct DescriptorSetBinding
+	struct VulkanDescriptorSetBinding
 	{
 		VkDescriptorType type;
 		VkShaderStageFlags stage;
@@ -26,6 +26,8 @@ namespace Genesis
 	{
 	public:
 		VulkanShaderModule(VkDevice device, string& shader_data);
+		VulkanShaderModule(VkDevice device, const ShaderModuleCreateInfo& create_info);
+
 		~VulkanShaderModule();
 
 		VkPipelineShaderStageCreateInfo getStageInfo();
@@ -50,7 +52,7 @@ namespace Genesis
 		inline vector<VkPipelineShaderStageCreateInfo> getShaderStages() { return this->shader_stages; };
 		inline VkPipelineLayout getPipelineLayout() { return this->pipeline_layout; };
 
-		inline const List<List<DescriptorSetBinding>>& getDescriptorSetBindings() { return this->descriptor_set_bindings; };
+		inline const List<List<VulkanDescriptorSetBinding>>& getDescriptorSetBindings() { return this->descriptor_set_bindings; };
 		inline const List<VkDescriptorSetLayout>& getDescriptorSetLayouts() { return this->descriptor_layouts; };
 
 	private:
@@ -59,7 +61,7 @@ namespace Genesis
 		VulkanShaderModule* vert_module = nullptr;
 		VulkanShaderModule* frag_module = nullptr;
 
-		List<List<DescriptorSetBinding>> descriptor_set_bindings;
+		List<List<VulkanDescriptorSetBinding>> descriptor_set_bindings;
 
 		List<VkDescriptorSetLayout> descriptor_layouts;
 		VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;

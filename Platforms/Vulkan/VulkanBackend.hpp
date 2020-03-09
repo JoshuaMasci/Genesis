@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Genesis/Rendering/RenderingBackend.hpp"
+#include "Genesis/Rendering/VertexInputDescription.hpp"
 #include "Genesis/Platform/Window.hpp"
 
 #include "VulkanInclude.hpp"
@@ -35,11 +36,22 @@ namespace Genesis
 		virtual void setScreenSize(vector2U size) override;
 		virtual vector2U getScreenSize() override;
 
-		virtual CommandBuffer* beginFrame() override;
+		virtual CommandBufferInterface* beginFrame() override;
 		virtual void endFrame() override;
 
-		virtual Sampler createSampler(SamplerCreateInfo& create_info) override;
+		virtual Sampler createSampler(const SamplerCreateInfo& create_info) override;
+
 		virtual VertexInputDescription createVertexInputDescription(vector<VertexElementType> input_elements) override;
+		virtual VertexInputDescription createVertexInputDescription(const VertexInputDescriptionCreateInfo& create_info) override;
+
+		virtual DescriptorSetLayout createDescriptorSetLayout(const DescriptorSetLayoutCreateInfo& create_info) override;
+		virtual DescriptorSet createDescriptorSet(const DescriptorSetCreateInfo& create_info) override;
+		virtual void destroyDescriptorSet(DescriptorSet descriptor_set) override;
+
+		virtual PipelineLayout createPipelineLayout(const PipelineLayoutCreateInfo& create_info) override;
+
+		virtual ShaderModule createShaderModule(ShaderModuleCreateInfo& create_info) override;
+		virtual void destroyShaderModule(ShaderModule shader_module) override;
 
 		virtual StaticBuffer createStaticBuffer(void* data, uint64_t data_size, BufferUsage buffer_usage, MemoryType memory_usage = MemoryType::GPU_Only) override;
 		virtual void destroyStaticBuffer(StaticBuffer buffer) override;
@@ -60,12 +72,12 @@ namespace Genesis
 
 		virtual STCommandBuffer createSTCommandBuffer() override;
 		virtual void destroySTCommandBuffer(STCommandBuffer st_command_buffer) override;
-		virtual CommandBuffer* beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer_target) override;
+		virtual CommandBufferInterface* beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer_target) override;
 		virtual void endSTCommandBuffer(STCommandBuffer st_command_buffer) override;
 
 		virtual MTCommandBuffer createMTCommandBuffer() override;
 		virtual void destroyMTCommandBuffer(MTCommandBuffer mt_command_buffer) override;
-		virtual List<CommandBuffer*>* beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer_target) override;
+		virtual List<CommandBufferInterface*>* beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer_target) override;
 		virtual void endMTCommandBuffer(MTCommandBuffer mt_command_buffer) override;
 
 		virtual void waitTillDone() override;
@@ -108,6 +120,7 @@ namespace Genesis
 		List <VulkanTransferBuffer*> transfer_buffers;
 
 		//Descriptor Pools
+		VulkanDescriptorPool2* descriptor_pool = nullptr;
 		List<VulkanDescriptorPool*> descriptor_pools;
 		VulkanLayoutPool* layout_pool = nullptr;
 

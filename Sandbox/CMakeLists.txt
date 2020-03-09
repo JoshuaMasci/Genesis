@@ -21,8 +21,8 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/src/)
 link_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/build/lib/)
 add_definitions(-DIS_DOUBLE_PRECISION_ENABLED)
 
-#TEMP ENTT
-include_directories(${CMAKE_SOURCE_DIR}/lib/entt-3.2.2/src/)
+#ENTT
+include_directories(${CMAKE_SOURCE_DIR}/lib/entt-3.3.1/src/)
 
 if(INCLUDE_EASY_PROFILER)
 	include_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/include/)

@@ -17,6 +17,8 @@ namespace Genesis
 		virtual void startLayer() = 0;
 		virtual void endLayer() = 0;
 
+		virtual void ImGuiDraw() = 0;
+
 		virtual Framebuffer getFramebuffer() = 0;
 		virtual uint32_t getFramebufferIndex() = 0;
 

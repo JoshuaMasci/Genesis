@@ -19,7 +19,7 @@ namespace Genesis
 	protected:
 		RenderingBackend* backend = nullptr;
 
-		CommandBuffer* command_buffer = nullptr;
+		CommandBufferInterface* command_buffer = nullptr;
 
 		Shader screen_shader = nullptr;
 		StaticBuffer screen_vertex;

@@ -20,6 +20,13 @@ namespace Genesis
 		float roughness;
 		float ambient_occlusion;
 		float height_scale = 0.0f;
+
+		bool has_albedo_map = false;
+		bool has_normal_map = false;
+		bool has_height_map = false;
+		bool has_metallic_map = false;
+		bool has_roughness_map = false;
+		bool has_ambient_occlusion_map = false;
 	};
 
 	struct MaterialMaps

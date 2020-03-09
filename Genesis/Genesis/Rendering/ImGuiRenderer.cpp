@@ -41,7 +41,12 @@ Genesis::ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* i
 	}
 
 	this->shader = ShaderLoader::loadShaderSingle(this->backend, "res/imgui/vulkan");
-	this->vertex_input = this->backend->createVertexInputDescription({ VertexElementType::float_2, VertexElementType::float_2, VertexElementType::unorm8_4 });
+
+	VertexElementType vertex_input[] = { VertexElementType::float_2, VertexElementType::float_2, VertexElementType::unorm8_4 };
+	VertexInputDescriptionCreateInfo vertex_input_create_info = {};
+	vertex_input_create_info.input_elements = (VertexElementType*)&vertex_input;
+	vertex_input_create_info.input_elements_count = _countof(vertex_input);
+	this->vertex_input = this->backend->createVertexInputDescription(vertex_input_create_info);
 
 	this->settings.cull_mode = CullMode::None;
 	this->settings.depth_test = DepthTest::None;
@@ -117,7 +122,7 @@ void Genesis::ImGuiRenderer::endLayer()
 	ImGui::Render();
 	ImDrawData* draw_data = ImGui::GetDrawData();
 
-	CommandBuffer* command_buffer = this->backend->beginSTCommandBuffer(this->st_command_buffer, this->framebuffer);
+	CommandBufferInterface* command_buffer = this->backend->beginSTCommandBuffer(this->st_command_buffer, this->framebuffer);
 	command_buffer->setPipelineSettings(this->settings);
 	command_buffer->setShader(this->shader);
 
@@ -188,5 +193,10 @@ void Genesis::ImGuiRenderer::endLayer()
 	}
 
 	this->backend->endSTCommandBuffer(this->st_command_buffer);
+}
+
+void ImGuiRenderer::ImGuiDraw()
+{
+	//Nothing to do here
 }
 

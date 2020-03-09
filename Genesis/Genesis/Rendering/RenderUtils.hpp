@@ -10,7 +10,7 @@ namespace Genesis
 	class UniformWrite
 	{
 	public:
-		inline static void writeDirectionalLight(CommandBuffer* command_buffer, string base_name, DirectionalLight& directional, vector3F direction)
+		inline static void writeDirectionalLight(CommandBufferInterface* command_buffer, string base_name, DirectionalLight& directional, vector3F direction)
 		{
 			command_buffer->setUniformVec3(base_name + ".color", directional.color);
 			command_buffer->setUniformFloat(base_name + ".intensity", directional.intensity);
@@ -18,7 +18,7 @@ namespace Genesis
 			command_buffer->setUniformVec3(base_name + ".direction", direction);
 		};
 		
-		inline static void writePointLight(CommandBuffer* command_buffer, string base_name, PointLight& point, vector3F position)
+		inline static void writePointLight(CommandBufferInterface* command_buffer, string base_name, PointLight& point, vector3F position)
 		{
 			command_buffer->setUniformVec3(base_name + ".color", point.color);
 			command_buffer->setUniformFloat(base_name + ".intensity", point.intensity);
@@ -29,7 +29,7 @@ namespace Genesis
 
 		};
 		
-		inline static void writeSpotLight(CommandBuffer* command_buffer, string base_name, SpotLight& spot, vector3F position, vector3F direction)
+		inline static void writeSpotLight(CommandBufferInterface* command_buffer, string base_name, SpotLight& spot, vector3F position, vector3F direction)
 		{
 			command_buffer->setUniformVec3(base_name + ".color", spot.color);
 			command_buffer->setUniformFloat(base_name + ".intensity", spot.intensity);

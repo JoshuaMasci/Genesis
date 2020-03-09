@@ -1,8 +1,5 @@
 #pragma once
 
-//Vector Types
-#include "Genesis/Core/VectorTypes.hpp"
-
 #include <string>
 
 //STL replacements

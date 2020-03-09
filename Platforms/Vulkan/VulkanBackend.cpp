@@ -3,6 +3,8 @@
 #include "Genesis/Debug/Assert.hpp"
 #include "Genesis/Debug/Profiler.hpp"
 
+#include "VulkanDescriptorSet.hpp"
+
 #include "VulkanPhysicalDevicePicker.hpp"
 
 using namespace Genesis;
@@ -120,14 +122,26 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 	this->transfer_pool = new VulkanCommandPool(this->device->get(), this->device->getGraphicsFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
 	//Descriptor Pools
+	this->descriptor_pool = new VulkanDescriptorPool2(this->device->get(), 8000,
+		{
+			{VK_DESCRIPTOR_TYPE_SAMPLER, 8000},
+			{VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 8000},
+			{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 8000},
+			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000},
+			{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 8000}
+		});
+
 	this->descriptor_pools.resize(this->THREAD_COUNT);
 	for (size_t i = 0; i < this->descriptor_pools.size(); i++)
 	{
 		this->descriptor_pools[i] =
 			new VulkanDescriptorPool(this->device->get(), this->FRAME_COUNT, 8000,
 				{
+					{VK_DESCRIPTOR_TYPE_SAMPLER, 8000},
+					{VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 8000},
+					{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 8000},
 					{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000},
-					{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 8000}
+					{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 8000}
 				});
 	}
 
@@ -209,6 +223,7 @@ VulkanBackend::~VulkanBackend()
 
 	delete this->layout_pool;
 
+	delete this->descriptor_pool;
 	for (size_t i = 0; i < this->descriptor_pools.size(); i++)
 	{
 		delete this->descriptor_pools[i];
@@ -244,7 +259,7 @@ vector2U VulkanBackend::getScreenSize()
 	return vector2U(size.width, size.height);
 }
 
-CommandBuffer* VulkanBackend::beginFrame()
+CommandBufferInterface* VulkanBackend::beginFrame()
 {
 	GENESIS_PROFILE_FUNCTION("VulkanBackend_beginFrame");
 
@@ -360,7 +375,7 @@ void VulkanBackend::endFrame()
 	this->pipeline_pool->update();
 }
 
-Sampler VulkanBackend::createSampler(SamplerCreateInfo& create_info)
+Sampler VulkanBackend::createSampler(const SamplerCreateInfo& create_info)
 {
 	return (Sampler)this->sampler_pool->getSampler(create_info);
 }
@@ -368,6 +383,40 @@ Sampler VulkanBackend::createSampler(SamplerCreateInfo& create_info)
 VertexInputDescription VulkanBackend::createVertexInputDescription(vector<VertexElementType> input_elements)
 {
 	return (VertexInputDescription)this->vertex_input_pool->getVertexInputDescription(input_elements);
+}
+
+VertexInputDescription VulkanBackend::createVertexInputDescription(const VertexInputDescriptionCreateInfo& create_info)
+{
+	return (VertexInputDescription)this->vertex_input_pool->getVertexInputDescription(create_info);
+}
+
+DescriptorSetLayout VulkanBackend::createDescriptorSetLayout(const DescriptorSetLayoutCreateInfo& create_info)
+{
+	return (DescriptorSetLayout)this->layout_pool->getDescriptorLayout(create_info);
+}
+
+DescriptorSet VulkanBackend::createDescriptorSet(const DescriptorSetCreateInfo& create_info)
+{
+	return (DescriptorSet) new VulkanDescriptorSet(this->descriptor_pool, create_info);
+}
+
+void VulkanBackend::destroyDescriptorSet(DescriptorSet descriptor_set)
+{
+}
+
+PipelineLayout VulkanBackend::createPipelineLayout(const PipelineLayoutCreateInfo& create_info)
+{
+	return (PipelineLayout)this->layout_pool->getPipelineLayout(create_info);
+}
+
+ShaderModule VulkanBackend::createShaderModule(ShaderModuleCreateInfo& create_info)
+{
+	return (ShaderModule)new VulkanShaderModule(this->device->get(), create_info);
+}
+
+void VulkanBackend::destroyShaderModule(ShaderModule shader_module)
+{
+	//TODO
 }
 
 StaticBuffer VulkanBackend::createStaticBuffer(void* data, uint64_t data_size, BufferUsage buffer_usage, MemoryType memory_usage)
@@ -488,7 +537,7 @@ void VulkanBackend::destroySTCommandBuffer(STCommandBuffer st_command_buffer)
 	this->st_command_buffer_deleter->addToQueue((VulkanCommandBufferSet*)st_command_buffer);
 }
 
-CommandBuffer* VulkanBackend::beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer_target)
+CommandBufferInterface* VulkanBackend::beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer_target)
 {
 	VulkanCommandBufferSet* command_buffer = (VulkanCommandBufferSet*)st_command_buffer;
 	((VulkanFramebufferSet*)framebuffer_target)->rebuildFramebuffer(this->frame_index);
@@ -515,7 +564,7 @@ void VulkanBackend::destroyMTCommandBuffer(MTCommandBuffer mt_command_buffer)
 	this->mt_command_buffer_deleter->addToQueue((VulkanCommandBufferMultithreadSet*)mt_command_buffer);
 }
 
-List<CommandBuffer*>* VulkanBackend::beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer_target)
+List<CommandBufferInterface*>* VulkanBackend::beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer_target)
 {
 	VulkanCommandBufferMultithreadSet* command_buffer = (VulkanCommandBufferMultithreadSet*)mt_command_buffer;
 
@@ -523,7 +572,7 @@ List<CommandBuffer*>* VulkanBackend::beginMTCommandBuffer(MTCommandBuffer mt_com
 	VulkanFramebuffer* vulkan_framebuffer = ((VulkanFramebufferSet*)framebuffer_target)->framebuffers[this->frame_index];
 
 	command_buffer->command_buffers[this->frame_index]->start(vulkan_framebuffer);
-	return (List<CommandBuffer*>*)command_buffer->command_buffers[this->frame_index]->getSecondaryCommandBuffers();
+	return (List<CommandBufferInterface*>*)command_buffer->command_buffers[this->frame_index]->getSecondaryCommandBuffers();
 }
 
 void VulkanBackend::endMTCommandBuffer(MTCommandBuffer mt_command_buffer)

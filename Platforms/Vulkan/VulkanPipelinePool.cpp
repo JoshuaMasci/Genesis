@@ -284,24 +284,24 @@ VkPipeline VulkanThreadPipelinePool::createPipeline(VulkanShader* shader, VkRend
 
 	vector<VkPipelineShaderStageCreateInfo> shader_stage = shader->getShaderStages();
 
-	VkGraphicsPipelineCreateInfo pipelineInfo = {};
-	pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipelineInfo.stageCount = (uint32_t)shader_stage.size();
-	pipelineInfo.pStages = shader_stage.data();
-	pipelineInfo.pVertexInputState = &vertex_input_info;
-	pipelineInfo.pInputAssemblyState = &input_assembly;
-	pipelineInfo.pViewportState = &viewport_state;
-	pipelineInfo.pRasterizationState = &rasterizer;
-	pipelineInfo.pMultisampleState = &multisampling;
-	pipelineInfo.pDepthStencilState = &depth_stencil;
-	pipelineInfo.pColorBlendState = &color_blending;
-	pipelineInfo.layout = shader->getPipelineLayout();
-	pipelineInfo.pDynamicState = &dynamic_state;
-	pipelineInfo.renderPass = renderpass;
-	pipelineInfo.subpass = 0;
-	pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
+	VkGraphicsPipelineCreateInfo pipeline_info = {};
+	pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipeline_info.stageCount = (uint32_t)shader_stage.size();
+	pipeline_info.pStages = shader_stage.data();
+	pipeline_info.pVertexInputState = &vertex_input_info;
+	pipeline_info.pInputAssemblyState = &input_assembly;
+	pipeline_info.pViewportState = &viewport_state;
+	pipeline_info.pRasterizationState = &rasterizer;
+	pipeline_info.pMultisampleState = &multisampling;
+	pipeline_info.pDepthStencilState = &depth_stencil;
+	pipeline_info.pColorBlendState = &color_blending;
+	pipeline_info.layout = shader->getPipelineLayout();
+	pipeline_info.pDynamicState = &dynamic_state;
+	pipeline_info.renderPass = renderpass;
+	pipeline_info.subpass = 0;
+	pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
 
 	VkPipeline pipeline = VK_NULL_HANDLE;
-	GENESIS_ENGINE_ASSERT_ERROR((vkCreateGraphicsPipelines(this->device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) == VK_SUCCESS), "failed to create graphics pipeline");
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateGraphicsPipelines(this->device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &pipeline) == VK_SUCCESS), "failed to create graphics pipeline");
 	return pipeline;
 }

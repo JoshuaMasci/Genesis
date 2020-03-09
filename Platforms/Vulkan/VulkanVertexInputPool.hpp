@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Genesis/Rendering/RenderingTypes.hpp"
+#include "Genesis/Rendering/VertexInputDescription.hpp"
 #include "VulkanInclude.hpp"
 #include "Genesis/Core/Types.hpp"
 
@@ -21,6 +22,7 @@ namespace Genesis
 		~VulkanVertexInputPool();
 
 		VulkanVertexInputDescription* getVertexInputDescription(vector<VertexElementType>& input_elements);
+		VulkanVertexInputDescription* getVertexInputDescription(const VertexInputDescriptionCreateInfo& create_info);
 
 	private:
 		VkDevice device;

@@ -14,7 +14,7 @@ namespace Genesis
 		VulkanSamplerPool(VkDevice device);
 		~VulkanSamplerPool();
 
-		VkSampler getSampler(SamplerCreateInfo& create_info);
+		VkSampler getSampler(const SamplerCreateInfo& create_info);
 
 	private:
 		VkDevice device;

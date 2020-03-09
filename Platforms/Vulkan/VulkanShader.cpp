@@ -10,12 +10,12 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string& shader_data)
 {
 	this->device = device;
 
-	VkShaderModuleCreateInfo createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	createInfo.codeSize = shader_data.length();
-	createInfo.pCode = (uint32_t*)shader_data.data();
+	VkShaderModuleCreateInfo create_info = {};
+	create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	create_info.codeSize = shader_data.length();
+	create_info.pCode = (uint32_t*)shader_data.data();
 
-	GENESIS_ENGINE_ASSERT_ERROR((vkCreateShaderModule(this->device, &createInfo, nullptr, &this->shader_module) == VK_SUCCESS), "failed to create shader module");
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateShaderModule(this->device, &create_info, nullptr, &this->shader_module) == VK_SUCCESS), "failed to create shader module");
 
 	SpvReflectShaderModule module;
 	SpvReflectResult result = spvReflectCreateShaderModule(shader_data.length(), (uint32_t*)shader_data.data(), &module);
@@ -86,6 +86,18 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string& shader_data)
 	spvReflectDestroyShaderModule(&module);
 }
 
+VulkanShaderModule::VulkanShaderModule(VkDevice device, const ShaderModuleCreateInfo& create_info)
+{
+	this->device = device;
+
+	VkShaderModuleCreateInfo shader_module_create_info = {};
+	shader_module_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	shader_module_create_info.codeSize = create_info.code_size;
+	shader_module_create_info.pCode = create_info.code;
+
+	GENESIS_ENGINE_ASSERT_ERROR((vkCreateShaderModule(this->device, &shader_module_create_info, nullptr, &this->shader_module) == VK_SUCCESS), "failed to create shader module");
+}
+
 VulkanShaderModule::~VulkanShaderModule()
 {
 	vkDestroyShaderModule(this->device, this->shader_module, nullptr);
@@ -149,7 +161,7 @@ void fillDescriptorSetLayouts(List<List<VkDescriptorSetLayoutBinding>>& destinat
 	}
 }
 
-void fillDescriptorSetBindings(List<List<DescriptorSetBinding>>& destination, List<List<DescriptorSetBindingModule>>& source, VkShaderStageFlags stage)
+void fillDescriptorSetBindings(List<List<VulkanDescriptorSetBinding>>& destination, List<List<DescriptorSetBindingModule>>& source, VkShaderStageFlags stage)
 {
 	if (source.size() <= 0)
 	{

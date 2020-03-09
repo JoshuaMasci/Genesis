@@ -1,6 +1,7 @@
 #include "VulkanVertexInputPool.hpp"
 
 #include "Genesis/Core/MurmurHash2.hpp"
+#include "Genesis/Rendering/VertexInputDescription.hpp"
 
 using namespace Genesis;
 
@@ -136,6 +137,44 @@ VulkanVertexInputDescription* VulkanVertexInputPool::getVertexInputDescription(v
 			return_description->attribute_descriptions[i].format = getVulkanType(input_elements[i]);
 			return_description->attribute_descriptions[i].offset = offset;
 			offset += getInputElementSize(input_elements[i]);
+		}
+
+		return_description->binding_description.binding = 0;
+		return_description->binding_description.stride = offset;//Total Size
+		return_description->binding_description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+	}
+
+	return_description = &this->input_descriptions[hash_value];
+	this->map_lock.unlock();
+
+	return return_description;
+}
+
+VulkanVertexInputDescription* VulkanVertexInputPool::getVertexInputDescription(const VertexInputDescriptionCreateInfo& create_info)
+{
+	MurmurHash2 hash;
+	hash.begin();
+	hash.addData((uint8_t*)create_info.input_elements, (uint32_t)(sizeof(VertexElementType) * create_info.input_elements_count));
+	uint32_t hash_value = hash.end();
+	
+
+	VulkanVertexInputDescription* return_description = nullptr;
+
+	this->map_lock.lock();
+	if (!has_value(this->input_descriptions, hash_value))
+	{
+		return_description = &this->input_descriptions[hash_value];
+
+		uint32_t offset = 0;
+
+		return_description->attribute_descriptions.resize(create_info.input_elements_count);
+		for (uint32_t i = 0; i < return_description->attribute_descriptions.size(); i++)
+		{
+			return_description->attribute_descriptions[i].binding = 0;
+			return_description->attribute_descriptions[i].location = i;
+			return_description->attribute_descriptions[i].format = getVulkanType(create_info.input_elements[i]);
+			return_description->attribute_descriptions[i].offset = offset;
+			offset += getInputElementSize(create_info.input_elements[i]);
 		}
 
 		return_description->binding_description.binding = 0;

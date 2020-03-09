@@ -3,8 +3,6 @@
 #include "VulkanInclude.hpp"
 #include "Genesis/Core/Types.hpp"
 
-#include <mutex>
-
 namespace Genesis
 {
 	class VulkanDescriptorPool
@@ -33,5 +31,21 @@ namespace Genesis
 		};
 		
 		List<FrameData> frame_data;
+	};
+
+	class VulkanDescriptorPool2
+	{
+	public:
+		VulkanDescriptorPool2(VkDevice device, uint32_t max_sets, vector<VkDescriptorPoolSize> types);
+		~VulkanDescriptorPool2();
+
+		inline VkDescriptorPool get() { return this->pool; };
+
+		VkDescriptorSet createDescriptorSet(VkDescriptorSetLayout layout);
+		void destroyDescriptorSet(VkDescriptorSet descriptor_set);
+
+	private:
+		VkDevice device;
+		VkDescriptorPool pool;
 	};
 }

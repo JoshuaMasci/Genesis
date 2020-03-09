@@ -56,6 +56,7 @@ namespace Genesis
 
 		//Utils
 		TransformD transformBy(const TransformD& transform1) const;
+		TransformF toTransformF(const vector3D& pos_offset = vector3D(0.0));
 
 	private:
 		vector3D position;
@@ -63,5 +64,10 @@ namespace Genesis
 		vector3D scale;
 	};
 
-
+	class TransformUtil
+	{
+	public:
+		static TransformD transformBy(const TransformD& parent, const TransformD& child);
+		static TransformD transformBy(const TransformD& parent, const TransformF& child);
+	};
 };

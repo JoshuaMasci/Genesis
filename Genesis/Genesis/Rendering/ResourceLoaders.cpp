@@ -20,6 +20,10 @@ Shader ShaderLoader::loadShader(RenderingBackend* backend, string vert_file_path
 		vert_file.read(vert_data.data(), vert_data.size());
 		vert_file.close();
 	}
+	else
+	{
+		GENESIS_ENGINE_ERROR("Failed to open file: {}", vert_file_path);
+	}
 
 	std::ifstream frag_file(frag_file_path, std::ios::ate | std::ios::binary);
 	if (frag_file.is_open())
@@ -29,6 +33,10 @@ Shader ShaderLoader::loadShader(RenderingBackend* backend, string vert_file_path
 		frag_data.resize(fileSize);
 		frag_file.read(frag_data.data(), frag_data.size());
 		frag_file.close();
+	}
+	else
+	{
+		GENESIS_ENGINE_ERROR("Failed to open file: {}", frag_file_path);
 	}
 
 	return backend->createShader(vert_data, frag_data);
@@ -42,7 +50,7 @@ Shader ShaderLoader::loadShaderSingle(RenderingBackend* backend, string shader_f
 #define TINYOBJLOADER_IMPLEMENTATION
 
 #include <tiny_obj_loader.h>
-void Genesis::ObjLoader::loadMesh(RenderingBackend* backend, string mesh_file_path, StaticBuffer& vertex_buffer, StaticBuffer& index_buffer, uint32_t& index_count)
+void Genesis::ObjLoader::loadMesh(RenderingBackend* backend, string mesh_file_path, StaticBuffer& vertex_buffer, StaticBuffer& index_buffer, uint32_t& index_count, float& frustum_sphere_radius)
 {
 	struct TexturedVertex
 	{
@@ -62,6 +70,8 @@ void Genesis::ObjLoader::loadMesh(RenderingBackend* backend, string mesh_file_pa
 	
 	vector<TexturedVertex> vertices;
 	vector<uint32_t> indices;
+
+	float distance = 0.0f;
 
 	for (const auto& shape : shapes)
 	{
@@ -83,6 +93,13 @@ void Genesis::ObjLoader::loadMesh(RenderingBackend* backend, string mesh_file_pa
 
 				vertices.push_back(vertex);
 				indices.push_back((uint32_t)indices.size());
+
+
+				float pos_length = glm::length(position);
+				if (pos_length > distance)
+				{
+					distance = pos_length;
+				}
 			}
 			index_offset += fv;
 		}
@@ -120,6 +137,28 @@ void Genesis::ObjLoader::loadMesh(RenderingBackend* backend, string mesh_file_pa
 	vertex_buffer = backend->createStaticBuffer(vertices.data(), sizeof(TexturedVertex) * vertices.size(), BufferUsage::Vertex_Buffer);
 	index_buffer = backend->createStaticBuffer(indices.data(), sizeof(uint32_t) * indices.size(), BufferUsage::Index_Buffer);
 	index_count = (uint32_t)indices.size();
+	frustum_sphere_radius = distance;
+}
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
+Texture PngLoader::loadTexture(RenderingBackend * backend, string texture_file_path)
+{
+	int width, height, tex_channels;
+	uint8_t* data = stbi_load(texture_file_path.c_str(), &width, &height, &tex_channels, STBI_rgb_alpha);
+	uint64_t data_size = width * height * STBI_rgb_alpha;
+
+	if (data == NULL)
+	{
+		GENESIS_ENGINE_WARN("Can't load Texture {}", texture_file_path);
+		return nullptr;
+	}
+
+	Texture texture = backend->createTexture(vector2U((uint32_t)width, (uint32_t)height), (void*)data, data_size);
+	stbi_image_free(data);
+	return texture;
+	return nullptr;
 }
 
 /*
@@ -282,27 +321,6 @@ MeshTemp ObjLoader::loadMesh_CalcTangent(RenderingBackend* backend, string mesh_
 	}
 
 	return mesh;
-}
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
-Texture PngLoader::loadTexture(RenderingBackend * backend, string texture_file_path)
-{
-	int width, height, tex_channels;
-	uint8_t* data = stbi_load(texture_file_path.c_str(), &width, &height, &tex_channels, STBI_rgb_alpha);
-	uint64_t data_size = width * height * STBI_rgb_alpha;
-
-	if (data == NULL)
-	{
-		GENESIS_ENGINE_WARN("Can't load Texture {}", texture_file_path);
-		return nullptr;
-	}
-
-	Texture texture = backend->createTexture(vector2U((uint32_t)width, (uint32_t)height), (void*)data, data_size);
-	stbi_image_free(data);
-	return texture;
-	return nullptr;
 }
 
 #include <assimp/Importer.hpp>

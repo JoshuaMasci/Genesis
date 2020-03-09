@@ -51,3 +51,30 @@ TransformD TransformD::transformBy(const TransformD& transform1) const
 	result.scale = transform1.scale * this->scale;
 	return result;
 }
+
+TransformF Genesis::TransformD::toTransformF(const vector3D& pos_offset)
+{
+	TransformF new_transform;
+	new_transform.setPosition((vector3F)(this->position - pos_offset));
+	new_transform.setOrientation((quaternionF)this->orientation);
+	new_transform.setScale((vector3F)this->scale);
+	return new_transform;
+}
+
+TransformD TransformUtil::transformBy(const TransformD& parent, const TransformD& child)
+{
+	TransformD result;
+	result.setPosition(parent.getPosition() + (parent.getOrientation() * (child.getPosition() * parent.getScale())));
+	result.setOrientation(parent.getOrientation() * child.getOrientation());
+	result.setScale(parent.getScale() * child.getScale());
+	return result;
+}
+
+TransformD TransformUtil::transformBy(const TransformD& parent, const TransformF& child)
+{
+	TransformD result;
+	result.setPosition(parent.getPosition() + (parent.getOrientation() * ((vector3D)child.getPosition() * parent.getScale())));
+	result.setOrientation(parent.getOrientation() * (quaternionD)child.getOrientation());
+	result.setScale(parent.getScale() * (vector3D)child.getScale());
+	return result;
+}

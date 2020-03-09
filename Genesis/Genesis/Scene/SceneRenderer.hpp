@@ -15,19 +15,20 @@ namespace Genesis
 		virtual void startLayer() override;
 		virtual void endLayer() override;
 
+		virtual void ImGuiDraw() override;
+
 		virtual inline Framebuffer getFramebuffer() { return this->framebuffer; };
 		virtual inline uint32_t getFramebufferIndex() { return 0; };
 
 		void drawScene(Scene* scene);
 
 	protected:
+		uint32_t draw_call_count = 0;
+		bool use_frustum_culling = true;
 
 		//TEMP
-		StaticBuffer vertex_buffer = nullptr;
-		StaticBuffer index_buffer = nullptr;
-		uint32_t index_count;
+		Texture temp_texture = nullptr;
 		Shader mesh_shader = nullptr;
-		VertexInputDescription vertex_input = nullptr;
 		//END TEMP
 
 		vector2U view_size;
@@ -36,7 +37,7 @@ namespace Genesis
 		Framebuffer framebuffer;
 		MTCommandBuffer mt_command_buffer;
 
-		CommandBuffer* command_buffer = nullptr;
+		CommandBufferInterface* command_buffer = nullptr;
 
 		//Scene: Binding Set 0
 		struct SceneUniform

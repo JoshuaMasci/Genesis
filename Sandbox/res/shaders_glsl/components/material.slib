@@ -1,3 +1,10 @@
+//layout (constant_id = 0) const bool has_albedo_map = false;
+//layout (constant_id = 1) const bool has_normal_map = false;
+//layout (constant_id = 2) const bool has_height_map = false;
+//layout (constant_id = 3) const bool has_metallic_map = false;
+//layout (constant_id = 4) const bool has_roughness_map = false;
+//layout (constant_id = 5) const bool has_ambient_occlusion_map = false;
+
 layout(set = 1, binding = 0) uniform Material
 {
 	vec4 albedo;
@@ -6,6 +13,9 @@ layout(set = 1, binding = 0) uniform Material
 	//y = roughness;
 	//z = ambient_occlusion;
 	//w = height_scale;
+	
+	bvec4 has_textures1;
+	bvec2 has_textures2;
 } material;
 
 layout(set = 1, binding = 1) uniform sampler2D albedo_map;

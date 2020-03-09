@@ -80,7 +80,7 @@ void RenderSystem::endFrame()
 {
 	GENESIS_ENGINE_ASSERT_ERROR((this->command_buffer != nullptr), "Command buffer not valid");
 	this->backend->endFrame();
-	CommandBuffer* command_buffer = nullptr;
+	CommandBufferInterface* command_buffer = nullptr;
 }
 
 void RenderSystem::drawLayerWholeScreen(RenderLayer* layer)

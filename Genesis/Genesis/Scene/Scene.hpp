@@ -20,7 +20,6 @@ namespace Genesis
 		struct MeshTransform
 		{
 			Mesh mesh;
-			float radius;
 			TransformF transform;
 		};
 

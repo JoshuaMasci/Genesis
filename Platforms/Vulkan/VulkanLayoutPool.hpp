@@ -2,6 +2,8 @@
 
 #include "VulkanInclude.hpp"
 #include "Genesis/Core/Types.hpp"
+#include "Genesis/Rendering/DescriptorSet.hpp"
+#include "Genesis/Rendering/PipelineLayout.hpp"
 
 #include <mutex>
 
@@ -14,7 +16,10 @@ namespace Genesis
 		~VulkanLayoutPool();
 
 		VkDescriptorSetLayout getDescriptorLayout(List<VkDescriptorSetLayoutBinding>& bindings);
+		VkDescriptorSetLayout getDescriptorLayout(const DescriptorSetLayoutCreateInfo& create_info);
+
 		VkPipelineLayout getPipelineLayout(List<VkDescriptorSetLayout>& layouts, List<VkPushConstantRange>& ranges);
+		VkPipelineLayout getPipelineLayout(const PipelineLayoutCreateInfo& create_info);
 
 	private:
 		VkDevice device;

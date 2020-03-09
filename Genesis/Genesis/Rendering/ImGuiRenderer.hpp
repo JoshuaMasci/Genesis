@@ -13,8 +13,10 @@ namespace Genesis
 		ImGuiRenderer(RenderingBackend* backend, InputManager* input_manager);
 		~ImGuiRenderer();
 
-		virtual void startLayer();
-		virtual void endLayer();
+		virtual void startLayer() override;
+		virtual void endLayer() override;
+
+		virtual void ImGuiDraw() override;
 
 		virtual inline Framebuffer getFramebuffer() { return this->framebuffer; };
 		virtual inline uint32_t getFramebufferIndex() { return 0; };

@@ -19,17 +19,17 @@ namespace Genesis
 	class ObjLoader
 	{
 	public:
-		static void loadMesh(RenderingBackend* backend, string mesh_file_path, StaticBuffer& vertex_buffer, StaticBuffer& index_buffer, uint32_t& index_count);
+		static void loadMesh(RenderingBackend* backend, string mesh_file_path, StaticBuffer& vertex_buffer, StaticBuffer& index_buffer, uint32_t& index_count, float& frustum_sphere_radius);
 		//static MeshTemp loadMesh_CalcTangent(RenderingBackend* backend, string mesh_file_path);
 	};
 
-	/*class PngLoader
+	class PngLoader
 	{
 	public:
 		static Texture loadTexture(RenderingBackend* backend, string texture_file_path);
 	};
 
-	class AssimpLoader
+	/*class AssimpLoader
 	{
 	public:
 		static MeshTemp loadMesh(RenderingBackend* backend, string file_path);
