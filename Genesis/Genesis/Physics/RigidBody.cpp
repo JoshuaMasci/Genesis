@@ -5,9 +5,15 @@
 using namespace Genesis;
 using namespace Genesis::Physics;
 
-RigidBody::RigidBody(reactphysics3d::RigidBody* rigid_body)
+RigidBody::RigidBody(PhysicsWorld* physics_world, const TransformD& transform)
 {
-	this->rigid_body = rigid_body;
+	this->physics_world = physics_world;
+	this->rigid_body = this->physics_world->addRigidBody(transform);
+}
+
+RigidBody::~RigidBody()
+{
+	this->physics_world->removeRigidBody(this->rigid_body);
 }
 
 void RigidBody::setType(RigidBodyType type)

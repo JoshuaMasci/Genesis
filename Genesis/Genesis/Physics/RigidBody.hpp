@@ -17,7 +17,8 @@ namespace Genesis
 		class RigidBody
 		{
 		public:
-			RigidBody(reactphysics3d::RigidBody* rigid_body);
+			RigidBody(PhysicsWorld* physics_world, const TransformD& transform);
+			~RigidBody();
 
 			void setType(RigidBodyType type);
 
@@ -43,6 +44,7 @@ namespace Genesis
 			inline reactphysics3d::RigidBody* get() { return this->rigid_body; };
 
 		private:
+			PhysicsWorld* physics_world;
 			reactphysics3d::RigidBody* rigid_body;
 		};
 

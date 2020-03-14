@@ -47,8 +47,8 @@ Application::~Application()
 void Application::run()
 {
 	//Fixed Timestep Stuff
-	const double SimulationStep = 1.0 / (60.0 * 5);
-	const TimeStep MaxTimeStep = 1.0 / 4.0;
+	const double SimulationStep = 1.0 / (60.0 * 3);
+	const TimeStep MaxTimeStep = 1.0 / 60.0;
 
 	//Mode: Rendering and Simulation Linked
 	using clock = std::chrono::high_resolution_clock;
@@ -58,7 +58,7 @@ void Application::run()
 	auto time_last_frame = time_last;
 	size_t frames = 0;
 
-	double accumulator = 0.0;
+	double accumulator = SimulationStep;
 
 	while (this->isRunning())
 	{

@@ -9,6 +9,8 @@ namespace Genesis
 {
 	struct WorldTransform
 	{
+		WorldTransform(TransformD transform);
+
 		TransformD current;
 		TransformD previous;
 

@@ -12,6 +12,9 @@ source_group("Core" FILES ${GENESIS_CORE})
 file(GLOB_RECURSE GENESIS_DEBUG "Genesis/Debug/*.*")
 source_group("Debug" FILES ${GENESIS_DEBUG})
 
+file(GLOB_RECURSE GENESIS_ECS "Genesis/Ecs/*.*")
+source_group("ECS" FILES ${GENESIS_ECS})
+
 file(GLOB_RECURSE GENESIS_ENTITY "Genesis/Entity/*.*")
 source_group("Entity" FILES ${GENESIS_ENTITY})
 
@@ -34,7 +37,7 @@ file(GLOB GENESIS_SCENE "Genesis/Scene/*.*")
 source_group("Scene" FILES ${GENESIS_SCENE})
 
 #Create Libary
-add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_DEBUG} ${GENESIS_ENTITY} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM} ${GENESIS_RENDERING} ${GENESIS_SCENE})
+add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_DEBUG} ${GENESIS_ECS} ${GENESIS_ENTITY} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM} ${GENESIS_RENDERING} ${GENESIS_SCENE})
 
 include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
 include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)

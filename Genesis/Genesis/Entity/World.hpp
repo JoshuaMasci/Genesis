@@ -16,14 +16,8 @@ namespace Genesis
 
 		void runSimulation(Application* application, TimeStep time_step);
 
-		inline EntityRegistry& getRegistry() { return this->entity_registry; };
-		inline EntityId getCameraEntity() { return this->camera; };
-
 	private:
 		MeshPool* mesh_pool;
-
-		EntityRegistry entity_registry;
-		EntityId camera;
 
 		Physics::PhysicsWorld* physics_world = nullptr;
 	};

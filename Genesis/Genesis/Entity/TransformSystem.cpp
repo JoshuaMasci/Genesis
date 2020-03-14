@@ -7,7 +7,13 @@
 
 using namespace Genesis;
 
-TransformD WorldTransform::linearInterpolation(double interpolation_value)
+WorldTransform::WorldTransform(TransformD transform)
+{
+	this->current = transform;
+	this->previous = transform;
+}
+
+TransformD WorldTransform::linearInterpolation(TimeStep interpolation_value)
 {
 	TransformD result;
 	result.setPosition(glm::lerp(this->current.getPosition(), this->previous.getPosition(), interpolation_value));
@@ -20,6 +26,7 @@ void TransformSystem::preSimulation(EntityRegistry& world, JobSystem* job_system
 {
 	GENESIS_PROFILE_FUNCTION("TransformSystem::preSimulation");
 	auto view = world.view<WorldTransform>();
+
 	for (auto entity : view)
 	{
 		WorldTransform& world_transform = view.get<WorldTransform>(entity);

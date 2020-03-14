@@ -9,10 +9,8 @@ int main(int argc, char** argv)
 	Genesis::Logging::inti_client_logging("Sandbox", "");
 	GENESIS_INFO("Sandbox Started");
 
-	GENESIS_PROFILE_BLOCK_START("Sandbox_Load");
 	//ALPHA
 	SandboxApplication* sandbox = new SandboxApplication();
-	GENESIS_PROFILE_BLOCK_END();
 
 	GENESIS_PROFILE_BLOCK_START("Sandbox_Loop");
 	sandbox->run();

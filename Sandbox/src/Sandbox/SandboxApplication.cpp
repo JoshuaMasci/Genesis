@@ -46,9 +46,9 @@ void SandboxApplication::render(Genesis::TimeStep interpolation_value)
 		Genesis::Application::render(interpolation_value);
 
 		this->world_renderer->ImGuiDraw();
-		this->world_renderer->drawWorld(interpolation_value, this->world->getRegistry(), this->world->getCameraEntity());
+		//this->world_renderer->drawWorld(interpolation_value, this->world->getRegistry(), this->world->getCameraEntity());
 
-		this->render_system->drawLayerWholeScreen(this->world_renderer);
+		//this->render_system->drawLayerWholeScreen(this->world_renderer);
 
 		this->endFrame();
 	}

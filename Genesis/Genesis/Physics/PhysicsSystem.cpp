@@ -1,6 +1,7 @@
 #include "PhysicsSystem.hpp"
 
 #include "Genesis/Debug/Profiler.hpp"
+#include "Genesis/Debug/Log.hpp"
 
 #include "Genesis/Physics/RigidBody.hpp"
 #include "Genesis/Physics/ReactPhyscis.hpp"
@@ -11,7 +12,8 @@ using namespace Genesis::Physics;
 
 void PhysicsSystem::prePhysicsUpdate(EntityRegistry* registry, JobSystem* job_system)
 {
-	GENESIS_PROFILE_FUNCTION("PhysicsSystem::prePhysicsUpdate()");
+	GENESIS_PROFILE_FUNCTION("PhysicsSystem::prePhysicsUpdate");
+
 	auto view = registry->view<RigidBody, WorldTransform>();
 
 	for (auto entity : view)
@@ -24,7 +26,8 @@ void PhysicsSystem::prePhysicsUpdate(EntityRegistry* registry, JobSystem* job_sy
 
 void PhysicsSystem::postPhysicsUpdate(EntityRegistry* registry, JobSystem* job_system)
 {
-	GENESIS_PROFILE_FUNCTION("PhysicsSystem::postPhysicsUpdate()");
+	GENESIS_PROFILE_FUNCTION("PhysicsSystem::postPhysicsUpdate");
+
 	auto view = registry->view<RigidBody, WorldTransform>();
 
 	for (auto entity : view)
