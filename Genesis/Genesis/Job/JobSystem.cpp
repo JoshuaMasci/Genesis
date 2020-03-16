@@ -19,9 +19,9 @@ void workerthread(uint32_t thread_id, JobSystem* job_system)
 		{
 			next_job.job(thread_id);
 
-			if (next_job.finished_flag != nullptr)
+			if (next_job.job_counter != nullptr)
 			{
-				(*next_job.finished_flag) = true;
+				(*next_job.job_counter)--;
 			}
 		}
 		else
@@ -60,49 +60,29 @@ JobSystem::~JobSystem()
 	}
 }
 
-void JobSystem::addJob(JobType job)
+void Genesis::JobSystem::addJob(JobType job, JobCounter* counter)
 {
-	bool has_enqueued = this->job_queue.try_enqueue({ job, nullptr });
+	(*counter)++;
+
+	bool has_enqueued = this->job_queue.try_enqueue({ job, counter });
 	GENESIS_ENGINE_ASSERT_ERROR((has_enqueued == true), "Failed to enqueue job");
 }
 
-void JobSystem::addJobAndWait(JobType job)
+void JobSystem::addJobs(JobType* jobs, size_t job_count, JobCounter* counter)
 {
-	std::atomic<bool> finished_flag = false;
+	(*counter) += (uint16_t)job_count;
 
-	bool has_enqueued = this->job_queue.try_enqueue({ job, &finished_flag });
-	GENESIS_ENGINE_ASSERT_ERROR((has_enqueued == true), "Failed to enqueue job");
-
-	while (!finished_flag)
-	{
-		std::this_thread::yield();
-	}
-}
-
-void JobSystem::addJobs(JobType* jobs, size_t job_count)
-{
 	for (size_t i = 0; i < job_count; i++)
 	{
-		bool has_enqueued = this->job_queue.try_enqueue({ jobs[i], nullptr });
+		bool has_enqueued = this->job_queue.try_enqueue({ jobs[i], counter });
 		GENESIS_ENGINE_ASSERT_ERROR((has_enqueued == true), "Failed to enqueue job");
 	}
 }
 
-void JobSystem::addJobsAndWait(JobType* jobs, size_t job_count)
+void JobSystem::waitForCounter(JobCounter& counter)
 {
-	vector<std::atomic<bool>> finished_flags(job_count);
-
-	for (size_t i = 0; i < job_count; i++)
+	while (counter != 0)
 	{
-		bool has_enqueued = this->job_queue.try_enqueue({ jobs[i], &finished_flags[i] });
-		GENESIS_ENGINE_ASSERT_ERROR((has_enqueued == true), "Failed to enqueue job");
-	}
-
-	for (size_t i = 0; i < job_count; i++)
-	{
-		while (!finished_flags[i])
-		{
-			std::this_thread::yield();
-		}
+		
 	}
 }

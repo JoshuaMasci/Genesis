@@ -37,7 +37,7 @@ World::World(MeshPool* mesh_pool)
 
 	{
 		this->camera = this->world->createEntity<WorldTransform, Camera, DebugCamera, RigidBody, ProxyShape>();
-		this->world->initalizeComponent<WorldTransform>(this->camera, vector3D(0.0, 0.0, -20.0));
+		this->world->initalizeComponent<WorldTransform>(this->camera, vector3D(0.0, 5.0, -20.0));
 		this->world->initalizeComponent<Camera>(this->camera, 77.0f);
 		this->world->initalizeComponent<DebugCamera>(this->camera, 5.0, 0.5);
 		this->world->initalizeComponent<RigidBody>(this->camera, this->physics_world, this->world->getComponent<WorldTransform>(this->camera)->current)->setType(RigidBodyType::Kinematic);

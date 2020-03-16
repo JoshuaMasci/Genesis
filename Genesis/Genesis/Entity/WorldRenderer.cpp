@@ -141,9 +141,8 @@ void WorldRenderer::drawWorld(TimeStep interpolation_value, EcsWorld& world, Ent
 		{
 			for (size_t i = 0; i < view.getSize(); i++)
 			{
-				EntityHandle entity = view.get(i);
-				MeshComponent* mesh = view.getComponent<MeshComponent>(entity);
-				WorldTransform* world_transform = view.getComponent<WorldTransform>(entity);
+				MeshComponent* mesh = view.getComponent<MeshComponent>(i);
+				WorldTransform* world_transform = view.getComponent<WorldTransform>(i);
 
 				TransformF render_transform = world_transform->linearInterpolation(interpolation_value).toTransformF();
 

@@ -21,7 +21,9 @@ namespace Genesis
 
 			size_t getSize();
 			EntityHandle getEntity(size_t index);
+
 			void* getComponent(EntityHandle entity, ComponentId component_id);
+			void* getComponentIndex(size_t index, ComponentId component_id);
 
 		private:
 			const size_t memory_step_size = 5;

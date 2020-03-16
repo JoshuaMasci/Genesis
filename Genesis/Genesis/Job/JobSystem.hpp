@@ -10,11 +10,12 @@
 namespace Genesis
 {
 	typedef std::function<void(uint32_t)> JobType;
+	typedef std::atomic<uint16_t> JobCounter;
 
 	struct JobStruct
 	{
 		JobType job;
-		std::atomic<bool>* finished_flag = nullptr;
+		JobCounter* job_counter = nullptr;
 	};
 
 	class JobSystem
@@ -23,13 +24,12 @@ namespace Genesis
 		JobSystem();
 		~JobSystem();
 
-		void addJob(JobType job);
-		void addJobAndWait(JobType job);
-
-		void addJobs(JobType* jobs, size_t job_count);
-		void addJobsAndWait(JobType* jobs, size_t job_count);
+		void addJob(JobType job, JobCounter* counter = nullptr);
+		void addJobs(JobType* jobs, size_t job_count, JobCounter* counter = nullptr);
 
 		inline uint32_t getNumberOfJobThreads() { return (uint32_t)this->threads.size(); };
+
+		static void waitForCounter(JobCounter& counter);
 
 		//Just for Job Threads
 		moodycamel::ConcurrentQueue<JobStruct> job_queue;

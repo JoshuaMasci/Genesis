@@ -39,10 +39,10 @@ namespace Genesis
 		};
 
 		template<class Component>
-		Component* getComponent(EntityHandle entity) 
+		Component* getComponent(size_t index)
 		{ 
 			GENESIS_ENGINE_ASSERT_ERROR((this->signature_table != nullptr), "View does not exist");
-			return (Component*)this->signature_table->getComponent(entity, this->getComponentID<Component>()); 
+			return (Component*)this->signature_table->getComponentIndex(index, this->getComponentID<Component>());
 		};
 
 	private:

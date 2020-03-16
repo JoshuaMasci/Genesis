@@ -22,19 +22,30 @@ TransformD WorldTransform::linearInterpolation(TimeStep interpolation_value)
 	return result;
 }
 
+void preSimulationThread(uint32_t thread_id, View view)
+{
+	GENESIS_PROFILE_FUNCTION("TransformSystem::preSimulationThread");
+
+	for (size_t i = 0; i < view.getSize(); i++)
+	{
+		WorldTransform* world_transform = view.getComponent<WorldTransform>(i);
+		world_transform->previous = world_transform->current;
+	}
+}
+
 void TransformSystem::preSimulation(EcsWorld& world, JobSystem* job_system)
 {
 	GENESIS_PROFILE_FUNCTION("TransformSystem::preSimulation");
 
+	JobCounter counter = 0;
+
 	std::vector<View> views = world.getView<WorldTransform>();
 	for (auto& view : views)
 	{
-		for (size_t i = 0; i < view.getSize(); i++)
-		{
-			WorldTransform* world_transform = view.getComponent<WorldTransform>(view.get(i));
-			world_transform->previous = world_transform->current;
-		}
+		job_system->addJob(std::bind(preSimulationThread, std::placeholders::_1, view), &counter);
 	}
+
+	JobSystem::waitForCounter(counter);
 }
 
 void tempUpdateChild(EcsWorld& world, EntityHandle child, TransformD& parent_transform)

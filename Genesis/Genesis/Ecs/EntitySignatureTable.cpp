@@ -82,3 +82,10 @@ void* Genesis::Ecs::EntitySignatureTable::getComponent(EntityHandle entity, Comp
 
 	return this->entity_memory->getBlock(this->entities_handle_to_index[entity], this->component_offset[component_id]);
 }
+
+void* Genesis::Ecs::EntitySignatureTable::getComponentIndex(size_t index, ComponentId component_id)
+{
+	GENESIS_ENGINE_ASSERT_ERROR((has_value(this->component_offset, component_id)), "Component Offest does not exist in Entity Signature table");
+
+	return this->entity_memory->getBlock(index, this->component_offset[component_id]);
+}
