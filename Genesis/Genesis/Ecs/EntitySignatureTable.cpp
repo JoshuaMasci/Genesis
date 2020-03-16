@@ -3,6 +3,9 @@
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Debug/Assert.hpp"
 
+using namespace Genesis;
+using namespace Genesis::Ecs;
+
 Genesis::Ecs::EntitySignatureTable::EntitySignatureTable(EntitySignature signature, std::vector<size_t>& component_sizes)
 {
 	this->table_signature = signature;
@@ -36,7 +39,7 @@ void Genesis::Ecs::EntitySignatureTable::addEntity(EntityHandle entity)
 	this->entities_handle_to_index[entity] = new_entity_index;
 
 	//Check Memory for space, resize if needed
-	if (new_entity_index > this->entity_memory->getBlockCount())
+	if (new_entity_index >= this->entity_memory->getBlockCount())
 	{
 		this->entity_memory->increaseSize(this->memory_step_size);
 	}
@@ -60,6 +63,16 @@ void Genesis::Ecs::EntitySignatureTable::removeEntity(EntityHandle entity)
 	//Remove Last
 	this->entities_index_to_handle.pop_back();
 	this->entities_handle_to_index.erase(entity);
+}
+
+size_t Genesis::Ecs::EntitySignatureTable::getSize()
+{
+	return this->entities_index_to_handle.size();
+}
+
+EntityHandle Genesis::Ecs::EntitySignatureTable::getEntity(size_t index)
+{
+	return this->entities_index_to_handle[index];
 }
 
 void* Genesis::Ecs::EntitySignatureTable::getComponent(EntityHandle entity, ComponentId component_id)

@@ -22,21 +22,24 @@ TransformD WorldTransform::linearInterpolation(TimeStep interpolation_value)
 	return result;
 }
 
-void TransformSystem::preSimulation(EntityRegistry& world, JobSystem* job_system)
+void TransformSystem::preSimulation(EcsWorld& world, JobSystem* job_system)
 {
 	GENESIS_PROFILE_FUNCTION("TransformSystem::preSimulation");
-	auto view = world.view<WorldTransform>();
 
-	for (auto entity : view)
+	std::vector<View> views = world.getView<WorldTransform>();
+	for (auto& view : views)
 	{
-		WorldTransform& world_transform = view.get<WorldTransform>(entity);
-		world_transform.previous = world_transform.current;
+		for (size_t i = 0; i < view.getSize(); i++)
+		{
+			WorldTransform* world_transform = view.getComponent<WorldTransform>(view.get(i));
+			world_transform->previous = world_transform->current;
+		}
 	}
 }
 
-void tempUpdateChild(EntityRegistry& world, EntityId child, TransformD& parent_transform)
+void tempUpdateChild(EcsWorld& world, EntityHandle child, TransformD& parent_transform)
 {
-	if (world.has<WorldTransform, ChildNode, ChildTransform>(child))
+	/*if (world.has)
 	{
 		WorldTransform& world_transform = world.get<WorldTransform>(child);
 		ChildNode& child_node = world.get<ChildNode>(child);
@@ -52,22 +55,26 @@ void tempUpdateChild(EntityRegistry& world, EntityId child, TransformD& parent_t
 	else
 	{
 		GENESIS_ENGINE_ERROR("TransformSystem::tempUpdateChild child doesn't have node");
-	}
+	}*/
 }
 
-void TransformSystem::calculateHierarchy(EntityRegistry& world, JobSystem* job_system)
+void TransformSystem::calculateHierarchy(EcsWorld& world, JobSystem* job_system)
 {
 	GENESIS_PROFILE_FUNCTION("TransformSystem::calculateHierarchy");
 
-	auto view = world.view<WorldTransform, ParentNode>();
-	for (auto entity : view)
+	std::vector<View> views = world.getView<WorldTransform, ParentNode>();
+	for (auto& view : views)
 	{
-		WorldTransform& world_transform = view.get<WorldTransform>(entity);
-		ParentNode& parent_node = view.get<ParentNode>(entity);
-	
-		for (auto entity : parent_node.child_entities)
+		for (size_t i = 0; i < view.getSize(); i++)
 		{
-			tempUpdateChild(world, entity, world_transform.current);
+			EntityHandle entity = view.get(i);
+			WorldTransform* world_transform = view.getComponent<WorldTransform>(entity);
+			ParentNode* parent_node = view.getComponent<ParentNode>(entity);
+
+			for (auto entity : parent_node->child_entities)
+			{
+				tempUpdateChild(world, entity, world_transform->current);
+			}
 		}
 	}
 }

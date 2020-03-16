@@ -14,9 +14,6 @@
 
 #include "Genesis/Entity/TransformSystem.hpp"
 
-#include "Genesis/Ecs/EscWorld.hpp"
-//#include "Genesis/Ecs/EntitySignatureTable.hpp"
-
 using namespace Genesis;
 using namespace Genesis::Physics;
 
@@ -24,88 +21,71 @@ using namespace Genesis::Physics;
 World::World(MeshPool* mesh_pool)
 {
 	this->mesh_pool = mesh_pool;
+	this->world = new EcsWorld();
 	this->physics_world = new PhysicsWorld(vector3D(0.0, -10.0, 0.0));
 
-	//TEST ECS
+	this->world->registerComponent<WorldTransform>();
+	this->world->registerComponent<Camera>();
+	this->world->registerComponent<DebugCamera>();
+	this->world->registerComponent<ProxyShape>();
+	this->world->registerComponent<RigidBody>();
+	this->world->registerComponent<MeshComponent>();
+
+	EntityHandle entity = this->world->createEntity<WorldTransform, DebugCamera, ProxyShape>();
+	this->world->initalizeComponent<WorldTransform>(entity, vector3D(0.0, 0.0, -20.0));
+	WorldTransform* transform = this->world->getComponent<WorldTransform>(entity);
+
 	{
-		EcsWorld world;
-		world.registerComponent<WorldTransform>();
-		world.registerComponent<Camera>();
-		world.registerComponent<DebugCamera>();
-		world.registerComponent<ProxyShape>();
-		world.registerComponent<RigidBody>();
-		world.registerComponent<MeshComponent>();
-
-		EntityHandle entity = world.createEntity<WorldTransform, DebugCamera, ProxyShape>();
-		world.initalizeComponent<WorldTransform>(entity, vector3D(0.0, 0.0, -20.0));
-		WorldTransform* transform = world.getComponent<WorldTransform>(entity);
-
-		{
-			EntityHandle camera = world.createEntity<WorldTransform, Camera, DebugCamera, RigidBody, ProxyShape>();
-			world.initalizeComponent<WorldTransform>(camera, vector3D(0.0, 0.0, -20.0));
-			world.initalizeComponent<Camera>(camera, 77.0f);
-			world.initalizeComponent<DebugCamera>(camera, 5.0, 0.5);
-
-			world.initalizeComponent<RigidBody>(camera, this->physics_world, world.getComponent<WorldTransform>(camera)->current)->setType(RigidBodyType::Kinematic);
-			world.initalizeComponent<ProxyShape>(camera, world.getComponent<RigidBody>(camera)->addCollisionShape(new reactphysics3d::SphereShape(2.0f), TransformD(), 1.0f));
-		}
-
-
-		world.destroyEntity(entity);
+		this->camera = this->world->createEntity<WorldTransform, Camera, DebugCamera, RigidBody, ProxyShape>();
+		this->world->initalizeComponent<WorldTransform>(this->camera, vector3D(0.0, 0.0, -20.0));
+		this->world->initalizeComponent<Camera>(this->camera, 77.0f);
+		this->world->initalizeComponent<DebugCamera>(this->camera, 5.0, 0.5);
+		this->world->initalizeComponent<RigidBody>(this->camera, this->physics_world, this->world->getComponent<WorldTransform>(this->camera)->current)->setType(RigidBodyType::Kinematic);
+		this->world->initalizeComponent<ProxyShape>(this->camera, this->world->getComponent<RigidBody>(this->camera)->addCollisionShape(new reactphysics3d::SphereShape(2.0f), TransformD(), 1.0f));
 	}
 
+	{
+		EntityHandle entity = this->world->createEntity<WorldTransform, RigidBody, ProxyShape, MeshComponent>();
+		this->world->initalizeComponent<WorldTransform>(entity, vector3D((0.0, -10.0, 0.0)));
+		this->world->initalizeComponent<RigidBody>(entity, this->physics_world, this->world->getComponent<WorldTransform>(entity)->current)->setType(RigidBodyType::Static);
+		this->world->initalizeComponent<ProxyShape>(entity, this->world->getComponent<RigidBody>(entity)->addCollisionShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(16.0, 1.0, 16.0)), TransformD(), 1.0f));
+		this->world->initalizeComponent<MeshComponent>(entity, "res/ground.obj", this->mesh_pool);
+	}
 
-	/*{
-		this->camera = this->entity_registry.create();
-		this->entity_registry.assign<WorldTransform>(this->camera, vector3D(0.0, 0.0, -20.0));
-		this->entity_registry.assign<Camera>(this->camera, 77.0f);
-		this->entity_registry.assign<DebugCamera>(this->camera, 5.0, 0.5);
-
-		this->entity_registry.assign<RigidBody>(this->camera, this->physics_world->addRigidBody(this->entity_registry.get<WorldTransform>(this->camera).current));
-		this->entity_registry.assign<ProxyShape>(this->camera, this->entity_registry.get<RigidBody>(this->camera).addCollisionShape(new reactphysics3d::SphereShape(2.0f), TransformD(), 1.0f));
-		this->entity_registry.get<RigidBody>(this->camera).setType(RigidBodyType::Kinematic);
-	}*/
+	for (uint32_t i = 0; i < 50; i++)
+	{
+		EntityHandle entity = this->world->createEntity<WorldTransform, RigidBody, ProxyShape, MeshComponent>();
+		this->world->initalizeComponent<WorldTransform>(entity, vector3D(0.0, 200.0 + (i * 3.0), 0.0));
+		this->world->initalizeComponent<RigidBody>(entity, this->physics_world, this->world->getComponent<WorldTransform>(entity)->current);
+		this->world->initalizeComponent<ProxyShape>(entity, this->world->getComponent<RigidBody>(entity)->addCollisionShape(new reactphysics3d::SphereShape(1.0f), TransformD(), 1.0f));
+		this->world->initalizeComponent<MeshComponent>(entity, "res/sphere.obj", this->mesh_pool);
+	}
 
 }
 
+
 World::~World()
 {
-	/*auto rigid_body_view = this->entity_registry.view<RigidBody>();
-	for (auto entity : rigid_body_view)
-	{
-		auto& rigid_body = rigid_body_view.get<RigidBody>(entity);
-		this->physics_world->removeRigidBody(rigid_body.get());
-	}*/
-
+	delete this->world;
 	delete this->physics_world;
-
-	/*auto mesh_view = this->entity_registry.view<MeshComponent>();
-	for (auto entity : mesh_view)
-	{
-		auto& mesh = mesh_view.get<MeshComponent>(entity);
-		if (mesh.mesh != nullptr)
-		{
-			this->mesh_pool->freeResource(mesh.mesh_file);
-		}
-	}*/
 }
 
 void World::runSimulation(Application* application, TimeStep time_step)
 {
 	GENESIS_PROFILE_FUNCTION("World::runSimulation");
 
-	//TransformSystem::preSimulation(this->entity_registry, &application->job_system);
+	TransformSystem::preSimulation(*this->world, &application->job_system);
 
 	//ENTITY MOVEMENT PHASE
 	if (this->physics_world != nullptr)
 	{
-		//PhysicsSystem::prePhysicsUpdate(&this->entity_registry, &application->job_system);
+		PhysicsSystem::prePhysicsUpdate(*this->world, &application->job_system);
 		this->physics_world->simulate(time_step);
-		//PhysicsSystem::postPhysicsUpdate(&this->entity_registry, &application->job_system);
+		PhysicsSystem::postPhysicsUpdate(*this->world, &application->job_system);
 	}
 
 	GENESIS_PROFILE_BLOCK_START("DebugCamera::update");
-	//DebugCamera::update(&application->input_manager, this->entity_registry.get<DebugCamera>(this->camera), this->entity_registry.get<WorldTransform>(this->camera).current, time_step);
+	DebugCamera::update(&application->input_manager, *this->world->getComponent<DebugCamera>(this->camera), this->world->getComponent<WorldTransform>(this->camera)->current, time_step);
 	GENESIS_PROFILE_BLOCK_END();
 
 	//RESOLVE ENTITY TRANSFORMS

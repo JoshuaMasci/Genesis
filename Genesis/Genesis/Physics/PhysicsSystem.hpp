@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Genesis/Physics/PhysicsWorld.hpp"
-#include "Genesis/Entity/Entity.hpp"
+#include "Genesis/Ecs/EscWorld.hpp"
 #include "Genesis/Job/JobSystem.hpp"
 
 namespace Genesis
@@ -10,8 +10,8 @@ namespace Genesis
 	{
 		struct PhysicsSystem
 		{
-			static void prePhysicsUpdate(EntityRegistry* registry, JobSystem* job_system);
-			static void postPhysicsUpdate(EntityRegistry* registry, JobSystem* job_system);
+			static void prePhysicsUpdate(EcsWorld& world, JobSystem* job_system);
+			static void postPhysicsUpdate(EcsWorld& world, JobSystem* job_system);
 		};
 	}
 }

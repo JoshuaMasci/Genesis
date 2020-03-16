@@ -4,6 +4,7 @@
 #include <map>
 #include <functional>
 
+#include "Genesis/Core/Types.hpp"
 #include "Genesis/Ecs/EcsTypes.hpp"
 #include "Genesis/Ecs/EntitySignatureTable.hpp"
 
@@ -11,6 +12,53 @@
 
 namespace Genesis
 {
+
+	class View
+	{
+	public:
+		View(Ecs::EntitySignatureTable* signature_table = nullptr, std::map<size_t, ComponentId>* component_map = nullptr) 
+		{ 
+			this->signature_table = signature_table;
+			this->component_map = component_map; 
+		};
+		
+		size_t getSize() 
+		{ 
+			if (this->signature_table == nullptr)
+			{
+				return 0;
+			}
+
+			return this->signature_table->getSize(); 
+		};
+
+		EntityHandle get(size_t index) 
+		{ 
+			GENESIS_ENGINE_ASSERT_ERROR((this->signature_table != nullptr), "View does not exist");
+			return this->signature_table->getEntity(index); 
+		};
+
+		template<class Component>
+		Component* getComponent(EntityHandle entity) 
+		{ 
+			GENESIS_ENGINE_ASSERT_ERROR((this->signature_table != nullptr), "View does not exist");
+			return (Component*)this->signature_table->getComponent(entity, this->getComponentID<Component>()); 
+		};
+
+	private:
+
+		template<class Component>
+		ComponentId getComponentID()
+		{
+			size_t hash_value = Ecs::TypeInfo<Component>().getHash();
+			GENESIS_ENGINE_ASSERT_ERROR((has_value((*this->component_map), hash_value)), "Component Not Registered");
+			return (*this->component_map)[hash_value];
+		};
+
+		Ecs::EntitySignatureTable* signature_table;
+		std::map<size_t, ComponentId>* component_map;
+	};
+
 	class EcsWorld
 	{
 	public:
@@ -71,24 +119,35 @@ namespace Genesis
 		template<class... Components>
 		EntityHandle createEntity()
 		{
-			EntitySignature signature = this->getSignature<Components...>();
+			EntitySignature entity_signature = this->getSignature<Components...>();
 
 			EntityHandle entity = this->next_entity_id;
-			this->entity_map[entity] = signature;
+			this->entity_map[entity] = entity_signature;
 
 			this->next_entity_id++;
 
-			if (signature == EntitySignature(0))
+			if (entity_signature == EntitySignature(0))
 			{
 				return entity;
 			}
 
-			if (!has_value(this->entity_signature_table, signature))
+
+			//Create table if it doesn't exist
+			if (!has_value(this->entity_signature_table, entity_signature))
 			{
-				this->entity_signature_table[signature] = new Ecs::EntitySignatureTable(signature, this->component_sizes);
+				this->entity_signature_table[entity_signature] = new Ecs::EntitySignatureTable(entity_signature, this->component_sizes);
+
+				//Adds all signature to all caches that is fits
+				for (auto element : this->entity_signature_cache)
+				{
+					if ((entity_signature & element.first) == element.first)
+					{
+						element.second.push_back(element.first);
+					}
+				}
 			}
 
-			this->entity_signature_table[signature]->addEntity(entity);
+			this->entity_signature_table[entity_signature]->addEntity(entity);
 
 			return entity;
 		};
@@ -125,7 +184,7 @@ namespace Genesis
 			void* component_ptr = this->entity_signature_table[entity_signature]->getComponent(entity, component_id);
 
 			return new(component_ptr)Component(args...);
-		}
+		};
 
 
 		template<class Component>
@@ -140,9 +199,46 @@ namespace Genesis
 			return (Component*)this->entity_signature_table[entity_signature]->getComponent(entity, component_id);
 		};
 
+		template<class... Components>
+		View getExactView()
+		{
+			EntitySignature entity_signature = this->getSignature<Components...>();
+
+			Ecs::EntitySignatureTable* table = nullptr;
+
+			if (has_value(this->entity_signature_table, entity_signature))
+			{
+				table = this->entity_signature_table[entity_signature];
+			}
+
+			return View(table, &this->component_map);
+		};
+
+		template<class... Components>
+		std::vector<View> getView()
+		{
+			EntitySignature entity_signature = this->getSignature<Components...>();
+
+			//Create Cache for this signature
+			if (!has_value(this->entity_signature_cache, entity_signature))
+			{
+				this->createEntitySignatureCache(entity_signature);
+			}
+
+			std::vector<EntitySignature>& signature_cache = this->entity_signature_cache[entity_signature];
+
+			std::vector<View> views(signature_cache.size());
+			for (size_t i = 0; i < views.size(); i++)
+			{
+				views[i] = View(this->entity_signature_table[signature_cache[i]], &this->component_map);
+			}
+
+			return views;
+		};
+
 	protected:
 
-		//Same as Destory Entity, except it does not change the table
+		//Calls the deconstrutor on all components
 		//Used for fast world deletion
 		void deconstructEntity(EntityHandle entity)
 		{
@@ -161,6 +257,21 @@ namespace Genesis
 			}
 		};
 
+		//Used to create
+		void createEntitySignatureCache(EntitySignature entity_signature)
+		{
+			std::vector<EntitySignature>& signature_cache = this->entity_signature_cache[entity_signature];
+
+			//Adds all signatures that have the necessary components
+			for (auto element : this->entity_signature_table)
+			{
+				if ((element.first & entity_signature) == entity_signature)
+				{
+					signature_cache.push_back(element.first);
+				}
+			}
+		};
+
 
 		std::map<size_t, ComponentId> component_map;
 		std::vector<size_t> component_sizes;
@@ -170,5 +281,7 @@ namespace Genesis
 		std::map<EntityHandle, EntitySignature> entity_map;
 
 		std::map<EntitySignature, Ecs::EntitySignatureTable*> entity_signature_table;
+
+		std::map<EntitySignature, std::vector<EntitySignature>> entity_signature_cache;
 	};
 }

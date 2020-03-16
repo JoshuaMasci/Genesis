@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Entity/Entity.hpp"
+#include "Genesis/Ecs/EscWorld.hpp"
 #include "Genesis/Core/Transform.hpp"
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Job/JobSystem.hpp"
@@ -19,7 +19,7 @@ namespace Genesis
 
 	struct ParentNode
 	{
-		vector<EntityId> child_entities;
+		vector<EntityHandle> child_entities;
 	};
 
 	struct ChildTransform
@@ -29,15 +29,15 @@ namespace Genesis
 
 	struct ChildNode
 	{
-		EntityId root_parent;
-		EntityId parent;
-		vector<EntityId> child_entities;
+		EntityHandle root_parent;
+		EntityHandle parent;
+		vector<EntityHandle> child_entities;
 	};
 
 	class TransformSystem
 	{
 	public:
-		static void preSimulation(EntityRegistry& world, JobSystem* job_system);
-		static void calculateHierarchy(EntityRegistry& world, JobSystem* job_system);
+		static void preSimulation(EcsWorld& world, JobSystem* job_system);
+		static void calculateHierarchy(EcsWorld& world, JobSystem* job_system);
 	};
 }

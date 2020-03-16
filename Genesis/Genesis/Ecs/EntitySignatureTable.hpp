@@ -19,6 +19,8 @@ namespace Genesis
 			void addEntity(EntityHandle entity);
 			void removeEntity(EntityHandle entity);
 
+			size_t getSize();
+			EntityHandle getEntity(size_t index);
 			void* getComponent(EntityHandle entity, ComponentId component_id);
 
 		private:

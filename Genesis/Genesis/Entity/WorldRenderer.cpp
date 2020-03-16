@@ -82,7 +82,7 @@ void WorldRenderer::ImGuiDraw()
 	ImGui::End();
 }
 
-void WorldRenderer::drawWorld(TimeStep interpolation_value, EntityRegistry& world, EntityId camera)
+void WorldRenderer::drawWorld(TimeStep interpolation_value, EcsWorld& world, EntityHandle camera)
 {
 	GENESIS_PROFILE_FUNCTION("WorldRenderer::drawWorld");
 
@@ -101,9 +101,9 @@ void WorldRenderer::drawWorld(TimeStep interpolation_value, EntityRegistry& worl
 	{
 		float aspect_ratio = ((float)this->view_size.x) / ((float)this->view_size.y);
 
-		Camera camera_component = world.get<Camera>(camera);
-		TransformF camera_transform = world.get<WorldTransform>(camera).current.toTransformF();
-		matrix4F view_projection_matrix = camera_component.getProjectionMatrix(aspect_ratio) * camera_transform.getViewMatirx();
+		Camera* camera_component = world.getComponent<Camera>(camera);
+		TransformF camera_transform = world.getComponent<WorldTransform>(camera)->current.toTransformF();
+		matrix4F view_projection_matrix = camera_component->getProjectionMatrix(aspect_ratio) * camera_transform.getViewMatirx();
 
 		{
 			//Update Scene Uniform
@@ -135,26 +135,32 @@ void WorldRenderer::drawWorld(TimeStep interpolation_value, EntityRegistry& worl
 		this->command_buffer->setUniformTexture(1, 6, this->empty_texture, this->basic_sampler);
 
 		Frustum frustum(view_projection_matrix);
-		auto& mesh_view = world.view<MeshComponent, WorldTransform>();
-		for (auto entity : mesh_view)
+
+		std::vector<View> views = world.getView<MeshComponent, WorldTransform>();
+		for (auto& view : views)
 		{
-			MeshComponent& mesh = mesh_view.get<MeshComponent>(entity);
-			WorldTransform& world_transform = mesh_view.get<WorldTransform>(entity);
-			TransformF render_transform = world_transform.linearInterpolation(interpolation_value).toTransformF();
-
-			if (!this->use_frustum_culling || frustum.sphereTest(render_transform.getPosition(), mesh.mesh->frustum_sphere_radius))
+			for (size_t i = 0; i < view.getSize(); i++)
 			{
-				this->draw_call_count++;
+				EntityHandle entity = view.get(i);
+				MeshComponent* mesh = view.getComponent<MeshComponent>(entity);
+				WorldTransform* world_transform = view.getComponent<WorldTransform>(entity);
 
-				ObjectTransformUniform matrices = {};
-				matrices.model_matrix = render_transform.getModelMatrix();
-				matrices.normal_matrix = (glm::mat3x4)render_transform.getNormalMatrix();
+				TransformF render_transform = world_transform->linearInterpolation(interpolation_value).toTransformF();
 
-				this->command_buffer->setUniformConstant(&matrices, sizeof(ObjectTransformUniform));
+				if (!this->use_frustum_culling || frustum.sphereTest(render_transform.getPosition(), mesh->mesh->frustum_sphere_radius))
+				{
+					this->draw_call_count++;
 
-				this->command_buffer->setVertexBuffer(mesh.mesh->vertex_buffer, *mesh.mesh->vertex_description);
-				this->command_buffer->setIndexBuffer(mesh.mesh->index_buffer, mesh.mesh->index_type);
-				this->command_buffer->drawIndexed(mesh.mesh->index_count);
+					ObjectTransformUniform matrices = {};
+					matrices.model_matrix = render_transform.getModelMatrix();
+					matrices.normal_matrix = (glm::mat3x4)render_transform.getNormalMatrix();
+
+					this->command_buffer->setUniformConstant(&matrices, sizeof(ObjectTransformUniform));
+
+					this->command_buffer->setVertexBuffer(mesh->mesh->vertex_buffer, *mesh->mesh->vertex_description);
+					this->command_buffer->setIndexBuffer(mesh->mesh->index_buffer, mesh->mesh->index_type);
+					this->command_buffer->drawIndexed(mesh->mesh->index_count);
+				}
 			}
 		}
 	}

@@ -10,32 +10,38 @@
 using namespace Genesis;
 using namespace Genesis::Physics;
 
-void PhysicsSystem::prePhysicsUpdate(EntityRegistry* registry, JobSystem* job_system)
+void PhysicsSystem::prePhysicsUpdate(EcsWorld& world, JobSystem* job_system)
 {
 	GENESIS_PROFILE_FUNCTION("PhysicsSystem::prePhysicsUpdate");
 
-	auto view = registry->view<RigidBody, WorldTransform>();
-
-	for (auto entity : view)
+	vector<View> views = world.getView<WorldTransform, RigidBody>();
+	for (auto& view : views)
 	{
-		RigidBody& rigid_body = view.get<RigidBody>(entity);
-		WorldTransform& world_transform = view.get<WorldTransform>(entity);
-		rigid_body.setTransform(world_transform.current);
+		for (size_t i = 0; i < view.getSize(); i++)
+		{
+			EntityHandle entity = view.get(i);
+			WorldTransform* world_transform = view.getComponent<WorldTransform>(entity);
+			RigidBody* rigid_body = view.getComponent<RigidBody>(entity);
+			rigid_body->setTransform(world_transform->current);
+		}
 	}
 }
 
-void PhysicsSystem::postPhysicsUpdate(EntityRegistry* registry, JobSystem* job_system)
+void PhysicsSystem::postPhysicsUpdate(EcsWorld& world, JobSystem* job_system)
 {
 	GENESIS_PROFILE_FUNCTION("PhysicsSystem::postPhysicsUpdate");
 
-	auto view = registry->view<RigidBody, WorldTransform>();
-
-	for (auto entity : view)
+	vector<View> views = world.getView<WorldTransform, RigidBody>();
+	for (auto& view : views)
 	{
-		RigidBody& rigid_body = view.get<RigidBody>(entity);
-		WorldTransform& world_transform = view.get<WorldTransform>(entity);
-		TransformD rigid_body_transform = rigid_body.getTransform();
-		world_transform.current.setPosition(rigid_body_transform.getPosition());
-		world_transform.current.setOrientation(rigid_body_transform.getOrientation());
+		for (size_t i = 0; i < view.getSize(); i++)
+		{
+			EntityHandle entity = view.get(i);
+			WorldTransform* world_transform = view.getComponent<WorldTransform>(entity);
+			RigidBody* rigid_body = view.getComponent<RigidBody>(entity);
+			TransformD rigid_body_transform = rigid_body->getTransform();
+			world_transform->current.setPosition(rigid_body_transform.getPosition());
+			world_transform->current.setOrientation(rigid_body_transform.getOrientation());
+		}
 	}
 }

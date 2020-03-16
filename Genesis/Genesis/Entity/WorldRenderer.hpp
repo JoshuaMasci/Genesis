@@ -20,7 +20,7 @@ namespace Genesis
 		virtual inline Framebuffer getFramebuffer() { return this->framebuffer; };
 		virtual inline uint32_t getFramebufferIndex() { return 0; };
 
-		void drawWorld(TimeStep interpolation_value, EntityRegistry& world, EntityId camera);
+		void drawWorld(TimeStep interpolation_value, EcsWorld& world, EntityHandle camera);
 
 	protected:
 		//TEMP

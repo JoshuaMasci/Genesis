@@ -10,12 +10,12 @@ namespace Genesis
 		template <typename T>
 		struct TypeInfo
 		{
-			static size_t getHash()
+			constexpr static size_t getHash()
 			{
 				return typeid(T).hash_code();
 			}
 
-			static size_t getSize()
+			constexpr static size_t getSize()
 			{
 				return sizeof(T);
 			};
