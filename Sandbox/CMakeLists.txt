@@ -1,48 +1,24 @@
 cmake_minimum_required(VERSION 3.8.0)
-project(Sandbox)
+project(Sandbox CXX)
 
-include_directories(src)
-
-file(GLOB_RECURSE SANDBOX_SOURCES "src/Sandbox/*.*")
-source_group("Sandbox" FILES ${SANDBOX_SOURCES})
-
-include_directories(${Genesis_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/imgui/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/spdlog-1.5.0/include)
-
-link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/code/Debug/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/contrib/zlib/Debug/)
-
-include_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/src/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/build/lib/)
-add_definitions(-DIS_DOUBLE_PRECISION_ENABLED)
-
-if(INCLUDE_EASY_PROFILER)
-	include_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/include/)
-	link_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/lib)
-	add_definitions(-DGENESIS_PROFILER_ENABLED)
-endif()
+file(GLOB_RECURSE SANDBOX_SOURCES "source/*.*")
+file(GLOB_RECURSE SANDBOX_HEADERS "include/*.*")
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})
+
+target_include_directories(Sandbox PUBLIC include/)
+
+target_compile_features(Sandbox INTERFACE cxx_std_17)
+#target_compile_features(Sandbox PUBLIC cxx_auto_type cxx_constexpr)
+
+target_link_libraries(Sandbox PUBLIC Genesis_Engine)
+
+#SDL2
+target_link_libraries(Sandbox PUBLIC SDL2_Platform)
+add_custom_command(TARGET Sandbox POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/SDL2.dll" $<TARGET_FILE_DIR:Sandbox>)
+
+#VulkanBackend
+target_link_libraries(Sandbox PUBLIC Vulkan_Rendering)
+
+#Working Directory
 set_target_properties(Sandbox PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${Sandbox_SOURCE_DIR}")
-
-if(INCLUDE_SDL2)
-	addSDL2(Sandbox)
-endif()
-
-if(INCLUDE_VULKAN)
-	addVulkan(Sandbox)
-endif()
-
-target_link_libraries(Sandbox Genesis)
-
-#Copy DLLs to runtime directories
-#add_custom_command(TARGET Sandbox POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/SDL2.dll" $<TARGET_FILE_DIR:Sandbox>)
-add_custom_command(TARGET Sandbox POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/bin/easy_profiler.dll" $<TARGET_FILE_DIR:Sandbox>)
-
-#TEMP
-add_custom_command(TARGET Sandbox POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/code/Debug/assimp-vc140-mt.dll" $<TARGET_FILE_DIR:Sandbox>)
