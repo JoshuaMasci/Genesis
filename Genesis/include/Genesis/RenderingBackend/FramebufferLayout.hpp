@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Rendering/RenderingTypes.hpp"
+#include "Genesis/RenderingBackend/RenderingTypes.hpp"
 #include "Genesis/Core/List.hpp"
 #include "Genesis/Core/MurmurHash2.hpp"
 

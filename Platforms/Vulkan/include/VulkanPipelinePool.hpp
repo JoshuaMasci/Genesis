@@ -5,7 +5,7 @@
 #include "VulkanShader.hpp"
 #include "VulkanVertexInputPool.hpp"
 
-#include "Genesis/Rendering/PipelineSettings.hpp"
+#include "Genesis/RenderingBackend/PipelineSettings.hpp"
 
 namespace Genesis
 {

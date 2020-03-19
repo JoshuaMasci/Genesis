@@ -10,7 +10,7 @@
 using namespace Genesis;
 using namespace Genesis::Physics;
 
-void prePhysicsUpdateThread(uint32_t thread_id, View view)
+void prePhysicsUpdateThread(uint32_t thread_id, EntitySystem::EntityView view)
 {
 	GENESIS_PROFILE_FUNCTION("PhysicsSystem::prePhysicsUpdateThread");
 
@@ -22,7 +22,7 @@ void prePhysicsUpdateThread(uint32_t thread_id, View view)
 	}
 }
 
-void PhysicsSystem::prePhysicsUpdate(EcsWorld& world, JobSystem* job_system)
+void PhysicsSystem::prePhysicsUpdate(EntitySystem::EntityRegistry& world, JobSystem* job_system)
 {
 	GENESIS_PROFILE_FUNCTION("PhysicsSystem::prePhysicsUpdate");
 
@@ -39,7 +39,7 @@ void PhysicsSystem::prePhysicsUpdate(EcsWorld& world, JobSystem* job_system)
 
 	JobCounter counter = 0;
 
-	vector<View> views = world.getView<WorldTransform, RigidBody>();
+	vector<EntitySystem::EntityView> views = world.getView<WorldTransform, RigidBody>();
 	for (auto& view : views)
 	{
 		job_system->addJob(std::bind(prePhysicsUpdateThread, std::placeholders::_1, view), &counter);
@@ -48,11 +48,11 @@ void PhysicsSystem::prePhysicsUpdate(EcsWorld& world, JobSystem* job_system)
 	JobSystem::waitForCounter(counter);
 }
 
-void PhysicsSystem::postPhysicsUpdate(EcsWorld& world, JobSystem* job_system)
+void PhysicsSystem::postPhysicsUpdate(EntitySystem::EntityRegistry& world, JobSystem* job_system)
 {
 	GENESIS_PROFILE_FUNCTION("PhysicsSystem::postPhysicsUpdate");
 
-	vector<View> views = world.getView<WorldTransform, RigidBody>();
+	vector<EntitySystem::EntityView> views = world.getView<WorldTransform, RigidBody>();
 	for (auto& view : views)
 	{
 		for (size_t i = 0; i < view.getSize(); i++)

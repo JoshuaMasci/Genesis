@@ -1,4 +1,4 @@
-#include "Genesis/Scene/Frustum.hpp"
+#include "Genesis/Rendering/Frustum.hpp"
 
 using namespace Genesis;
 

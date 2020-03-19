@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Genesis/Core/Types.hpp"
-#include "Genesis/Rendering/DescriptorSet.hpp"
+#include "Genesis/RenderingBackend/DescriptorSet.hpp"
 
 namespace Genesis
 {

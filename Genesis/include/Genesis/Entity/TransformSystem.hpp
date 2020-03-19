@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Ecs/EscWorld.hpp"
+#include "Genesis/EntitySystem/EntityRegistry.hpp"
 #include "Genesis/Core/Transform.hpp"
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Job/JobSystem.hpp"
@@ -37,7 +37,7 @@ namespace Genesis
 	class TransformSystem
 	{
 	public:
-		static void preSimulation(EcsWorld& world, JobSystem* job_system);
-		static void calculateHierarchy(EcsWorld& world, JobSystem* job_system);
+		static void preSimulation(EntitySystem::EntityRegistry& world, JobSystem* job_system);
+		static void calculateHierarchy(EntitySystem::EntityRegistry& world, JobSystem* job_system);
 	};
 }

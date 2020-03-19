@@ -1,7 +1,7 @@
 #pragma once
 
 #include "VulkanInclude.hpp"
-#include "Genesis/Rendering/RenderingTypes.hpp"
+#include "Genesis/RenderingBackend/RenderingTypes.hpp"
 #include "VulkanDevice.hpp"
 #include "VulkanDescriptorPool.hpp"
 

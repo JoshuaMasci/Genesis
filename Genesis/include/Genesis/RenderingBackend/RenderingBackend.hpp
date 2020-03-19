@@ -1,15 +1,15 @@
 #pragma once
 
 #include "Genesis/Core/VectorTypes.hpp"
-#include "Genesis/Rendering/RenderingTypes.hpp"
+#include "Genesis/RenderingBackend/RenderingTypes.hpp"
 
-#include "Genesis/Rendering/Sampler.hpp"
-#include "Genesis/Rendering/VertexInputDescription.hpp"
-#include "Genesis/Rendering/DescriptorSet.hpp"
-#include "Genesis/Rendering/PipelineLayout.hpp"
+#include "Genesis/RenderingBackend/Sampler.hpp"
+#include "Genesis/RenderingBackend/VertexInputDescription.hpp"
+#include "Genesis/RenderingBackend/DescriptorSet.hpp"
+#include "Genesis/RenderingBackend/PipelineLayout.hpp"
 
-#include "Genesis/Rendering/FramebufferLayout.hpp"
-#include "Genesis/Rendering/CommandBuffer.hpp"
+#include "Genesis/RenderingBackend/FramebufferLayout.hpp"
+#include "Genesis/RenderingBackend/CommandBuffer.hpp"
 
 namespace Genesis
 {

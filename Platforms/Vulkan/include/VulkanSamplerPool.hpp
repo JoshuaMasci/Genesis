@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Rendering/Sampler.hpp"
+#include "Genesis/RenderingBackend/Sampler.hpp"
 #include "VulkanInclude.hpp"
 #include "Genesis/Core/Types.hpp"
 

@@ -5,7 +5,7 @@
 #include "Genesis/Core/Types.hpp"
 #include "VulkanInclude.hpp"
 #include "VulkanDevice.hpp"
-#include "Genesis/Rendering/FramebufferLayout.hpp"
+#include "Genesis/RenderingBackend/FramebufferLayout.hpp"
 
 namespace Genesis
 {

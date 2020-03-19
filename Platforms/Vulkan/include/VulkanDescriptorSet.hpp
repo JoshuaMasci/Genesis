@@ -3,7 +3,7 @@
 #include "VulkanInclude.hpp"
 #include "Genesis/Core/Types.hpp"
 #include "VulkanDescriptorPool.hpp"
-#include "Genesis/Rendering/DescriptorSet.hpp"
+#include "Genesis/RenderingBackend/DescriptorSet.hpp"
 
 namespace Genesis
 {

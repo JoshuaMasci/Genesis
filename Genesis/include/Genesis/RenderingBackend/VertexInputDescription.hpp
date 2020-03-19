@@ -3,7 +3,7 @@
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Debug/Log.hpp"
 #include "Genesis/Core/MurmurHash2.hpp"
-#include "Genesis/Rendering/RenderingTypes.hpp"
+#include "Genesis/RenderingBackend/RenderingTypes.hpp"
 
 namespace Genesis
 {

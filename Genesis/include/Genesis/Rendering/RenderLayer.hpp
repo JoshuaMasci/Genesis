@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Genesis/Core/VectorTypes.hpp"
-#include "Genesis/Rendering/RenderingTypes.hpp"
-#include "Genesis/Rendering/RenderingBackend.hpp"
+#include "Genesis/RenderingBackend/RenderingTypes.hpp"
+#include "Genesis/RenderingBackend/RenderingBackend.hpp"
 
 namespace Genesis
 {

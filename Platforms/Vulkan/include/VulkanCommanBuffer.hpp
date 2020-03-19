@@ -10,7 +10,7 @@
 #include "VulkanFramebuffer.hpp"
 
 #include "Genesis/Core/VectorTypes.hpp"
-#include "Genesis/Rendering/CommandBuffer.hpp"
+#include "Genesis/RenderingBackend/CommandBuffer.hpp"
 
 namespace Genesis
 {

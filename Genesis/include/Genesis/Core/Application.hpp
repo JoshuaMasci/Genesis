@@ -5,7 +5,7 @@
 
 #include "Genesis/Platform/Platform.hpp"
 #include "Genesis/Platform/Window.hpp"
-#include "Genesis/Rendering/RenderingBackend.hpp"
+#include "Genesis/RenderingBackend/RenderingBackend.hpp"
 #include "Genesis/Rendering/RenderSystem.hpp"
 #include "Genesis/Rendering/ImGuiRenderer.hpp"
 

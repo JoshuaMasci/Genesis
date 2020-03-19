@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Genesis/Core/Types.hpp"
-#include "Genesis/Scene/Mesh.hpp"
+#include "Genesis/Resource/Mesh.hpp"
 
 namespace Genesis
 {

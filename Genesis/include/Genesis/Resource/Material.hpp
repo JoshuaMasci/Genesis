@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Genesis/Core/VectorTypes.hpp"
-#include "Genesis/Rendering/RenderingTypes.hpp"
+#include "Genesis/RenderingBackend/RenderingTypes.hpp"
 
 namespace Genesis
 {

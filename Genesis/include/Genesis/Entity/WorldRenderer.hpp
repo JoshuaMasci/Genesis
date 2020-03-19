@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Genesis/Rendering/RenderLayer.hpp"
-#include "Genesis/Scene/Material.hpp"
+#include "Genesis/Resource/Material.hpp"
 #include "Genesis/Entity/World.hpp"
 
 namespace Genesis
@@ -20,7 +20,15 @@ namespace Genesis
 		virtual inline Framebuffer getFramebuffer() { return this->framebuffer; };
 		virtual inline uint32_t getFramebufferIndex() { return 0; };
 
-		void drawWorld(TimeStep interpolation_value, EcsWorld& world, EntityHandle camera);
+		void drawWorld(JobSystem* job_system, TimeStep interpolation_value, EntitySystem::EntityRegistry& world, EntityHandle camera);
+
+
+		//Object Transform: Push Constant
+		struct ObjectTransformUniform
+		{
+			matrix4F model_matrix;
+			glm::mat3x4 normal_matrix;
+		};
 
 	protected:
 		//TEMP
@@ -37,8 +45,6 @@ namespace Genesis
 		Framebuffer framebuffer;
 		MTCommandBuffer mt_command_buffer;
 
-		CommandBufferInterface* command_buffer = nullptr;
-
 		//Scene: Binding Set 0
 		struct SceneUniform
 		{
@@ -53,12 +59,5 @@ namespace Genesis
 		DynamicBuffer material_buffer = nullptr;//Dynamic for now
 		Texture empty_texture = nullptr;
 		Sampler basic_sampler = nullptr;
-
-		//Object Transform: Push Constant
-		struct ObjectTransformUniform
-		{
-			matrix4F model_matrix;
-			glm::mat3x4 normal_matrix;
-		};
 	};
 }

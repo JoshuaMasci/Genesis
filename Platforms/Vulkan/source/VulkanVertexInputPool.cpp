@@ -1,7 +1,7 @@
 #include "VulkanVertexInputPool.hpp"
 
 #include "Genesis/Core/MurmurHash2.hpp"
-#include "Genesis/Rendering/VertexInputDescription.hpp"
+#include "Genesis/RenderingBackend/VertexInputDescription.hpp"
 
 using namespace Genesis;
 

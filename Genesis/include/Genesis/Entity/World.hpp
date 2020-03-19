@@ -2,8 +2,8 @@
 
 #include "Genesis/Core/Application.hpp"
 #include "Genesis/Physics/PhysicsWorld.hpp"
-#include "Genesis/Scene/MeshPool.hpp"
-#include "Genesis/Ecs/EscWorld.hpp"
+#include "Genesis/Resource/MeshPool.hpp"
+#include "Genesis/EntitySystem/EntityRegistry.hpp"
 
 namespace Genesis
 {
@@ -15,7 +15,7 @@ namespace Genesis
 
 		void runSimulation(Application* application, TimeStep time_step);
 
-		EcsWorld* world;
+		EntitySystem::EntityRegistry* world;
 		EntityHandle camera;
 
 	private:

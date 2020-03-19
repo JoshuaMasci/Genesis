@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Genesis/Scene/Mesh.hpp"
-#include "Genesis/Scene/ResourcePool.hpp"
-#include "Genesis/Rendering/RenderingBackend.hpp"
+#include "Genesis/Resource/Mesh.hpp"
+#include "Genesis/Resource/ResourcePool.hpp"
+#include "Genesis/RenderingBackend/RenderingBackend.hpp"
 
 namespace Genesis
 {

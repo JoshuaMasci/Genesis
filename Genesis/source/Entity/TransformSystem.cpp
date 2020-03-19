@@ -22,7 +22,7 @@ TransformD WorldTransform::linearInterpolation(TimeStep interpolation_value)
 	return result;
 }
 
-void preSimulationThread(uint32_t thread_id, View view)
+void preSimulationThread(uint32_t thread_id, EntitySystem::EntityView view)
 {
 	GENESIS_PROFILE_FUNCTION("TransformSystem::preSimulationThread");
 
@@ -33,13 +33,13 @@ void preSimulationThread(uint32_t thread_id, View view)
 	}
 }
 
-void TransformSystem::preSimulation(EcsWorld& world, JobSystem* job_system)
+void TransformSystem::preSimulation(EntitySystem::EntityRegistry& world, JobSystem* job_system)
 {
 	GENESIS_PROFILE_FUNCTION("TransformSystem::preSimulation");
 
 	JobCounter counter = 0;
 
-	std::vector<View> views = world.getView<WorldTransform>();
+	std::vector<EntitySystem::EntityView> views = world.getView<WorldTransform>();
 	for (auto& view : views)
 	{
 		job_system->addJob(std::bind(preSimulationThread, std::placeholders::_1, view), &counter);
@@ -48,7 +48,7 @@ void TransformSystem::preSimulation(EcsWorld& world, JobSystem* job_system)
 	JobSystem::waitForCounter(counter);
 }
 
-void tempUpdateChild(EcsWorld& world, EntityHandle child, TransformD& parent_transform)
+void tempUpdateChild(EntitySystem::EntityRegistry& world, EntityHandle child, TransformD& parent_transform)
 {
 	/*if (world.has)
 	{
@@ -69,11 +69,11 @@ void tempUpdateChild(EcsWorld& world, EntityHandle child, TransformD& parent_tra
 	}*/
 }
 
-void TransformSystem::calculateHierarchy(EcsWorld& world, JobSystem* job_system)
+void TransformSystem::calculateHierarchy(EntitySystem::EntityRegistry& world, JobSystem* job_system)
 {
 	GENESIS_PROFILE_FUNCTION("TransformSystem::calculateHierarchy");
 
-	std::vector<View> views = world.getView<WorldTransform, ParentNode>();
+	std::vector<EntitySystem::EntityView> views = world.getView<WorldTransform, ParentNode>();
 	for (auto& view : views)
 	{
 		for (size_t i = 0; i < view.getSize(); i++)

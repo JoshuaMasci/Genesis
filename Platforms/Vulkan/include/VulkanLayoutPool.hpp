@@ -2,8 +2,8 @@
 
 #include "VulkanInclude.hpp"
 #include "Genesis/Core/Types.hpp"
-#include "Genesis/Rendering/DescriptorSet.hpp"
-#include "Genesis/Rendering/PipelineLayout.hpp"
+#include "Genesis/RenderingBackend/DescriptorSet.hpp"
+#include "Genesis/RenderingBackend/PipelineLayout.hpp"
 
 #include <mutex>
 

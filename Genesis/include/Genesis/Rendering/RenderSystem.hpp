@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Rendering/RenderingBackend.hpp"
+#include "Genesis/RenderingBackend/RenderingBackend.hpp"
 #include "Genesis/Rendering/RenderLayer.hpp"
 
 namespace Genesis

@@ -1,11 +1,13 @@
 #pragma once
 
+#define has_value(list, value) (list.find(value) != list.end())
+
 #include <stdint.h>
-#include "Genesis/Core/Bitset.hpp"
+#include <bitset>
 
 namespace Genesis
 {
-	namespace Ecs
+	namespace EntitySystem
 	{
 		template <typename T>
 		struct TypeInfo
@@ -24,5 +26,5 @@ namespace Genesis
 
 	typedef uint64_t EntityHandle;
 	typedef uint32_t ComponentId;
-	typedef Bitset64 EntitySignature;
+	typedef std::bitset<64> EntitySignature;
 }

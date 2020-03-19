@@ -1,4 +1,4 @@
-#include "Genesis/Scene/MeshPool.hpp"
+#include "Genesis/Resource/MeshPool.hpp"
 
 #include "Genesis/Rendering/ResourceLoaders.hpp"
 

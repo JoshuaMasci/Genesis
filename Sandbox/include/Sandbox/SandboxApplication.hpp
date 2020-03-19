@@ -3,7 +3,7 @@
 #include <Genesis/Genesis.hpp>
 #include <Genesis/Entity/World.hpp>
 #include <Genesis/Entity/WorldRenderer.hpp>
-#include <Genesis/Scene/MeshPool.hpp>
+#include <Genesis/Resource/MeshPool.hpp>
 
 class SandboxApplication : public Genesis::Application
 {

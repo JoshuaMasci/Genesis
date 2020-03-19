@@ -3,8 +3,8 @@
 #include "VulkanInclude.hpp"
 #include "VulkanDevice.hpp"
 
-#include "Genesis/Rendering/RenderingTypes.hpp"
-#include "Genesis/Rendering/VertexInputDescription.hpp"
+#include "Genesis/RenderingBackend/RenderingTypes.hpp"
+#include "Genesis/RenderingBackend/VertexInputDescription.hpp"
 
 namespace Genesis
 {

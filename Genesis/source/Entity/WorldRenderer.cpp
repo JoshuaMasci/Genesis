@@ -3,10 +3,10 @@
 #include "Genesis/Debug/Assert.hpp"
 #include "Genesis/Debug/Profiler.hpp"
 
-#include "Genesis/Scene/Frustum.hpp"
+#include "Genesis/Rendering/Frustum.hpp"
 #include "Genesis/Rendering/ResourceLoaders.hpp"
 #include "Genesis/Entity/MeshComponent.hpp"
-#include "Genesis/Scene/Camera.hpp"
+#include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Entity/TransformSystem.hpp"
 
 using namespace Genesis;
@@ -82,7 +82,33 @@ void WorldRenderer::ImGuiDraw()
 	ImGui::End();
 }
 
-void WorldRenderer::drawWorld(TimeStep interpolation_value, EcsWorld& world, EntityHandle camera)
+void drawMeshThread(uint32_t thread_id, EntitySystem::EntityView view, List<CommandBufferInterface*>* command_buffers, Frustum& camera_frustum, TimeStep interpolation_value)
+{
+	GENESIS_PROFILE_FUNCTION("WorldRenderer::drawMeshThread");
+
+	for (size_t i = 0; i < view.getSize(); i++)
+	{
+		MeshComponent* mesh = view.getComponent<MeshComponent>(i);
+		WorldTransform* world_transform = view.getComponent<WorldTransform>(i);
+
+		TransformF render_transform = world_transform->current.toTransformF();
+
+		if (camera_frustum.sphereTest(render_transform.getPosition(), mesh->mesh->frustum_sphere_radius))
+		{
+			WorldRenderer::ObjectTransformUniform matrices = {};
+			matrices.model_matrix = render_transform.getModelMatrix();
+			matrices.normal_matrix = (glm::mat3x4)render_transform.getNormalMatrix();
+
+			(*command_buffers)[thread_id]->setUniformConstant(&matrices, sizeof(WorldRenderer::ObjectTransformUniform));
+
+			(*command_buffers)[thread_id]->setVertexBuffer(mesh->mesh->vertex_buffer, *mesh->mesh->vertex_description);
+			(*command_buffers)[thread_id]->setIndexBuffer(mesh->mesh->index_buffer, mesh->mesh->index_type);
+			(*command_buffers)[thread_id]->drawIndexed(mesh->mesh->index_count);
+		}
+	}
+}
+
+void WorldRenderer::drawWorld(JobSystem* job_system, TimeStep interpolation_value, EntitySystem::EntityRegistry& world, EntityHandle camera)
 {
 	GENESIS_PROFILE_FUNCTION("WorldRenderer::drawWorld");
 
@@ -96,7 +122,6 @@ void WorldRenderer::drawWorld(TimeStep interpolation_value, EcsWorld& world, Ent
 	}
 
 	List<CommandBufferInterface*>& command_buffers = *this->backend->beginMTCommandBuffer(this->mt_command_buffer, this->framebuffer);
-	this->command_buffer = command_buffers[0];
 
 	{
 		float aspect_ratio = ((float)this->view_size.x) / ((float)this->view_size.y);
@@ -120,23 +145,38 @@ void WorldRenderer::drawWorld(TimeStep interpolation_value, EcsWorld& world, Ent
 		}
 
 		PipelineSettings pipeline_settings;
-		this->command_buffer->setPipelineSettings(pipeline_settings);
-		this->command_buffer->setShader(this->mesh_shader);
 
-		this->command_buffer->setUniformBuffer(0, 0, this->scene_uniform_buffer);
 
-		//Material
-		this->command_buffer->setUniformBuffer(1, 0, this->material_buffer);
-		this->command_buffer->setUniformTexture(1, 1, this->temp_texture, this->basic_sampler);
-		this->command_buffer->setUniformTexture(1, 2, this->empty_texture, this->basic_sampler);
-		this->command_buffer->setUniformTexture(1, 3, this->empty_texture, this->basic_sampler);
-		this->command_buffer->setUniformTexture(1, 4, this->empty_texture, this->basic_sampler);
-		this->command_buffer->setUniformTexture(1, 5, this->empty_texture, this->basic_sampler);
-		this->command_buffer->setUniformTexture(1, 6, this->empty_texture, this->basic_sampler);
+		for (size_t i = 0; i < command_buffers.size(); i++)
+		{
+			command_buffers[i]->setPipelineSettings(pipeline_settings);
+			command_buffers[i]->setShader(this->mesh_shader);
+
+			command_buffers[i]->setUniformBuffer(0, 0, this->scene_uniform_buffer);
+
+			//Material
+			command_buffers[i]->setUniformBuffer(1, 0, this->material_buffer);
+			command_buffers[i]->setUniformTexture(1, 1, this->temp_texture, this->basic_sampler);
+			command_buffers[i]->setUniformTexture(1, 2, this->empty_texture, this->basic_sampler);
+			command_buffers[i]->setUniformTexture(1, 3, this->empty_texture, this->basic_sampler);
+			command_buffers[i]->setUniformTexture(1, 4, this->empty_texture, this->basic_sampler);
+			command_buffers[i]->setUniformTexture(1, 5, this->empty_texture, this->basic_sampler);
+			command_buffers[i]->setUniformTexture(1, 6, this->empty_texture, this->basic_sampler);
+		}
 
 		Frustum frustum(view_projection_matrix);
 
-		std::vector<View> views = world.getView<MeshComponent, WorldTransform>();
+		JobCounter counter = 0;
+
+		vector<EntitySystem::EntityView> views = world.getView<MeshComponent, WorldTransform>();
+		for (auto& view : views)
+		{
+			job_system->addJob(std::bind(drawMeshThread, std::placeholders::_1, view, &command_buffers, frustum, interpolation_value), &counter);
+		}
+
+		JobSystem::waitForCounter(counter);
+
+		/*std::vector<EntitySystem::EntityView> views = world.getView<MeshComponent, WorldTransform>();
 		for (auto& view : views)
 		{
 			for (size_t i = 0; i < view.getSize(); i++)
@@ -146,7 +186,7 @@ void WorldRenderer::drawWorld(TimeStep interpolation_value, EcsWorld& world, Ent
 
 				TransformF render_transform = world_transform->linearInterpolation(interpolation_value).toTransformF();
 
-				if (!this->use_frustum_culling || frustum.sphereTest(render_transform.getPosition(), mesh->mesh->frustum_sphere_radius))
+				if (frustum.sphereTest(render_transform.getPosition(), mesh->mesh->frustum_sphere_radius))
 				{
 					this->draw_call_count++;
 
@@ -161,7 +201,7 @@ void WorldRenderer::drawWorld(TimeStep interpolation_value, EcsWorld& world, Ent
 					this->command_buffer->drawIndexed(mesh->mesh->index_count);
 				}
 			}
-		}
+		}*/
 	}
 
 	this->backend->endMTCommandBuffer(this->mt_command_buffer);

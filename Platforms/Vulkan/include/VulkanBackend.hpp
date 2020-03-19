@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Genesis/Rendering/RenderingBackend.hpp"
-#include "Genesis/Rendering/VertexInputDescription.hpp"
+#include "Genesis/RenderingBackend/RenderingBackend.hpp"
+#include "Genesis/RenderingBackend/VertexInputDescription.hpp"
 #include "Genesis/Platform/Window.hpp"
 
 #include "VulkanInclude.hpp"
@@ -23,7 +23,7 @@
 #include "VulkanTexture.hpp"
 #include "VulkanCommanBuffer.hpp"
 
-#include "Genesis/Rendering/DelayedResourceDeleter.hpp"
+#include "Genesis/RenderingBackend/DelayedResourceDeleter.hpp"
 
 namespace Genesis
 {
