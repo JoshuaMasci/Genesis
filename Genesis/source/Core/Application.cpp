@@ -47,8 +47,10 @@ Application::~Application()
 void Application::run()
 {
 	//Fixed Timestep Stuff
-	const double SimulationStep = 1.0 / (60.0 * 3);
+	/*const double SimulationStep = 1.0 / (60.0 * 3);
 	const TimeStep MaxTimeStep = 1.0 / 60.0;
+	double accumulator = SimulationStep;*/
+
 
 	//Mode: Rendering and Simulation Linked
 	using clock = std::chrono::high_resolution_clock;
@@ -58,15 +60,13 @@ void Application::run()
 	auto time_last_frame = time_last;
 	size_t frames = 0;
 
-	double accumulator = SimulationStep;
-
 	while (this->isRunning())
 	{
 		GENESIS_PROFILE_BLOCK_START("Application_Loop");
 
 		time_current = clock::now();
 		TimeStep time_step = (TimeStep)std::chrono::duration_cast<std::chrono::duration<double>>(time_current - time_last).count();
-		if (time_step > MaxTimeStep)
+		/*if (time_step > MaxTimeStep)
 		{
 			time_step = MaxTimeStep;
 		}
@@ -81,9 +81,11 @@ void Application::run()
 			GENESIS_PROFILE_BLOCK_END();
 		}
 
-		TimeStep interpolation_value = accumulator / SimulationStep;
+		TimeStep interpolation_value = accumulator / SimulationStep;*/
 
-		this->render(interpolation_value);
+		this->update(time_step);
+
+		this->render(time_step);
 
 		time_last = time_current;
 

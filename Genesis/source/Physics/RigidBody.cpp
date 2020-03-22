@@ -5,31 +5,10 @@
 using namespace Genesis;
 using namespace Genesis::Physics;
 
-RigidBody::RigidBody(PhysicsWorld* physics_world, const TransformD& transform)
+RigidBody::RigidBody(reactphysics3d::RigidBody* rigid_body)
 {
-	this->physics_world = physics_world;
-	this->rigid_body = this->physics_world->addRigidBody(transform);
-}
-
-RigidBody::~RigidBody()
-{
-	this->physics_world->removeRigidBody(this->rigid_body);
-}
-
-void RigidBody::setType(RigidBodyType type)
-{
-	switch (type)
-	{
-	case RigidBodyType::Dynamic:
-		this->rigid_body->setType(reactphysics3d::BodyType::DYNAMIC);
-		return;
-	case RigidBodyType::Kinematic:
-		this->rigid_body->setType(reactphysics3d::BodyType::KINEMATIC);
-		return;
-	case RigidBodyType::Static:
-		this->rigid_body->setType(reactphysics3d::BodyType::STATIC);
-		return;
-	}
+	this->rigid_body = rigid_body;
+	this->rigid_body->setType(reactphysics3d::BodyType::DYNAMIC);
 }
 
 reactphysics3d::ProxyShape* RigidBody::addCollisionShape(reactphysics3d::CollisionShape* shape, const TransformD& transform, double mass)
@@ -97,6 +76,37 @@ void RigidBody::applyTorque(const vector3D& torque)
 {
 	this->rigid_body->applyTorque(toVec3R(torque));
 }
+
+
+
+StaticRigidBody::StaticRigidBody(reactphysics3d::RigidBody* rigid_body)
+{
+	this->rigid_body = rigid_body;
+	this->rigid_body->setType(reactphysics3d::BodyType::STATIC);
+}
+
+reactphysics3d::ProxyShape* StaticRigidBody::addCollisionShape(reactphysics3d::CollisionShape* shape, const TransformD& transform, double mass)
+{
+	return this->rigid_body->addCollisionShape(shape, reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())), (reactphysics3d::decimal)mass);
+}
+
+void StaticRigidBody::removeCollisionShape(reactphysics3d::ProxyShape* shape_proxy)
+{
+	this->rigid_body->removeCollisionShape(shape_proxy);
+}
+
+void StaticRigidBody::setTransform(const TransformD& transform)
+{
+	this->rigid_body->setTransform(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())));
+}
+
+TransformD StaticRigidBody::getTransform()
+{
+	const reactphysics3d::Transform& transform_r = this->rigid_body->getTransform();
+	return TransformD(toVec3D(transform_r.getPosition()), toQuatD(transform_r.getOrientation()));
+}
+
+
 
 ProxyShape::ProxyShape(reactphysics3d::ProxyShape* shape_proxy)
 {

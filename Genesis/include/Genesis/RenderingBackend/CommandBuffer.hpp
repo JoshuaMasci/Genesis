@@ -14,7 +14,8 @@ namespace Genesis
 		virtual void setPipelineSettings(PipelineSettings& settings) = 0;
 		virtual void setScissor(vector2I offset, vector2U extent) = 0;
 
-		virtual void setUniformBuffer(uint32_t set, uint32_t binding, DynamicBuffer buffer) = 0;
+		virtual void setUniformDynamicBuffer(uint32_t set, uint32_t binding, DynamicBuffer buffer) = 0;
+		virtual void setUniformStaticBuffer(uint32_t set, uint32_t binding, StaticBuffer buffer) = 0;
 		virtual void setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler sampler) = 0;
 		virtual void setUniformFramebuffer(uint32_t set, uint32_t binding, Framebuffer framebuffer, uint8_t framebuffer_image_index, Sampler sampler) = 0;
 

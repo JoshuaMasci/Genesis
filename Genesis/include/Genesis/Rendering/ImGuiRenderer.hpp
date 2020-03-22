@@ -13,8 +13,8 @@ namespace Genesis
 		ImGuiRenderer(RenderingBackend* backend, InputManager* input_manager);
 		~ImGuiRenderer();
 
-		virtual void startLayer() override;
-		virtual void endLayer() override;
+		void startLayer();
+		void endLayer();
 
 		virtual void ImGuiDraw() override;
 

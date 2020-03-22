@@ -7,20 +7,10 @@ namespace Genesis
 {
 	namespace Physics
 	{
-		enum class RigidBodyType
-		{
-			Dynamic,
-			Kinematic,
-			Static,
-		};
-
 		class RigidBody
 		{
 		public:
-			RigidBody(PhysicsWorld* physics_world, const TransformD& transform);
-			~RigidBody();
-
-			void setType(RigidBodyType type);
+			RigidBody(reactphysics3d::RigidBody* rigid_body);
 
 			reactphysics3d::ProxyShape* addCollisionShape(reactphysics3d::CollisionShape* shape, const TransformD& transform, double mass);
 			void removeCollisionShape(reactphysics3d::ProxyShape* shape_proxy);
@@ -44,7 +34,23 @@ namespace Genesis
 			inline reactphysics3d::RigidBody* get() { return this->rigid_body; };
 
 		private:
-			PhysicsWorld* physics_world;
+			reactphysics3d::RigidBody* rigid_body;
+		};
+
+		class StaticRigidBody
+		{
+		public:
+			StaticRigidBody(reactphysics3d::RigidBody* rigid_body);
+
+			reactphysics3d::ProxyShape* addCollisionShape(reactphysics3d::CollisionShape* shape, const TransformD& transform, double mass);
+			void removeCollisionShape(reactphysics3d::ProxyShape* shape_proxy);
+
+			void setTransform(const TransformD& transform);
+			TransformD getTransform();
+
+			inline reactphysics3d::RigidBody* get() { return this->rigid_body; };
+
+		private:
 			reactphysics3d::RigidBody* rigid_body;
 		};
 

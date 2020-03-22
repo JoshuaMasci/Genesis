@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/Transform.hpp"
 #include "Genesis/RenderingBackend/RenderingTypes.hpp"
 #include "Genesis/RenderingBackend/VertexInputDescription.hpp"
 

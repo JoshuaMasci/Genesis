@@ -160,3 +160,88 @@ Texture PngLoader::loadTexture(RenderingBackend * backend, string texture_file_p
 	return texture;
 	return nullptr;
 }
+
+/*#include <jsoncons/json.hpp>
+
+Material MaterialLoader::loadMaterial(RenderingBackend* backend, string material_file_path)
+{
+	jsoncons::json material_json = jsoncons::json::parse_file(material_file_path);
+
+	Material material;
+	MaterialValues values;
+
+	if (material_json.has_key("Maps"))
+	{
+		jsoncons::json json_maps = material_json.at("Maps");
+	
+		if (json_maps.has_key("albedo_map"))
+		{
+			values.has_albedo_map = true;
+			material.bindings.albedo_map = PngLoader::loadTexture(backend, json_maps["albedo_map"].as_string());
+		}
+		else
+		{
+			values.has_albedo_map = false;
+		}
+
+		if (json_maps.has_key("normal_map"))
+		{
+			values.has_normal_map = true;
+			material.bindings.normal_map = PngLoader::loadTexture(backend, json_maps["normal_map"].as_string());
+		}
+		else
+		{
+			values.has_normal_map = false;
+		}
+
+		if (json_maps.has_key("height_map"))
+		{
+			values.has_height_map = true;
+			material.bindings.height_map = PngLoader::loadTexture(backend, json_maps["height_map"].as_string());
+		}
+		else
+		{
+			values.has_height_map = false;
+		}
+
+		if (json_maps.has_key("metallic_map"))
+		{
+			values.has_metallic_map = true;
+			material.bindings.metallic_map = PngLoader::loadTexture(backend, json_maps["metallic_map"].as_string());
+		}
+		else
+		{
+			values.has_metallic_map = false;
+		}
+
+		if (json_maps.has_key("roughness_map"))
+		{
+			values.has_roughness_map = true;
+			material.bindings.roughness_map = PngLoader::loadTexture(backend, json_maps["roughness_map"].as_string());
+		}
+		else
+		{
+			values.has_roughness_map = false;
+		}
+
+		if (json_maps.has_key("occlusion_map"))
+		{
+			values.has_ambient_occlusion_map = true;
+			material.bindings.occlusion_map = PngLoader::loadTexture(backend, json_maps["occlusion_map"].as_string());
+		}
+		else
+		{
+			values.has_ambient_occlusion_map = false;
+		}
+	}
+
+	if (material_json.has_key("Values"))
+	{
+		jsoncons::json json_values = material_json.at("Values");
+		//values.albedo = 
+	}
+
+
+
+	return material;
+}*/

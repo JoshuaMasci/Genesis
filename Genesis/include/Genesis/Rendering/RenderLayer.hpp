@@ -14,9 +14,6 @@ namespace Genesis
 			this->backend = backend;
 		};
 
-		virtual void startLayer() = 0;
-		virtual void endLayer() = 0;
-
 		virtual void ImGuiDraw() = 0;
 
 		virtual Framebuffer getFramebuffer() = 0;

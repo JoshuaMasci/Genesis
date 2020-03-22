@@ -115,7 +115,8 @@ namespace Genesis
 		virtual void setShader(Shader shader) override;
 		virtual void setPipelineSettings(PipelineSettings & settings) override;
 		virtual void setScissor(vector2I offset, vector2U extent) override;
-		virtual void setUniformBuffer(uint32_t set, uint32_t binding, DynamicBuffer uniform_buffer) override;
+		virtual void setUniformDynamicBuffer(uint32_t set, uint32_t binding, DynamicBuffer uniform_buffer) override;
+		virtual void setUniformStaticBuffer(uint32_t set, uint32_t binding, StaticBuffer uniform_buffer) override;
 		virtual void setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler sampler) override;
 		virtual void setUniformFramebuffer(uint32_t set, uint32_t binding, Framebuffer framebuffer, uint8_t framebuffer_image_index, Sampler sampler) override;
 		virtual void setUniformConstant(void * data, uint32_t data_size) override;

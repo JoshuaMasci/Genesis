@@ -340,9 +340,15 @@ void VulkanCommandBuffer::setScissor(vector2I offset, vector2U extent)
 	this->command_buffer.setScissor(rect);
 }
 
-void VulkanCommandBuffer::setUniformBuffer(uint32_t set, uint32_t binding, DynamicBuffer uniform_buffer)
+void VulkanCommandBuffer::setUniformDynamicBuffer(uint32_t set, uint32_t binding, DynamicBuffer uniform_buffer)
 {
 	VulkanBuffer* uniform = ((VulkanDynamicBuffer*)uniform_buffer)->getCurrentBuffer();
+	this->command_buffer.setUniformBuffer(set, binding, uniform->get(), uniform->getSize());
+}
+
+void VulkanCommandBuffer::setUniformStaticBuffer(uint32_t set, uint32_t binding, StaticBuffer uniform_buffer)
+{
+	VulkanBuffer* uniform = ((VulkanBuffer*)uniform_buffer);
 	this->command_buffer.setUniformBuffer(set, binding, uniform->get(), uniform->getSize());
 }
 

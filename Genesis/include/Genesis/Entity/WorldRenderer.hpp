@@ -12,16 +12,12 @@ namespace Genesis
 		WorldRenderer(RenderingBackend* backend);
 		~WorldRenderer();
 
-		virtual void startLayer() override;
-		virtual void endLayer() override;
-
 		virtual void ImGuiDraw() override;
 
 		virtual inline Framebuffer getFramebuffer() { return this->framebuffer; };
 		virtual inline uint32_t getFramebufferIndex() { return 0; };
 
-		void drawWorld(JobSystem* job_system, TimeStep interpolation_value, EntitySystem::EntityRegistry& world, EntityHandle camera);
-
+		void drawWorld(World* world);
 
 		//Object Transform: Push Constant
 		struct ObjectTransformUniform
@@ -32,7 +28,6 @@ namespace Genesis
 
 	protected:
 		//TEMP
-		Texture temp_texture = nullptr;
 		Shader mesh_shader = nullptr;
 		//END TEMP
 
@@ -43,7 +38,7 @@ namespace Genesis
 		FramebufferLayout layout;
 
 		Framebuffer framebuffer;
-		MTCommandBuffer mt_command_buffer;
+		STCommandBuffer st_command_buffer;
 
 		//Scene: Binding Set 0
 		struct SceneUniform
@@ -56,7 +51,8 @@ namespace Genesis
 		DynamicBuffer scene_uniform_buffer;
 
 		//Material: Binding Set 1
-		DynamicBuffer material_buffer = nullptr;//Dynamic for now
+		Material material;
+
 		Texture empty_texture = nullptr;
 		Sampler basic_sampler = nullptr;
 	};
