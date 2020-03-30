@@ -15,7 +15,7 @@ layout(set = 1, binding = 0) uniform Material
 	//w = height_scale;
 	
 	bvec4 has_textures1;
-	bvec2 has_textures2;
+	bvec4 has_textures2;
 } material;
 
 layout(set = 1, binding = 1) uniform sampler2D albedo_map;
@@ -27,3 +27,6 @@ layout(set = 1, binding = 3) uniform sampler2D height_map;
 layout(set = 1, binding = 4) uniform sampler2D ambient_occlusion_map;
 layout(set = 1, binding = 5) uniform sampler2D metallic_map;
 layout(set = 1, binding = 6) uniform sampler2D roughness_map;
+
+layout(set = 1, binding = 7) uniform sampler2D extra1;
+layout(set = 1, binding = 8) uniform sampler2D extra2;

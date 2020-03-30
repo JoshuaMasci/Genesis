@@ -10,11 +10,18 @@ namespace Genesis
 	{
 	public:
 		MaterialPool(RenderingBackend* backend);
+		virtual ~MaterialPool();
+
+		inline DescriptorSetLayout getMaterialLayout() { return this->material_layout; };
 
 	protected:
 		virtual void loadResource(string key) override;
 		virtual void unloadResource(string key) override;
 
 		RenderingBackend* backend;
+
+		Texture empty_texture;
+		Sampler material_sampler;
+		DescriptorSetLayout material_layout;
 	};
 }

@@ -26,9 +26,9 @@ namespace Genesis
 		static Texture loadTexture(RenderingBackend* backend, string texture_file_path);
 	};
 
-	/*class MaterialLoader
+	class MaterialLoader
 	{
 	public:
 		static Material loadMaterial(RenderingBackend* backend, string material_file_path);
-	};*/
+	};
 }

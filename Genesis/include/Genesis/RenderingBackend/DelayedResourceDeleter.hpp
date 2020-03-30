@@ -1,9 +1,9 @@
 #pragma once
 
+#include "Genesis/Core/Types.hpp"
 #include "Genesis/Debug/Log.hpp"
 
 #include <stdint.h>
-#include <queue>
 
 namespace Genesis
 {
@@ -42,78 +42,47 @@ namespace Genesis
 
 		void addToQueue(T* object)
 		{
-			Resource<T> res = { object, this->delay_cycles };
-			if (this->queue_select)
-			{
-				this->queue_a.push(res);
-			}
-			else
-			{
-				this->queue_b.push(res);
-			}
+			this->resources.push_back({ object, this->delay_cycles });
 		};
 
 		void cycle()
 		{
-			std::queue<Resource<T>>* read_queue;
-			std::queue<Resource<T>>* write_queue;
-
-			if (this->queue_select)
+			for (size_t i = 0; i < this->resources.size(); i++)
 			{
-				read_queue = &this->queue_a;
-				write_queue = &this->queue_b;
-			}
-			else
-			{
-				read_queue = &this->queue_b;
-				write_queue = &this->queue_a;
-			}
-
-			while (!read_queue->empty())
-			{
-				Resource<T> res = read_queue->front();
-				read_queue->pop();
-				
-				res.cycles_remaining--;
-
-				if (res.cycles_remaining == 0)
+				if (this->resources[i].cycles_remaining == 0)
 				{
-					//Delete object
-					delete res.object;
+					delete this->resources[i].object;
+
+					size_t last_index = (this->resources.size() - 1);
+
+					//If is not in last index
+					if (i != last_index)
+					{
+						//Swap the last element with deleted element
+						this->resources[i] = this->resources[last_index];
+					}
+
+					//Remove last element
+					this->resources.pop_back();
 				}
 				else
 				{
-					write_queue->push(res);
+					this->resources[i].cycles_remaining--;
 				}
 			}
-
-			//Flip to next queue
-			this->queue_select = !this->queue_select;
 		};
 
 		void flushAll()
 		{
-			//Empties both queues
-			while (!this->queue_a.empty())
+			for (size_t i = 0; i < this->resources.size(); i++)
 			{
-				Resource<T> res = this->queue_a.front();
-				this->queue_a.pop();
-				delete res.object;
-			}
-
-			while (!this->queue_b.empty())
-			{
-				Resource<T> res = this->queue_b.front();
-				this->queue_b.pop();
-				delete res.object;
+				delete this->resources[i].object;
 			}
 		};
 
 	private:
 		uint8_t delay_cycles;
 
-		bool queue_select = true; //true means a, false means b
-		std::queue<Resource<T>> queue_a;
-		std::queue<Resource<T>> queue_b;
+		vector<Resource<T>> resources;
 	};
 }

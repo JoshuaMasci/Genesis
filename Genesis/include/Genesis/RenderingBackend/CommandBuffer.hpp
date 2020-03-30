@@ -1,7 +1,10 @@
 #pragma once
 
 #include "Genesis/Core/Types.hpp"
+#include "Genesis/Core/VectorTypes.hpp"
 #include "Genesis/RenderingBackend/RenderingTypes.hpp"
+#include "Genesis/RenderingBackend/Sampler.hpp"
+#include "Genesis/RenderingBackend/DescriptorSet.hpp"
 #include "Genesis/RenderingBackend/PipelineSettings.hpp"
 #include "Genesis/RenderingBackend/VertexInputDescription.hpp"
 
@@ -19,6 +22,7 @@ namespace Genesis
 		virtual void setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler sampler) = 0;
 		virtual void setUniformFramebuffer(uint32_t set, uint32_t binding, Framebuffer framebuffer, uint8_t framebuffer_image_index, Sampler sampler) = 0;
 
+		virtual void setDescriptorSet(uint32_t index, DescriptorSet descriptor_set) = 0;
 		virtual void setUniformConstant(void* data, uint32_t data_size) = 0;
 
 		virtual void setVertexBuffer(StaticBuffer vertex_buffer, VertexInputDescription& vertex_description) = 0;

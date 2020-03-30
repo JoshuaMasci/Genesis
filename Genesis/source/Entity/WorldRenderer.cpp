@@ -26,35 +26,10 @@ WorldRenderer::WorldRenderer(RenderingBackend* backend)
 	this->scene_uniform_buffer = this->backend->createDynamicBuffer(sizeof(SceneUniform), BufferUsage::Uniform_Buffer, MemoryType::CPU_Visable);
 
 	this->mesh_shader = ShaderLoader::loadShaderSingle(this->backend, "res/shaders_glsl/Model");
-
-	{
-		vector2U size(1, 1);
-		vector<uint8_t> data(size.x * size.y * 4, 0);
-		this->empty_texture = this->backend->createTexture(size, data.data(), sizeof(uint8_t) * data.size());
-
-		SamplerCreateInfo info = {};
-		this->basic_sampler = this->backend->createSampler(info);
-
-		//this->temp_texture = PngLoader::loadTexture(this->backend, "res/1K_Grid.png");
-
-		MaterialValues values;
-		values.albedo = vector4F(1.0f, 0.1f, 0.7f, 1.0f);
-		values.metallic = 0.0f;
-		values.roughness = 0.0f;
-		values.ambient_occlusion = 0.0f;
-		values.height_scale = 0.0f;
-		this->material = Material::createMaterial(this->backend, values, this->empty_texture);
-	}
 }
 
 WorldRenderer::~WorldRenderer()
 {
-	{
-		this->backend->destroyStaticBuffer(this->material.bindings.values);
-		this->backend->destroyTexture(this->empty_texture);
-		//this->backend->destroyTexture(this->temp_texture);
-	}
-
 	this->backend->destroyShader(this->mesh_shader);
 
 	this->backend->destroyFramebuffer(this->framebuffer);
@@ -115,21 +90,13 @@ void WorldRenderer::drawWorld(World* world)
 			command_buffer->setPipelineSettings(pipeline_settings);
 			command_buffer->setShader(this->mesh_shader);
 
-			command_buffer->setUniformDynamicBuffer(0, 0, this->scene_uniform_buffer);
-
-			//Material
-			command_buffer->setUniformStaticBuffer(1, 0, this->material.bindings.values);
-			command_buffer->setUniformTexture(1, 1, this->empty_texture, this->basic_sampler);
-			command_buffer->setUniformTexture(1, 2, this->empty_texture, this->basic_sampler);
-			command_buffer->setUniformTexture(1, 3, this->empty_texture, this->basic_sampler);
-			command_buffer->setUniformTexture(1, 4, this->empty_texture, this->basic_sampler);
-			command_buffer->setUniformTexture(1, 5, this->empty_texture, this->basic_sampler);
-			command_buffer->setUniformTexture(1, 6, this->empty_texture, this->basic_sampler);
+			command_buffer->setUniformDynamicBuffer(0, 0, this->scene_uniform_buffer);			
 		}
 
 		Frustum frustum(view_projection_matrix);
 
 		auto& view = world->getEntityRegistry()->view<MeshComponent, TransformD>();
+		Material* material = nullptr;
 		for (EntityHandle entity : view)
 		{
 			MeshComponent& mesh_component = view.get<MeshComponent>(entity);
@@ -137,7 +104,7 @@ void WorldRenderer::drawWorld(World* world)
 
 			if (frustum.sphereTest(render_transform.getPosition(), mesh_component.mesh->frustum_sphere_radius))
 			{
-				this->draw_call_count++;
+				command_buffer->setDescriptorSet(1, mesh_component.material->material_descriptor);
 
 				ObjectTransformUniform matrices = {};
 				matrices.model_matrix = render_transform.getModelMatrix();
@@ -147,6 +114,8 @@ void WorldRenderer::drawWorld(World* world)
 
 				command_buffer->setVertexBuffer(mesh_component.mesh->vertex_buffer, *mesh_component.mesh->vertex_description);
 				command_buffer->setIndexBuffer(mesh_component.mesh->index_buffer, mesh_component.mesh->index_type);
+
+				this->draw_call_count++;
 				command_buffer->drawIndexed(mesh_component.mesh->index_count);
 			}
 		}

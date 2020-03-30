@@ -107,6 +107,11 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 	device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 	this->device = new VulkanDevice(VulkanPhysicalDevicePicker::pickDevice(this->instance, this->surface), this->surface, device_extensions, layers);
 
+	uint32_t count;
+	vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr); //get number of extensions
+	std::vector<VkExtensionProperties> list_extensions(count);
+	vkEnumerateInstanceExtensionProperties(nullptr, &count, list_extensions.data());
+
 	vector2U window_size = this->window->getWindowSize();
 	this->swapchain = new VulkanSwapchain(this->device, { window_size.x, window_size.y }, this->surface);
 
@@ -178,7 +183,7 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 		this->frames[i].frame_done_fence = this->device->createFence();
 	}
 
-	const uint8_t delay_cycles = (uint8_t)this->FRAME_COUNT + 1;
+	const uint8_t delay_cycles = (uint8_t)this->FRAME_COUNT;
 	this->buffer_deleter = new DelayedResourceDeleter<VulkanBuffer>(delay_cycles);
 	this->dynamic_deleter = new DelayedResourceDeleter<VulkanDynamicBuffer>(delay_cycles);
 	this->texture_deleter = new DelayedResourceDeleter<VulkanTexture>(delay_cycles);
@@ -186,6 +191,7 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 	this->frame_deleter = new DelayedResourceDeleter<VulkanFramebufferSet>(delay_cycles);
 	this->st_command_buffer_deleter = new DelayedResourceDeleter<VulkanCommandBufferSet>(delay_cycles);
 	this->mt_command_buffer_deleter = new DelayedResourceDeleter<VulkanCommandBufferMultithreadSet>(delay_cycles);
+	this->descriptor_set_deleter = new DelayedResourceDeleter<VulkanDescriptorSet>(delay_cycles);
 }
 
 VulkanBackend::~VulkanBackend()
@@ -196,6 +202,7 @@ VulkanBackend::~VulkanBackend()
 	delete this->shader_deleter;
 	delete this->frame_deleter;
 	delete this->mt_command_buffer_deleter;
+	delete this->descriptor_set_deleter;
 
 	for (size_t i = 0; i < this->frames.size(); i++)
 	{
@@ -371,6 +378,7 @@ void VulkanBackend::endFrame()
 	this->frame_deleter->cycle();
 	this->st_command_buffer_deleter->cycle();
 	this->mt_command_buffer_deleter->cycle();
+	this->descriptor_set_deleter->cycle();
 
 	this->pipeline_pool->update();
 }
@@ -397,11 +405,12 @@ DescriptorSetLayout VulkanBackend::createDescriptorSetLayout(const DescriptorSet
 
 DescriptorSet VulkanBackend::createDescriptorSet(const DescriptorSetCreateInfo& create_info)
 {
-	return (DescriptorSet) new VulkanDescriptorSet(this->descriptor_pool, create_info);
+	return (DescriptorSet) new VulkanDescriptorSet(this->device->get(), this->descriptor_pool, create_info);
 }
 
 void VulkanBackend::destroyDescriptorSet(DescriptorSet descriptor_set)
 {
+	this->descriptor_set_deleter->addToQueue((VulkanDescriptorSet*)descriptor_set);
 }
 
 PipelineLayout VulkanBackend::createPipelineLayout(const PipelineLayoutCreateInfo& create_info)

@@ -36,6 +36,7 @@ namespace Genesis
 				if (this->resources[key].using_count == 0)
 				{
 					this->unloadResource(key);
+					this->resources.erase(key);
 				}
 			}
 			else

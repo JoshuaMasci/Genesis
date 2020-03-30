@@ -45,14 +45,14 @@ namespace Genesis
 		Storage_Buffer
 	};
 
-	enum class ShaderStageBits
+	typedef uint32_t ShaderStage;
+	enum class ShaderStageBits : ShaderStage
 	{
 		VERTEX = 0x00000001,
 		GEOMETRY = 0x00000008,
 		FRAGMENT = 0x00000010,
 		COMPUTE = 0x00000020,
 	};
-	typedef uint32_t ShaderStage;
 
 	typedef void* StaticBuffer;
 	typedef void* DynamicBuffer;
@@ -70,4 +70,8 @@ namespace Genesis
 		uint32_t* code = nullptr;
 		uint32_t code_size = 0;
 	};
+
+	//Unsided Types
+	typedef void* FramebufferAttachement;
+	typedef void* Buffer;
 }

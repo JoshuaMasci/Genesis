@@ -15,6 +15,14 @@ MeshPool::MeshPool(RenderingBackend* backend)
 	this->vertex_input = this->backend->createVertexInputDescription(vertex_input_create_info);
 }
 
+MeshPool::~MeshPool()
+{
+	for (auto resource : this->resources)
+	{
+		this->unloadResource(resource.first);
+	}
+}
+
 void MeshPool::loadResource(string key)
 {
 	Mesh mesh;
@@ -31,5 +39,4 @@ void MeshPool::unloadResource(string key)
 	ResourceInternal resource = this->resources[key];
 	this->backend->destroyStaticBuffer(resource.resource.vertex_buffer);
 	this->backend->destroyStaticBuffer(resource.resource.index_buffer);
-	this->resources.erase(key);
 }

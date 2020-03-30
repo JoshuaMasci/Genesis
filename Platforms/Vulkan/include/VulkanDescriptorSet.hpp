@@ -10,7 +10,7 @@ namespace Genesis
 	class VulkanDescriptorSet
 	{
 	public:
-		VulkanDescriptorSet(VulkanDescriptorPool2* descriptor_pool, const DescriptorSetCreateInfo& create_info);
+		VulkanDescriptorSet(VkDevice device, VulkanDescriptorPool2* descriptor_pool, const DescriptorSetCreateInfo& create_info);
 		~VulkanDescriptorSet();
 
 		inline VkDescriptorSet get() { return this->descriptor_set; };

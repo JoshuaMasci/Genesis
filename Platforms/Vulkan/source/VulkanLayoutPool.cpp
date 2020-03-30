@@ -64,6 +64,8 @@ VkDescriptorType getDescriptorType(BindingType type)
 		return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 	case BindingType::Storage_Image:
 		return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+	case BindingType::Combined_Image_Sampler:
+		return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 	case BindingType::Uniform_Buffer:
 		return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	case BindingType::Storage_Buffer:
@@ -77,19 +79,19 @@ VkDescriptorType getDescriptorType(BindingType type)
 VkShaderStageFlags getShaderStageFlags(ShaderStage stage)
 {
 	VkShaderStageFlags shader_stage = 0;
-	if (stage && (ShaderStage)ShaderStageBits::VERTEX)
+	if ((stage & (ShaderStage)ShaderStageBits::VERTEX) != 0)
 	{
 		shader_stage |= VK_SHADER_STAGE_VERTEX_BIT;
 	}
-	if (stage && (ShaderStage)ShaderStageBits::FRAGMENT)
+	if ((stage & (ShaderStage)ShaderStageBits::FRAGMENT) != 0)
 	{
 		shader_stage |= VK_SHADER_STAGE_FRAGMENT_BIT;
 	}
-	if (stage && (ShaderStage)ShaderStageBits::GEOMETRY)
+	if ((stage & (ShaderStage)ShaderStageBits::GEOMETRY) != 0)
 	{
 		shader_stage |= VK_SHADER_STAGE_GEOMETRY_BIT;
 	}
-	if (stage && (ShaderStage)ShaderStageBits::COMPUTE)
+	if ((stage & (ShaderStage)ShaderStageBits::COMPUTE) != 0)
 	{
 		shader_stage |= VK_SHADER_STAGE_COMPUTE_BIT;
 	}

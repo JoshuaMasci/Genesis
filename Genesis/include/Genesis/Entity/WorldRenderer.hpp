@@ -19,12 +19,7 @@ namespace Genesis
 
 		void drawWorld(World* world);
 
-		//Object Transform: Push Constant
-		struct ObjectTransformUniform
-		{
-			matrix4F model_matrix;
-			glm::mat3x4 normal_matrix;
-		};
+		//Framebuffer drawWorld(World* world, EntityHandle camera_entity, );
 
 	protected:
 		//TEMP
@@ -50,10 +45,12 @@ namespace Genesis
 		SceneUniform scene_uniform;
 		DynamicBuffer scene_uniform_buffer;
 
-		//Material: Binding Set 1
-		Material material;
 
-		Texture empty_texture = nullptr;
-		Sampler basic_sampler = nullptr;
+		//Object Transform: Push Constant
+		struct ObjectTransformUniform
+		{
+			matrix4F model_matrix;
+			glm::mat3x4 normal_matrix;
+		};
 	};
 }

@@ -161,87 +161,48 @@ Texture PngLoader::loadTexture(RenderingBackend * backend, string texture_file_p
 	return nullptr;
 }
 
-/*#include <jsoncons/json.hpp>
+#include <fstream>
 
 Material MaterialLoader::loadMaterial(RenderingBackend* backend, string material_file_path)
 {
-	jsoncons::json material_json = jsoncons::json::parse_file(material_file_path);
+	std::fstream file_stream;
+	file_stream.open(material_file_path, std::ios::in);
 
 	Material material;
-	MaterialValues values;
+	MaterialValuesPacked packed_values;
+	string value;
 
-	if (material_json.has_key("Maps"))
+	//Albedo
+	for (uint8_t i = 0; i < 4; i++)
 	{
-		jsoncons::json json_maps = material_json.at("Maps");
-	
-		if (json_maps.has_key("albedo_map"))
-		{
-			values.has_albedo_map = true;
-			material.bindings.albedo_map = PngLoader::loadTexture(backend, json_maps["albedo_map"].as_string());
-		}
-		else
-		{
-			values.has_albedo_map = false;
-		}
+		std::getline(file_stream, value, ',');
+		packed_values.albedo[i] = std::stof(value);
+	}
 
-		if (json_maps.has_key("normal_map"))
-		{
-			values.has_normal_map = true;
-			material.bindings.normal_map = PngLoader::loadTexture(backend, json_maps["normal_map"].as_string());
-		}
-		else
-		{
-			values.has_normal_map = false;
-		}
+	//PBR
+	for (uint8_t i = 0; i < 4; i++)
+	{
+		std::getline(file_stream, value, ',');
+		packed_values.pbr_values[i] = std::stof(value);
+	}
 
-		if (json_maps.has_key("height_map"))
+	//Textures
+	for (size_t i = 0; i < Material::TextureCount; i++)
+	{
+		std::getline(file_stream, value, ',');
+		if (value != "")
 		{
-			values.has_height_map = true;
-			material.bindings.height_map = PngLoader::loadTexture(backend, json_maps["height_map"].as_string());
+			packed_values.has_textures[i] = true;
+			material.textures[i] = PngLoader::loadTexture(backend, value);
 		}
 		else
 		{
-			values.has_height_map = false;
-		}
-
-		if (json_maps.has_key("metallic_map"))
-		{
-			values.has_metallic_map = true;
-			material.bindings.metallic_map = PngLoader::loadTexture(backend, json_maps["metallic_map"].as_string());
-		}
-		else
-		{
-			values.has_metallic_map = false;
-		}
-
-		if (json_maps.has_key("roughness_map"))
-		{
-			values.has_roughness_map = true;
-			material.bindings.roughness_map = PngLoader::loadTexture(backend, json_maps["roughness_map"].as_string());
-		}
-		else
-		{
-			values.has_roughness_map = false;
-		}
-
-		if (json_maps.has_key("occlusion_map"))
-		{
-			values.has_ambient_occlusion_map = true;
-			material.bindings.occlusion_map = PngLoader::loadTexture(backend, json_maps["occlusion_map"].as_string());
-		}
-		else
-		{
-			values.has_ambient_occlusion_map = false;
+			packed_values.has_textures[i] = false;
+			material.textures[i] = false;
 		}
 	}
 
-	if (material_json.has_key("Values"))
-	{
-		jsoncons::json json_values = material_json.at("Values");
-		//values.albedo = 
-	}
-
-
+	material.values = backend->createStaticBuffer(&packed_values, sizeof(MaterialValuesPacked), BufferUsage::Uniform_Buffer, MemoryType::GPU_Only);
 
 	return material;
-}*/
+}

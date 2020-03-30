@@ -198,6 +198,14 @@ void VulkanCommandBufferInternal::setUniformTexture(uint32_t set, uint32_t bindi
 	this->current_descriptor_sets[set].has_changed = true;
 }
 
+void VulkanCommandBufferInternal::setDescriptorSet(uint32_t index, VkDescriptorSet descriptor_set)
+{
+	GENESIS_ENGINE_ASSERT_ERROR((index < this->current_descriptor_sets.size()), "Descriptor Set index out of range");
+
+	this->current_descriptor_sets[index].last_set = descriptor_set;
+	this->current_descriptor_sets[index].has_changed = false;
+}
+
 void VulkanCommandBufferInternal::setUniformConstant(void* data, uint32_t data_size)
 {
 	vkCmdPushConstants(this->command_buffer, this->current_pipeline_layout, VK_SHADER_STAGE_ALL, 0, data_size, data); //TODO use specific stage flags
@@ -363,6 +371,11 @@ void VulkanCommandBuffer::setUniformFramebuffer(uint32_t set, uint32_t binding, 
 
 	VkImageView image_view = vulkan_framebuffer->framebuffers[this->command_buffer.getFrameIndex()]->getImageView(framebuffer_image_index);
 	this->command_buffer.setUniformTexture(set, binding, image_view, (VkSampler)sampler);
+}
+
+void VulkanCommandBuffer::setDescriptorSet(uint32_t index, DescriptorSet descriptor_set)
+{
+	this->command_buffer.setDescriptorSet(index, ((VulkanDescriptorSet*)descriptor_set)->get());
 }
 
 void VulkanCommandBuffer::setUniformConstant(void* data, uint32_t data_size)

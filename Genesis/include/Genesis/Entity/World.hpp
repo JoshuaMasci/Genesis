@@ -3,6 +3,7 @@
 #include "Genesis/Core/Application.hpp"
 #include "Genesis/Physics/PhysicsWorld.hpp"
 #include "Genesis/Resource/MeshPool.hpp"
+#include "Genesis/Resource/MaterialPool.hpp"
 #include "Genesis/Entity/EntitySystem.hpp"
 
 namespace Genesis
@@ -10,7 +11,7 @@ namespace Genesis
 	class World
 	{
 	public:
-		World(MeshPool* mesh_pool);
+		World(MeshPool* mesh_pool, MaterialPool* material_pool);
 		~World();
 
 		void runSimulation(Application* application, TimeStep time_step);
@@ -20,6 +21,7 @@ namespace Genesis
 
 	private:
 		MeshPool* mesh_pool;
+		MaterialPool* material_pool;
 
 		EntityRegistry* entity_registry = nullptr;
 		Physics::PhysicsWorld* physics_world = nullptr;

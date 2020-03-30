@@ -6,6 +6,7 @@
 #include "VulkanDescriptorPool.hpp"
 #include "VulkanSamplerPool.hpp"
 #include "VulkanTransferBuffer.hpp"
+#include "VulkanDescriptorSet.hpp"
 
 #include "VulkanFramebuffer.hpp"
 
@@ -33,6 +34,8 @@ namespace Genesis
 
 		void setUniformBuffer(uint32_t set, uint32_t binding, VkBuffer buffer, uint64_t buffer_size);
 		void setUniformTexture(uint32_t set, uint32_t binding, VkImageView texture, VkSampler sampler);
+
+		void setDescriptorSet(uint32_t index, VkDescriptorSet descriptor_set);
 		void setUniformConstant(void* data, uint32_t data_size);
 
 		void setVertexBuffer(VkBuffer vertex_buffer, VulkanVertexInputDescription* vertex_description);
@@ -119,6 +122,8 @@ namespace Genesis
 		virtual void setUniformStaticBuffer(uint32_t set, uint32_t binding, StaticBuffer uniform_buffer) override;
 		virtual void setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler sampler) override;
 		virtual void setUniformFramebuffer(uint32_t set, uint32_t binding, Framebuffer framebuffer, uint8_t framebuffer_image_index, Sampler sampler) override;
+
+		virtual void setDescriptorSet(uint32_t index, DescriptorSet descriptor_set) override;
 		virtual void setUniformConstant(void * data, uint32_t data_size) override;
 		virtual void setVertexBuffer(StaticBuffer vertex_buffer, VertexInputDescription& vertex_description) override;
 		virtual void setIndexBuffer(StaticBuffer index_buffer, IndexType type) override;

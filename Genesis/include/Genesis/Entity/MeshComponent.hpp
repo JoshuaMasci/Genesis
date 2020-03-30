@@ -7,13 +7,12 @@ namespace Genesis
 {
 	struct MeshComponent
 	{
-		MeshComponent(string file, Mesh* mesh)
+		MeshComponent(Mesh* mesh, Material* material)
 		{
-			this->mesh_file = file;
 			this->mesh = mesh;
+			this->material = material;
 		};
-
-		string mesh_file;
 		Mesh* mesh;
+		Material* material;
 	};
 }

@@ -14,9 +14,11 @@ SandboxApplication::SandboxApplication()
 	this->ui_renderer = new Genesis::ImGuiRenderer(this->rendering_backend, &this->input_manager);
 
 	this->mesh_pool = new Genesis::MeshPool(this->rendering_backend);
+	this->material_pool = new Genesis::MaterialPool(this->rendering_backend);
+
 	this->world_renderer = new Genesis::WorldRenderer(this->rendering_backend);
 
-	this->world = new Genesis::World(this->mesh_pool);
+	this->world = new Genesis::World(this->mesh_pool, this->material_pool);
 }
 
 SandboxApplication::~SandboxApplication()
@@ -24,6 +26,7 @@ SandboxApplication::~SandboxApplication()
 	delete this->world;
 	delete this->world_renderer;
 	delete this->mesh_pool;
+	delete this->material_pool;
 }
 
 void SandboxApplication::update(Genesis::TimeStep time_step)

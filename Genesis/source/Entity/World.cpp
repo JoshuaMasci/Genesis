@@ -29,9 +29,12 @@ struct CharacterController
 	double sideways_input;
 };
 
-World::World(MeshPool* mesh_pool)
+#include "Genesis/Rendering/ResourceLoaders.hpp"
+
+World::World(MeshPool* mesh_pool, MaterialPool* material_pool)
 {
 	this->mesh_pool = mesh_pool;
+	this->material_pool = material_pool;
 
 	this->entity_registry = new EntityRegistry();
 	this->physics_world = new PhysicsWorld(vector3D(0.0, -9.8, 0.0));
@@ -46,11 +49,11 @@ World::World(MeshPool* mesh_pool)
 	{
 		EntityHandle entity = this->entity_registry->create();
 		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, 0.0, 0.0));
-		this->entity_registry->assign<MeshComponent>(entity, "res/sphere.obj", this->mesh_pool->getResource("res/sphere.obj"));	
+		this->entity_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource("res/sphere.obj"), this->material_pool->getResource("res/materials/red.csv"));
 		this->entity_registry->assign<RigidBody>(entity, this->physics_world->addRigidBody(this->entity_registry->get<TransformD>(entity)));
 		this->entity_registry->assign<ProxyShape>(entity, this->entity_registry->get<RigidBody>(entity).addCollisionShape(new reactphysics3d::SphereShape(1.0f), TransformD(), 1.0f));
 
-		this->entity_registry->assign<CharacterController>(entity, 5.0);
+		//this->entity_registry->assign<CharacterController>(entity, 5.0);
 
 		this->entity_registry->get<RigidBody>(entity).get()->setAngularDamping(1.0);
 	}
@@ -58,21 +61,28 @@ World::World(MeshPool* mesh_pool)
 	{
 		EntityHandle entity = this->entity_registry->create();
 		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, -5.0, 0.0));
-		this->entity_registry->assign<MeshComponent>(entity, "res/ground.obj", this->mesh_pool->getResource("res/ground.obj"));
+		this->entity_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource("res/ground.obj"), this->material_pool->getResource("res/materials/grid.csv"));
 		this->entity_registry->assign<StaticRigidBody>(entity, this->physics_world->addRigidBody(this->entity_registry->get<TransformD>(entity)));
 		this->entity_registry->assign<ProxyShape>(entity, this->entity_registry->get<StaticRigidBody>(entity).addCollisionShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(16.0, 1.0, 16.0)), TransformD(), 0.0f));
+	}
+
+	{
+		EntityHandle entity = this->entity_registry->create();
+		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, -5.0, 10.0));
+		this->entity_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource("res/portal.obj"), this->material_pool->getResource("res/materials/blue.csv"));
+		this->entity_registry->assign<StaticRigidBody>(entity, this->physics_world->addRigidBody(this->entity_registry->get<TransformD>(entity)));
+		this->entity_registry->assign<ProxyShape>(entity, this->entity_registry->get<StaticRigidBody>(entity).addCollisionShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(2.0, 3.0, 0.5)), TransformD(vector3D(0.0, 1.5, 0.0)), 0.0f));
+	}
+	{
+		EntityHandle entity = this->entity_registry->create();
+		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, -5.0, 10.0));
+		this->entity_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource("res/portal_inside.obj"), this->material_pool->getResource("res/materials/white.csv"));
 	}
 
 }
 
 World::~World()
 {
-	auto& view = this->entity_registry->view<MeshComponent>();
-	for (EntityHandle entity : view)
-	{
-		this->mesh_pool->freeResource(view.get<MeshComponent>(entity).mesh_file);
-	}
-
 	delete this->entity_registry;
 	delete this->physics_world;
 }

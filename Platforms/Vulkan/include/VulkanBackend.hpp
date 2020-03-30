@@ -18,6 +18,7 @@
 #include "VulkanLayoutPool.hpp"
 #include "VulkanSamplerPool.hpp"
 #include "VulkanVertexInputPool.hpp"
+#include "VulkanDescriptorSet.hpp"
 
 #include "VulkanBuffer.hpp"
 #include "VulkanTexture.hpp"
@@ -108,6 +109,8 @@ namespace Genesis
 			VulkanCommandBuffer* command_buffer = nullptr;
 			VkSemaphore command_buffer_done_semaphore = VK_NULL_HANDLE;
 			VkFence frame_done_fence = VK_NULL_HANDLE;
+
+			VulkanPreFrameDescriptorPool* descriptor_pool = nullptr;
 		};
 		List<Frame> frames;
 
@@ -142,5 +145,6 @@ namespace Genesis
 		DelayedResourceDeleter<VulkanFramebufferSet>* frame_deleter = nullptr;
 		DelayedResourceDeleter<VulkanCommandBufferSet>* st_command_buffer_deleter = nullptr;
 		DelayedResourceDeleter<VulkanCommandBufferMultithreadSet>* mt_command_buffer_deleter = nullptr;
+		DelayedResourceDeleter<VulkanDescriptorSet>* descriptor_set_deleter = nullptr;
 	};
 }

@@ -48,4 +48,19 @@ namespace Genesis
 		VkDevice device;
 		VkDescriptorPool pool;
 	};
+
+	class VulkanPreFrameDescriptorPool
+	{
+	public:
+		VulkanPreFrameDescriptorPool(VkDevice device, uint32_t max_sets, vector<VkDescriptorPoolSize> types);
+		~VulkanPreFrameDescriptorPool();
+
+		VkDescriptorSet createDescriptorSet(VkDescriptorSetLayout layout);
+
+		void resetPool();
+
+	private:
+		VkDevice device;
+		VkDescriptorPool pool;
+	};
 }

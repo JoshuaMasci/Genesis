@@ -10,6 +10,7 @@ namespace Genesis
 	{
 	public:
 		MeshPool(RenderingBackend* backend);
+		virtual ~MeshPool();
 
 	protected:
 		virtual void loadResource(string key) override;

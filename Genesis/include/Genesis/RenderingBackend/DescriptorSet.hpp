@@ -2,6 +2,7 @@
 
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/RenderingBackend/RenderingTypes.hpp"
+#include "Genesis/RenderingBackend/Sampler.hpp"
 
 namespace Genesis
 {
@@ -13,6 +14,7 @@ namespace Genesis
 		Sampler,
 		Sampled_Image,
 		Storage_Image,
+		Combined_Image_Sampler,
 		Uniform_Buffer,
 		Storage_Buffer
 	};
@@ -32,7 +34,9 @@ namespace Genesis
 	struct DescriptorSetBinding
 	{
 		BindingType type;
-		void* handle;
+		Sampler sampler;
+		Texture texture;
+		StaticBuffer buffer;
 	};
 
 	struct DescriptorSetCreateInfo
