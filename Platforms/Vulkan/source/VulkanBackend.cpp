@@ -7,6 +7,8 @@
 
 #include "VulkanPhysicalDevicePicker.hpp"
 
+#include "Genesis/FrameGraph/FrameGraph.hpp"
+
 using namespace Genesis;
 
 inline VkBufferUsageFlags getBufferUseage(BufferUsage usage, MemoryType memory_usage)
@@ -127,26 +129,26 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 	this->transfer_pool = new VulkanCommandPool(this->device->get(), this->device->getGraphicsFamilyIndex(), VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
 	//Descriptor Pools
-	this->descriptor_pool = new VulkanDescriptorPool2(this->device->get(), 8000,
+	this->descriptor_pool = new VulkanDescriptorPool2(this->device->get(), 20,
 		{
-			{VK_DESCRIPTOR_TYPE_SAMPLER, 8000},
-			{VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 8000},
-			{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 8000},
-			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000},
-			{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 8000}
+			{VK_DESCRIPTOR_TYPE_SAMPLER, 20},
+			{VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 20},
+			{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 20},
+			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 20},
+			{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 20}
 		});
 
 	this->descriptor_pools.resize(this->THREAD_COUNT);
 	for (size_t i = 0; i < this->descriptor_pools.size(); i++)
 	{
 		this->descriptor_pools[i] =
-			new VulkanDescriptorPool(this->device->get(), this->FRAME_COUNT, 8000,
+			new VulkanDescriptorPool(this->device->get(), this->FRAME_COUNT, 20,
 				{
-					{VK_DESCRIPTOR_TYPE_SAMPLER, 8000},
-					{VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 8000},
-					{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 8000},
-					{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 8000},
-					{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 8000}
+					{VK_DESCRIPTOR_TYPE_SAMPLER, 20},
+					{VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 20},
+					{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 20},
+					{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 20},
+					{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 20}
 				});
 	}
 
@@ -187,10 +189,7 @@ VulkanBackend::VulkanBackend(Window* window, uint32_t number_of_threads)
 	this->buffer_deleter = new DelayedResourceDeleter<VulkanBuffer>(delay_cycles);
 	this->dynamic_deleter = new DelayedResourceDeleter<VulkanDynamicBuffer>(delay_cycles);
 	this->texture_deleter = new DelayedResourceDeleter<VulkanTexture>(delay_cycles);
-	this->shader_deleter = new DelayedResourceDeleter<VulkanShader>(delay_cycles);
-	this->frame_deleter = new DelayedResourceDeleter<VulkanFramebufferSet>(delay_cycles);
-	this->st_command_buffer_deleter = new DelayedResourceDeleter<VulkanCommandBufferSet>(delay_cycles);
-	this->mt_command_buffer_deleter = new DelayedResourceDeleter<VulkanCommandBufferMultithreadSet>(delay_cycles);
+
 	this->descriptor_set_deleter = new DelayedResourceDeleter<VulkanDescriptorSet>(delay_cycles);
 }
 
@@ -199,9 +198,7 @@ VulkanBackend::~VulkanBackend()
 	delete this->buffer_deleter;
 	delete this->dynamic_deleter;
 	delete this->texture_deleter;
-	delete this->shader_deleter;
-	delete this->frame_deleter;
-	delete this->mt_command_buffer_deleter;
+
 	delete this->descriptor_set_deleter;
 
 	for (size_t i = 0; i < this->frames.size(); i++)
@@ -296,7 +293,7 @@ CommandBufferInterface* VulkanBackend::beginFrame()
 		this->descriptor_pools[i]->resetFrame(this->frame_index);
 	}
 
-	List<VkClearValue> clear_values(1);
+	vector<VkClearValue> clear_values(1);
 	clear_values[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
 	VkRect2D render_area = {};
 	render_area.offset = { 0, 0 };
@@ -319,8 +316,8 @@ void VulkanBackend::endFrame()
 	//Excute pending transfers
 	bool has_transfers = this->transfer_buffers[this->frame_index]->SubmitTransfers(this->device->getTransferQueue());
 
-	List<VkSemaphore> wait_semaphores(1);
-	List<VkPipelineStageFlags> wait_stages(1);
+	vector<VkSemaphore> wait_semaphores(1);
+	vector<VkPipelineStageFlags> wait_stages(1);
 
 	wait_semaphores[0] = this->frames[this->frame_index].image_ready_semaphore;
 	wait_stages[0] = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
@@ -334,7 +331,7 @@ void VulkanBackend::endFrame()
 		wait_stages[1] = VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
 	}
 
-	List<VkSemaphore> signal_semaphores(1);
+	vector<VkSemaphore> signal_semaphores(1);
 	signal_semaphores[0] = this->frames[this->frame_index].command_buffer_done_semaphore;
 
 	//Create submition info
@@ -374,10 +371,7 @@ void VulkanBackend::endFrame()
 	this->buffer_deleter->cycle();
 	this->dynamic_deleter->cycle();
 	this->texture_deleter->cycle();
-	this->shader_deleter->cycle();
-	this->frame_deleter->cycle();
-	this->st_command_buffer_deleter->cycle();
-	this->mt_command_buffer_deleter->cycle();
+
 	this->descriptor_set_deleter->cycle();
 
 	this->pipeline_pool->update();
@@ -386,11 +380,6 @@ void VulkanBackend::endFrame()
 Sampler VulkanBackend::createSampler(const SamplerCreateInfo& create_info)
 {
 	return (Sampler)this->sampler_pool->getSampler(create_info);
-}
-
-VertexInputDescription VulkanBackend::createVertexInputDescription(vector<VertexElementType> input_elements)
-{
-	return (VertexInputDescription)this->vertex_input_pool->getVertexInputDescription(input_elements);
 }
 
 VertexInputDescription VulkanBackend::createVertexInputDescription(const VertexInputDescriptionCreateInfo& create_info)
@@ -416,6 +405,13 @@ void VulkanBackend::destroyDescriptorSet(DescriptorSet descriptor_set)
 PipelineLayout VulkanBackend::createPipelineLayout(const PipelineLayoutCreateInfo& create_info)
 {
 	return (PipelineLayout)this->layout_pool->getPipelineLayout(create_info);
+}
+
+RenderPass VulkanBackend::createRenderPass(const RenderPassCreateInfo& create_info)
+{
+
+
+	return RenderPass();
 }
 
 ShaderModule VulkanBackend::createShaderModule(ShaderModuleCreateInfo& create_info)
@@ -501,94 +497,115 @@ void VulkanBackend::destroyTexture(Texture texture)
 	this->texture_deleter->addToQueue((VulkanTexture*)texture);
 }
 
-Shader VulkanBackend::createShader(string& vert_data, string& frag_data)
+void VulkanBackend::submitFrameGraph(FrameGraph* render_graph)
 {
-	return new VulkanShader(this->device->get(), vert_data, frag_data, this->layout_pool);
-}
+	vector<RenderTask*> render_tasks = render_graph->getRenderTasks();
 
-void VulkanBackend::destroyShader(Shader shader)
-{
-	this->shader_deleter->addToQueue((VulkanShader*)shader);
-}
-
-Framebuffer VulkanBackend::createFramebuffer(FramebufferLayout& layout, vector2U size)
-{
-	List<VkFormat> color(layout.getColorCount());
-	List<VkClearValue> clear_colors(color.size());
-	for (size_t i = 0; i < color.size(); i++)
+	for (size_t i = 0; i < render_tasks.size(); i++)
 	{
-		color[i] = getImageFormat(layout.getColor(i));
+		RenderTask* render_task = render_tasks[i];
+
+		vector<VkAttachmentDescription> attachment_descriptions;
+		{
+			if (render_task->hasDepthStencilAttachment())
+			{
+				FramebufferAttachment* depth_description = render_task->getDepthStencilAttachment();
+
+				VkAttachmentDescription depth_attachment = {};
+				depth_attachment.format = getImageFormat(depth_description->format);
+				depth_attachment.samples = (VkSampleCountFlagBits)depth_description->samples;
+				depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+				depth_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+
+				if (depth_description->usage_counts == 0)
+				{
+					depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+					depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+					depth_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				}
+				else
+				{
+					depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+					depth_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+					depth_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				}
+
+				attachment_descriptions.push_back(depth_attachment);
+			}
+
+			const vector<FramebufferAttachment> color_descriptions = render_task->getColorAttachments();
+			for (size_t i = 0; i < color_descriptions.size(); i++)
+			{
+				VkAttachmentDescription color_attachment = {};
+				color_attachment.format = getImageFormat(color_descriptions[i].format);
+				color_attachment.samples = (VkSampleCountFlagBits)color_descriptions[i].samples;
+				color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+				color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+				if (color_descriptions[i].usage_counts == 0)
+				{
+					color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+					color_attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				}
+				else
+				{
+					color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+					color_attachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				}
+
+				attachment_descriptions.push_back(color_attachment);
+			}
+		}
+
+		VkSubpassDescription basic_subpass = {};
+		vector<VkAttachmentReference> color_references;
+		VkAttachmentReference depth_reference = {};
+		{
+			basic_subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+
+			size_t start_index = 0;
+
+			if (render_task->hasDepthStencilAttachment())
+			{
+				depth_reference = { 0, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
+				basic_subpass.pDepthStencilAttachment = &depth_reference;
+				start_index = 1;
+			}
+
+			for (size_t i = start_index; i < attachment_descriptions.size(); i++)
+			{
+				VkAttachmentReference color_reference = {(uint32_t)i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL };
+				color_references.push_back(color_reference);
+			}
+
+			basic_subpass.colorAttachmentCount = (uint32_t)color_references.size();
+			basic_subpass.pColorAttachments = color_references.data();
+
+			//TODO
+			basic_subpass.pInputAttachments = nullptr;
+			basic_subpass.pPreserveAttachments = nullptr;
+			basic_subpass.pResolveAttachments = nullptr;
+		}
+
+		VkRenderPassCreateInfo render_pass_info = {};
+		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+
+		render_pass_info.attachmentCount = (uint32_t)attachment_descriptions.size();
+		render_pass_info.pAttachments = attachment_descriptions.data();
+
+		render_pass_info.subpassCount = 1;
+		render_pass_info.pSubpasses = &basic_subpass;
+
+		render_pass_info.dependencyCount = 0;
+		render_pass_info.pDependencies = nullptr;
+
+		VkRenderPass render_pass;
+
+		GENESIS_ENGINE_ASSERT_ERROR((vkCreateRenderPass(this->device->get(), &render_pass_info, nullptr, &render_pass) == VK_SUCCESS), "failed to create render pass!");
+		vkDestroyRenderPass(this->device->get(), render_pass, nullptr);
+
 	}
-	VkFormat depth = getImageFormat(layout.getDepth());
-
-	VkRenderPass render_pass = this->render_pass_pool->getRenderPass(layout.getHash(), color, depth);
-
-	return new VulkanFramebufferSet(this->device, { size.x, size.y }, color, depth, render_pass, this->FRAME_COUNT);
-}
-
-void VulkanBackend::destroyFramebuffer(Framebuffer framebuffer)
-{
-	this->frame_deleter->addToQueue((VulkanFramebufferSet*)framebuffer);
-}
-
-void VulkanBackend::resizeFramebuffer(Framebuffer framebuffer, vector2U size)
-{
-	((VulkanFramebufferSet*)framebuffer)->size = {size.x, size.y};
-}
-
-STCommandBuffer VulkanBackend::createSTCommandBuffer()
-{
-	return (STCommandBuffer)new VulkanCommandBufferSet(this->device, this->primary_graphics_pool, this->thread_pipeline_pools[0], this->descriptor_pools[0], this->transfer_buffers[0], this->FRAME_COUNT);
-}
-
-void VulkanBackend::destroySTCommandBuffer(STCommandBuffer st_command_buffer)
-{
-	this->st_command_buffer_deleter->addToQueue((VulkanCommandBufferSet*)st_command_buffer);
-}
-
-CommandBufferInterface* VulkanBackend::beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer_target)
-{
-	VulkanCommandBufferSet* command_buffer = (VulkanCommandBufferSet*)st_command_buffer;
-	((VulkanFramebufferSet*)framebuffer_target)->rebuildFramebuffer(this->frame_index);
-	VulkanFramebuffer* framebuffer = ((VulkanFramebufferSet*)framebuffer_target)->framebuffers[this->frame_index];
-
-	command_buffer->command_buffers[this->frame_index]->startPrimary(framebuffer->get(), framebuffer->getRenderPass(), { {0, 0}, framebuffer->getSize() }, framebuffer->getClearValues(), VK_SUBPASS_CONTENTS_INLINE);
-	return command_buffer->command_buffers[this->frame_index];
-}
-
-void VulkanBackend::endSTCommandBuffer(STCommandBuffer st_command_buffer)
-{
-	VulkanCommandBufferSet* command_buffer = (VulkanCommandBufferSet*)st_command_buffer;
-	command_buffer->command_buffers[this->frame_index]->endPrimary();
-	this->graphics_command_buffers.push_back(command_buffer->command_buffers[this->frame_index]->getCommandBuffer());
-}
-
-MTCommandBuffer VulkanBackend::createMTCommandBuffer()
-{
-	return new VulkanCommandBufferMultithreadSet(this->device, this->FRAME_COUNT, this->THREAD_COUNT, this->primary_graphics_pool, this->secondary_graphics_pools, this->thread_pipeline_pools, this->descriptor_pools, this->transfer_buffers);
-}
-
-void VulkanBackend::destroyMTCommandBuffer(MTCommandBuffer mt_command_buffer)
-{
-	this->mt_command_buffer_deleter->addToQueue((VulkanCommandBufferMultithreadSet*)mt_command_buffer);
-}
-
-List<CommandBufferInterface*>* VulkanBackend::beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer_target)
-{
-	VulkanCommandBufferMultithreadSet* command_buffer = (VulkanCommandBufferMultithreadSet*)mt_command_buffer;
-
-	((VulkanFramebufferSet*)framebuffer_target)->rebuildFramebuffer(this->frame_index);
-	VulkanFramebuffer* vulkan_framebuffer = ((VulkanFramebufferSet*)framebuffer_target)->framebuffers[this->frame_index];
-
-	command_buffer->command_buffers[this->frame_index]->start(vulkan_framebuffer);
-	return (List<CommandBufferInterface*>*)command_buffer->command_buffers[this->frame_index]->getSecondaryCommandBuffers();
-}
-
-void VulkanBackend::endMTCommandBuffer(MTCommandBuffer mt_command_buffer)
-{
-	VulkanCommandBufferMultithreadSet* command_buffer = (VulkanCommandBufferMultithreadSet*)mt_command_buffer;
-	command_buffer->command_buffers[this->frame_index]->end();
-	this->graphics_command_buffers.push_back(command_buffer->command_buffers[this->frame_index]->getCommandBuffer());
 }
 
 void VulkanBackend::waitTillDone()

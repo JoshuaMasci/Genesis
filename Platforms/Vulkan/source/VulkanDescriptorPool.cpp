@@ -2,7 +2,6 @@
 
 #include "Genesis/Debug/Assert.hpp"
 
-#include "Genesis/Core/List.hpp"
 #include "Genesis/Core/MurmurHash2.hpp"
 
 #include <stdexcept>
@@ -21,10 +20,10 @@ VulkanDescriptorPool::VulkanDescriptorPool(VkDevice device, uint32_t frame_count
 	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 	GENESIS_ENGINE_ASSERT_ERROR((vkCreateDescriptorPool(this->device, &pool_info, nullptr, &this->pool) == VK_SUCCESS), "failed to create descriptor pool");
 
-	this->frame_data = List<FrameData>(frame_count);
+	this->frame_data = vector<FrameData>(frame_count);
 	for (size_t i = 0; i < this->frame_data.size(); i++)
 	{
-		this->frame_data[i].used_descriptor_set = List<VkDescriptorSet>(MAX_PER_FRAME_DESCRIPTOR_SETS);
+		this->frame_data[i].used_descriptor_set = vector<VkDescriptorSet>(MAX_PER_FRAME_DESCRIPTOR_SETS);
 	}
 }
 

@@ -63,8 +63,8 @@ namespace Genesis
 		virtual string getAxisName(uint16_t index);
 	protected:
 
-		List<ButtonValue> button_values;
-		List<AxisValue> axis_values;
+		vector<ButtonValue> button_values;
+		vector<AxisValue> axis_values;
 
 		map<string, ButtonIndex> button_bindings;
 		map<string, AxisSettings> axis_bindings;

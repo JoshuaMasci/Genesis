@@ -26,4 +26,7 @@ target_link_libraries(Sandbox PUBLIC SDL2_Platform)
 add_custom_command(TARGET Sandbox POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/SDL2.dll" $<TARGET_FILE_DIR:Sandbox>)
 
 #VulkanBackend
-target_link_libraries(Sandbox PUBLIC Vulkan_Rendering)
+#target_link_libraries(Sandbox PUBLIC Vulkan_Rendering)
+
+#OpenglBackend
+target_link_libraries(Sandbox PUBLIC OpenGL_Rendering)

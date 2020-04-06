@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Genesis/RenderingBackend/RenderingTypes.hpp"
-#include "Genesis/Core/List.hpp"
 #include "Genesis/Core/MurmurHash2.hpp"
 
 namespace Genesis
@@ -11,12 +10,12 @@ namespace Genesis
 	public:
 		FramebufferLayout() 
 		{
-			this->color_formats = List<ImageFormat>(0);
+			this->color_formats = vector<ImageFormat>(0);
 			this->depth_format = ImageFormat::Invalid;
 			this->hash_value = 0;
 		};
 
-		FramebufferLayout(List<ImageFormat> color_formats, ImageFormat depth_format)
+		FramebufferLayout(vector<ImageFormat> color_formats, ImageFormat depth_format)
 		{
 			this->color_formats = color_formats;
 			this->depth_format = depth_format;
@@ -44,7 +43,7 @@ namespace Genesis
 		inline ImageFormat getDepth() { return this->depth_format; };
 
 	private:
-		List<ImageFormat> color_formats;
+		vector<ImageFormat> color_formats;
 		ImageFormat depth_format;
 
 		uint32_t hash_value;

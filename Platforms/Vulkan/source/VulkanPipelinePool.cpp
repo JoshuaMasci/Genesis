@@ -67,7 +67,7 @@ VkPipeline VulkanThreadPipelinePool::getPipeline(VulkanShader* shader, VkRenderP
 
 	if (has_value(this->temp_map, shader))
 	{
-		pipeline_map shader_pipelines = this->temp_map[shader];
+		pipeline_map& shader_pipelines = this->temp_map[shader];
 		if (has_value(shader_pipelines, pipeline_hash))
 		{
 			return shader_pipelines[pipeline_hash];
@@ -76,7 +76,7 @@ VkPipeline VulkanThreadPipelinePool::getPipeline(VulkanShader* shader, VkRenderP
 
 	if (has_value(this->main_pool->pipelines, shader))
 	{
-		pipeline_map shader_pipelines = this->main_pool->pipelines[shader];
+		pipeline_map& shader_pipelines = this->main_pool->pipelines[shader];
 		if (has_value(shader_pipelines, pipeline_hash))
 		{
 			return shader_pipelines[pipeline_hash];

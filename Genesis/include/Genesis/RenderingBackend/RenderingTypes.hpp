@@ -37,6 +37,17 @@ namespace Genesis
 		D_32_Float,
 	};
 
+	enum class IamgeSamples
+	{
+		Count_1 = 1,
+		Count_2 = 2,
+		Count_4 = 4,
+		Count_8 = 8,
+		Count_16 = 16,
+		Count_32 = 32,
+		Count_64 = 64,
+	};
+
 	enum class BufferUsage
 	{
 		Vertex_Buffer,
@@ -62,7 +73,6 @@ namespace Genesis
 
 	typedef void* Framebuffer;
 	typedef void* STCommandBuffer;
-	typedef void* MTCommandBuffer;
 
 	typedef void* ShaderModule;
 	struct ShaderModuleCreateInfo
@@ -70,8 +80,4 @@ namespace Genesis
 		uint32_t* code = nullptr;
 		uint32_t code_size = 0;
 	};
-
-	//Unsided Types
-	typedef void* FramebufferAttachement;
-	typedef void* Buffer;
 }

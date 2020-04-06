@@ -31,6 +31,8 @@ struct CharacterController
 
 #include "Genesis/Rendering/ResourceLoaders.hpp"
 
+#include "Genesis/FrameGraph/FrameGraph.hpp"
+
 World::World(MeshPool* mesh_pool, MaterialPool* material_pool)
 {
 	this->mesh_pool = mesh_pool;
@@ -78,7 +80,6 @@ World::World(MeshPool* mesh_pool, MaterialPool* material_pool)
 		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, -5.0, 10.0));
 		this->entity_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource("res/portal_inside.obj"), this->material_pool->getResource("res/materials/white.csv"));
 	}
-
 }
 
 World::~World()
@@ -131,6 +132,6 @@ void World::runSimulation(Application* application, TimeStep time_step)
 		}
 	}
 
-	DebugCamera::update(&application->input_manager, this->entity_registry->get<DebugCamera>(this->main_camera), this->entity_registry->get<TransformD>(this->main_camera), time_step);
+	//DebugCamera::update(&application->input_manager, this->entity_registry->get<DebugCamera>(this->main_camera), this->entity_registry->get<TransformD>(this->main_camera), time_step);
 
 }

@@ -26,7 +26,7 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string& shader_data)
 	spvReflectEnumeratePushConstantBlocks(&module, &push_constant_count, NULL);
 	if (push_constant_count > 0)
 	{
-		List<SpvReflectBlockVariable*> push_blocks(push_constant_count);
+		vector<SpvReflectBlockVariable*> push_blocks(push_constant_count);
 		this->push_constant.resize(push_constant_count);
 		spvReflectEnumeratePushConstantBlocks(&module, &push_constant_count, push_blocks.data());
 
@@ -41,7 +41,7 @@ VulkanShaderModule::VulkanShaderModule(VkDevice device, string& shader_data)
 	uint32_t descriptor_sets_count = 0;
 	spvReflectEnumerateDescriptorSets(&module, &descriptor_sets_count, NULL);
 
-	List<SpvReflectDescriptorSet*> descriptor_sets_spv(descriptor_sets_count);
+	vector<SpvReflectDescriptorSet*> descriptor_sets_spv(descriptor_sets_count);
 	spvReflectEnumerateDescriptorSets(&module, &descriptor_sets_count, descriptor_sets_spv.data());
 
 	for (size_t i = 0; i < descriptor_sets_spv.size(); i++)
@@ -114,7 +114,7 @@ VkPipelineShaderStageCreateInfo VulkanShaderModule::getStageInfo()
 	return shader_stage_info;
 }
 
-void fillDescriptorSetLayouts(List<List<VkDescriptorSetLayoutBinding>>& destination, List<List<DescriptorSetBindingModule>>& source, VkShaderStageFlags stage)
+void fillDescriptorSetLayouts(vector<vector<VkDescriptorSetLayoutBinding>>& destination, vector<vector<DescriptorSetBindingModule>>& source, VkShaderStageFlags stage)
 {
 	if (destination.size() < source.size())
 	{
@@ -161,7 +161,7 @@ void fillDescriptorSetLayouts(List<List<VkDescriptorSetLayoutBinding>>& destinat
 	}
 }
 
-void fillDescriptorSetBindings(List<List<VulkanDescriptorSetBinding>>& destination, List<List<DescriptorSetBindingModule>>& source, VkShaderStageFlags stage)
+void fillDescriptorSetBindings(vector<vector<VulkanDescriptorSetBinding>>& destination, vector<vector<DescriptorSetBindingModule>>& source, VkShaderStageFlags stage)
 {
 	if (source.size() <= 0)
 	{
@@ -213,7 +213,7 @@ VulkanShader::VulkanShader(VkDevice device, string& vert_data, string& frag_data
 	fillDescriptorSetBindings(this->descriptor_set_bindings, this->vert_module->descriptor_sets, this->vert_module->shader_stage);
 
 	size_t vert_push_constant_count = this->vert_module->push_constant.size();
-	List<VkPushConstantRange> push_constant(vert_push_constant_count);
+	vector<VkPushConstantRange> push_constant(vert_push_constant_count);
 	for (size_t i = 0; i < vert_push_constant_count; i++)
 	{
 		push_constant[i] = this->vert_module->push_constant[i];
@@ -232,7 +232,7 @@ VulkanShader::VulkanShader(VkDevice device, string& vert_data, string& frag_data
 		}
 	}
 
-	List<List<VkDescriptorSetLayoutBinding>> descriptor_sets(this->descriptor_set_bindings.size());
+	vector<vector<VkDescriptorSetLayoutBinding>> descriptor_sets(this->descriptor_set_bindings.size());
 	for (size_t set = 0; set < this->descriptor_set_bindings.size(); set++)
 	{
 		descriptor_sets[set].resize(this->descriptor_set_bindings[set].size());

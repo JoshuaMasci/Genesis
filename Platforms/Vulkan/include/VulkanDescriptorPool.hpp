@@ -26,11 +26,11 @@ namespace Genesis
 		//Per frame descriptorset allocations
 		struct FrameData
 		{
-			List<VkDescriptorSet> used_descriptor_set;
+			vector<VkDescriptorSet> used_descriptor_set;
 			uint32_t descriptor_set_count = 0;
 		};
 		
-		List<FrameData> frame_data;
+		vector<FrameData> frame_data;
 	};
 
 	class VulkanDescriptorPool2

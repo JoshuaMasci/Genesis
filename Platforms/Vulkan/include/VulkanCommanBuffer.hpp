@@ -23,10 +23,8 @@ namespace Genesis
 
 		inline VkCommandBuffer getCommandBuffer() { return this->command_buffer; };
 
-		void startPrimary(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area, List<VkClearValue>& clear_values, VkSubpassContents content);
-		void startSecondary(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area);
+		void startPrimary(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area, vector<VkClearValue>& clear_values, VkSubpassContents content);
 		void endPrimary();
-		void endSecondary();
 
 		void setShader(VulkanShader* shader);
 		void setPipelineSettings(PipelineSettings& settings);
@@ -78,7 +76,7 @@ namespace Genesis
 		struct DescriptorSet
 		{
 			VkDescriptorSetLayout layout = VK_NULL_HANDLE;
-			List<DescriptorBinding> bindings;
+			vector<DescriptorBinding> bindings;
 
 			bool has_changed = true;
 			VkDescriptorSet last_set = VK_NULL_HANDLE;
@@ -91,7 +89,7 @@ namespace Genesis
 
 		//Shader Info
 		VulkanShader* current_shader = nullptr;
-		List<DescriptorSet> current_descriptor_sets;
+		vector<DescriptorSet> current_descriptor_sets;
 
 		//Mesh info
 		VulkanVertexInputDescription* current_vertex_description = nullptr;
@@ -110,10 +108,8 @@ namespace Genesis
 
 		inline VkCommandBuffer getCommandBuffer() { return this->command_buffer.getCommandBuffer(); };
 
-		void startPrimary(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area, List<VkClearValue>& clear_values, VkSubpassContents content);
-		void startSecondary(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area);
+		void startPrimary(VkFramebuffer framebuffer, VkRenderPass render_pass, VkRect2D render_area, vector<VkClearValue>& clear_values, VkSubpassContents content);
 		void endPrimary();
-		void endSecondary();
 
 		virtual void setShader(Shader shader) override;
 		virtual void setPipelineSettings(PipelineSettings & settings) override;
@@ -134,41 +130,11 @@ namespace Genesis
 		VulkanTransferBuffer* transfer_buffer = nullptr;
 	};
 
-	class VulkanCommandBufferMultithread
-	{
-	public:
-		VulkanCommandBufferMultithread(VulkanDevice* device, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, VulkanTransferBuffer* transfer_buffer, uint32_t frame_index);
-		~VulkanCommandBufferMultithread();
-
-		void start(VulkanFramebuffer* framebuffer_target);
-		void end();
-
-		inline VkCommandBuffer getCommandBuffer() { return this->primary_buffer; };
-		inline List<VulkanCommandBuffer*>* getSecondaryCommandBuffers()
-		{
-			return &this->secondary_buffers;
-		};
-
-	private:
-		VulkanCommandPool* primary_pool;
-		VkCommandBuffer primary_buffer;
-
-		List<VulkanCommandBuffer*> secondary_buffers;
-	};
-
-	struct VulkanCommandBufferMultithreadSet
-	{
-		VulkanCommandBufferMultithreadSet(VulkanDevice* device, uint32_t frame_count, uint32_t thread_count, VulkanCommandPool* primary_pool, List<VulkanCommandPool*> secondary_pools, List<VulkanThreadPipelinePool*> pipeline_pools, List<VulkanDescriptorPool*> descriptor_pools, List<VulkanTransferBuffer*> transfer_buffers);
-		~VulkanCommandBufferMultithreadSet();
-
-		List<VulkanCommandBufferMultithread*> command_buffers;
-	};
-
 	struct VulkanCommandBufferSet
 	{
 		VulkanCommandBufferSet(VulkanDevice* device, VulkanCommandPool* command_pool, VulkanThreadPipelinePool* pipeline_pool, VulkanDescriptorPool* descriptor_pool, VulkanTransferBuffer* transfer_buffer, uint32_t frame_count);
 		~VulkanCommandBufferSet();
 
-		List<VulkanCommandBuffer*> command_buffers;
+		vector<VulkanCommandBuffer*> command_buffers;
 	};
 }

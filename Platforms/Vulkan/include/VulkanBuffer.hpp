@@ -43,7 +43,7 @@ namespace Genesis
 		inline uint64_t getSize() { return this->size; };
 
 	protected:
-		List<VulkanBuffer*> buffers;
+		vector<VulkanBuffer*> buffers;
 		uint32_t current_index;
 		uint64_t size = 0;
 		bool has_changed;

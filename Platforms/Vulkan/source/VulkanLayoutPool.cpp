@@ -26,14 +26,14 @@ VulkanLayoutPool::~VulkanLayoutPool()
 	}
 }
 
-VkDescriptorSetLayout VulkanLayoutPool::getDescriptorLayout(List<VkDescriptorSetLayoutBinding>& bindings)
+VkDescriptorSetLayout VulkanLayoutPool::getDescriptorLayout(vector<VkDescriptorSetLayoutBinding>& bindings)
 {
 	MurmurHash2 binding_hash;
 	binding_hash.addData((const uint8_t*)bindings.data(), (uint32_t)(bindings.size() * sizeof(VkDescriptorSetLayoutBinding)));
 	uint32_t hash_value = binding_hash.end();
 
 	VkDescriptorSetLayout layout = VK_NULL_HANDLE;
-	this->descriptor_map_lock.lock();
+	this->render_pass_map_lock.lock();
 	if (has_value(this->descriptor_layouts, hash_value))
 	{
 		layout = this->descriptor_layouts[hash_value];
@@ -50,7 +50,7 @@ VkDescriptorSetLayout VulkanLayoutPool::getDescriptorLayout(List<VkDescriptorSet
 
 		this->descriptor_layouts[hash_value] = layout;
 	}
-	this->descriptor_map_lock.unlock();
+	this->render_pass_map_lock.unlock();
 	return layout;
 }
 
@@ -105,14 +105,14 @@ VkDescriptorSetLayout VulkanLayoutPool::getDescriptorLayout(const DescriptorSetL
 	uint32_t hash_value = binding_hash.end();
 
 	VkDescriptorSetLayout layout = VK_NULL_HANDLE;
-	this->descriptor_map_lock.lock();
+	this->render_pass_map_lock.lock();
 	if (has_value(this->descriptor_layouts, hash_value))
 	{
 		layout = this->descriptor_layouts[hash_value];
 	}
 	else
 	{
-		List<VkDescriptorSetLayoutBinding> bindings(create_info.descriptor_bindings_count);
+		vector<VkDescriptorSetLayoutBinding> bindings(create_info.descriptor_bindings_count);
 		for (uint32_t i = 0; i < create_info.descriptor_bindings_count; i++)
 		{
 			bindings[i] = {};
@@ -133,11 +133,11 @@ VkDescriptorSetLayout VulkanLayoutPool::getDescriptorLayout(const DescriptorSetL
 
 		this->descriptor_layouts[hash_value] = layout;
 	}
-	this->descriptor_map_lock.unlock();
+	this->render_pass_map_lock.unlock();
 	return layout;
 }
 
-VkPipelineLayout VulkanLayoutPool::getPipelineLayout(List<VkDescriptorSetLayout>& layouts, List<VkPushConstantRange>& ranges)
+VkPipelineLayout VulkanLayoutPool::getPipelineLayout(vector<VkDescriptorSetLayout>& layouts, vector<VkPushConstantRange>& ranges)
 {
 	MurmurHash2 layout_hash;
 	layout_hash.addData((const uint8_t*)layouts.data(), (uint32_t)(layouts.size() * sizeof(VkDescriptorSetLayout)));
@@ -181,13 +181,13 @@ VkPipelineLayout VulkanLayoutPool::getPipelineLayout(const PipelineLayoutCreateI
 	}
 	else
 	{
-		List<VkDescriptorSetLayout> descriptor_sets_layouts(create_info.descriptor_sets_count);
+		vector<VkDescriptorSetLayout> descriptor_sets_layouts(create_info.descriptor_sets_count);
 		for (uint32_t i = 0; i < descriptor_sets_layouts.size(); i++)
 		{
 			descriptor_sets_layouts[i] = (VkDescriptorSetLayout)create_info.descriptor_sets[i];
 		}
 
-		List<VkPushConstantRange> push_constant_ranges(create_info.push_constant_ranges_count);
+		vector<VkPushConstantRange> push_constant_ranges(create_info.push_constant_ranges_count);
 		for (uint32_t i = 0; i < push_constant_ranges.size(); i++)
 		{
 			push_constant_ranges[i].offset = create_info.push_constant_ranges[i].offset;

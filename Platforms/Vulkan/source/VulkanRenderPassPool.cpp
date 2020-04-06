@@ -1,6 +1,7 @@
 #include "VulkanRenderPassPool.hpp"
 
 #include "Genesis/Debug/Assert.hpp"
+#include "Genesis/Core/MurmurHash2.hpp"
 
 using namespace Genesis;
 
@@ -17,106 +18,61 @@ VulkanRenderPassPool::~VulkanRenderPassPool()
 	}
 }
 
-VkRenderPass VulkanRenderPassPool::getRenderPass(uint32_t hash, List<VkFormat>& color_formats, VkFormat depth_format)
+uint32_t createHash(const RenderPassCreateInfo& create_info)
 {
-	this->descriptor_map_lock.lock();
+	MurmurHash2 hash;
+	hash.addData((uint8_t*)create_info.color_attachments, (uint32_t)(sizeof(RenderPassAttachment) * create_info.color_attachments_count));
 
-	if (this->render_passes.find(hash) != this->render_passes.end())
+	if (create_info.depth_attachment != nullptr)
 	{
-		this->descriptor_map_lock.unlock();
-		return this->render_passes[hash];
+		hash.add(*create_info.depth_attachment);
 	}
 
-	vector<VkAttachmentDescription> attachment_descriptions;
-	vector<VkAttachmentReference> color_attachment_references;
-
-	for (uint16_t i = 0; i < color_formats.size(); i++)
+	for (size_t i = 0; i < create_info.subpasses_count; i++)
 	{
-		VkAttachmentDescription color_description = {};
-		color_description.format = color_formats[i];
-		color_description.samples = VK_SAMPLE_COUNT_1_BIT;
-		color_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		color_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		color_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		color_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		color_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		color_description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		RenderPassSubpass& subpass = create_info.subpasses[i];
 
-		VkAttachmentReference color_reference = {};
-		color_reference.attachment = i;
-		color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		hash.addData((uint8_t*)subpass.color_attachment_index, (uint32_t)(sizeof(uint32_t) * subpass.color_attachments_count));
 
-		attachment_descriptions.push_back(color_description);
-		color_attachment_references.push_back(color_reference);
+		if (subpass.depth_attachment_index != nullptr)
+		{
+			hash.add(*subpass.depth_attachment_index);
+		}
+
+		if (subpass.input_attachments_count != 0)
+		{
+			hash.addData((uint8_t*)subpass.input_attachment_index, (uint32_t)(sizeof(uint32_t) * subpass.input_attachments_count));
+		}
 	}
 
-	VkSubpassDescription subpass = {};
-	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpass.colorAttachmentCount = (uint32_t)color_attachment_references.size();
-	subpass.pColorAttachments = color_attachment_references.data();
+	return hash.end();
+}
 
-	if (depth_format != VK_FORMAT_UNDEFINED)
+VkRenderPass createRenderPass(const RenderPassCreateInfo& create_info)
+{
+	vector<VkAttachmentDescription> attachment_descriptions(create_info.color_attachments_count);
+	for (size_t i = 0; i < attachment_descriptions.size(); i++)
 	{
-		uint32_t depth_pos = (uint32_t)attachment_descriptions.size();
-
-		VkAttachmentReference depth_reference = {};
-		depth_reference.attachment = depth_pos;
-		depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		subpass.pDepthStencilAttachment = &depth_reference;
-
-		VkAttachmentDescription depth_description = {};
-		depth_description.format = depth_format;
-		depth_description.samples = VK_SAMPLE_COUNT_1_BIT;
-		depth_description.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depth_description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depth_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-		depth_description.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		depth_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		attachment_descriptions.push_back(depth_description);
-	}
-	else
-	{
-		subpass.pDepthStencilAttachment = VK_NULL_HANDLE;
+		VkAttachmentDescription& attachment_description = attachment_descriptions[i];
+		//attachment_description.format = //create_info.color_attachments[i];
 	}
 
-	//Use subpass dependencies for layout transitions
-	List<VkSubpassDependency> dependencies(2);
 
-	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[0].dstSubpass = 0;
-	dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	dependencies[0].dstStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-	dependencies[0].srcAccessMask = 0;
-	dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+	return VK_NULL_HANDLE;
+}
 
-	dependencies[1].srcSubpass = 0;
-	dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-	dependencies[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-	dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+VkRenderPass Genesis::VulkanRenderPassPool::getRenderPass(const RenderPassCreateInfo& create_info)
+{
+	uint32_t hash_value = createHash(create_info);
+	this->render_pass_map_lock.lock();
 
-	VkRenderPassCreateInfo render_pass_info = {};
-	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-
-	render_pass_info.attachmentCount = (uint32_t)attachment_descriptions.size();
-	render_pass_info.pAttachments = attachment_descriptions.data();
-	render_pass_info.subpassCount = 1;
-	render_pass_info.pSubpasses = &subpass;
-	render_pass_info.dependencyCount = (uint32_t)dependencies.size();
-	render_pass_info.pDependencies = dependencies.data();
+	if (!has_value(this->render_passes, hash_value))
+	{
+		this->render_passes[hash_value] = createRenderPass(create_info);
+	}
 
 	VkRenderPass render_pass;
-
-	GENESIS_ENGINE_ASSERT_ERROR((vkCreateRenderPass(device, &render_pass_info, nullptr, &render_pass) == VK_SUCCESS), "failed to create render pass!");
-
-	this->render_passes[hash] = render_pass;
-
-	this->descriptor_map_lock.unlock();
-
+	render_pass = this->render_passes[hash_value];
+	this->render_pass_map_lock.unlock();
 	return render_pass;
 }

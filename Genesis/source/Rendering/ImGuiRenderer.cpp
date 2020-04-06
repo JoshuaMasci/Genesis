@@ -12,18 +12,9 @@ using namespace Genesis;
 #include "imgui_internal.h"
 
 Genesis::ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* input_manager)
-	:RenderLayer(backend)
 {
-	this->backend = backend;
+	/*this->backend = backend;
 	this->input_manager = input_manager;
-
-	this->view_size = backend->getScreenSize();
-
-	List<ImageFormat> color(1);
-	color[0] = ImageFormat::RGBA_8_Unorm;
-	this->layout = FramebufferLayout(color, ImageFormat::Invalid);
-	this->framebuffer = this->backend->createFramebuffer(this->layout, this->view_size);
-	this->st_command_buffer = this->backend->createSTCommandBuffer();
 
 	ImGui::CreateContext();
 	{
@@ -68,29 +59,17 @@ Genesis::ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* i
 	sampler_create_info.min_lod = 0.0f;
 	sampler_create_info.max_lod = 0.0f;
 	sampler_create_info.border_color = BorderColor::Transparent_Black;
-	this->sampler = this->backend->createSampler(sampler_create_info);
+	this->sampler = this->backend->createSampler(sampler_create_info);*/
 }
 
 Genesis::ImGuiRenderer::~ImGuiRenderer()
 {
-	this->backend->destroyTexture(this->texture_atlas);
-	this->backend->destroyShader(this->shader);
-	this->backend->destroyFramebuffer(this->framebuffer);
-	this->backend->destroySTCommandBuffer(this->st_command_buffer);
+	//this->backend->destroyTexture(this->texture_atlas);
 }
 
 void Genesis::ImGuiRenderer::startLayer()
 {
-	vector2U temp_size = this->backend->getScreenSize();
-	if (temp_size != this->view_size)
-	{
-		this->view_size = temp_size;
-		this->backend->resizeFramebuffer(this->framebuffer, this->view_size);
-	}
-
-	this->view_size = temp_size;
-
-	ImGuiIO& io = ImGui::GetIO();
+	/*ImGuiIO& io = ImGui::GetIO();
 
 	io.DisplaySize = { (float)this->view_size.x, (float)this->view_size.y };
 
@@ -111,23 +90,21 @@ void Genesis::ImGuiRenderer::startLayer()
 	else if (this->input_manager->getButtonDown("Mouse_BackwardScroll"))
 	{
 		io.MouseWheel -= 1;
-	}
+	}*/
 
-	ImGui::NewFrame();
+	//ImGui::NewFrame();
+
+	//bool is_true = true;
+	//ImGui::ShowDemoWindow(&is_true);
 }
 
 void Genesis::ImGuiRenderer::endLayer()
 {
-	ImGui::EndFrame();
+	/*ImGui::EndFrame();
 	ImGui::Render();
 	ImDrawData* draw_data = ImGui::GetDrawData();
 
-	CommandBufferInterface* command_buffer = this->backend->beginSTCommandBuffer(this->st_command_buffer, this->framebuffer);
-	command_buffer->setPipelineSettings(this->settings);
-	command_buffer->setShader(this->shader);
-
 	vector2F scale;
-
 	vector4F push_constant;
 	//scale x, y
 	push_constant[0] = 2.0f / draw_data->DisplaySize.x;
@@ -190,13 +167,6 @@ void Genesis::ImGuiRenderer::endLayer()
 		}
 		this->backend->destroyStaticBuffer(vertex_buffer);
 		this->backend->destroyStaticBuffer(index_buffer);
-	}
-
-	this->backend->endSTCommandBuffer(this->st_command_buffer);
-}
-
-void ImGuiRenderer::ImGuiDraw()
-{
-	//Nothing to do here
+	}*/
 }
 

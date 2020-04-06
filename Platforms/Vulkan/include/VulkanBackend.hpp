@@ -42,7 +42,6 @@ namespace Genesis
 
 		virtual Sampler createSampler(const SamplerCreateInfo& create_info) override;
 
-		virtual VertexInputDescription createVertexInputDescription(vector<VertexElementType> input_elements) override;
 		virtual VertexInputDescription createVertexInputDescription(const VertexInputDescriptionCreateInfo& create_info) override;
 
 		virtual DescriptorSetLayout createDescriptorSetLayout(const DescriptorSetLayoutCreateInfo& create_info) override;
@@ -50,6 +49,8 @@ namespace Genesis
 		virtual void destroyDescriptorSet(DescriptorSet descriptor_set) override;
 
 		virtual PipelineLayout createPipelineLayout(const PipelineLayoutCreateInfo& create_info) override;
+
+		virtual RenderPass createRenderPass(const RenderPassCreateInfo& create_info) override;
 
 		virtual ShaderModule createShaderModule(ShaderModuleCreateInfo& create_info) override;
 		virtual void destroyShaderModule(ShaderModule shader_module) override;
@@ -64,22 +65,7 @@ namespace Genesis
 		virtual Texture createTexture(vector2U size, void* data, uint64_t data_size) override;
 		virtual void destroyTexture(Texture texture) override;
 
-		virtual Shader createShader(string& vert_data, string& frag_data) override;
-		virtual void destroyShader(Shader shader) override;
-
-		virtual Framebuffer createFramebuffer(FramebufferLayout& layout, vector2U size) override;
-		virtual void destroyFramebuffer(Framebuffer framebuffer) override;
-		virtual void resizeFramebuffer(Framebuffer framebuffer, vector2U size) override;
-
-		virtual STCommandBuffer createSTCommandBuffer() override;
-		virtual void destroySTCommandBuffer(STCommandBuffer st_command_buffer) override;
-		virtual CommandBufferInterface* beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer_target) override;
-		virtual void endSTCommandBuffer(STCommandBuffer st_command_buffer) override;
-
-		virtual MTCommandBuffer createMTCommandBuffer() override;
-		virtual void destroyMTCommandBuffer(MTCommandBuffer mt_command_buffer) override;
-		virtual List<CommandBufferInterface*>* beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer_target) override;
-		virtual void endMTCommandBuffer(MTCommandBuffer mt_command_buffer) override;
+		virtual void submitFrameGraph(FrameGraph* render_graph) override;
 
 		virtual void waitTillDone() override;
 
@@ -112,24 +98,24 @@ namespace Genesis
 
 			VulkanPreFrameDescriptorPool* descriptor_pool = nullptr;
 		};
-		List<Frame> frames;
+		vector<Frame> frames;
 
 		//Graphics Command Pools
 		VulkanCommandPool* primary_graphics_pool = nullptr;
-		List<VulkanCommandPool*> secondary_graphics_pools;
+		vector<VulkanCommandPool*> secondary_graphics_pools;
 
 		//Transfer Command Pool
 		VulkanCommandPool* transfer_pool = nullptr;
-		List <VulkanTransferBuffer*> transfer_buffers;
+		vector <VulkanTransferBuffer*> transfer_buffers;
 
 		//Descriptor Pools
 		VulkanDescriptorPool2* descriptor_pool = nullptr;
-		List<VulkanDescriptorPool*> descriptor_pools;
+		vector<VulkanDescriptorPool*> descriptor_pools;
 		VulkanLayoutPool* layout_pool = nullptr;
 
 		//Pipeline Pool
 		VulkanPipelinePool* pipeline_pool = nullptr;
-		List<VulkanThreadPipelinePool*> thread_pipeline_pools;
+		vector<VulkanThreadPipelinePool*> thread_pipeline_pools;
 
 		//RenderPass Pool
 		VulkanRenderPassPool* render_pass_pool = nullptr;
@@ -141,10 +127,6 @@ namespace Genesis
 		DelayedResourceDeleter<VulkanBuffer>* buffer_deleter = nullptr;
 		DelayedResourceDeleter<VulkanDynamicBuffer>* dynamic_deleter = nullptr;
 		DelayedResourceDeleter<VulkanTexture>* texture_deleter = nullptr;
-		DelayedResourceDeleter<VulkanShader>* shader_deleter = nullptr;
-		DelayedResourceDeleter<VulkanFramebufferSet>* frame_deleter = nullptr;
-		DelayedResourceDeleter<VulkanCommandBufferSet>* st_command_buffer_deleter = nullptr;
-		DelayedResourceDeleter<VulkanCommandBufferMultithreadSet>* mt_command_buffer_deleter = nullptr;
 		DelayedResourceDeleter<VulkanDescriptorSet>* descriptor_set_deleter = nullptr;
 	};
 }

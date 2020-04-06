@@ -6,7 +6,6 @@
 #include "Genesis/Platform/Platform.hpp"
 #include "Genesis/Platform/Window.hpp"
 #include "Genesis/RenderingBackend/RenderingBackend.hpp"
-#include "Genesis/Rendering/RenderSystem.hpp"
 #include "Genesis/Rendering/ImGuiRenderer.hpp"
 
 namespace Genesis
@@ -24,9 +23,6 @@ namespace Genesis
 		virtual void update(TimeStep time_step);
 		virtual void render(TimeStep interpolation_value);
 
-		bool startFrame();
-		void endFrame();
-
 		void close();
 		bool isRunning();
 
@@ -38,9 +34,6 @@ namespace Genesis
 		Platform* platform = nullptr;
 		Window* window = nullptr;
 		RenderingBackend* rendering_backend = nullptr;
-		RenderSystem* render_system = nullptr;
-
-		ImGuiRenderer* ui_renderer = nullptr;
 		
 	protected:
 		bool is_running = true;

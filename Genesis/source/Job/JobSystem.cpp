@@ -70,7 +70,7 @@ void Genesis::JobSystem::addJob(JobType job, JobCounter* counter)
 
 void JobSystem::addJobs(JobType* jobs, size_t job_count, JobCounter* counter)
 {
-	(*counter) += (uint16_t)job_count;
+	(*counter)++;
 
 	for (size_t i = 0; i < job_count; i++)
 	{

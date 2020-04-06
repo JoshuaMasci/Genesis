@@ -39,9 +39,9 @@ namespace Genesis
 			uint32_t image_count;
 			VkExtent2D size;
 			VkRenderPass render_pass;
-			List<VkImage> images;
-			List<VkImageView> image_views;
-			List<VkFramebuffer> framebuffers;
+			vector<VkImage> images;
+			vector<VkImageView> image_views;
+			vector<VkFramebuffer> framebuffers;
 		};
 
 		Swapchain createSwapchain(VkPhysicalDevice physical_device, VkExtent2D surface_size, VkSurfaceKHR surface, VkSwapchainKHR old_swapchain);

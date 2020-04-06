@@ -7,9 +7,12 @@
 #include "Genesis/RenderingBackend/VertexInputDescription.hpp"
 #include "Genesis/RenderingBackend/DescriptorSet.hpp"
 #include "Genesis/RenderingBackend/PipelineLayout.hpp"
+#include "Genesis/RenderingBackend/RenderPass.hpp"
 
 #include "Genesis/RenderingBackend/FramebufferLayout.hpp"
 #include "Genesis/RenderingBackend/CommandBuffer.hpp"
+
+#include "Genesis/FrameGraph/FrameGraph.hpp"
 
 namespace Genesis
 {
@@ -26,7 +29,6 @@ namespace Genesis
 
 		virtual Sampler createSampler(const SamplerCreateInfo& create_info) = 0;
 
-		virtual VertexInputDescription createVertexInputDescription(vector<VertexElementType> input_elements) = 0;
 		virtual VertexInputDescription createVertexInputDescription(const VertexInputDescriptionCreateInfo& create_info) = 0;
 
 		virtual DescriptorSetLayout createDescriptorSetLayout(const DescriptorSetLayoutCreateInfo& create_info) = 0;
@@ -34,6 +36,8 @@ namespace Genesis
 		virtual void destroyDescriptorSet(DescriptorSet descriptor_set) = 0;
 
 		virtual PipelineLayout createPipelineLayout(const PipelineLayoutCreateInfo& create_info) = 0;
+
+		virtual RenderPass createRenderPass(const RenderPassCreateInfo& create_info) = 0;
 
 		virtual ShaderModule createShaderModule(ShaderModuleCreateInfo& create_info) = 0;
 		virtual void destroyShaderModule(ShaderModule shader_module) = 0;
@@ -48,22 +52,8 @@ namespace Genesis
 		virtual Texture createTexture(vector2U size, void* data, uint64_t data_size) = 0;
 		virtual void destroyTexture(Texture texture) = 0;
 
-		virtual Shader createShader(string& vert_data, string& frag_data) = 0;
-		virtual void destroyShader(Shader shader) = 0;
-
-		virtual Framebuffer createFramebuffer(FramebufferLayout& layout, vector2U size) = 0;
-		virtual void destroyFramebuffer(Framebuffer framebuffer) = 0;
-		virtual void resizeFramebuffer(Framebuffer framebuffer, vector2U size) = 0;
-
-		virtual STCommandBuffer createSTCommandBuffer() = 0;
-		virtual void destroySTCommandBuffer(STCommandBuffer st_command_buffer) = 0;
-		virtual CommandBufferInterface* beginSTCommandBuffer(STCommandBuffer st_command_buffer, Framebuffer framebuffer_target) = 0;
-		virtual void endSTCommandBuffer(STCommandBuffer st_command_buffer) = 0;
-
-		virtual MTCommandBuffer createMTCommandBuffer() = 0;
-		virtual void destroyMTCommandBuffer(MTCommandBuffer mt_command_buffer) = 0;
-		virtual List<CommandBufferInterface*>* beginMTCommandBuffer(MTCommandBuffer mt_command_buffer, Framebuffer framebuffer_target) = 0;
-		virtual void endMTCommandBuffer(MTCommandBuffer mt_command_buffer) = 0;
+		//Test Functions
+		virtual void submitFrameGraph(FrameGraph* render_graph) = 0;
 
 		//Wait until all GPU proccessing is done
 		virtual void waitTillDone() = 0;

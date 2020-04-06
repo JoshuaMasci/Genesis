@@ -18,16 +18,6 @@ Application::~Application()
 		this->rendering_backend->waitTillDone();
 	}
 
-	if (this->ui_renderer != nullptr)
-	{
-		delete this->ui_renderer;
-	}
-
-	if (this->render_system != nullptr)
-	{
-		delete this->render_system;
-	}
-
 	if (this->rendering_backend != nullptr)
 	{
 		delete this->rendering_backend;
@@ -116,31 +106,63 @@ void Application::update(TimeStep time_step)
 	}
 }
 
+#include "Genesis/FrameGraph/FrameGraph.hpp"
+
 void Application::render(TimeStep interpolation_value)
 {
 	GENESIS_PROFILE_FUNCTION("Application::render");
-}
 
-bool Application::startFrame()
-{
-	if (this->render_system->startFrame())
-	{
-		this->ui_renderer->startLayer();
-		return true;
-	}
+	//RenderGraph test
+	/*{
+		FrameGraph* render_graph = new FrameGraph();
 
-	return false;
-}
+		//Shadow Task
+		RenderTask* shadow_task = render_graph->createFramebufferRenderPass(RenderTaskSize::Absolute, vector2F(1000.0f));
+		{
+			FramebufferAttachmentDescription depth_info;
+			depth_info.format = ImageFormat::D_16_Unorm;
+			depth_info.samples = 1;
+			shadow_task->addDepthStencilOutput(depth_info);
+		}
 
-void Application::endFrame()
-{
-	GENESIS_PROFILE_BLOCK_START("Application_ImGUI_Draw");
-	this->ui_renderer->endLayer();
-	this->render_system->drawLayerWholeScreen(this->ui_renderer);
-	GENESIS_PROFILE_BLOCK_END();
+		//Main Task
+		RenderTask* main_task = render_graph->createFramebufferRenderPass(RenderTaskSize::SwapchainRelative, vector2F(1.0f));
+		{
+			FramebufferAttachmentDescription image_info;
+			image_info.format = ImageFormat::RGBA_8_Unorm;
+			image_info.samples = 1;
+			main_task->addColorOutput(image_info);
 
+			FramebufferAttachmentDescription depth_info;
+			depth_info.format = ImageFormat::D_16_Unorm;
+			depth_info.samples = 1;
+			main_task->addDepthStencilOutput(depth_info);
 
-	this->render_system->endFrame();
+			size_t shadow_index = main_task->readFramebufferAttachment(shadow_task->getDepthStencilAttachment());
+		}
+
+		//Ui Task
+		RenderTask* ui_task = render_graph->createFramebufferRenderPass(RenderTaskSize::SwapchainRelative, vector2F(1.0f));
+		{
+			FramebufferAttachmentDescription image_info;
+			image_info.format = ImageFormat::RGBA_8_Unorm;
+			image_info.samples = 1;
+			ui_task->addColorOutput(image_info);
+		}
+
+		//Swapchain
+		SwapchainRenderTask* swapchain = render_graph->getSwapchainRenderPass();
+		{
+			size_t main_index = swapchain->readFramebufferAttachment(main_task->getColorAttachment(0));
+			size_t ui_index = swapchain->readFramebufferAttachment(ui_task->getColorAttachment(0));
+		}
+
+		render_graph->compile();
+		
+		this->rendering_backend->submitFrameGraph(render_graph);
+
+		delete render_graph;
+	}*/
 }
 
 void Application::close()

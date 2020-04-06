@@ -10,7 +10,7 @@ SDL2_Window::SDL2_Window(vector2U size, string title)
 {
 	SDL_Init(SDL_INIT_VIDEO);
 
-	uint32_t flags = SDL_WINDOW_RESIZABLE;
+	uint32_t flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL;
 
 	this->window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.x, size.y, flags);
 

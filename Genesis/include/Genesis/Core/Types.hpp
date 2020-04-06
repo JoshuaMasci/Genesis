@@ -2,9 +2,6 @@
 
 #include <string>
 
-//STL replacements
-#include "Genesis/Core/List.hpp"
-
 #include <vector>
 #include <set>
 #include <map>

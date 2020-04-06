@@ -258,7 +258,7 @@ VulkanSwapchain::Swapchain VulkanSwapchain::createSwapchain(VkPhysicalDevice phy
 	new_swapchain.framebuffers.resize(new_swapchain.image_count);
 	for (size_t i = 0; i < new_swapchain.framebuffers.size(); i++)
 	{
-		List<VkImageView> attachments(1);
+		vector<VkImageView> attachments(1);
 		attachments[0] = new_swapchain.image_views[i];
 
 		VkFramebufferCreateInfo framebuffer_info = {};

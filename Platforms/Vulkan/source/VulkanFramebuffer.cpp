@@ -4,7 +4,7 @@
 
 using namespace Genesis;
 
-VulkanFramebuffer::VulkanFramebuffer(VulkanDevice* device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass)
+VulkanFramebuffer::VulkanFramebuffer(VulkanDevice* device, VkExtent2D size, vector<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass)
 {
 	this->device = device;
 	this->size = size;
@@ -129,7 +129,7 @@ VulkanFramebuffer::~VulkanFramebuffer()
 	}
 }
 
-VulkanFramebufferSet::VulkanFramebufferSet(VulkanDevice* device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, uint32_t frame_count)
+VulkanFramebufferSet::VulkanFramebufferSet(VulkanDevice* device, VkExtent2D size, vector<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, uint32_t frame_count)
 {
 	this->device = device;
 	this->size = size;

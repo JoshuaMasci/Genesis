@@ -20,7 +20,7 @@ namespace Genesis
 	class VulkanFramebuffer
 	{
 	public:
-		VulkanFramebuffer(VulkanDevice* device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass);
+		VulkanFramebuffer(VulkanDevice* device, VkExtent2D size, vector<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass);
 		virtual ~VulkanFramebuffer();
 
 		inline VkExtent2D getSize() { return this->size; };
@@ -35,30 +35,30 @@ namespace Genesis
 			return this->images[image_index].image_view; 
 		};
 
-		inline List<VkClearValue>& getClearValues() { return this->clear_values; };
+		inline vector<VkClearValue>& getClearValues() { return this->clear_values; };
 
 	protected:
 		VulkanDevice* device;
 		VkExtent2D size;
 		VkRenderPass render_pass;
 
-		List<VulkanFramebufferImage> images;
+		vector<VulkanFramebufferImage> images;
 		VulkanFramebufferImage depth_image;
 		VkFramebuffer framebuffer;
-		List<VkClearValue> clear_values;
+		vector<VkClearValue> clear_values;
 
 		friend struct VulkanFramebufferSet;
 	};
 
 	struct VulkanFramebufferSet
 	{
-		VulkanFramebufferSet(VulkanDevice* device, VkExtent2D size, List<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, uint32_t frame_count);
+		VulkanFramebufferSet(VulkanDevice* device, VkExtent2D size, vector<VkFormat>& color_formats, VkFormat depth_format, VkRenderPass render_pass, uint32_t frame_count);
 		~VulkanFramebufferSet();
-		List<VulkanFramebuffer*> framebuffers;
+		vector<VulkanFramebuffer*> framebuffers;
 
 		VulkanDevice* device;
 		VkExtent2D size;
-		List<VkFormat> color_formats;
+		vector<VkFormat> color_formats;
 		VkFormat depth_format;
 		VkRenderPass render_pass;
 

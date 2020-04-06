@@ -12,46 +12,18 @@
 using namespace Genesis;
 
 WorldRenderer::WorldRenderer(RenderingBackend* backend)
-:RenderLayer(backend)
 {
-	this->view_size = this->backend->getScreenSize();
-
-	List<ImageFormat> color(1);
-	color[0] = ImageFormat::RGBA_8_Unorm;
-	this->layout = FramebufferLayout(color, ImageFormat::D_16_Unorm);
-
-	this->framebuffer = this->backend->createFramebuffer(this->layout, this->view_size);
-	this->st_command_buffer = this->backend->createSTCommandBuffer();
-
-	this->scene_uniform_buffer = this->backend->createDynamicBuffer(sizeof(SceneUniform), BufferUsage::Uniform_Buffer, MemoryType::CPU_Visable);
-
-	this->mesh_shader = ShaderLoader::loadShaderSingle(this->backend, "res/shaders_glsl/Model");
 }
 
 WorldRenderer::~WorldRenderer()
 {
-	this->backend->destroyShader(this->mesh_shader);
-
-	this->backend->destroyFramebuffer(this->framebuffer);
-	this->backend->destroySTCommandBuffer(this->st_command_buffer);
-
-	this->backend->destroyDynamicBuffer(this->scene_uniform_buffer);
-}
-
-#include "imgui.h"
-void WorldRenderer::ImGuiDraw()
-{
-	ImGui::Begin("SceneRenderer");
-	ImGui::LabelText(std::to_string(this->draw_call_count).c_str(), "Draw Calls");
-	ImGui::Checkbox("Use Frustrum Culling", &this->use_frustum_culling);
-	ImGui::End();
 }
 
 void WorldRenderer::drawWorld(World* world)
 {
 	GENESIS_PROFILE_FUNCTION("WorldRenderer::drawWorld");
 
-	this->draw_call_count = 0;
+	/*this->draw_call_count = 0;
 
 	vector2U temp_size = this->backend->getScreenSize();
 	if (temp_size != this->view_size)
@@ -121,5 +93,5 @@ void WorldRenderer::drawWorld(World* world)
 		}
 	}
 
-	this->backend->endSTCommandBuffer(this->st_command_buffer);
+	this->backend->endSTCommandBuffer(this->st_command_buffer);*/
 }

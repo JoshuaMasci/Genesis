@@ -55,10 +55,10 @@ namespace Genesis
 		uint32_t transfer_count = 0;
 
 		uint32_t copy_buffer_list_index = 0;
-		List<CopyBuffer> copy_buffer_list;
+		vector<CopyBuffer> copy_buffer_list;
 
 		uint32_t fill_texture_list_index = 0;
-		List<FillTexture> fill_texture_list;
+		vector<FillTexture> fill_texture_list;
 
 		VkSemaphore transfer_done_semaphore = VK_NULL_HANDLE;
 	};

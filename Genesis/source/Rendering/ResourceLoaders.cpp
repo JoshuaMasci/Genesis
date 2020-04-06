@@ -39,7 +39,7 @@ Shader ShaderLoader::loadShader(RenderingBackend* backend, string vert_file_path
 		GENESIS_ENGINE_ERROR("Failed to open file: {}", frag_file_path);
 	}
 
-	return backend->createShader(vert_data, frag_data);
+	return nullptr;// backend->createShader(vert_data, frag_data);
 }
 
 Shader ShaderLoader::loadShaderSingle(RenderingBackend* backend, string shader_file_path)

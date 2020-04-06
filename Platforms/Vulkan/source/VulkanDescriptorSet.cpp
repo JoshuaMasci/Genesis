@@ -12,9 +12,9 @@ VulkanDescriptorSet::VulkanDescriptorSet(VkDevice device, VulkanDescriptorPool2*
 	this->descriptor_set = this->descriptor_pool->createDescriptorSet((VkDescriptorSetLayout)create_info.layout);
 
 	size_t binding_count = create_info.descriptor_bindings_count;
-	List<VkWriteDescriptorSet> descriptor_info(binding_count);
-	List<VkDescriptorBufferInfo> buffer_info(binding_count);
-	List<VkDescriptorImageInfo> image_sampler_info(binding_count);
+	vector<VkWriteDescriptorSet> descriptor_info(binding_count);
+	vector<VkDescriptorBufferInfo> buffer_info(binding_count);
+	vector<VkDescriptorImageInfo> image_sampler_info(binding_count);
 	for (uint32_t i = 0; i < binding_count; i++)
 	{
 		if (create_info.descriptor_bindings[i].type == BindingType::Uniform_Buffer)

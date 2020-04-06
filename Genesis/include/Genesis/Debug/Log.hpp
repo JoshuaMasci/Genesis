@@ -24,6 +24,9 @@ namespace Genesis
 	};
 }
 
+#define GENESIS_LOGGING_ENABLED
+#ifdef GENESIS_LOGGING_ENABLED
+
 #define GENESIS_ENGINE_TRACE(...) Genesis::Logging::GetEngineLogger()->trace(__VA_ARGS__)
 #define GENESIS_ENGINE_DEBUG(...) Genesis::Logging::GetEngineLogger()->debug(__VA_ARGS__)
 #define GENESIS_ENGINE_INFO(...) Genesis::Logging::GetEngineLogger()->info(__VA_ARGS__)
@@ -37,3 +40,21 @@ namespace Genesis
 #define GENESIS_WARN(...) Genesis::Logging::GetClientLogger()->warn(__VA_ARGS__)
 #define GENESIS_ERROR(...) Genesis::Logging::GetClientLogger()->error(__VA_ARGS__)
 #define GENESIS_CRITICAL(...) Genesis::Logging::GetClientLogger()->critical(__VA_ARGS__)
+
+#else
+
+#define GENESIS_ENGINE_TRACE(...)
+#define GENESIS_ENGINE_DEBUG(...)
+#define GENESIS_ENGINE_INFO(...)
+#define GENESIS_ENGINE_WARN(...)
+#define GENESIS_ENGINE_ERROR(...)
+#define GENESIS_ENGINE_CRITICAL(...)
+
+#define GENESIS_TRACE(...)
+#define GENESIS_DEBUG(...)
+#define GENESIS_INFO(...)
+#define GENESIS_WARN(...)
+#define GENESIS_ERROR(...)
+#define GENESIS_CRITICAL(...)
+
+#endif // USE_LOGGING

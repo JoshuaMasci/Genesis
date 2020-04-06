@@ -12,7 +12,7 @@ namespace Genesis
 	struct VulkanVertexInputDescription
 	{
 		VkVertexInputBindingDescription binding_description;
-		List<VkVertexInputAttributeDescription> attribute_descriptions;
+		vector<VkVertexInputAttributeDescription> attribute_descriptions;
 	};
 
 	class VulkanVertexInputPool
