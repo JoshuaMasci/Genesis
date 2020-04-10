@@ -1,0 +1,5 @@
+//normal_basic.slib
+vec3 calcNormal(vec2 uv)
+{
+	return frag_tangent_space[2];
+}

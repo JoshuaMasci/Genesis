@@ -18,3 +18,10 @@ target_link_libraries (OpenGL_Rendering PUBLIC glu32)
 target_include_directories(OpenGL_Rendering PUBLIC ${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/include/)
 target_link_libraries (OpenGL_Rendering PUBLIC ${CMAKE_SOURCE_DIR}/lib/glew-1.12.0/lib/Release/x64/glew32.lib)
 
+set_target_properties(OpenGL_Rendering
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+

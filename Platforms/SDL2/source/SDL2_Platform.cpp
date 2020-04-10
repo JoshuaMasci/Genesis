@@ -4,6 +4,8 @@
 
 #include "Genesis/Core/Application.hpp"
 
+#include "Genesis/Debug/Log.hpp"
+
 using namespace Genesis;
 
 SDL2_Platform::SDL2_Platform(Application* app)

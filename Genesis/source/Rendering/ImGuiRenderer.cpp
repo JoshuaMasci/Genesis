@@ -2,8 +2,6 @@
 
 using namespace Genesis;
 
-#include "Genesis/Rendering/ResourceLoaders.hpp"
-
 #include "imgui.cpp"
 #include "imgui.h"
 #include "imgui_demo.cpp"

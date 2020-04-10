@@ -2,6 +2,7 @@
 
 #include "Genesis/Core/Types.hpp"
 #include "Genesis/Resource/Mesh.hpp"
+#include "Genesis/Resource/Material.hpp"
 
 namespace Genesis
 {
@@ -14,5 +15,16 @@ namespace Genesis
 		};
 		Mesh* mesh;
 		Material* material;
+	};
+
+	struct MaterialMeshComponent
+	{
+		MaterialMeshComponent(void* mesh, void* material)
+		{
+			this->mesh = mesh;
+			this->material = material;
+		};
+		void* mesh = nullptr;
+		void* material = nullptr;
 	};
 }

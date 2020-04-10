@@ -2,16 +2,15 @@
 
 #include "Genesis/Core/Application.hpp"
 #include "Genesis/Physics/PhysicsWorld.hpp"
-#include "Genesis/Resource/MeshPool.hpp"
-#include "Genesis/Resource/MaterialPool.hpp"
 #include "Genesis/Entity/EntitySystem.hpp"
+#include "Genesis/Rendering/BaseWorldRenderer.hpp"
 
 namespace Genesis
 {
 	class World
 	{
 	public:
-		World(MeshPool* mesh_pool, MaterialPool* material_pool);
+		World(BaseWorldRenderer* world_renderer);
 		~World();
 
 		void runSimulation(Application* application, TimeStep time_step);
@@ -20,8 +19,7 @@ namespace Genesis
 		inline EntityHandle getCamera() { return this->main_camera; };
 
 	private:
-		MeshPool* mesh_pool;
-		MaterialPool* material_pool;
+		BaseWorldRenderer* world_renderer;
 
 		EntityRegistry* entity_registry = nullptr;
 		Physics::PhysicsWorld* physics_world = nullptr;

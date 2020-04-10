@@ -1,0 +1,56 @@
+//uv_parallax_occlusion.slib
+vec2 ParallaxOcclusionMapping(sampler2D depth_map, vec2 tex_coords, vec3 view_dir, float height_scale)
+{ 
+	if(height_scale == 0.0)
+	{
+		return tex_coords;
+	}
+
+    // number of depth layers
+    const float min_layers = 8;
+    const float max_layers = 32;
+    float num_layers = mix(max_layers, min_layers, abs(dot(vec3(0.0, 0.0, 1.0), view_dir)));
+	
+    // calculate the size of each layer
+    float layer_depth = 1.0 / num_layers;
+    // depth of current layer
+    float current_layer_depth = 0.0;
+	
+    // the amount to shift the texture coordinates per layer (from vector P)
+    vec2 P = view_dir.xy / view_dir.z * height_scale; 
+    vec2 delta_tex_coords = P / num_layers;
+  
+    // get initial values
+    vec2  current_tex_coords = tex_coords;
+    float current_depth_map_value = (1.0 - texture(depth_map, current_tex_coords).r);
+      
+    while(current_layer_depth < current_depth_map_value)
+    {
+        // shift texture coordinates along direction of P
+        current_tex_coords -= delta_tex_coords;
+        // get depth_map value at current texture coordinates
+        current_depth_map_value = (1.0 - texture(depth_map, current_tex_coords).r);  
+        // get depth of next layer
+        current_layer_depth += layer_depth;  
+    }
+    
+    // get texture coordinates before collision (reverse operations)
+    vec2 prev_tex_coords = current_tex_coords + delta_tex_coords;
+
+    // get depth after and before collision for linear interpolation
+    float after_depth  = current_depth_map_value - current_layer_depth;
+    float before_depth = (1.0 - texture(depth_map, prev_tex_coords).r) - current_layer_depth + layer_depth;
+ 
+    // interpolation of texture coordinates
+    float weight = after_depth / (after_depth - before_depth);
+    vec2 final_tex_coords = prev_tex_coords * weight + current_tex_coords * (1.0 - weight);
+
+    return final_tex_coords;
+}
+
+vec2 calcUV()
+{
+	vec3 view_direction = normalize(environment.camera_position - frag_world_pos);
+	view_direction = transpose(frag_tangent_space) * view_direction;
+	return ParallaxOcclusionMapping(material_textures[2], frag_uv, view_direction, material.pbr_values.w);
+}

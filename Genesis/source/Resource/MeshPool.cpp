@@ -1,6 +1,6 @@
 #include "Genesis/Resource/MeshPool.hpp"
 
-#include "Genesis/Rendering/ResourceLoaders.hpp"
+#include "Genesis/Resource/ResourceLoaders.hpp"
 
 using namespace Genesis;
 

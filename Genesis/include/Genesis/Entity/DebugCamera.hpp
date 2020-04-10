@@ -19,8 +19,6 @@ namespace Genesis
 
 		static void update(InputManager* input_manager, DebugCamera& debug_camera, TransformD& transform, TimeStep time_step)
 		{
-			return;
-
 			vector3D position = transform.getPosition();
 			position += (transform.getForward() * input_manager->getButtonAxisCombo("Debug_ForwardBackward", "Debug_Forward", "Debug_Backward")) * debug_camera.linear_speed * time_step;
 			position += (transform.getUp() * input_manager->getButtonAxisCombo("Debug_UpDown", "Debug_Up", "Debug_Down")) * debug_camera.linear_speed * time_step;

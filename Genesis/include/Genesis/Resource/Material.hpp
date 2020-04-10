@@ -8,6 +8,16 @@
 
 namespace Genesis
 {
+	struct MaterialDescription
+	{
+		vector4F albedo;
+		float metallic;
+		float roughness;
+		float ambient_occlusion;
+		float height_scale;
+		string textures[MaterialTextureCount];
+	};
+	
 	struct MaterialSettings
 	{
 		bool transparent = false;

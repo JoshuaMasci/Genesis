@@ -5,7 +5,6 @@
 
 #include "Genesis/Core/Transform.hpp"
 #include "Genesis/Rendering/Frustum.hpp"
-#include "Genesis/Rendering/ResourceLoaders.hpp"
 #include "Genesis/Entity/MeshComponent.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 

@@ -20,3 +20,10 @@ target_include_directories(Vulkan_Rendering PUBLIC ${Vulkan_INCLUDE_DIR})
 target_include_directories(Vulkan_Rendering PUBLIC ${CMAKE_SOURCE_DIR}/lib/vulkan_memory_allocator/src/)
 target_include_directories(Vulkan_Rendering PUBLIC ${CMAKE_SOURCE_DIR}/lib/spirv-reflect/)
 target_link_libraries(Vulkan_Rendering PRIVATE Vulkan::Vulkan)
+
+set_target_properties(Vulkan_Rendering
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)

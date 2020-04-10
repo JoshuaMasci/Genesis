@@ -1,0 +1,5 @@
+//uv_basic.slib
+vec2 calcUV()
+{
+	return frag_uv;
+}

@@ -1,9 +1,6 @@
 #pragma once
 
 #include "Genesis/Core/Types.hpp"
-#include "Genesis/Debug/Log.hpp"
-#include "Genesis/Core/MurmurHash2.hpp"
-#include "Genesis/RenderingBackend/RenderingTypes.hpp"
 
 namespace Genesis
 {
@@ -46,5 +43,90 @@ namespace Genesis
 	{
 		VertexElementType* input_elements = nullptr;
 		uint32_t input_elements_count = 0;
+	};
+
+	struct VertexElementTypeInfo
+	{
+		static uint32_t getInputElementSizeByte(VertexElementType type)
+		{
+			switch (type)
+			{
+			case VertexElementType::float_1:
+				return sizeof(float);
+			case VertexElementType::float_2:
+				return sizeof(float) * 2;
+			case VertexElementType::float_3:
+				return sizeof(float) * 3;
+			case VertexElementType::float_4:
+				return sizeof(float) * 4;
+			case VertexElementType::unorm8_1:
+				return sizeof(uint8_t);
+			case VertexElementType::unorm8_2:
+				return sizeof(uint8_t) * 2;
+			case VertexElementType::unorm8_3:
+				return sizeof(uint8_t) * 3;
+			case VertexElementType::unorm8_4:
+				return sizeof(uint8_t) * 4;
+			case VertexElementType::uint8_1:
+				return sizeof(uint8_t);
+			case VertexElementType::uint8_2:
+				return sizeof(uint8_t) * 2;
+			case VertexElementType::uint8_3:
+				return sizeof(uint8_t) * 3;
+			case VertexElementType::uint8_4:
+				return sizeof(uint8_t) * 4;
+			case VertexElementType::uint16_1:
+				return sizeof(uint16_t);
+			case VertexElementType::uint16_2:
+				return sizeof(uint16_t) * 2;
+			case VertexElementType::uint16_3:
+				return sizeof(uint16_t) * 3;
+			case VertexElementType::uint16_4:
+				return sizeof(uint16_t) * 4;
+			case VertexElementType::uint32_1:
+				return sizeof(uint32_t);
+			case VertexElementType::uint32_2:
+				return sizeof(uint32_t) * 2;
+			case VertexElementType::uint32_3:
+				return sizeof(uint32_t) * 3;
+			case VertexElementType::uint32_4:
+				return sizeof(uint32_t) * 4;
+			default:
+				return 0;
+			}
+		};
+
+		static uint32_t getInputElementCount(VertexElementType type)
+		{
+			switch (type)
+			{
+			case VertexElementType::float_1:
+			case VertexElementType::unorm8_1:
+			case VertexElementType::uint8_1:
+			case VertexElementType::uint16_1:
+			case VertexElementType::uint32_1:
+				return 1;
+			case VertexElementType::float_2:
+			case VertexElementType::unorm8_2:
+			case VertexElementType::uint8_2:
+			case VertexElementType::uint16_2:
+			case VertexElementType::uint32_2:
+				return 2;
+			case VertexElementType::float_3:
+			case VertexElementType::unorm8_3:
+			case VertexElementType::uint8_3:
+			case VertexElementType::uint16_3:
+			case VertexElementType::uint32_3:
+				return 3;
+			case VertexElementType::float_4:
+			case VertexElementType::unorm8_4:
+			case VertexElementType::uint8_4:
+			case VertexElementType::uint16_4:
+			case VertexElementType::uint32_4:
+				return 4;
+			}
+
+			return 0;
+		};
 	};
 }
