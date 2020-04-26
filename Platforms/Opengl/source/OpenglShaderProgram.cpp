@@ -1,6 +1,7 @@
 #include "OpenglShaderProgram.hpp"
 
 #include "Genesis/Debug/Log.hpp"
+#include "Genesis/Debug/Assert.hpp"
 
 using namespace Genesis;
 using namespace Genesis::Opengl;
@@ -73,11 +74,16 @@ GLuint OpenglShaderProgram::buildShader(const char* data, uint32_t size, GLuint 
 	return shader_id;
 }
 
-GLuint OpenglShaderProgram::getUniformLocation(const string& name)
+GLint OpenglShaderProgram::getUniformLocation(const string& name)
 {
 	if (!has_value(this->uniform_locations, name))
 	{
-		this->uniform_locations[name] = glGetUniformLocation(this->program_id, name.c_str());
+		GLint location = glGetUniformLocation(this->program_id, name.c_str());
+		if (location == -1)
+		{
+			GENESIS_ENGINE_WARN("Uniform Location doesn't exist: {}", name);
+		}
+		this->uniform_locations[name] = location;
 	}
 
 	return this->uniform_locations[name];

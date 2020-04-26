@@ -9,26 +9,26 @@
     "uv",
     "light"
   ],
-  "color": [
-    "color_albedo.slib",
-    "color_texture.slib"
-  ],
-  "normal": [
-    "normal_basic.slib",
-    "normal_mapped.slib"
-  ],
-  "uv": [
-    "uv_basic.slib",
-    "uv_parallax.slib",
-    "uv_parallax_occlusion.slib"
-  ],
-  "light": [
-    "light_ambient.slib",
-    "light_directional.slib",
-    "light_point.slib",
-    "light_spot.slib",
-    "light_directional_shadow.slib",
-    "light_point_shadow.slib",
-    "light_spot_shadow.slib"
-  ]
+  "color": {
+    "albedo": "color_albedo.slib",
+    "texture": "color_texture.slib"
+  },
+  "normal": {
+    "basic": "normal_basic.slib",
+    "mapped": "normal_mapped.slib"
+  },
+  "uv": {
+    "basic": "uv_basic.slib",
+    "parallax": "uv_parallax.slib",
+    "parallax_occlusion": "uv_parallax_occlusion.slib"
+  },
+  "light": {
+    "ambient": "light_ambient.slib",
+    "directional": "light_directional.slib",
+    "point": "light_point.slib",
+    "spot": "light_spot.slib",
+    "directional_shadow": "light_directional_shadow.slib",
+    "point_shadow": "light_point_shadow.slib",
+    "spot_shadow": "light_spot_shadow.slib"
+  }
 }

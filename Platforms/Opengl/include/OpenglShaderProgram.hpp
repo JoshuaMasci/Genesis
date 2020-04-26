@@ -14,14 +14,14 @@ namespace Genesis
 			~OpenglShaderProgram();
 
 			GLuint getProgramID() { return this->program_id; };
-			GLuint getUniformLocation(const string& name);
+			GLint getUniformLocation(const string& name);
 
 		protected:
 			GLuint program_id;
 
 			GLuint buildShader(const char* data, uint32_t size, GLuint type);
 
-			map<string, GLuint> uniform_locations;
+			map<string, GLint> uniform_locations;
 		};
 	}
 }

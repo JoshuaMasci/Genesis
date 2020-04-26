@@ -59,8 +59,9 @@ namespace Genesis
 			virtual void setUniformMat4f(const string& name, const matrix4F& value) override;
 			virtual void setUniformTexture(const string& name, const uint32_t texture_slot, const Texture2D& value) override;
 
-
 			virtual void draw(VertexBuffer vertex_buffer, IndexBuffer index_buffer, uint32_t triangle_count) override;
+
+			virtual void TEMP_enableAlphaBlending(bool enable) override;
 
 		protected:
 			SDL2_Window* window;

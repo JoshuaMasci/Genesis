@@ -39,6 +39,9 @@ namespace Genesis
 		LegacyMaterialPool* material_pool;
 
 		//TEMP
-		ShaderProgram mesh_program;
+		ShaderProgram color_ambient;
+		ShaderProgram texture_ambient;
+
+		ShaderProgram color_directional;
 	};
 }

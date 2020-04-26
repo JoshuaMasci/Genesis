@@ -1,0 +1,40 @@
+//light_directional.slib
+
+struct BaseLight
+{
+    vec3 color;
+    float intensity;
+};
+
+struct DirectionalLight
+{
+	BaseLight base;
+	vec3 direction;
+};
+
+vec4 CalcLight(BaseLight base, vec3 direction, vec3 normal, vec3 worldPos)
+{
+    float diffuseFactor = dot(normal, -direction);
+    
+    vec4 diffuseColor = vec4(0.0, 0.0, 0.0, 0.0);
+    
+    if(diffuseFactor > 0.0)
+    {
+        diffuseColor = vec4(base.color, 1.0) * base.intensity * diffuseFactor;
+    }
+    
+    return diffuseColor;
+}
+
+
+vec4 CalcDirectionalLight(DirectionalLight directional, vec3 normal, vec3 worldPos)
+{
+    return CalcLight(directional.base, directional.direction, normal, worldPos);
+}
+
+uniform DirectionalLight directional_light;
+
+vec4 calcLightColor(vec3 normal, vec3 position)
+{
+	return CalcDirectionalLight(directional_light, normal, position);
+}

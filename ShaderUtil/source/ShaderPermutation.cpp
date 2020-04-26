@@ -23,7 +23,6 @@ void readWholeFile(const string& filename, string& data)
 	}
 	else
 	{
-		printf("Failed to open file: %s\n", filename.c_str());
 		exit(1);
 	}
 }
@@ -57,19 +56,28 @@ size_t incrementIndices(const vector<size_t>& element_counts, vector<size_t>& el
 	return carry;
 }
 
+struct ShaderElement
+{
+	string name;
+	string data;
+};
+
 int main(int argc, char *argv[])
 {
 	if (argc != 3)
 	{
 		printf("Error: invalid input\n");
 		printf("usage: ShaderPermutation input_file output_directory\n");
-		exit(1);
+		//exit(1);
 	}
 
-	string filename(argv[1]);
-	string output_path(argv[2]);
-	
-	ifstream in_file(filename, ios::ate);
+	//string filename(argv[1]);
+	//string output_path(argv[2]);
+
+	string filename = "model_permutations.shader";
+	string output_path = "build/";
+
+	ifstream in_file(filename);
 	if (!in_file.is_open())
 	{
 		printf("Error: failed to open %s\n", filename.c_str());
@@ -146,10 +154,10 @@ int main(int argc, char *argv[])
 	}
 
 	//Create filename tables
-	vector<vector<string>> elements(element_names.size());
+	vector<vector<ShaderElement>> shader_elements(element_names.size());
 	vector<size_t> element_count(element_names.size());
 
-	for (size_t i = 0; i < elements.size(); i++)
+	for (size_t i = 0; i < shader_elements.size(); i++)
 	{
 		printf("Element %zu %s: ", i, element_names[i].c_str());
 
@@ -160,17 +168,14 @@ int main(int argc, char *argv[])
 		}
 
 		json element_list = json_file[element_names[i]];
-		elements[i].resize(element_list.size());
-		for (size_t j = 0; j < element_list.size(); j++)
+		for (auto member : element_list.object_range())
 		{
-			string element_file_name = element_list[j].as_string();
-			printf(" %s", element_file_name.c_str());
-			readWholeFile(element_file_name, elements[i][j]);
-
-			if (j != (element_list.size() - 1))
-			{
-				printf(",");
-			}
+			string element_file_name = member.value().as_string();
+			ShaderElement new_element;
+			new_element.name = member.key();
+			readWholeFile(element_file_name, new_element.data);
+			shader_elements[i].push_back(new_element);
+			printf(" %s,", element_file_name.c_str());
 		}
 
 		element_count[i] = element_list.size();
@@ -179,7 +184,7 @@ int main(int argc, char *argv[])
 	}
 
 	//Loop though all permutations
-	vector<size_t> element_indices(elements.size(), 0);
+	vector<size_t> element_indices(shader_elements.size(), 0);
 
 	size_t permutation_count = 0;
 
@@ -191,7 +196,7 @@ int main(int argc, char *argv[])
 
 		for (size_t i = 0; i < element_indices.size(); i++)
 		{
-			permutation_index += to_string(element_indices[i]);
+			permutation_index += "_" + shader_elements[i][element_indices[i]].name;
 		}
 
 		filename = output_path + output_name_pre + permutation_index + output_name_post;
@@ -210,7 +215,7 @@ int main(int argc, char *argv[])
 		for (size_t i = 0; i < element_indices.size(); i++)
 		{
 			size_t elment_index = element_indices[i];
-			out_file << elements[i][elment_index] << '\n' << '\n';
+			out_file << shader_elements[i][elment_index].data << '\n' << '\n';
 		}
 
 		out_file << file_tail;

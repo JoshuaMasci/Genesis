@@ -332,3 +332,20 @@ void OpenglBackend::draw(VertexBuffer vertex_buffer, IndexBuffer index_buffer, u
 	glBindVertexArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
+
+void OpenglBackend::TEMP_enableAlphaBlending(bool enable)
+{
+	if (enable)
+	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE);
+		glDepthMask(false);
+		glDepthFunc(GL_EQUAL);
+	}
+	else
+	{
+		glDepthFunc(GL_LESS);
+		glDepthMask(true);
+		glDisable(GL_BLEND);
+	}
+}

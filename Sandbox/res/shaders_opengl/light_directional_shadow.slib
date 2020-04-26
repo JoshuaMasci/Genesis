@@ -1,0 +1,72 @@
+//light_directional_shadow.slib
+
+struct BaseLight
+{
+    vec3 color;
+    float intensity;
+};
+
+struct DirectionalLight
+{
+	BaseLight base;
+	vec3 direction;
+};
+
+vec4 CalcLight(BaseLight base, vec3 direction, vec3 normal, vec3 worldPos)
+{
+    float diffuseFactor = dot(normal, -direction);
+    
+    vec4 diffuseColor = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 specularColor = vec4(0.0, 0.0, 0.0, 0.0);
+    
+    if(diffuseFactor > 0.0)
+    {
+        diffuseColor = vec4(base.color, 1.0) * base.intensity * diffuseFactor;
+        
+		vec3 eyePos = vec3(0.0, 0.0, 0.0); //EyePos is always the origin
+        vec3 directionToEye = normalize(eyePos - worldPos);
+        //vec3 reflectDirection = normalize(reflect(direction, normal));
+        vec3 halfDirection = normalize(directionToEye - direction);
+        
+        float specularFactor = dot(halfDirection, normal);
+        //specularFactor = pow(specularFactor, specularPower);
+		specularFactor = pow(specularFactor, 96.078431);
+        
+        if(specularFactor > 0.0)
+        {
+			specularColor = vec4(base.color, 1.0) * 0.5 * specularFactor;
+        }
+    }
+    
+    return diffuseColor + specularColor;
+}
+
+
+vec4 CalcDirectionalLight(DirectionalLight directional, vec3 normal, vec3 worldPos)
+{
+    return CalcLight(directional.base, directional.direction, normal, worldPos);
+}
+
+float CalcShadow(sampler2D shadow_map, vec4 fragPosLightSpace)
+{
+    // perform perspective divide
+    vec3 projCoords = ((fragPosLightSpace.xyz / fragPosLightSpace.w) * 0.5) + 0.5;
+
+	float currentDepth = projCoords.z;
+	float closestDepth = (texture2D(shadow_map, projCoords.xy).r * 0.5) + 0.5;
+	
+	float bias = 0.00004;
+	float shadow = currentDepth + bias > closestDepth  ? 1.0 : 0.0;   
+
+    return shadow;
+}
+
+uniform sampler2D shadowMap;
+uniform mat4 shadowMatrix;
+
+uniform DirectionalLight directional_light;
+
+vec4 calcLightColor(vec3 normal, vec3 position)
+{
+	return CalcDirectionalLight(directional_light, normal, position) * CalcShadow(shadowMap, shadowMatrix);
+}

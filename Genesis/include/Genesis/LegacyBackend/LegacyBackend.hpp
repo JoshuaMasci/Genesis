@@ -65,5 +65,7 @@ namespace Genesis
 		virtual void setUniformTexture(const string& name, const uint32_t texture_slot, const Texture2D& value) = 0;
 
 		virtual void draw(VertexBuffer vertex_buffer, IndexBuffer index_buffer, uint32_t triangle_count) = 0;
+
+		virtual void TEMP_enableAlphaBlending(bool enable) = 0;
 	};
 }

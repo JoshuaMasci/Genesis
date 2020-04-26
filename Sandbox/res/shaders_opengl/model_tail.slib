@@ -4,6 +4,6 @@ void main()
 	vec2 uv = calcUV();
 	vec4 base_color = calcBaseColor(uv);
 	vec3 normal = calcNormal(uv);
-	vec4 light_color = calcLightColor(normal);
+	vec4 light_color = calcLightColor(normal, frag_world_pos);
 	out_color = base_color * light_color;
 }
