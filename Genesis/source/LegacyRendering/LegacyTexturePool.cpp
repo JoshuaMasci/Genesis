@@ -42,7 +42,13 @@ void LegacyTexturePool::loadResource(string key)
 		break;
 	}
 
-	this->resources[key].resource = this->legacy_backend->createTexture(format, unsigned_size, data, 0);
+	TextureCreateInfo create_info = {};
+	create_info.size = unsigned_size;
+	create_info.format = format;
+	create_info.filter_mode = TextureFilterMode::Nearest;
+	create_info.wrap_mode = TextureWrapMode::Repeat;
+
+	this->resources[key].resource = this->legacy_backend->createTexture(create_info, data);
 	this->resources[key].using_count = 0;
 
 	PngLoader::unloadTexture(data);

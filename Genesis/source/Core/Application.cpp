@@ -108,7 +108,7 @@ void Application::update(TimeStep time_step)
 
 #include "Genesis/FrameGraph/FrameGraph.hpp"
 
-void Application::render(TimeStep interpolation_value)
+void Application::render(TimeStep time_step)
 {
 	GENESIS_PROFILE_FUNCTION("Application::render");
 

@@ -23,6 +23,7 @@
   },
   "light": {
     "ambient": "light_ambient.slib",
-    "directional": "light_directional.slib"
+    "directional": "light_directional.slib",
+	"point": "light_point.slib"
   }
 }

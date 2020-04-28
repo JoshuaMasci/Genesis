@@ -21,7 +21,7 @@ namespace Genesis
 		void run();
 
 		virtual void update(TimeStep time_step);
-		virtual void render(TimeStep interpolation_value);
+		virtual void render(TimeStep time_step);
 
 		void close();
 		bool isRunning();

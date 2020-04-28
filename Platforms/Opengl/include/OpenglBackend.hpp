@@ -37,11 +37,13 @@ namespace Genesis
 			virtual IndexBuffer createIndexBuffer(void* data, uint64_t data_size, IndexType type) override;
 			virtual void destoryIndexBuffer(IndexBuffer buffer) override;
 
-			virtual Texture2D createTexture(TextureFormat format, vector2U size, void* data, uint64_t data_size) override;
+			virtual Texture2D createTexture(const TextureCreateInfo& create_info, void* data) override;
 			virtual void destoryTexture(Texture2D texture) override;
 
 			virtual ShaderProgram createShaderProgram(const char* vert_data, uint32_t vert_size, const char* frag_data, uint32_t frag_size) override;
 			virtual void destoryShaderProgram(ShaderProgram program) override;
+
+			virtual void setPipelineState(const PipelineSettings& pipeline_state) override;
 
 			virtual void bindShaderProgram(ShaderProgram program) override;
 			virtual void setUniform1i(const string& name, const int32_t& value) override;
@@ -59,9 +61,16 @@ namespace Genesis
 			virtual void setUniformMat4f(const string& name, const matrix4F& value) override;
 			virtual void setUniformTexture(const string& name, const uint32_t texture_slot, const Texture2D& value) override;
 
+			virtual void setScissor(vector2I offset, vector2U extent) override;
+			virtual void clearScissor() override;
+
+			virtual void bindVertexBuffer(VertexBuffer buffer) override;
+			virtual void bindIndexBuffer(IndexBuffer buffer) override;
+			virtual void drawIndex(uint32_t index_count, uint32_t index_offset = 0) override;
+
 			virtual void draw(VertexBuffer vertex_buffer, IndexBuffer index_buffer, uint32_t triangle_count) override;
 
-			virtual void TEMP_enableAlphaBlending(bool enable) override;
+			virtual FrameStats getLastFrameStats() override;
 
 		protected:
 			SDL2_Window* window;
@@ -69,6 +78,12 @@ namespace Genesis
 			vector2U viewport_size;
 
 			OpenglShaderProgram* current_program = nullptr;
+			OpenglVertexBuffer* vertex_buffer = nullptr;
+			OpenglIndexBuffer* index_buffer = nullptr;
+
+			//Stats
+			FrameStats last_frame_stats;
+			FrameStats current_frame_stats;
 		};
 	}
 }

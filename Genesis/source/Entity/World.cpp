@@ -11,6 +11,8 @@
 
 #include "Genesis/Entity/MeshComponent.hpp"
 
+#include "Genesis/Rendering/Lighting.hpp"
+
 using namespace Genesis;
 using namespace Genesis::Physics;
 
@@ -46,11 +48,10 @@ World::World(BaseWorldRenderer* world_renderer)
 	{
 		EntityHandle entity = this->entity_registry->create();
 		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, 0.0, 0.0));
-		//this->entity_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource(), this->material_pool->getResource());
 		this->entity_registry->assign<RigidBody>(entity, this->physics_world->addRigidBody(this->entity_registry->get<TransformD>(entity)));
 		this->entity_registry->assign<ProxyShape>(entity, this->entity_registry->get<RigidBody>(entity).addCollisionShape(new reactphysics3d::SphereShape(1.0f), TransformD(), 1.0f));
 
-		this->world_renderer->addEntity(this->entity_registry, entity, "res/sphere.obj", "res/materials/red.csv");
+		this->world_renderer->addMesh(this->entity_registry, entity, "res/sphere.obj", "res/materials/red.csv");
 
 		//this->entity_registry->assign<CharacterController>(entity, 5.0);
 
@@ -60,28 +61,32 @@ World::World(BaseWorldRenderer* world_renderer)
 	{
 		EntityHandle entity = this->entity_registry->create();
 		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, -5.0, 0.0));
-		//this->entity_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource("res/ground.obj"), this->material_pool->getResource("res/materials/grid.csv"));
 		this->entity_registry->assign<StaticRigidBody>(entity, this->physics_world->addRigidBody(this->entity_registry->get<TransformD>(entity)));
 		this->entity_registry->assign<ProxyShape>(entity, this->entity_registry->get<StaticRigidBody>(entity).addCollisionShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(16.0, 1.0, 16.0)), TransformD(), 0.0f));
 
-		this->world_renderer->addEntity(this->entity_registry, entity, "res/ground.obj", "res/materials/grid.csv");
+		this->world_renderer->addMesh(this->entity_registry, entity, "res/ground.obj", "res/materials/grid.csv");
 	}
 
 	{
 		EntityHandle entity = this->entity_registry->create();
 		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, -5.0, 10.0));
-		//this->entity_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource("res/portal.obj"), this->material_pool->getResource("res/materials/blue.csv"));
 		this->entity_registry->assign<StaticRigidBody>(entity, this->physics_world->addRigidBody(this->entity_registry->get<TransformD>(entity)));
 		this->entity_registry->assign<ProxyShape>(entity, this->entity_registry->get<StaticRigidBody>(entity).addCollisionShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(2.0, 3.0, 0.5)), TransformD(vector3D(0.0, 1.5, 0.0)), 0.0f));
 
-		this->world_renderer->addEntity(this->entity_registry, entity, "res/portal.obj", "res/materials/blue.csv");
+		this->world_renderer->addMesh(this->entity_registry, entity, "res/portal.obj", "res/materials/blue.csv");
 	}
 	{
 		EntityHandle entity = this->entity_registry->create();
 		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, -5.0, 10.0));
-		//this->entity_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource("res/portal_inside.obj"), this->material_pool->getResource("res/materials/white.csv"));
 
-		this->world_renderer->addEntity(this->entity_registry, entity, "res/portal_inside.obj", "res/materials/white.csv");
+		this->world_renderer->addMesh(this->entity_registry, entity, "res/portal_inside.obj", "res/materials/white.csv");
+	}
+
+	{
+		EntityHandle entity = this->entity_registry->create();
+		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, 0.0, 0.0), glm::angleAxis(glm::radians(85.0f), vector3F(1.0f, 0.0f, 0.0f)));
+		this->entity_registry->assign<DirectionalLight>(entity, vector3F(1.0f), 0.2f);
+		this->entity_registry->assign<PointLight>(entity, 25.0f, vector2F(1.0f, 0.0f), vector3F(0.8f, 0.0f, 0.8f), 0.2f);
 	}
 }
 

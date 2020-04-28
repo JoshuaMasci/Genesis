@@ -1,5 +1,8 @@
-//light_ambient.slib
+//light_point.slib
+
+uniform PointLight point_light;
+
 vec4 calcLightColor(vec3 normal, vec3 position)
 {
-	return vec4(environment.ambient_light, 1.0);
+	return CalcPointLight(point_light, normal, position);
 }

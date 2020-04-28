@@ -5,6 +5,7 @@
 #include "SDL2_Window.hpp" 
 #include "OpenglBackend.hpp"
 #include "Genesis/LegacyRendering/LegacyWorldRenderer.hpp"
+#include "Genesis/LegacyRendering/LegacyImGui.hpp"
 
 #include <Genesis/Core/Types.hpp>
 
@@ -15,6 +16,7 @@ SandboxApplication::SandboxApplication()
 
 	this->legacy_backend = new Genesis::Opengl::OpenglBackend((Genesis::SDL2_Window*) window);
 	this->world_renderer = new Genesis::LegacyWorldRenderer(this->legacy_backend);
+	this->ui_renderer = new Genesis::LegacyImGui(this->legacy_backend, &this->input_manager, this->window);
 
 	this->world = new Genesis::World(this->world_renderer);
 
@@ -64,15 +66,38 @@ void SandboxApplication::update(Genesis::TimeStep time_step)
 	}
 }
 
-void SandboxApplication::render(Genesis::TimeStep interpolation_value)
+#include "imgui.h"
+
+void SandboxApplication::render(Genesis::TimeStep time_step)
 {
 	GENESIS_PROFILE_FUNCTION("SandboxApplication::render");
-	
-	Application::render(interpolation_value);
+
+	Application::render(time_step);
 
 	this->legacy_backend->startFrame();
 
 	this->world_renderer->drawWorld(this->world);
+
+	this->ui_renderer->beginFrame();
+	
+	{
+		Genesis::FrameStats stats = this->legacy_backend->getLastFrameStats();
+
+		const float DISTANCE = 10.0f;
+		ImGuiIO& io = ImGui::GetIO();
+		ImVec2 window_pos = ImVec2(io.DisplaySize.x - DISTANCE, DISTANCE);
+		ImVec2 window_pos_pivot = ImVec2(1.0f, 0.0f);
+		ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+		ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
+
+		ImGui::Begin("Stats", 0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav);
+		ImGui::LabelText(std::to_string(time_step * 1000.0).c_str(), "Frame Time (ms)");
+		ImGui::LabelText(std::to_string(stats.draw_calls).c_str(), "Draw Calls");
+		ImGui::LabelText(std::to_string(stats.triangles_count).c_str(), "Tris count");
+		ImGui::End();
+	}
+
+	this->ui_renderer->endFrame();
 
 	this->legacy_backend->endFrame();
 }

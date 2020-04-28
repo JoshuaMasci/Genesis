@@ -3,6 +3,7 @@
 #include <Genesis/Genesis.hpp>
 #include <Genesis/Entity/World.hpp>
 #include <Genesis/Rendering/BaseWorldRenderer.hpp>
+#include "Genesis/Rendering/BaseImGui.hpp"
 
 #include <Genesis/LegacyBackend/LegacyBackend.hpp>
 
@@ -19,6 +20,7 @@ protected:
 
 	Genesis::World* world;
 	Genesis::BaseWorldRenderer* world_renderer;
+	Genesis::BaseImGui* ui_renderer;
 
 	Genesis::VertexBuffer vertex_buffer;
 	Genesis::IndexBuffer index_buffer;

@@ -2,12 +2,12 @@
 
 using namespace Genesis;
 
-#include "imgui.cpp"
+/*#include "imgui.cpp"
 #include "imgui.h"
 #include "imgui_demo.cpp"
 #include "imgui_draw.cpp"
 #include "imgui_widgets.cpp"
-#include "imgui_internal.h"
+#include "imgui_internal.h"*/
 
 Genesis::ImGuiRenderer::ImGuiRenderer(RenderingBackend* backend, InputManager* input_manager)
 {
