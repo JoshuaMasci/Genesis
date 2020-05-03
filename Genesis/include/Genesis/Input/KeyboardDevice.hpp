@@ -52,7 +52,7 @@ namespace Genesis
 		RCtrl,
 		RAlt,
 
-		Return,
+		Enter,
 		Backspace,
 		Tab,
 		Space,
@@ -240,11 +240,18 @@ namespace Genesis
 		KeyboardDevice(string name);
 		~KeyboardDevice();
 
+		virtual void updateValues() override;
+
 		void updateKeyboardButton(KeyboardButton button, bool state, Timestamp time);
+		void updateInputText(string input_text);
+		string getInputText();
+
+		bool getButtonState(KeyboardButton button);
 
 		virtual string getAxisName(uint16_t index) override;
 		virtual string getButtonName(uint16_t index) override;
-
 	protected:
+
+		string input_text;
 	};
 };

@@ -7,7 +7,9 @@
 #include "Genesis/LegacyRendering/LegacyWorldRenderer.hpp"
 #include "Genesis/LegacyRendering/LegacyImGui.hpp"
 
-#include <Genesis/Core/Types.hpp>
+#include "Genesis/Core/Types.hpp"
+
+#include "Genesis/Resource/ResourceLoaders.hpp"
 
 SandboxApplication::SandboxApplication()
 {
@@ -20,36 +22,24 @@ SandboxApplication::SandboxApplication()
 
 	this->world = new Genesis::World(this->world_renderer);
 
-	/*{
-		Genesis::vector<Genesis::VertexElementType> vertex_types = { Genesis::VertexElementType::float_3, Genesis::VertexElementType::float_3 };
-		Genesis::VertexInputDescriptionCreateInfo vertex_description = { vertex_types.data(), (uint32_t)vertex_types.size()};
 
-		Genesis::vector3F vertices[] =
-		{
-			Genesis::vector3F(-1.0f, -1.0f, 0.0f),//Position
-			Genesis::vector3F(1.0f, 0.0f, 0.0f), //Color
-
-			Genesis::vector3F(1.0f, -1.0f, 0.0f),
-			Genesis::vector3F(0.0f, 1.0f, 0.0f),
-
-			Genesis::vector3F(0.0f, 1.0f, 0.0f),
-			Genesis::vector3F(0.0f, 0.0f, 1.0f)
-		};
-
-		uint32_t indices[] = { 0, 1, 2 };
-
-		this->vertex_buffer = this->legacy_backend->createVertexBuffer(vertices, sizeof(Genesis::vector3F) * _countof(vertices), vertex_description);
-		this->index_buffer = this->legacy_backend->createIndexBuffer(indices, sizeof(uint32_t) * _countof(indices), Genesis::IndexType::uint32);
-		this->index_count = _countof(indices);
-
-		Genesis::string vertex_shader = "#version 330 core\n layout(location = 0) in vec3 position;\n layout(location = 1) in vec3 color;\n out vec3 out_color;\n void main()\n {\n out_color = color;\n gl_Position = vec4(position, 1.0);\n }\n ";
-		Genesis::string fragment_shader = "#version 330 core\n in vec3 out_color;\n out vec4 FragColor;\n void main()\n {\n FragColor = vec4(out_color, 1.0);\n }\n";
-		this->program = this->legacy_backend->createShaderProgram(vertex_shader.c_str(), (uint32_t)vertex_shader.size(), fragment_shader.c_str(), (uint32_t)fragment_shader.size());
-	}*/
+	{
+		this->offscreen_size = Genesis::vector2U(1920, 1080);
+		Genesis::FramebufferAttachmentInfo color_attachment = { Genesis::TextureFormat::RGBA, Genesis::MultisampleCount::Sample_1 };
+		Genesis::FramebufferDepthInfo depth_attachment = {Genesis::DepthFormat::depth_24,  Genesis::MultisampleCount::Sample_1 };
+		Genesis::FramebufferCreateInfo create_info = {};
+		create_info.attachments = &color_attachment;
+		create_info.attachment_count = 1;
+		create_info.depth_attachment = &depth_attachment;
+		create_info.size = this->offscreen_size;
+		this->offscreen_framebuffer = this->legacy_backend->createFramebuffer(create_info);
+	}
 }
 
 SandboxApplication::~SandboxApplication()
 {
+	this->legacy_backend->destoryFramebuffer(this->offscreen_framebuffer);
+
 	delete this->world;
 	delete this->world_renderer;
 	delete this->legacy_backend;
@@ -76,24 +66,60 @@ void SandboxApplication::render(Genesis::TimeStep time_step)
 
 	this->legacy_backend->startFrame();
 
-	this->world_renderer->drawWorld(this->world);
-
 	this->ui_renderer->beginFrame();
-	
+	this->ui_renderer->beginDocking();
+	if (ImGui::BeginMenuBar())
+	{
+		if (ImGui::BeginMenu("Menu"))
+		{
+			if (ImGui::MenuItem("item 1", "")) { GENESIS_ENGINE_INFO("item 1"); };
+			if (ImGui::MenuItem("item 2", "")) { GENESIS_ENGINE_INFO("item 2"); };
+			if (ImGui::MenuItem("item 3", "")) { GENESIS_ENGINE_INFO("item 3"); };
+			if (ImGui::MenuItem("item 4", "")) { GENESIS_ENGINE_INFO("item 4"); };
+			if (ImGui::MenuItem("item 5", "")) { GENESIS_ENGINE_INFO("item 5"); };
+			if (ImGui::MenuItem("item 6", "")) { GENESIS_ENGINE_INFO("item 6"); };
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenuBar();
+	}
+	this->ui_renderer->endDocking();
+
 	{
 		Genesis::FrameStats stats = this->legacy_backend->getLastFrameStats();
 
-		const float DISTANCE = 10.0f;
-		ImGuiIO& io = ImGui::GetIO();
-		ImVec2 window_pos = ImVec2(io.DisplaySize.x - DISTANCE, DISTANCE);
-		ImVec2 window_pos_pivot = ImVec2(1.0f, 0.0f);
-		ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-		ImGui::SetNextWindowBgAlpha(0.35f); // Transparent background
-
-		ImGui::Begin("Stats", 0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav);
+		ImGui::Begin("Stats");
 		ImGui::LabelText(std::to_string(time_step * 1000.0).c_str(), "Frame Time (ms)");
 		ImGui::LabelText(std::to_string(stats.draw_calls).c_str(), "Draw Calls");
 		ImGui::LabelText(std::to_string(stats.triangles_count).c_str(), "Tris count");
+		
+		ImGui::End();
+	}
+
+	{
+		ImGui::Begin("Input Test");
+
+		static char str0[128] = "Hello, world!";
+		bool value = ImGui::InputText("input text", str0, _countof(str0) * sizeof(char));
+
+		if (value)
+		{
+			GENESIS_INFO("Text: {}", str0);
+		}
+
+		ImGui::End();
+	}
+
+	{
+		ImGui::Begin("GameView");
+		ImVec2 vMin = ImGui::GetWindowContentRegionMin();
+		ImVec2 vMax = ImGui::GetWindowContentRegionMax();
+		ImVec2 size = ImVec2(vMax.x - vMin.x, vMax.y - vMin.y);
+
+		this->legacy_backend->bindFramebuffer(this->offscreen_framebuffer);
+		this->world_renderer->drawWorld(this->world, Genesis::vector2U(size.x, size.y));
+		this->legacy_backend->bindFramebuffer(nullptr);
+
+		ImGui::Image((void*)(intptr_t)this->legacy_backend->getFramebufferColorAttachment(this->offscreen_framebuffer, 0), size, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 		ImGui::End();
 	}
 

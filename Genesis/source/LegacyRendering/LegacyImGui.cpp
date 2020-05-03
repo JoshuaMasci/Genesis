@@ -81,8 +81,13 @@ void LegacyImGui::endFrame()
 	ImGui::EndFrame();
 	ImGui::Render();
 	ImDrawData* draw_data = ImGui::GetDrawData();
-	this->backend->bindShaderProgram(this->imgui_program);
 
+	int fb_width = (int)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
+	int fb_height = (int)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y);
+	if (fb_width <= 0 || fb_height <= 0)
+		return;
+
+	this->backend->bindShaderProgram(this->imgui_program);
 	this->backend->setPipelineState(this->settings);
 
 	vector2F scale;
@@ -123,13 +128,12 @@ void LegacyImGui::endFrame()
 				clip_rect.y = (pcmd->ClipRect.y - clip_off.y) * clip_scale.y;
 				clip_rect.z = (pcmd->ClipRect.z - clip_off.x) * clip_scale.x;
 				clip_rect.w = (pcmd->ClipRect.w - clip_off.y) * clip_scale.y;
-
-				if (clip_rect.x < draw_data->DisplaySize.x && clip_rect.y < draw_data->DisplaySize.y && clip_rect.z >= 0.0f && clip_rect.w >= 0.0f)
+				if (clip_rect.x < fb_width && clip_rect.y < fb_height && clip_rect.z >= 0.0f && clip_rect.w >= 0.0f)
 				{
 					// Apply scissor/clipping rectangle
-					vector2I offset = { clip_rect.x, clip_rect.y };
-					vector2U extend = { (uint32_t)clip_rect.z ,  (uint32_t)clip_rect.w };
-					//this->backend->setScissor(offset, extend);
+					vector2I offset = { (int)clip_rect.x, (int)(fb_height - clip_rect.w) };
+					vector2U extend = { (int)(clip_rect.z - clip_rect.x), (int)(clip_rect.w - clip_rect.y) };
+					this->backend->setScissor(offset, extend);
 					this->backend->setUniformTexture("texture_atlas", 0, (Texture2D)pcmd->TextureId);
 					this->backend->drawIndex(pcmd->ElemCount, pcmd->IdxOffset);
 				}
@@ -141,6 +145,7 @@ void LegacyImGui::endFrame()
 		this->backend->destoryVertexBuffer(vertex_buffer);
 		this->backend->destoryIndexBuffer(index_buffer);
 	}
+	this->backend->clearScissor();
 
 	/*PipelineSettings settings;
 	settings.cull_mode = CullMode::None;

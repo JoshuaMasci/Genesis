@@ -20,6 +20,14 @@ namespace Genesis
 		RGBA = 4
 	};
 
+	enum class DepthFormat
+	{
+		depth_16,
+		depth_24,
+		depth_32,
+		depth_32f,
+	};
+
 	enum class TextureWrapMode
 	{
 		Repeat,
@@ -41,8 +49,39 @@ namespace Genesis
 		TextureWrapMode wrap_mode;
 		TextureFilterMode filter_mode;
 	};
-
 	typedef uint32_t Texture2D;
+
+	enum class MultisampleCount
+	{
+		Sample_1 = 1,
+		Sample_2 = 2,
+		Sample_4 = 4,
+		Sample_8 = 8,
+		Sample_16 = 16,
+		Sample_32 = 32,
+		Sample_64 = 64
+	};
+
+	struct FramebufferAttachmentInfo
+	{
+		TextureFormat format;
+		MultisampleCount samples;
+	};
+
+	struct FramebufferDepthInfo
+	{
+		DepthFormat format;
+		MultisampleCount samples;
+	};
+
+	struct FramebufferCreateInfo
+	{
+		vector2U size;
+		FramebufferAttachmentInfo* attachments;
+		uint32_t attachment_count;
+		FramebufferDepthInfo* depth_attachment;
+	};
+	typedef void* Framebuffer;
 	
 	typedef void* ShaderProgram;
 
@@ -74,7 +113,13 @@ namespace Genesis
 		virtual ShaderProgram createShaderProgram(const char* vert_data, uint32_t vert_size, const char* frag_data, uint32_t frag_size) = 0;
 		virtual void destoryShaderProgram(ShaderProgram program) = 0;
 
+		virtual Framebuffer createFramebuffer(const FramebufferCreateInfo& create_info) = 0;
+		virtual void destoryFramebuffer(Framebuffer framebuffer) = 0;
+		virtual Texture2D getFramebufferColorAttachment(Framebuffer framebuffer, uint32_t index) = 0;
+		virtual Texture2D getFramebufferDepthAttachment(Framebuffer framebuffer) = 0;
+
 		//Commands
+		virtual void bindFramebuffer(Framebuffer framebuffer) = 0;
 		virtual void setPipelineState(const PipelineSettings& pipeline_state) = 0;
 
 		virtual void bindShaderProgram(ShaderProgram program) = 0;

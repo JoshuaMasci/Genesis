@@ -37,12 +37,13 @@ namespace Genesis
 
 		virtual void addMesh(EntityRegistry* registry, EntityHandle entity, const string& mesh_file, const string& material_file) override;
 		virtual void removeEntity(EntityRegistry* registry, EntityHandle entity) override;
-		virtual void drawWorld(World* world) override;
+		virtual void drawWorld(World* world, vector2U size) override;
 
 	protected: 
 		void drawAmbient(EntityRegistry* entity_registry, EnvironmentData* environment, Frustum* frustum);
 		void drawDirectional(EntityRegistry* entity_registry, EnvironmentData* environment, Frustum* frustum);
 		void drawPoint(EntityRegistry* entity_registry, EnvironmentData* environment, Frustum* frustum);
+		void drawSpot(EntityRegistry* entity_registry, EnvironmentData* environment, Frustum* frustum);
 
 		LegacyBackend* legacy_backend;
 
@@ -59,5 +60,8 @@ namespace Genesis
 
 		ShaderProgram color_point;
 		ShaderProgram texture_point;
+
+		ShaderProgram color_spot;
+		ShaderProgram texture_spot;
 	};
 }

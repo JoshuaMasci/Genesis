@@ -16,7 +16,7 @@ SDL2_Platform::SDL2_Platform(Application* app)
 
 	//Create Keyboard Device
 	this->keyboard_device = new KeyboardDevice("SDL2 Keyboard");
-	this->application->input_manager.addInputDevice(this->keyboard_device);
+	this->application->input_manager.setKeyboardDevice(this->keyboard_device);
 
 	this->keyboard_device->addButton("Debug_Forward", (ButtonIndex) KeyboardButton::W);
 	this->keyboard_device->addButton("Debug_Backward", (ButtonIndex)KeyboardButton::S);
@@ -34,7 +34,7 @@ SDL2_Platform::SDL2_Platform(Application* app)
 
 	//Create Mouse Device
 	this->mouse_device = new MouseDevice("SDL2 Mouse");
-	this->application->input_manager.addInputDevice(this->mouse_device);
+	this->application->input_manager.setMouseDevice(this->mouse_device);
 
 	this->mouse_device->addButton("Mouse_Left", (ButtonIndex)MouseButton::Left);
 	this->mouse_device->addButton("Mouse_Middle", (ButtonIndex)MouseButton::Middle);
@@ -49,13 +49,13 @@ SDL2_Platform::~SDL2_Platform()
 {
 	if (this->keyboard_device != nullptr)
 	{
-		this->application->input_manager.removeInputDevice(this->keyboard_device);
+		this->application->input_manager.removeKeyboardDevice();
 		delete this->keyboard_device;
 	}
 
 	if (this->mouse_device != nullptr)
 	{
-		this->application->input_manager.removeInputDevice(this->mouse_device);
+		this->application->input_manager.removeMouseDevice();
 		delete this->mouse_device;
 	}
 
@@ -203,7 +203,7 @@ KeyboardButton getGenesisKeyboardButton(SDL_Scancode scancode)
 	case SDL_SCANCODE_RALT:
 		return KeyboardButton::RAlt;
 	case SDL_SCANCODE_RETURN:
-		return KeyboardButton::Return;
+		return KeyboardButton::Enter;
 	case SDL_SCANCODE_BACKSPACE:
 		return KeyboardButton::Backspace;
 	case SDL_SCANCODE_TAB:
@@ -311,6 +311,13 @@ void SDL2_Platform::onUpdate(TimeStep time_step)
 			if (this->keyboard_device != nullptr)
 			{
 				this->keyboard_device->updateKeyboardButton(getGenesisKeyboardButton(event.key.keysym.scancode), false, event.key.timestamp);
+			}
+		}
+		else if (event.type == SDL_TEXTINPUT)
+		{
+			if (this->keyboard_device != nullptr)
+			{
+				this->keyboard_device->updateInputText(event.text.text);
 			}
 		}
 

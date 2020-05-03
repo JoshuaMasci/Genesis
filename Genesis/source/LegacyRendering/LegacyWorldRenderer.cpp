@@ -92,6 +92,12 @@ LegacyWorldRenderer::LegacyWorldRenderer(LegacyBackend* backend)
 
 		FileSystem::loadFileString("res/shaders_opengl/build/model_texture_basic_basic_point.frag", frag_data);
 		this->texture_point = this->legacy_backend->createShaderProgram(vert_data.data(), (uint32_t)vert_data.size(), frag_data.data(), (uint32_t)frag_data.size());
+
+		FileSystem::loadFileString("res/shaders_opengl/build/model_albedo_basic_basic_spot.frag", frag_data);
+		this->color_spot = this->legacy_backend->createShaderProgram(vert_data.data(), (uint32_t)vert_data.size(), frag_data.data(), (uint32_t)frag_data.size());
+
+		FileSystem::loadFileString("res/shaders_opengl/build/model_texture_basic_basic_spot.frag", frag_data);
+		this->texture_spot = this->legacy_backend->createShaderProgram(vert_data.data(), (uint32_t)vert_data.size(), frag_data.data(), (uint32_t)frag_data.size());
 	}
 }
 
@@ -113,10 +119,9 @@ void LegacyWorldRenderer::removeEntity(EntityRegistry* registry, EntityHandle en
 	registry->remove<LegacyMeshComponent>(entity);
 }
 
-void LegacyWorldRenderer::drawWorld(World* world)
+void LegacyWorldRenderer::drawWorld(World* world, vector2U size)
 {
-	vector2U temp_size = this->legacy_backend ->getScreenSize();
-	float aspect_ratio = ((float)temp_size.x) / ((float)temp_size.y);
+	float aspect_ratio = ((float)size.x) / ((float)size.y);
 
 	EntityHandle camera = world->getCamera();
 	Camera& camera_component = world->getEntityRegistry()->get<Camera>(camera);
@@ -145,111 +150,7 @@ void LegacyWorldRenderer::drawWorld(World* world)
 	this->legacy_backend->setPipelineState(light_settings);
 	this->drawDirectional(world->getEntityRegistry(), &environment, &frustum);
 	this->drawPoint(world->getEntityRegistry(), &environment, &frustum);
-
-	/*auto& view = world->getEntityRegistry()->view<LegacyMeshComponent, TransformD>();
-	for (EntityHandle entity : view)
-	{
-		LegacyMeshComponent& mesh_component = view.get<LegacyMeshComponent>(entity);
-		TransformF render_transform = view.get<TransformD>(entity).toTransformF();
-
-		PipelineSettings settings;
-		settings.cull_mode = CullMode::Back;
-		settings.depth_test = DepthTest::Test_And_Write;
-		settings.depth_op = DepthOp::Less;
-		settings.blend_op = BlendOp::None;
-		settings.src_factor = BlendFactor::One;
-		settings.dst_factor = BlendFactor::Zero;
-
-		if (frustum.sphereTest(render_transform.getPosition(), mesh_component.mesh->frustum_sphere_radius))
-		{
-			if (mesh_component.material->texture_names[0].empty())
-			{
-				this->legacy_backend->bindShaderProgram(this->color_ambient);
-			}
-			else
-			{
-				this->legacy_backend->bindShaderProgram(this->texture_ambient);
-			}
-
-			//Environment
-			writeEnvironmentUniform(this->legacy_backend, camera_transform.getPosition(), vector3F(0.1f), view_projection_matrix);
-
-			//Material
-			writeMaterialUniform(this->legacy_backend, mesh_component.material);
-
-			//Matrices
-			writeTransformUniform(this->legacy_backend, render_transform);
-		
-			this->legacy_backend->setPipelineState(settings);
-
-			this->legacy_backend->draw(mesh_component.mesh->vertex_buffer, mesh_component.mesh->index_buffer, mesh_component.mesh->index_count);
-
-			PipelineSettings light_settings;
-			light_settings.cull_mode = CullMode::Back;
-			light_settings.depth_test = DepthTest::Test_Only;
-			light_settings.depth_op = DepthOp::Equal;
-			light_settings.blend_op = BlendOp::Add;
-			light_settings.src_factor = BlendFactor::One;
-			light_settings.dst_factor = BlendFactor::One;
-			this->legacy_backend->setPipelineState(light_settings);
-
-			//Directional
-			{
-				if (mesh_component.material->texture_names[0].empty())
-				{
-					this->legacy_backend->bindShaderProgram(this->color_directional);
-				}
-				else
-				{
-					this->legacy_backend->bindShaderProgram(this->texture_directional);
-				}
-
-				//Environment
-				writeEnvironmentUniform(this->legacy_backend, camera_transform.getPosition(), vector3F(0.1f), view_projection_matrix);
-
-				//Material
-				writeMaterialUniform(this->legacy_backend, mesh_component.material);
-
-				//Matrices
-				writeTransformUniform(this->legacy_backend, render_transform);
-
-				//Light
-				TransformF light_transform;
-				light_transform.setOrientation(glm::angleAxis(glm::radians(85.0f), vector3F(1.0f, 0.0f, 0.0f)));
-				writeDirectionalLightUniform(this->legacy_backend, DirectionalLight(vector3F(1.0f), 0.2f), light_transform);
-
-				this->legacy_backend->draw(mesh_component.mesh->vertex_buffer, mesh_component.mesh->index_buffer, mesh_component.mesh->index_count);
-			}
-
-			//Point
-			{
-				if (mesh_component.material->texture_names[0].empty())
-				{
-					this->legacy_backend->bindShaderProgram(this->color_point);
-				}
-				else
-				{
-					this->legacy_backend->bindShaderProgram(this->texture_point);
-				}
-
-				//Environment
-				writeEnvironmentUniform(this->legacy_backend, camera_transform.getPosition(), vector3F(0.1f), view_projection_matrix);
-
-				//Material
-				writeMaterialUniform(this->legacy_backend, mesh_component.material);
-
-				//Matrices
-				writeTransformUniform(this->legacy_backend, render_transform);
-
-				//Light
-				PointLight light(10.0f, vector2F(1.0f, 0.0f), vector3F(0.8f, 0.0f, 0.8f), 0.2f);
-				TransformF light_transform(vector3F(0.0f, 0.0f, 0.0f));
-				writePointLightUniform(this->legacy_backend, light, light_transform);
-
-				this->legacy_backend->draw(mesh_component.mesh->vertex_buffer, mesh_component.mesh->index_buffer, mesh_component.mesh->index_count);
-			}
-		}
-	}*/
+	this->drawSpot(world->getEntityRegistry(), &environment, &frustum);
 }
 
 void LegacyWorldRenderer::drawAmbient(EntityRegistry* entity_registry, EnvironmentData* environment, Frustum* frustum)
@@ -373,6 +274,49 @@ void LegacyWorldRenderer::drawPoint(EntityRegistry* entity_registry, Environment
 
 				//Light
 				writePointLightUniform(this->legacy_backend, light, light_transform);
+
+				this->legacy_backend->draw(mesh_component.mesh->vertex_buffer, mesh_component.mesh->index_buffer, mesh_component.mesh->index_count);
+			}
+		}
+	}
+}
+
+void LegacyWorldRenderer::drawSpot(EntityRegistry* entity_registry, EnvironmentData* environment, Frustum* frustum)
+{
+	auto& spot_view = entity_registry->view<SpotLight, TransformD>();
+	for (EntityHandle light_entity : spot_view)
+	{
+		SpotLight& light = spot_view.get<SpotLight>(light_entity);
+		TransformF light_transform = spot_view.get<TransformD>(light_entity).toTransformF();
+
+		auto& mesh_view = entity_registry->view<LegacyMeshComponent, TransformD>();
+		for (EntityHandle entity : mesh_view)
+		{
+			LegacyMeshComponent& mesh_component = mesh_view.get<LegacyMeshComponent>(entity);
+			TransformF render_transform = mesh_view.get<TransformD>(entity).toTransformF();
+
+			if (frustum->sphereTest(render_transform.getPosition(), mesh_component.mesh->frustum_sphere_radius))
+			{
+				if (mesh_component.material->texture_names[0].empty())
+				{
+					this->legacy_backend->bindShaderProgram(this->color_spot);
+				}
+				else
+				{
+					this->legacy_backend->bindShaderProgram(this->texture_spot);
+				}
+
+				//Environment
+				writeEnvironmentUniform(this->legacy_backend, environment);
+
+				//Material
+				writeMaterialUniform(this->legacy_backend, mesh_component.material);
+
+				//Matrices
+				writeTransformUniform(this->legacy_backend, render_transform);
+
+				//Light
+				writeSpotLightUniform(this->legacy_backend, light, light_transform);
 
 				this->legacy_backend->draw(mesh_component.mesh->vertex_buffer, mesh_component.mesh->index_buffer, mesh_component.mesh->index_count);
 			}

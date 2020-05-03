@@ -21,12 +21,9 @@ protected:
 	Genesis::World* world;
 	Genesis::BaseWorldRenderer* world_renderer;
 	Genesis::BaseImGui* ui_renderer;
-
-	Genesis::VertexBuffer vertex_buffer;
-	Genesis::IndexBuffer index_buffer;
-	uint32_t index_count;
-
-	Genesis::ShaderProgram program;
+	
+	Genesis::vector2U offscreen_size;
+	Genesis::Framebuffer offscreen_framebuffer;
 };
 
 

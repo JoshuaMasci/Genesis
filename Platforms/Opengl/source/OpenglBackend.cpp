@@ -8,6 +8,26 @@
 using namespace Genesis;
 using namespace Opengl;
 
+void GLClearError()
+{
+	while (glGetError() != GL_NO_ERROR);
+}
+
+void GLCheckError()
+{
+	while (GLenum error = glGetError())
+	{
+		GENESIS_ENGINE_ERROR("Opengl Error: {}", error);
+	}
+}
+
+#define DEBUG
+#ifdef DEBUG
+#define GLCall(x) GLClearError(); x; GLCheckError();
+#else
+#define GLCall(x) x
+#endif
+
 OpenglBackend::OpenglBackend(SDL2_Window* window)
 {
 	this->window = window;
@@ -24,13 +44,15 @@ OpenglBackend::OpenglBackend(SDL2_Window* window)
 	if ((major > 4 || (major == 4 && minor >= 5)) || GLEW_ARB_clip_control)
 	{
 		//Matches Vulkan's clip space
-		glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE);
+		GLCall(glClipControl(GL_UPPER_LEFT, GL_ZERO_TO_ONE));
 	}
 	else
 	{
 		GENESIS_ENGINE_ERROR("glClipControl required, sorry!");
 		exit(1);
 	}
+
+	glFrontFace(GL_CW);
 }
 
 OpenglBackend::~OpenglBackend()
@@ -49,6 +71,7 @@ void OpenglBackend::startFrame()
 	glDepthMask(GL_TRUE);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClearDepth(1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -63,11 +86,6 @@ void OpenglBackend::startFrame()
 	this->viewport_size = window_size;
 
 	this->current_program = nullptr;
-
-	/*glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);*/
-	glFrontFace(GL_CW);
 }
 
 void OpenglBackend::endFrame()
@@ -181,28 +199,45 @@ void OpenglBackend::destoryIndexBuffer(IndexBuffer buffer)
 	delete index_buffer;
 }
 
+GLenum getFormat(TextureFormat format)
+{
+	switch (format)
+	{
+	case TextureFormat::R:
+		return GL_R;
+	case TextureFormat::RG:
+		return GL_RG;
+	case TextureFormat::RGB:
+		return GL_RGB;
+	case TextureFormat::RGBA:
+		return GL_RGBA;
+	}
+	return 0;
+}
+
+GLenum getDepthFormat(DepthFormat format)
+{
+	switch (format)
+	{
+	case DepthFormat::depth_16:
+		return GL_DEPTH_COMPONENT16;
+	case DepthFormat::depth_24:
+		return GL_DEPTH_COMPONENT24;
+	case DepthFormat::depth_32:
+		return GL_DEPTH_COMPONENT32;
+	case DepthFormat::depth_32f:
+		return GL_DEPTH_COMPONENT32;
+	}
+	return 0;
+}
+
 Texture2D OpenglBackend::createTexture(const TextureCreateInfo& create_info, void* data)
 {
 	GLuint texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
-	GLenum gl_format;
-	switch (create_info.format)
-	{
-	case TextureFormat::R:
-		gl_format = GL_R;
-		break;
-	case TextureFormat::RG:
-		gl_format = GL_RG;
-		break;
-	case TextureFormat::RGB:
-		gl_format = GL_RGB;
-		break;
-	case TextureFormat::RGBA:
-		gl_format = GL_RGBA;
-		break;
-	}
+	GLenum gl_format = getFormat(create_info.format);
 
 	GLenum gl_wrap_mode;
 	switch (create_info.wrap_mode)
@@ -245,7 +280,7 @@ Texture2D OpenglBackend::createTexture(const TextureCreateInfo& create_info, voi
 
 void OpenglBackend::destoryTexture(Texture2D texture)
 {
-	glDeleteTextures(1, &((GLuint)texture));
+	glDeleteTextures(1, &(GLuint)texture);
 }
 
 ShaderProgram OpenglBackend::createShaderProgram(const char* vert_data, uint32_t vert_size, const char* frag_data, uint32_t frag_size)
@@ -256,6 +291,129 @@ ShaderProgram OpenglBackend::createShaderProgram(const char* vert_data, uint32_t
 void OpenglBackend::destoryShaderProgram(ShaderProgram program)
 {
 	delete (OpenglShaderProgram*)program;
+}
+
+Framebuffer OpenglBackend::createFramebuffer(const FramebufferCreateInfo& create_info)
+{
+	OpenglFramebuffer* framebuffer = new OpenglFramebuffer();
+	framebuffer->size = create_info.size;
+	framebuffer->is_multisampled = false;
+	framebuffer->has_depth = false;
+
+	glGenFramebuffers(1, &framebuffer->frame_buffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->frame_buffer);
+
+	framebuffer->attachements.resize(create_info.attachment_count);
+
+	for (size_t i = 0; i < framebuffer->attachements.size(); i++)
+	{
+		GLuint attachment;
+		glGenTextures(1, &attachment);
+
+		GLenum gl_format = getFormat(create_info.attachments[i].format);
+
+		if (create_info.attachments[i].samples == MultisampleCount::Sample_1)
+		{
+			glBindTexture(GL_TEXTURE_2D, attachment);
+			glTexImage2D(GL_TEXTURE_2D, 0, gl_format, create_info.size.x, create_info.size.y, 0, gl_format, GL_UNSIGNED_BYTE, NULL);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, attachment, 0);
+		}
+		else
+		{
+			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, attachment);
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, (GLsizei)create_info.attachments[i].samples, gl_format, create_info.size.x, create_info.size.y, true);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D_MULTISAMPLE, attachment, 0);
+		}
+
+		framebuffer->attachements[i] = attachment;
+	}
+
+	if (create_info.depth_attachment != nullptr)
+	{
+		framebuffer->has_depth = true;
+
+		GLenum depth_format = getDepthFormat(create_info.depth_attachment->format);
+
+		GLuint depth_attachment;
+		glGenTextures(1, &depth_attachment);
+
+		if (create_info.depth_attachment->samples == MultisampleCount::Sample_1)
+		{
+			glBindTexture(GL_TEXTURE_2D, depth_attachment);
+			glTexStorage2D(GL_TEXTURE_2D, 1, depth_format, create_info.size.x, create_info.size.y);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depth_attachment, 0);
+		}
+		else
+		{
+			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, depth_attachment);
+			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, (GLsizei)create_info.depth_attachment->samples, depth_format, create_info.size.x, create_info.size.y, true);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, depth_attachment, 0);
+		}
+
+		framebuffer->depth_attachement = depth_attachment;
+	}
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return framebuffer;
+}
+
+void OpenglBackend::destoryFramebuffer(Framebuffer framebuffer)
+{
+	OpenglFramebuffer* opengl_framebuffer = (OpenglFramebuffer*)framebuffer;
+
+	glDeleteTextures(opengl_framebuffer->attachements.size(), opengl_framebuffer->attachements.data());
+
+	if (opengl_framebuffer->has_depth)
+	{
+		glDeleteTextures(1, &opengl_framebuffer->depth_attachement);
+	}
+
+	glDeleteFramebuffers(1, &opengl_framebuffer->frame_buffer);
+
+	delete opengl_framebuffer;
+}
+
+Texture2D OpenglBackend::getFramebufferColorAttachment(Framebuffer framebuffer, uint32_t index)
+{
+	return (Texture2D)((OpenglFramebuffer*)framebuffer)->attachements[index];
+}
+
+Texture2D OpenglBackend::getFramebufferDepthAttachment(Framebuffer framebuffer)
+{
+	return (Texture2D)((OpenglFramebuffer*)framebuffer)->depth_attachement;
+}
+
+void OpenglBackend::bindFramebuffer(Framebuffer framebuffer)
+{
+	vector2U size;
+
+	if (framebuffer == nullptr)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		size = this->window->getWindowSize();
+	}
+	else
+	{
+		//TODO TEMP
+		glBindFramebuffer(GL_FRAMEBUFFER, ((OpenglFramebuffer*)framebuffer)->frame_buffer);
+
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		size = ((OpenglFramebuffer*)framebuffer)->size;
+	}
+
+	if (size.y == 0) // Prevent A Divide By Zero By
+	{
+		size.y = 1;// Making Height Equal One
+	}
+
+	glViewport(0, 0, size.x, size.y);
+	this->viewport_size = size;
 }
 
 void OpenglBackend::setPipelineState(const PipelineSettings& pipeline_state)
@@ -508,9 +666,8 @@ void OpenglBackend::setUniformMat4f(const string& name, const matrix4F& value)
 void OpenglBackend::setUniformTexture(const string& name, const uint32_t texture_slot, const Texture2D& value)
 {
 	GENESIS_ENGINE_ASSERT_ERROR((this->current_program != nullptr), "Shader Not Bound");
-
 	glActiveTexture(GL_TEXTURE0 + texture_slot);
-	glBindTexture(GL_TEXTURE_2D, value);
+	glBindTexture(GL_TEXTURE_2D, (GLuint)value);
 	glUniform1i(current_program->getUniformLocation(name), texture_slot);
 }
 

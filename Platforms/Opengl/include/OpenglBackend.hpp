@@ -20,6 +20,22 @@ namespace Genesis
 			IndexType type;
 		};
 
+		struct OpenglTexture2D
+		{
+			GLuint texture;
+		};
+
+		struct OpenglFramebuffer
+		{
+			vector2U size;
+			bool is_multisampled;
+
+			GLuint frame_buffer;
+			vector<GLuint> attachements;
+			bool has_depth;
+			GLuint depth_attachement;
+		};
+
 		class OpenglBackend : public LegacyBackend
 		{
 		public:
@@ -43,6 +59,12 @@ namespace Genesis
 			virtual ShaderProgram createShaderProgram(const char* vert_data, uint32_t vert_size, const char* frag_data, uint32_t frag_size) override;
 			virtual void destoryShaderProgram(ShaderProgram program) override;
 
+			virtual Framebuffer createFramebuffer(const FramebufferCreateInfo& create_info) override;
+			virtual void destoryFramebuffer(Framebuffer framebuffer) override;
+			virtual Texture2D getFramebufferColorAttachment(Framebuffer framebuffer, uint32_t index) override;
+			virtual Texture2D getFramebufferDepthAttachment(Framebuffer framebuffer) override;
+
+			virtual void bindFramebuffer(Framebuffer framebuffer) override;
 			virtual void setPipelineState(const PipelineSettings& pipeline_state) override;
 
 			virtual void bindShaderProgram(ShaderProgram program) override;

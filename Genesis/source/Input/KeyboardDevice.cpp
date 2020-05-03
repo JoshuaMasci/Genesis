@@ -11,13 +11,34 @@ KeyboardDevice::~KeyboardDevice()
 {
 }
 
+void KeyboardDevice::updateValues()
+{
+	ArrayInputDevice::updateValues();
+	this->input_text.clear();
+}
+
 //A wrapper for updateButton
-void Genesis::KeyboardDevice::updateKeyboardButton(KeyboardButton button, bool state, Timestamp time)
+void KeyboardDevice::updateKeyboardButton(KeyboardButton button, bool state, Timestamp time)
 {
 	if (button != KeyboardButton::SIZE)
 	{
-		this->updateButton((int32_t)button, state, time);
+		this->updateButton((uint16_t)button, state, time);
 	}
+}
+
+void KeyboardDevice::updateInputText(string input_text)
+{
+	this->input_text = input_text;
+}
+
+string KeyboardDevice::getInputText()
+{
+	return this->input_text;
+}
+
+bool KeyboardDevice::getButtonState(KeyboardButton button)
+{
+	return this->button_values[(size_t)button].current_value;
 }
 
 string KeyboardDevice::getAxisName(uint16_t index)

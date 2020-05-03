@@ -75,6 +75,7 @@ World::World(BaseWorldRenderer* world_renderer)
 
 		this->world_renderer->addMesh(this->entity_registry, entity, "res/portal.obj", "res/materials/blue.csv");
 	}
+
 	{
 		EntityHandle entity = this->entity_registry->create();
 		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, -5.0, 10.0));

@@ -17,6 +17,9 @@ namespace Genesis
 		virtual void beginFrame() = 0;
 		virtual void endFrame() = 0;
 
+		void beginDocking();
+		void endDocking();
+
 	protected:
 		void update();
 
