@@ -7,6 +7,8 @@
 
 #include <Genesis/LegacyBackend/LegacyBackend.hpp>
 
+#include <Genesis/Editor/ConsoleWindow.hpp>
+
 class SandboxApplication : public Genesis::Application
 {
 public:
@@ -24,6 +26,8 @@ protected:
 	
 	Genesis::vector2U offscreen_size;
 	Genesis::Framebuffer offscreen_framebuffer;
+
+	Genesis::ConsoleWindow console_window;
 };
 
 

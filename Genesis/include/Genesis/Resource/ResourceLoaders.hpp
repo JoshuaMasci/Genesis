@@ -42,8 +42,6 @@ namespace Genesis
 	class MaterialLoader
 	{
 	public:
-
-		static Material loadMaterial(RenderingBackend* backend, string material_file_path);
 		static MaterialDescription loadMaterial(const string& material_file_path);
 	};
 }

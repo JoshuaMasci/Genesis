@@ -120,6 +120,8 @@ namespace Genesis
 
 		//Commands
 		virtual void bindFramebuffer(Framebuffer framebuffer) = 0;
+		virtual void clearFramebuffer(bool color, bool depth, vector4F* clear_color = nullptr, float* clear_depth = nullptr) = 0;
+
 		virtual void setPipelineState(const PipelineSettings& pipeline_state) = 0;
 
 		virtual void bindShaderProgram(ShaderProgram program) = 0;

@@ -106,63 +106,10 @@ void Application::update(TimeStep time_step)
 	}
 }
 
-#include "Genesis/FrameGraph/FrameGraph.hpp"
 
 void Application::render(TimeStep time_step)
 {
 	GENESIS_PROFILE_FUNCTION("Application::render");
-
-	//RenderGraph test
-	/*{
-		FrameGraph* render_graph = new FrameGraph();
-
-		//Shadow Task
-		RenderTask* shadow_task = render_graph->createFramebufferRenderPass(RenderTaskSize::Absolute, vector2F(1000.0f));
-		{
-			FramebufferAttachmentDescription depth_info;
-			depth_info.format = ImageFormat::D_16_Unorm;
-			depth_info.samples = 1;
-			shadow_task->addDepthStencilOutput(depth_info);
-		}
-
-		//Main Task
-		RenderTask* main_task = render_graph->createFramebufferRenderPass(RenderTaskSize::SwapchainRelative, vector2F(1.0f));
-		{
-			FramebufferAttachmentDescription image_info;
-			image_info.format = ImageFormat::RGBA_8_Unorm;
-			image_info.samples = 1;
-			main_task->addColorOutput(image_info);
-
-			FramebufferAttachmentDescription depth_info;
-			depth_info.format = ImageFormat::D_16_Unorm;
-			depth_info.samples = 1;
-			main_task->addDepthStencilOutput(depth_info);
-
-			size_t shadow_index = main_task->readFramebufferAttachment(shadow_task->getDepthStencilAttachment());
-		}
-
-		//Ui Task
-		RenderTask* ui_task = render_graph->createFramebufferRenderPass(RenderTaskSize::SwapchainRelative, vector2F(1.0f));
-		{
-			FramebufferAttachmentDescription image_info;
-			image_info.format = ImageFormat::RGBA_8_Unorm;
-			image_info.samples = 1;
-			ui_task->addColorOutput(image_info);
-		}
-
-		//Swapchain
-		SwapchainRenderTask* swapchain = render_graph->getSwapchainRenderPass();
-		{
-			size_t main_index = swapchain->readFramebufferAttachment(main_task->getColorAttachment(0));
-			size_t ui_index = swapchain->readFramebufferAttachment(ui_task->getColorAttachment(0));
-		}
-
-		render_graph->compile();
-		
-		this->rendering_backend->submitFrameGraph(render_graph);
-
-		delete render_graph;
-	}*/
 }
 
 void Application::close()

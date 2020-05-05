@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Genesis/Core/VectorTypes.hpp"
 
 namespace Genesis

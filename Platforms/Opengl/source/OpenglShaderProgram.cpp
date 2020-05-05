@@ -81,7 +81,7 @@ GLint OpenglShaderProgram::getUniformLocation(const string& name)
 		GLint location = glGetUniformLocation(this->program_id, name.c_str());
 		if (location == -1)
 		{
-			GENESIS_ENGINE_WARN("Uniform Location doesn't exist: {}", name);
+			GENESIS_ENGINE_WARNING("Uniform Location doesn't exist: {}", name);
 		}
 		this->uniform_locations[name] = location;
 	}

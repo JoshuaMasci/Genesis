@@ -10,13 +10,11 @@ SDL2_Window::SDL2_Window(vector2U size, string title)
 {
 	SDL_Init(SDL_INIT_VIDEO);
 
-	uint32_t flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL;
+	uint32_t flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED | SDL_WINDOW_OPENGL;
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	this->window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, size.x, size.y, flags);
-
-	//SDL_MaximizeWindow(this->window);
 }
 
 SDL2_Window::~SDL2_Window()

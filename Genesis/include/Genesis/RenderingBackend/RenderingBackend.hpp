@@ -12,7 +12,7 @@
 #include "Genesis/RenderingBackend/FramebufferLayout.hpp"
 #include "Genesis/RenderingBackend/CommandBuffer.hpp"
 
-#include "Genesis/FrameGraph/FrameGraph.hpp"
+//#include "Genesis/FrameGraph/FrameGraph.hpp"
 
 namespace Genesis
 {
@@ -53,7 +53,7 @@ namespace Genesis
 		virtual void destroyTexture(Texture texture) = 0;
 
 		//Test Functions
-		virtual void submitFrameGraph(FrameGraph* render_graph) = 0;
+		//virtual void submitFrameGraph(FrameGraph* render_graph) = 0;
 
 		//Wait until all GPU proccessing is done
 		virtual void waitTillDone() = 0;

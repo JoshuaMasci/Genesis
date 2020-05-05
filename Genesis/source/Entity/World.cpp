@@ -1,17 +1,16 @@
 #include "Genesis/Entity/World.hpp"
 
+#include "Genesis/Core/Transform.hpp"
 #include "Genesis/Debug/Assert.hpp"
 #include "Genesis/Debug/Profiler.hpp"
 
-#include "Genesis/Rendering/Camera.hpp"
-#include "Genesis/Core/Transform.hpp"
 #include "Genesis/Entity/DebugCamera.hpp"
-
 #include "Genesis/Physics/RigidBody.hpp"
 
-#include "Genesis/Entity/MeshComponent.hpp"
-
+#include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lighting.hpp"
+
+#include "Genesis/LegacyRendering/LegacyMeshRenderer.hpp"
 
 using namespace Genesis;
 using namespace Genesis::Physics;
@@ -51,9 +50,9 @@ World::World(BaseWorldRenderer* world_renderer)
 		this->entity_registry->assign<RigidBody>(entity, this->physics_world->addRigidBody(this->entity_registry->get<TransformD>(entity)));
 		this->entity_registry->assign<ProxyShape>(entity, this->entity_registry->get<RigidBody>(entity).addCollisionShape(new reactphysics3d::SphereShape(1.0f), TransformD(), 1.0f));
 
-		this->world_renderer->addMesh(this->entity_registry, entity, "res/sphere.obj", "res/materials/red.csv");
+		this->entity_registry->assign<LegacyMeshComponent>(entity, "res/sphere.obj");
+		this->entity_registry->assign<LegacyMaterialComponent>(entity, "res/materials/red.csv");
 
-		//this->entity_registry->assign<CharacterController>(entity, 5.0);
 
 		this->entity_registry->get<RigidBody>(entity).get()->setAngularDamping(1.0);
 	}
@@ -64,23 +63,9 @@ World::World(BaseWorldRenderer* world_renderer)
 		this->entity_registry->assign<StaticRigidBody>(entity, this->physics_world->addRigidBody(this->entity_registry->get<TransformD>(entity)));
 		this->entity_registry->assign<ProxyShape>(entity, this->entity_registry->get<StaticRigidBody>(entity).addCollisionShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(16.0, 1.0, 16.0)), TransformD(), 0.0f));
 
-		this->world_renderer->addMesh(this->entity_registry, entity, "res/ground.obj", "res/materials/grid.csv");
-	}
+		this->entity_registry->assign<LegacyMeshComponent>(entity, "res/ground.obj");
+		this->entity_registry->assign<LegacyMaterialComponent>(entity, "res/materials/grid.csv");
 
-	{
-		EntityHandle entity = this->entity_registry->create();
-		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, -5.0, 10.0));
-		this->entity_registry->assign<StaticRigidBody>(entity, this->physics_world->addRigidBody(this->entity_registry->get<TransformD>(entity)));
-		this->entity_registry->assign<ProxyShape>(entity, this->entity_registry->get<StaticRigidBody>(entity).addCollisionShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(2.0, 3.0, 0.5)), TransformD(vector3D(0.0, 1.5, 0.0)), 0.0f));
-
-		this->world_renderer->addMesh(this->entity_registry, entity, "res/portal.obj", "res/materials/blue.csv");
-	}
-
-	{
-		EntityHandle entity = this->entity_registry->create();
-		this->entity_registry->assign<TransformD>(entity, vector3D(0.0, -5.0, 10.0));
-
-		this->world_renderer->addMesh(this->entity_registry, entity, "res/portal_inside.obj", "res/materials/white.csv");
 	}
 
 	{

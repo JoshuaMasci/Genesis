@@ -28,7 +28,7 @@ namespace Genesis
 		{
 			if (delay_cycles == 0)
 			{
-				GENESIS_ENGINE_WARN("Delay must be at least 1");
+				GENESIS_ENGINE_WARNING("Delay must be at least 1");
 				delay_cycles = 1;
 			}
 

@@ -138,7 +138,7 @@ void ObjLoader::loadMesh(string mesh_file_path, vector<Vertex>& vertices, vector
 	vector<tinyobj::material_t> materials;
 	string warn, err;
 
-	GENESIS_ENGINE_ASSERT_ERROR((tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, mesh_file_path.c_str())), "Can't load Mesh");
+	GENESIS_ENGINE_ASSERT_ERROR((tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, mesh_file_path.c_str(), "res/")), "Can't load Mesh");
 
 	float distance = 0.0f;
 
@@ -216,7 +216,7 @@ Texture PngLoader::loadTexture(RenderingBackend * backend, string texture_file_p
 
 	if (data == NULL)
 	{
-		GENESIS_ENGINE_WARN("Can't load Texture {}", texture_file_path);
+		GENESIS_ENGINE_WARNING("Can't load Texture {}", texture_file_path);
 		return nullptr;
 	}
 
@@ -236,50 +236,6 @@ void PngLoader::unloadTexture(uint8_t* data)
 }
 
 #include <fstream>
-
-Material MaterialLoader::loadMaterial(RenderingBackend* backend, string material_file_path)
-{
-	std::fstream file_stream;
-	file_stream.open(material_file_path, std::ios::in);
-
-	Material material;
-	MaterialValuesPacked packed_values;
-	string value;
-
-	//Albedo
-	for (uint8_t i = 0; i < 4; i++)
-	{
-		std::getline(file_stream, value, ',');
-		packed_values.albedo[i] = std::stof(value);
-	}
-
-	//PBR
-	for (uint8_t i = 0; i < 4; i++)
-	{
-		std::getline(file_stream, value, ',');
-		packed_values.pbr_values[i] = std::stof(value);
-	}
-
-	//Textures
-	for (size_t i = 0; i < Material::TextureCount; i++)
-	{
-		std::getline(file_stream, value, ',');
-		if (value != "")
-		{
-			packed_values.has_textures[i] = true;
-			material.textures[i] = PngLoader::loadTexture(backend, value);
-		}
-		else
-		{
-			packed_values.has_textures[i] = false;
-			material.textures[i] = false;
-		}
-	}
-
-	material.values = backend->createStaticBuffer(&packed_values, sizeof(MaterialValuesPacked), BufferUsage::Uniform_Buffer, MemoryType::GPU_Only);
-
-	return material;
-}
 
 MaterialDescription MaterialLoader::loadMaterial(const string& material_file_path)
 {
@@ -313,7 +269,7 @@ MaterialDescription MaterialLoader::loadMaterial(const string& material_file_pat
 	material.height_scale = pbr_values[3];
 
 	//Textures
-	for (size_t i = 0; i < Material::TextureCount; i++)
+	for (size_t i = 0; i < MaterialDescription::TextureCount; i++)
 	{
 		std::getline(file_stream, value, ',');
 		material.textures[i] = value;

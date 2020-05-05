@@ -7,10 +7,10 @@ int main(int argc, char** argv)
 	GENESIS_ENGINE_DEBUG_START();
 
 	Genesis::Logging::inti_client_logging("Sandbox", "");
-	GENESIS_INFO("Sandbox Started");
 
 	//ALPHA
 	SandboxApplication* sandbox = new SandboxApplication();
+	GENESIS_INFO("Sandbox Started");
 
 	GENESIS_PROFILE_BLOCK_START("Sandbox_Loop");
 	sandbox->run();

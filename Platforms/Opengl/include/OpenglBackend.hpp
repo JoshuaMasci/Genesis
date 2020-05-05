@@ -65,6 +65,8 @@ namespace Genesis
 			virtual Texture2D getFramebufferDepthAttachment(Framebuffer framebuffer) override;
 
 			virtual void bindFramebuffer(Framebuffer framebuffer) override;
+			virtual void clearFramebuffer(bool color, bool depth, vector4F* clear_color = nullptr, float* clear_depth = nullptr) override;
+
 			virtual void setPipelineState(const PipelineSettings& pipeline_state) override;
 
 			virtual void bindShaderProgram(ShaderProgram program) override;

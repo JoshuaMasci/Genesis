@@ -11,8 +11,11 @@
 
 #include "Genesis/Resource/ResourceLoaders.hpp"
 
+
 SandboxApplication::SandboxApplication()
 {
+	Genesis::Logging::console_sink->setConsoleWindow(&this->console_window);
+
 	this->platform = new Genesis::SDL2_Platform(this);
 	this->window = new Genesis::SDL2_Window(Genesis::vector2U(1600, 900), "Sandbox: ");
 
@@ -22,9 +25,8 @@ SandboxApplication::SandboxApplication()
 
 	this->world = new Genesis::World(this->world_renderer);
 
-
 	{
-		this->offscreen_size = Genesis::vector2U(1920, 1080);
+		this->offscreen_size = Genesis::vector2U(2048, 2048);
 		Genesis::FramebufferAttachmentInfo color_attachment = { Genesis::TextureFormat::RGBA, Genesis::MultisampleCount::Sample_1 };
 		Genesis::FramebufferDepthInfo depth_attachment = {Genesis::DepthFormat::depth_24,  Genesis::MultisampleCount::Sample_1 };
 		Genesis::FramebufferCreateInfo create_info = {};
@@ -43,6 +45,8 @@ SandboxApplication::~SandboxApplication()
 	delete this->world;
 	delete this->world_renderer;
 	delete this->legacy_backend;
+
+	Genesis::Logging::console_sink->setConsoleWindow(nullptr);
 }
 
 void SandboxApplication::update(Genesis::TimeStep time_step)
@@ -65,6 +69,9 @@ void SandboxApplication::render(Genesis::TimeStep time_step)
 	Application::render(time_step);
 
 	this->legacy_backend->startFrame();
+	Genesis::vector4F clear_color = Genesis::vector4F(0.0f, 0.0f, 0.0f, 1.0f);
+	float clear_depth = 1.0f;
+	this->legacy_backend->clearFramebuffer(true, true, &clear_color, &clear_depth);
 
 	this->ui_renderer->beginFrame();
 	this->ui_renderer->beginDocking();
@@ -96,32 +103,24 @@ void SandboxApplication::render(Genesis::TimeStep time_step)
 	}
 
 	{
-		ImGui::Begin("Input Test");
-
-		static char str0[128] = "Hello, world!";
-		bool value = ImGui::InputText("input text", str0, _countof(str0) * sizeof(char));
-
-		if (value)
-		{
-			GENESIS_INFO("Text: {}", str0);
-		}
-
-		ImGui::End();
-	}
-
-	{
 		ImGui::Begin("GameView");
 		ImVec2 vMin = ImGui::GetWindowContentRegionMin();
 		ImVec2 vMax = ImGui::GetWindowContentRegionMax();
 		ImVec2 size = ImVec2(vMax.x - vMin.x, vMax.y - vMin.y);
 
 		this->legacy_backend->bindFramebuffer(this->offscreen_framebuffer);
+		this->legacy_backend->clearFramebuffer(true, true);
 		this->world_renderer->drawWorld(this->world, Genesis::vector2U(size.x, size.y));
 		this->legacy_backend->bindFramebuffer(nullptr);
 
 		ImGui::Image((void*)(intptr_t)this->legacy_backend->getFramebufferColorAttachment(this->offscreen_framebuffer, 0), size, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 		ImGui::End();
 	}
+
+	{
+		this->console_window.drawWindow("Console");
+	}
+
 
 	this->ui_renderer->endFrame();
 

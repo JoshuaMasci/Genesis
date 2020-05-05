@@ -71,9 +71,6 @@ void OpenglBackend::startFrame()
 	glDepthMask(GL_TRUE);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClearDepth(1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	vector2U window_size = this->window->getWindowSize();
 
@@ -318,13 +315,13 @@ Framebuffer OpenglBackend::createFramebuffer(const FramebufferCreateInfo& create
 			glTexImage2D(GL_TEXTURE_2D, 0, gl_format, create_info.size.x, create_info.size.y, 0, gl_format, GL_UNSIGNED_BYTE, NULL);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, attachment, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, (GLenum)(GL_COLOR_ATTACHMENT0 + i), GL_TEXTURE_2D, attachment, 0);
 		}
 		else
 		{
 			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, attachment);
 			glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, (GLsizei)create_info.attachments[i].samples, gl_format, create_info.size.x, create_info.size.y, true);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D_MULTISAMPLE, attachment, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, (GLenum)(GL_COLOR_ATTACHMENT0 + i), GL_TEXTURE_2D_MULTISAMPLE, attachment, 0);
 		}
 
 		framebuffer->attachements[i] = attachment;
@@ -365,7 +362,7 @@ void OpenglBackend::destoryFramebuffer(Framebuffer framebuffer)
 {
 	OpenglFramebuffer* opengl_framebuffer = (OpenglFramebuffer*)framebuffer;
 
-	glDeleteTextures(opengl_framebuffer->attachements.size(), opengl_framebuffer->attachements.data());
+	glDeleteTextures((GLsizei)(opengl_framebuffer->attachements.size()), opengl_framebuffer->attachements.data());
 
 	if (opengl_framebuffer->has_depth)
 	{
@@ -394,16 +391,12 @@ void OpenglBackend::bindFramebuffer(Framebuffer framebuffer)
 	if (framebuffer == nullptr)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 		size = this->window->getWindowSize();
 	}
 	else
 	{
 		//TODO TEMP
 		glBindFramebuffer(GL_FRAMEBUFFER, ((OpenglFramebuffer*)framebuffer)->frame_buffer);
-
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		size = ((OpenglFramebuffer*)framebuffer)->size;
 	}
 
@@ -414,6 +407,32 @@ void OpenglBackend::bindFramebuffer(Framebuffer framebuffer)
 
 	glViewport(0, 0, size.x, size.y);
 	this->viewport_size = size;
+}
+
+void OpenglBackend::clearFramebuffer(bool color, bool depth, vector4F* clear_color, float* clear_depth)
+{
+	if (clear_color != nullptr)
+	{
+		glClearColor(clear_color->x, clear_color->y, clear_color->z, clear_color->w);
+	}
+
+	if (clear_depth != nullptr)
+	{
+		glClearDepth(*clear_depth);
+	}
+
+	GLbitfield bits = 0;
+	if (color)
+	{
+		bits |= GL_COLOR_BUFFER_BIT;
+	}
+
+	if (depth)
+	{
+		bits |= GL_DEPTH_BUFFER_BIT;
+	}
+
+	glClear(bits);
 }
 
 void OpenglBackend::setPipelineState(const PipelineSettings& pipeline_state)
