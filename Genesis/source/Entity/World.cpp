@@ -127,5 +127,4 @@ void World::runSimulation(Application* application, TimeStep time_step)
 	}
 
 	DebugCamera::update(&application->input_manager, this->entity_registry->get<DebugCamera>(this->main_camera), this->entity_registry->get<TransformD>(this->main_camera), time_step);
-
 }
