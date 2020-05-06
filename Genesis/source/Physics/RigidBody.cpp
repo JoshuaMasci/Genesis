@@ -1,7 +1,5 @@
 #include "Genesis/Physics/RigidBody.hpp"
 
-#include "Genesis/Debug/Log.hpp"
-
 using namespace Genesis;
 using namespace Genesis::Physics;
 

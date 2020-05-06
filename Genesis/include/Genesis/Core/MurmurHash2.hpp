@@ -1,8 +1,6 @@
 // MurmurHash2A, by Austin Appleby
 #pragma once
 
-#include <stdint.h>
-
 #define mmix(h,k) { k *= m; k ^= k >> r; k *= m; h *= m; h ^= k; }
 
 namespace Genesis

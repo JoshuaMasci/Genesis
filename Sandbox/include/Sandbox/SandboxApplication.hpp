@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Genesis/Genesis.hpp>
 #include <Genesis/Entity/World.hpp>
 #include <Genesis/Rendering/BaseWorldRenderer.hpp>
 #include "Genesis/Rendering/BaseImGui.hpp"

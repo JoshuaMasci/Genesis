@@ -14,10 +14,8 @@ namespace Genesis
 {
 	typedef double TimeStep;
 
-	//Puts string in the Genesis namespace
-	typedef std::string string;
-
-	//gives the ability to replace these later.
+	//Puts these std classes in the Genesis namespace
+	using std::string;
 	using std::vector;
 	using std::set;
 	using std::map;

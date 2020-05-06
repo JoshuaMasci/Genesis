@@ -2,7 +2,6 @@
 
 //LegacyBackend only for now
 #include "Genesis/LegacyBackend/LegacyBackend.hpp"
-#include "Genesis/Core/Transform.hpp"
 
 #include "tiny_gltf.h"
 

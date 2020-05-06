@@ -1,15 +1,12 @@
 #pragma once
 
-#include "Genesis/Job/JobSystem.hpp"
-#include "Genesis/Input/InputManager.hpp"
-
-#include "Genesis/Platform/Platform.hpp"
-#include "Genesis/Platform/Window.hpp"
-#include "Genesis/RenderingBackend/RenderingBackend.hpp"
-
 namespace Genesis
 {
-	class GameScene;
+	class JobSystem;
+	class InputManager;
+	class Platform;
+	class Window;
+	class RenderingBackend;
 
 	class Application
 	{
@@ -26,11 +23,9 @@ namespace Genesis
 		bool isRunning();
 
 		//Engine Systems
-		JobSystem job_system;
-
-		InputManager input_manager;
-
-		Platform* platform = nullptr;
+		JobSystem* job_system = nullptr;
+		InputManager* input_manager = nullptr;
+		Platform* platform ;
 		Window* window = nullptr;
 		RenderingBackend* rendering_backend = nullptr;
 		

@@ -36,7 +36,7 @@ namespace Genesis
 #define GENESIS_TRACE(...) Genesis::Logging::Application->trace(__VA_ARGS__)
 #define GENESIS_DEBUG(...) Genesis::Logging::Application->debug(__VA_ARGS__)
 #define GENESIS_INFO(...) Genesis::Logging::Application->info(__VA_ARGS__)
-#define GENESIS_WARN(...) Genesis::Logging::Application->warn(__VA_ARGS__)
+#define GENESIS_WARNING(...) Genesis::Logging::Application->warn(__VA_ARGS__)
 #define GENESIS_ERROR(...) Genesis::Logging::Application->error(__VA_ARGS__)
 #define GENESIS_CRITICAL(...) Genesis::Logging::Application->critical(__VA_ARGS__)
 
@@ -45,14 +45,14 @@ namespace Genesis
 #define GENESIS_ENGINE_TRACE(...)
 #define GENESIS_ENGINE_DEBUG(...)
 #define GENESIS_ENGINE_INFO(...)
-#define GENESIS_ENGINE_WARN(...)
+#define GENESIS_ENGINE_WARNING(...)
 #define GENESIS_ENGINE_ERROR(...)
 #define GENESIS_ENGINE_CRITICAL(...)
 
 #define GENESIS_TRACE(...)
 #define GENESIS_DEBUG(...)
 #define GENESIS_INFO(...)
-#define GENESIS_WARN(...)
+#define GENESIS_WARNING(...)
 #define GENESIS_ERROR(...)
 #define GENESIS_CRITICAL(...)
 

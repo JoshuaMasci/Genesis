@@ -1,7 +1,7 @@
 #include "Genesis/LegacyRendering/LegacyWorldRenderer.hpp"
 
 #include "Genesis/Rendering/Camera.hpp"
-#include "Genesis/Rendering/Lighting.hpp"
+#include "Genesis/Rendering/Lights.hpp"
 
 #include "Genesis/LegacyRendering/LegacyMeshRenderer.hpp"
 #include "Genesis/LegacyRendering/LegacyAnimatedMeshRenderer.hpp"

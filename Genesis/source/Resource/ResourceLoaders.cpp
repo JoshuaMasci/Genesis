@@ -2,8 +2,6 @@
 
 using namespace Genesis;
 
-#include "Genesis/Debug/Assert.hpp"
-#include "Genesis/Debug/Log.hpp"
 #include <fstream>
 
 Shader ShaderLoader::loadShader(RenderingBackend* backend, string vert_file_path, string frag_file_path)

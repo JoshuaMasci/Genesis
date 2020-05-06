@@ -1,14 +1,10 @@
 #include "Genesis/Entity/World.hpp"
 
-#include "Genesis/Core/Transform.hpp"
-#include "Genesis/Debug/Assert.hpp"
-#include "Genesis/Debug/Profiler.hpp"
-
 #include "Genesis/Entity/DebugCamera.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
 
 #include "Genesis/Rendering/Camera.hpp"
-#include "Genesis/Rendering/Lighting.hpp"
+#include "Genesis/Rendering/Lights.hpp"
 
 #include "Genesis/LegacyRendering/LegacyMeshRenderer.hpp"
 
@@ -106,8 +102,8 @@ void World::runSimulation(Application* application, TimeStep time_step)
 		for (EntityHandle entity : view)
 		{
 			CharacterController& character = view.get<CharacterController>(entity);
-			character.forward_input = application->input_manager.getButtonAxisCombo("Debug_ForwardBackward", "Debug_Forward", "Debug_Backward");
-			character.sideways_input = application->input_manager.getButtonAxisCombo("Debug_LeftRight", "Debug_Left", "Debug_Right");
+			character.forward_input = application->input_manager->getButtonAxisCombo("Debug_ForwardBackward", "Debug_Forward", "Debug_Backward");
+			character.sideways_input = application->input_manager->getButtonAxisCombo("Debug_LeftRight", "Debug_Left", "Debug_Right");
 		}
 	}
 	{
@@ -126,5 +122,5 @@ void World::runSimulation(Application* application, TimeStep time_step)
 		}
 	}
 
-	DebugCamera::update(&application->input_manager, this->entity_registry->get<DebugCamera>(this->main_camera), this->entity_registry->get<TransformD>(this->main_camera), time_step);
+	DebugCamera::update(application->input_manager, this->entity_registry->get<DebugCamera>(this->main_camera), this->entity_registry->get<TransformD>(this->main_camera), time_step);
 }

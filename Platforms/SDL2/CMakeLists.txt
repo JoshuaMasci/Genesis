@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8.0)
+cmake_minimum_required(VERSION 3.16.0)
 project(SDL2_Platform CXX)
 
 file(GLOB_RECURSE SDL2_SOURCES "source/*.*")

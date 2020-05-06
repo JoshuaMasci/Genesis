@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/VectorTypes.hpp"
-#include "Genesis/Core/Transform.hpp"
-
 #include "Genesis/Input/InputManager.hpp"
 
 namespace Genesis

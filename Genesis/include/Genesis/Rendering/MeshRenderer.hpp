@@ -1,10 +1,8 @@
 #pragma once
 
-#include "Genesis/Core/VectorTypes.hpp"
 #include "Genesis/Entity/EntitySystem.hpp"
 #include "Genesis/Rendering/Frustum.hpp"
-#include "Genesis/Rendering/Lighting.hpp"
-#include "Genesis/Core/Transform.hpp"
+#include "Genesis/Rendering/Lights.hpp"
 
 namespace Genesis
 {

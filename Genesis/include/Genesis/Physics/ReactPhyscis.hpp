@@ -6,8 +6,6 @@
 #include <reactphysics3d.h>
 #pragma warning( pop )
 
-#include "Genesis/Core/Transform.hpp"
-
 namespace Genesis
 {
 	namespace Physics

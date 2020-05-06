@@ -1,7 +1,5 @@
 #include "Genesis/Input/InputManager.hpp"
 
-#include "Genesis/Debug/Assert.hpp"
-
 using namespace Genesis;
 
 InputManager::InputManager(string config_folder_path)

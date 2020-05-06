@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/Application.hpp"
 #include "Genesis/Physics/PhysicsWorld.hpp"
 #include "Genesis/Entity/EntitySystem.hpp"
 #include "Genesis/Rendering/BaseWorldRenderer.hpp"

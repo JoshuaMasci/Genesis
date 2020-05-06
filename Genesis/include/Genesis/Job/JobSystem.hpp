@@ -1,10 +1,7 @@
 #pragma once
 
-#include "Genesis/Core/Types.hpp"
-
 #include <concurrentqueue.h>
 #include <thread>
-#include <memory>
 #include <functional>
 
 namespace Genesis

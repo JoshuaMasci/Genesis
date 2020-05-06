@@ -2,9 +2,7 @@
 
 #include "SDL2_Include.hpp"
 
-#include "Genesis/Core/Application.hpp"
-
-#include "Genesis/Debug/Log.hpp"
+#include "Genesis/Input/InputManager.hpp"
 
 using namespace Genesis;
 
@@ -16,7 +14,7 @@ SDL2_Platform::SDL2_Platform(Application* app)
 
 	//Create Keyboard Device
 	this->keyboard_device = new KeyboardDevice("SDL2 Keyboard");
-	this->application->input_manager.setKeyboardDevice(this->keyboard_device);
+	this->application->input_manager->setKeyboardDevice(this->keyboard_device);
 
 	this->keyboard_device->addButton("Debug_Forward", (ButtonIndex) KeyboardButton::W);
 	this->keyboard_device->addButton("Debug_Backward", (ButtonIndex)KeyboardButton::S);
@@ -34,7 +32,7 @@ SDL2_Platform::SDL2_Platform(Application* app)
 
 	//Create Mouse Device
 	this->mouse_device = new MouseDevice("SDL2 Mouse");
-	this->application->input_manager.setMouseDevice(this->mouse_device);
+	this->application->input_manager->setMouseDevice(this->mouse_device);
 
 	this->mouse_device->addButton("Mouse_Left", (ButtonIndex)MouseButton::Left);
 	this->mouse_device->addButton("Mouse_Middle", (ButtonIndex)MouseButton::Middle);
@@ -49,20 +47,20 @@ SDL2_Platform::~SDL2_Platform()
 {
 	if (this->keyboard_device != nullptr)
 	{
-		this->application->input_manager.removeKeyboardDevice();
+		this->application->input_manager->removeKeyboardDevice();
 		delete this->keyboard_device;
 	}
 
 	if (this->mouse_device != nullptr)
 	{
-		this->application->input_manager.removeMouseDevice();
+		this->application->input_manager->removeMouseDevice();
 		delete this->mouse_device;
 	}
 
 	//Delete Input Devices
 	for (auto device : this->joystick_devices)
 	{
-		this->application->input_manager.removeInputDevice(device.second);
+		this->application->input_manager->removeInputDevice(device.second);
 		delete device.second;
 		SDL_JoystickClose(SDL_JoystickFromInstanceID(device.first));
 	}
@@ -363,7 +361,7 @@ void SDL2_Platform::onUpdate(TimeStep time_step)
 
 					//Menu Mode
 					vector2F pos = { (float)event.motion.x , (float)event.motion.y };
-					this->application->input_manager.setMousePosition(pos);
+					this->application->input_manager->setMousePosition(pos);
 				}
 			}
 		}
@@ -393,7 +391,7 @@ void SDL2_Platform::onUpdate(TimeStep time_step)
 			}
 
 
-			this->application->input_manager.addInputDevice(device);
+			this->application->input_manager->addInputDevice(device);
 		}
 		else if (event.type == SDL_JOYDEVICEREMOVED)
 		{
@@ -404,7 +402,7 @@ void SDL2_Platform::onUpdate(TimeStep time_step)
 
 			GENESIS_ENGINE_INFO("SDL Joystick Removed: {}", device->getName());
 
-			this->application->input_manager.removeInputDevice(device);
+			this->application->input_manager->removeInputDevice(device);
 			this->joystick_devices.erase(id);
 
 			delete device;

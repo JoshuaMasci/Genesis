@@ -1,7 +1,5 @@
 #include "Genesis/Rendering/BaseImGui.hpp"
 
-#include "Genesis/Debug/Log.hpp"
-
 #include "imgui.cpp"
 #include "imgui.h"
 #include "imgui_demo.cpp"

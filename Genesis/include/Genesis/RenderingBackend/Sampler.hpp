@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 namespace Genesis
 {
 	typedef void* Sampler;

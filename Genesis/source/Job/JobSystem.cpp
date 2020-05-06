@@ -1,8 +1,5 @@
 #include "Genesis/Job/JobSystem.hpp"
 
-#include "Genesis/Debug/Log.hpp"
-#include "Genesis/Debug/Assert.hpp"
-
 #define sleep_time_milliseconds 2
 
 using namespace Genesis;
@@ -36,8 +33,6 @@ void workerthread(uint32_t thread_id, JobSystem* job_system)
 JobSystem::JobSystem()
 {
 	uint32_t thread_count = std::thread::hardware_concurrency();
-	assert(thread_count >= 4);//Need 4 or more cores for the engine
-
 	this->threads.resize(thread_count);
 	for (uint32_t i = 0; i < thread_count; i++)
 	{

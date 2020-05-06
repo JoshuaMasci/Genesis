@@ -1,8 +1,5 @@
 #include "Genesis/Resource/GltfLoader.hpp"
 
-#include "Genesis/Debug/Log.hpp"
-#include "Genesis/Debug/Assert.hpp"
-
 #define TINYGLTF_IMPLEMENTATION
 //#define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION

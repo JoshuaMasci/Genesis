@@ -1,13 +1,17 @@
 #include "Genesis/Core/Application.hpp"
 
-#include "Genesis/Debug/Profiler.hpp"
+#include "Genesis/Job/JobSystem.hpp"
+#include "Genesis/Input/InputManager.hpp"
+#include "Genesis/Platform/Platform.hpp"
+#include "Genesis/Platform/Window.hpp"
+#include "Genesis/RenderingBackend/RenderingBackend.hpp"
 
 using namespace Genesis;
 
 Application::Application()
-	:input_manager("config/input")
 {
-
+	this->job_system = new JobSystem();
+	this->input_manager = new InputManager("");
 }
 
 Application::~Application()
@@ -16,10 +20,6 @@ Application::~Application()
 	if (this->rendering_backend != nullptr)
 	{
 		this->rendering_backend->waitTillDone();
-	}
-
-	if (this->rendering_backend != nullptr)
-	{
 		delete this->rendering_backend;
 	}
 
@@ -32,17 +32,20 @@ Application::~Application()
 	{
 		delete this->platform;
 	}
+
+	if (this->input_manager != nullptr)
+	{
+		delete this->input_manager;
+	}
+
+	if (this->job_system != nullptr)
+	{
+		delete this->job_system;
+	}
 }
 
 void Application::run()
 {
-	//Fixed Timestep Stuff
-	/*const double SimulationStep = 1.0 / (60.0 * 3);
-	const TimeStep MaxTimeStep = 1.0 / 60.0;
-	double accumulator = SimulationStep;*/
-
-
-	//Mode: Rendering and Simulation Linked
 	using clock = std::chrono::high_resolution_clock;
 	auto time_last = clock::now();
 	auto time_current = time_last;
@@ -56,22 +59,6 @@ void Application::run()
 
 		time_current = clock::now();
 		TimeStep time_step = (TimeStep)std::chrono::duration_cast<std::chrono::duration<double>>(time_current - time_last).count();
-		/*if (time_step > MaxTimeStep)
-		{
-			time_step = MaxTimeStep;
-		}
-
-		accumulator += time_step;
-
-		while (accumulator >= SimulationStep)
-		{
-			GENESIS_PROFILE_BLOCK_START("Application_SimulationStep");
-			this->update(SimulationStep);
-			accumulator -= SimulationStep;
-			GENESIS_PROFILE_BLOCK_END();
-		}
-
-		TimeStep interpolation_value = accumulator / SimulationStep;*/
 
 		this->update(time_step);
 
@@ -98,7 +85,11 @@ void Application::run()
 void Application::update(TimeStep time_step)
 {
 	GENESIS_PROFILE_FUNCTION("Application::update");
-	this->input_manager.update();
+
+	if (this->input_manager != nullptr)
+	{
+		this->input_manager->update();
+	}
 
 	if (this->platform != nullptr)
 	{

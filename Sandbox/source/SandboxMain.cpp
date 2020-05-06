@@ -4,8 +4,8 @@
 
 int main(int argc, char** argv)
 {
-	GENESIS_ENGINE_DEBUG_START();
-
+	GENESIS_PROFILE_START(); 
+	Genesis::Logging::inti_engine_logging("");
 	Genesis::Logging::inti_client_logging("Sandbox", "");
 
 	//ALPHA

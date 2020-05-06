@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/Types.hpp"
-#include "Genesis/Core/VectorTypes.hpp"
 #include "Genesis/Input/InputDevice.hpp"
 
 #include "Genesis/Input/MouseDevice.hpp"

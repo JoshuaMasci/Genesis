@@ -1,4 +1,4 @@
-#include "Log.hpp"
+#include "Genesis/Debug/Log.hpp"
 
 using namespace Genesis;
 

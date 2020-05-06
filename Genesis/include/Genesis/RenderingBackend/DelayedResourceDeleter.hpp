@@ -1,10 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/Types.hpp"
-#include "Genesis/Debug/Log.hpp"
-
-#include <stdint.h>
-
 namespace Genesis
 {
 	/*

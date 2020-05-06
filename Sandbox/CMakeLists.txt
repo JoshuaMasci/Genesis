@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8.0)
+cmake_minimum_required(VERSION 3.16.0)
 project(Sandbox CXX)
 
 file(GLOB_RECURSE SANDBOX_SOURCES "source/*.*")

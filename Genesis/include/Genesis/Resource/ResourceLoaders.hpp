@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/Types.hpp"
 #include "Genesis/RenderingBackend/RenderingTypes.hpp"
 #include "Genesis/Resource/Material.hpp"
 #include "Genesis/RenderingBackend/RenderingBackend.hpp"

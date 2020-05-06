@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/Types.hpp"
 #include "Genesis/Physics/ReactPhyscis.hpp"
 
 namespace Genesis

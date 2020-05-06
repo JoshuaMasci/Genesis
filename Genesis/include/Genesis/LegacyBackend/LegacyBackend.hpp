@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/VectorTypes.hpp"
-#include "Genesis/Core/Types.hpp"
-
 #include "Genesis/RenderingBackend/VertexInputDescription.hpp"
 #include "Genesis/RenderingBackend/RenderingTypes.hpp"
 #include "Genesis/RenderingBackend/PipelineSettings.hpp"

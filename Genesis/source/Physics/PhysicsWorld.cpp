@@ -1,7 +1,5 @@
 #include "Genesis/Physics/PhysicsWorld.hpp"
 
-#include "Genesis/Debug/Profiler.hpp"
-
 using namespace Genesis;
 using namespace Genesis::Physics;
 

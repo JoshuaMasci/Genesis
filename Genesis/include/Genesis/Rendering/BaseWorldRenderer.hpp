@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Genesis/Entity/EntitySystem.hpp"
-#include "Genesis/Core/VectorTypes.hpp"
 
 namespace Genesis
 {

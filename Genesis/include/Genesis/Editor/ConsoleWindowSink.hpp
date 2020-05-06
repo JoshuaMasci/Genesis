@@ -3,9 +3,6 @@
 #include "spdlog/sinks/base_sink.h"
 #include "Genesis/Editor/ConsoleWindow.hpp"
 
-#include <iostream>
-
-
 namespace Genesis
 {
 	template<typename Mutex>

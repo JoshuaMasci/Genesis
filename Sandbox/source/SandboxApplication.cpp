@@ -7,11 +7,6 @@
 #include "Genesis/LegacyRendering/LegacyWorldRenderer.hpp"
 #include "Genesis/LegacyRendering/LegacyImGui.hpp"
 
-#include "Genesis/Core/Types.hpp"
-
-#include "Genesis/Resource/ResourceLoaders.hpp"
-
-
 SandboxApplication::SandboxApplication()
 {
 	Genesis::Logging::console_sink->setConsoleWindow(&this->console_window);
@@ -21,7 +16,7 @@ SandboxApplication::SandboxApplication()
 
 	this->legacy_backend = new Genesis::Opengl::OpenglBackend((Genesis::SDL2_Window*) window);
 	this->world_renderer = new Genesis::LegacyWorldRenderer(this->legacy_backend);
-	this->ui_renderer = new Genesis::LegacyImGui(this->legacy_backend, &this->input_manager, this->window);
+	this->ui_renderer = new Genesis::LegacyImGui(this->legacy_backend, this->input_manager, this->window);
 
 	this->world = new Genesis::World(this->world_renderer);
 

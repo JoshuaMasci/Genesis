@@ -1,8 +1,5 @@
 #pragma once
 
-#include <cstdint>
-#include "Genesis/Core/VectorTypes.hpp"
-
 namespace Genesis
 {
 	enum class PolygonMode

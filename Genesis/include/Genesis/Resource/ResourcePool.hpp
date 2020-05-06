@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/Types.hpp"
-#include "Genesis/Debug/Log.hpp"
-
 namespace Genesis
 {
 

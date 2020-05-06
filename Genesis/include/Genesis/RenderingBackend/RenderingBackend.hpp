@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Genesis/Core/VectorTypes.hpp"
 #include "Genesis/RenderingBackend/RenderingTypes.hpp"
 
 #include "Genesis/RenderingBackend/Sampler.hpp"
