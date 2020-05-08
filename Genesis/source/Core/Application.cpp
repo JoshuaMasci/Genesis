@@ -10,7 +10,7 @@ using namespace Genesis;
 
 Application::Application()
 {
-	this->job_system = new JobSystem();
+	//this->job_system = new JobSystem();
 	this->input_manager = new InputManager("");
 }
 

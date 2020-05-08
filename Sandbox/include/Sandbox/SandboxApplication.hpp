@@ -7,7 +7,8 @@
 #include <Genesis/LegacyBackend/LegacyBackend.hpp>
 
 #include <Genesis/Editor/ConsoleWindow.hpp>
-
+#include <Genesis/Editor/HierarchyWindow.hpp>
+#include <Genesis/Editor/EntityPropertiesWindow.hpp>
 class SandboxApplication : public Genesis::Application
 {
 public:
@@ -27,6 +28,8 @@ protected:
 	Genesis::Framebuffer offscreen_framebuffer;
 
 	Genesis::ConsoleWindow console_window;
+	Genesis::HierarchyWindow world_view_window;
+	Genesis::EntityPropertiesWindow entity_properties_window;
 };
 
 

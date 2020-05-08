@@ -11,7 +11,7 @@ namespace Genesis
 
 		float frame_of_view = 75.0f;
 		float z_near = 0.1f;
-		float z_far = 100.0f;
+		float z_far = 1000.0f;
 
 		matrix4F getProjectionMatrix(float aspect_ratio)
 		{

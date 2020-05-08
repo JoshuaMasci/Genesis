@@ -6,6 +6,8 @@
 
 namespace Genesis
 {
+	class Entity;
+
 	class World
 	{
 	public:
@@ -17,13 +19,18 @@ namespace Genesis
 		inline EntityRegistry* getEntityRegistry() { return this->entity_registry; };
 		inline EntityHandle getCamera() { return this->main_camera; };
 
+		void addEntity(Entity* entity);
+		void removeEntity(Entity* entity);
+		inline const vector<Entity*>& getEntities() { return this->root_entities; };
+
 	private:
 		BaseWorldRenderer* world_renderer;
 
 		EntityRegistry* entity_registry = nullptr;
 		Physics::PhysicsWorld* physics_world = nullptr;
 
-
 		EntityHandle main_camera;
+
+		vector<Entity*> root_entities;
 	};
 }

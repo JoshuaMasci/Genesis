@@ -13,7 +13,6 @@ LegacyWorldRenderer::LegacyWorldRenderer(LegacyBackend* backend)
 	this->legacy_backend = backend;
 
 	this->renderers.push_back(new LegacyMeshRenderer(this->legacy_backend));
-	this->renderers.push_back(new LegacyAnimatedMeshRenderer(this->legacy_backend));
 }
 
 LegacyWorldRenderer::~LegacyWorldRenderer()
@@ -30,11 +29,11 @@ void LegacyWorldRenderer::drawWorld(World* world, vector2U size)
 
 	EntityHandle camera = world->getCamera();
 	Camera& camera_component = world->getEntityRegistry()->get<Camera>(camera);
-	TransformF camera_transform = world->getEntityRegistry()->get<TransformD>(camera).toTransformF();
+	TransformD& camera_transform = world->getEntityRegistry()->get<TransformD>(camera);
 	matrix4F view_projection_matrix = camera_component.getProjectionMatrix(aspect_ratio) * camera_transform.getViewMatirx();
 
 	Frustum frustum(view_projection_matrix);
-	SceneData environment = { camera_transform.getPosition(), vector3F(0.1f), view_projection_matrix };
+	SceneData environment = { (vector3F)camera_transform.getPosition(), vector3F(0.1f), view_projection_matrix };
 
 	PipelineSettings settings;
 	settings.cull_mode = CullMode::Back;
@@ -47,6 +46,9 @@ void LegacyWorldRenderer::drawWorld(World* world, vector2U size)
 	for (MeshRenderer* renderer : this->renderers)
 	{
 		renderer->drawAmbientPass(world->getEntityRegistry(), &environment, &frustum);
+
+		SceneData temp = { (vector3F)camera_transform.getPosition(), vector3F(1.0f), view_projection_matrix };
+		renderer->drawAmbientPass(world, &temp, &frustum);
 	}
 
 	PipelineSettings light_settings;
@@ -62,7 +64,7 @@ void LegacyWorldRenderer::drawWorld(World* world, vector2U size)
 	for (EntityHandle light_entity : directional_light_view)
 	{
 		DirectionalLight& light = directional_light_view.get<DirectionalLight>(light_entity);
-		TransformF light_transform = directional_light_view.get<TransformD>(light_entity).toTransformF();
+		TransformD& light_transform = directional_light_view.get<TransformD>(light_entity);
 
 		for (MeshRenderer* renderer : this->renderers)
 		{
@@ -74,7 +76,7 @@ void LegacyWorldRenderer::drawWorld(World* world, vector2U size)
 	for (EntityHandle light_entity : point_light_view)
 	{
 		PointLight& light = point_light_view.get<PointLight>(light_entity);
-		TransformF light_transform = point_light_view.get<TransformD>(light_entity).toTransformF();
+		TransformD& light_transform = directional_light_view.get<TransformD>(light_entity);
 
 		for (MeshRenderer* renderer : this->renderers)
 		{
@@ -86,7 +88,7 @@ void LegacyWorldRenderer::drawWorld(World* world, vector2U size)
 	for (EntityHandle light_entity : spot_light_view)
 	{
 		SpotLight& light = spot_light_view.get<SpotLight>(light_entity);
-		TransformF light_transform = spot_light_view.get<TransformD>(light_entity).toTransformF();
+		TransformD& light_transform = directional_light_view.get<TransformD>(light_entity);
 
 		for (MeshRenderer* renderer : this->renderers)
 		{

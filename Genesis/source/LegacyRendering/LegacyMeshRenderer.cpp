@@ -42,6 +42,9 @@ LegacyMeshRenderer::LegacyMeshRenderer(LegacyBackend* backend)
 		FileSystem::loadFileString("res/shaders_opengl/build/model_texture_basic_basic_spot.frag", frag_data);
 		this->texture_spot = this->legacy_backend->createShaderProgram(vert_data.data(), (uint32_t)vert_data.size(), frag_data.data(), (uint32_t)frag_data.size());
 	}
+
+	this->mesh = this->mesh_pool->getResource("res/small_cube.obj");
+	this->material = this->material_pool->getResource("res/materials/blue.csv");
 }
 
 LegacyMeshRenderer::~LegacyMeshRenderer()
@@ -72,20 +75,20 @@ void writeMaterialUniform(LegacyBackend* backend, LegacyMaterial* material)
 	}
 }
 
-void writeTransformUniform(LegacyBackend* backend, const TransformF& transform)
+void writeTransformUniform(LegacyBackend* backend, TransformD& transform)
 {
 	backend->setUniformMat4f("matrices.model", transform.getModelMatrix());
 	backend->setUniformMat3f("matrices.normal", transform.getNormalMatrix());
 }
 
-void writeDirectionalLightUniform(LegacyBackend* backend, const DirectionalLight& light, const TransformF& light_transform)
+void writeDirectionalLightUniform(LegacyBackend* backend, const DirectionalLight& light, const TransformD& light_transform)
 {
 	backend->setUniform3f("directional_light.base.color", light.color);
 	backend->setUniform1f("directional_light.base.intensity", light.intensity);
 	backend->setUniform3f("directional_light.direction", light_transform.getForward());
 }
 
-void writePointLightUniform(LegacyBackend* backend, const PointLight& light, const TransformF& light_transform)
+void writePointLightUniform(LegacyBackend* backend, const PointLight& light, const TransformD& light_transform)
 {
 	backend->setUniform3f("point_light.base.color", light.color);
 	backend->setUniform1f("point_light.base.intensity", light.intensity);
@@ -94,7 +97,7 @@ void writePointLightUniform(LegacyBackend* backend, const PointLight& light, con
 	backend->setUniform3f("point_light.position", light_transform.getPosition());
 }
 
-void writeSpotLightUniform(LegacyBackend* backend, const SpotLight& light, const TransformF& light_transform)
+void writeSpotLightUniform(LegacyBackend* backend, const SpotLight& light, const TransformD& light_transform)
 {
 	backend->setUniform3f("spot_light.base.color", light.color);
 	backend->setUniform1f("spot_light.base.intensity", light.intensity);
@@ -121,9 +124,9 @@ void LegacyMeshRenderer::drawAmbientPass(EntityRegistry* entity_registry, SceneD
 			material_component.material = this->material_pool->getResource(material_component.material_file);
 		}
 
-		TransformF render_transform = view.get<TransformD>(entity).toTransformF();
+		TransformD& render_transform = view.get<TransformD>(entity);
 
-		if (frustum->sphereTest(render_transform.getPosition(), mesh_component.mesh->frustum_sphere_radius))
+		if (frustum->sphereTest((vector3F)render_transform.getPosition(), mesh_component.mesh->frustum_sphere_radius))
 		{
 			if (material_component.material->texture_names[0].empty())
 			{
@@ -148,16 +151,52 @@ void LegacyMeshRenderer::drawAmbientPass(EntityRegistry* entity_registry, SceneD
 	}
 }
 
-void LegacyMeshRenderer::drawDirectionalPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, DirectionalLight& light, TransformF& light_transform)
+#include "Genesis/Entity/Entity.hpp"
+void LegacyMeshRenderer::drawEntity(Entity* entity)
+{
+	//Matrices
+	writeTransformUniform(this->legacy_backend, entity->getGlobalTransform());
+	this->legacy_backend->draw(mesh->vertex_buffer, mesh->index_buffer, mesh->index_count);
+
+	for (Entity* child : entity->getChildren())
+	{
+		this->drawEntity(child);
+	}
+}
+
+void LegacyMeshRenderer::drawAmbientPass(World* world, SceneData* environment, Frustum* frustum)
+{
+	if (material->texture_names[0].empty())
+	{
+		this->legacy_backend->bindShaderProgram(this->color_ambient);
+	}
+	else
+	{
+		this->legacy_backend->bindShaderProgram(this->texture_ambient);
+	}
+
+	//Environment
+	writeEnvironmentUniform(this->legacy_backend, environment);
+
+	//Material
+	writeMaterialUniform(this->legacy_backend, material);
+
+	for (Entity* child : world->getEntities())
+	{
+		this->drawEntity(child);
+	}
+}
+
+void LegacyMeshRenderer::drawDirectionalPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, DirectionalLight& light, TransformD& light_transform)
 {
 	auto& view = entity_registry->view<LegacyMeshComponent, LegacyMaterialComponent, TransformD>();
 	for (EntityHandle entity : view)
 	{
 		LegacyMeshComponent& mesh_component = view.get<LegacyMeshComponent>(entity);
 		LegacyMaterialComponent& material_component = view.get<LegacyMaterialComponent>(entity);
-		TransformF render_transform = view.get<TransformD>(entity).toTransformF();
+		TransformD& render_transform = view.get<TransformD>(entity);
 
-		if (frustum->sphereTest(render_transform.getPosition(), mesh_component.mesh->frustum_sphere_radius))
+		if (frustum->sphereTest((vector3F)render_transform.getPosition(), mesh_component.mesh->frustum_sphere_radius))
 		{
 			if (material_component.material->texture_names[0].empty())
 			{
@@ -185,16 +224,16 @@ void LegacyMeshRenderer::drawDirectionalPass(EntityRegistry* entity_registry, Sc
 	}
 }
 
-void LegacyMeshRenderer::drawPointPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, PointLight& light, TransformF& light_transform)
+void LegacyMeshRenderer::drawPointPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, PointLight& light, TransformD& light_transform)
 {
 	auto& view = entity_registry->view<LegacyMeshComponent, LegacyMaterialComponent, TransformD>();
 	for (EntityHandle entity : view)
 	{
 		LegacyMeshComponent& mesh_component = view.get<LegacyMeshComponent>(entity);
 		LegacyMaterialComponent& material_component = view.get<LegacyMaterialComponent>(entity);
-		TransformF render_transform = view.get<TransformD>(entity).toTransformF();
+		TransformD& render_transform = view.get<TransformD>(entity);
 
-		if (frustum->sphereTest(render_transform.getPosition(), mesh_component.mesh->frustum_sphere_radius))
+		if (frustum->sphereTest((vector3F)render_transform.getPosition(), mesh_component.mesh->frustum_sphere_radius))
 		{
 			if (material_component.material->texture_names[0].empty())
 			{
@@ -222,16 +261,16 @@ void LegacyMeshRenderer::drawPointPass(EntityRegistry* entity_registry, SceneDat
 	}
 }
 
-void LegacyMeshRenderer::drawSpotPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, SpotLight& light, TransformF& light_transform)
+void LegacyMeshRenderer::drawSpotPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, SpotLight& light, TransformD& light_transform)
 {
 	auto& view = entity_registry->view<LegacyMeshComponent, LegacyMaterialComponent, TransformD>();
 	for (EntityHandle entity : view)
 	{
 		LegacyMeshComponent& mesh_component = view.get<LegacyMeshComponent>(entity);
 		LegacyMaterialComponent& material_component = view.get<LegacyMaterialComponent>(entity);
-		TransformF render_transform = view.get<TransformD>(entity).toTransformF();
+		TransformD& render_transform = view.get<TransformD>(entity);
 
-		if (frustum->sphereTest(render_transform.getPosition(), mesh_component.mesh->frustum_sphere_radius))
+		if (frustum->sphereTest((vector3F)render_transform.getPosition(), mesh_component.mesh->frustum_sphere_radius))
 		{
 			if (material_component.material->texture_names[0].empty())
 			{

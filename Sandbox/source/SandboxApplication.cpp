@@ -112,10 +112,9 @@ void SandboxApplication::render(Genesis::TimeStep time_step)
 		ImGui::End();
 	}
 
-	{
-		this->console_window.drawWindow("Console");
-	}
-
+	this->console_window.drawWindow("Console");
+	this->world_view_window.drawWindow(this->world);
+	this->entity_properties_window.drawWindow(this->world, this->world_view_window.getSelectedEntity());
 
 	this->ui_renderer->endFrame();
 

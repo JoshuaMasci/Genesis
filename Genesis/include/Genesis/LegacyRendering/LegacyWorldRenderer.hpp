@@ -20,6 +20,6 @@ namespace Genesis
 	protected: 
 		LegacyBackend* legacy_backend;
 
-		vector<MeshRenderer*> renderers;
+		vector<MeshRenderer*> renderers;		
 	};
 }

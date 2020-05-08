@@ -33,12 +33,18 @@ namespace Genesis
 		~LegacyMeshRenderer();
 
 		virtual void drawAmbientPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum) override;
+		virtual void drawAmbientPass(World* world, SceneData* environment, Frustum* frustum) override;
 
-		virtual void drawDirectionalPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, DirectionalLight& light, TransformF& light_transform) override;
-		virtual void drawPointPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, PointLight& light, TransformF& light_transform) override;
-		virtual void drawSpotPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, SpotLight& light, TransformF& light_transform) override;
+		virtual void drawDirectionalPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, DirectionalLight& light, TransformD& light_transform) override;
+		virtual void drawPointPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, PointLight& light, TransformD& light_transform) override;
+		virtual void drawSpotPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, SpotLight& light, TransformD& light_transform) override;
 
 	protected:
+		//TEMP
+		void drawEntity(Entity* entity);
+		LegacyMaterial* material;
+		LegacyMesh* mesh;
+
 		LegacyBackend* legacy_backend;
 
 		LegacyMeshPool* mesh_pool;

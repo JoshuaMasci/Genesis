@@ -48,18 +48,26 @@ namespace Genesis
 		inline vector3D getForward() const { return this->orientation * vector3D(0.0, 0.0, 1.0); };
 
 		//Setters
-		inline void setPosition(const vector3D& vec) { this->position = vec; };
-		inline void setOrientation(const quaternionD& quat) { this->orientation = quat; };
-		inline void setScale(const vector3D& vec) { this->scale = vec; };
+		inline void setPosition(const vector3D& vec) { this->position = vec; this->has_changed = true; };
+		inline void setOrientation(const quaternionD& quat) { this->orientation = quat; this->has_changed = true; };
+		inline void setScale(const vector3D& vec) { this->scale = vec; this->has_changed = true; };
 
 		//Utils
 		TransformD transformBy(const TransformD& transform1) const;
-		TransformF toTransformF(const vector3D& pos_offset = vector3D(0.0));
+
+		matrix4F getModelMatrix(const vector3D& position_offset = vector3D(0.0));
+		matrix3F getNormalMatrix();
+		matrix4F getViewMatirx(const vector3D& position_offset = vector3D(0.0));
 
 	private:
+		void updateModelMatrix();
+
 		vector3D position;
 		quaternionD orientation;
 		vector3D scale;
+
+		bool has_changed;
+		matrix4F untranslated_model_matrix;
 	};
 
 	class TransformUtil
