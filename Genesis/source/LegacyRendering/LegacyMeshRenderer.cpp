@@ -42,9 +42,6 @@ LegacyMeshRenderer::LegacyMeshRenderer(LegacyBackend* backend)
 		FileSystem::loadFileString("res/shaders_opengl/build/model_texture_basic_basic_spot.frag", frag_data);
 		this->texture_spot = this->legacy_backend->createShaderProgram(vert_data.data(), (uint32_t)vert_data.size(), frag_data.data(), (uint32_t)frag_data.size());
 	}
-
-	this->mesh = this->mesh_pool->getResource("res/small_cube.obj");
-	this->material = this->material_pool->getResource("res/materials/blue.csv");
 }
 
 LegacyMeshRenderer::~LegacyMeshRenderer()
@@ -154,37 +151,12 @@ void LegacyMeshRenderer::drawAmbientPass(EntityRegistry* entity_registry, SceneD
 #include "Genesis/Entity/Entity.hpp"
 void LegacyMeshRenderer::drawEntity(Entity* entity)
 {
-	//Matrices
-	writeTransformUniform(this->legacy_backend, entity->getGlobalTransform());
-	this->legacy_backend->draw(mesh->vertex_buffer, mesh->index_buffer, mesh->index_count);
 
-	for (Entity* child : entity->getChildren())
-	{
-		this->drawEntity(child);
-	}
 }
 
 void LegacyMeshRenderer::drawAmbientPass(World* world, SceneData* environment, Frustum* frustum)
 {
-	if (material->texture_names[0].empty())
-	{
-		this->legacy_backend->bindShaderProgram(this->color_ambient);
-	}
-	else
-	{
-		this->legacy_backend->bindShaderProgram(this->texture_ambient);
-	}
 
-	//Environment
-	writeEnvironmentUniform(this->legacy_backend, environment);
-
-	//Material
-	writeMaterialUniform(this->legacy_backend, material);
-
-	for (Entity* child : world->getEntities())
-	{
-		this->drawEntity(child);
-	}
 }
 
 void LegacyMeshRenderer::drawDirectionalPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum, DirectionalLight& light, TransformD& light_transform)

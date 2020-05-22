@@ -72,7 +72,7 @@ void SandboxApplication::render(Genesis::TimeStep time_step)
 	this->ui_renderer->beginDocking();
 	if (ImGui::BeginMenuBar())
 	{
-		if (ImGui::BeginMenu("Menu"))
+		if (ImGui::BeginMenu("File"))
 		{
 			if (ImGui::MenuItem("item 1", "")) { GENESIS_ENGINE_INFO("item 1"); };
 			if (ImGui::MenuItem("item 2", "")) { GENESIS_ENGINE_INFO("item 2"); };

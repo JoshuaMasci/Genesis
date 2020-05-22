@@ -13,6 +13,7 @@ LegacyWorldRenderer::LegacyWorldRenderer(LegacyBackend* backend)
 	this->legacy_backend = backend;
 
 	this->renderers.push_back(new LegacyMeshRenderer(this->legacy_backend));
+	this->renderers.push_back(new LegacyAnimatedMeshRenderer(this->legacy_backend));
 }
 
 LegacyWorldRenderer::~LegacyWorldRenderer()

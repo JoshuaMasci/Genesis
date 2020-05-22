@@ -1,132 +1,89 @@
 #include "Genesis/Physics/RigidBody.hpp"
 
 using namespace Genesis;
-using namespace Genesis::Physics;
 
-RigidBody::RigidBody(reactphysics3d::RigidBody* rigid_body)
+Rigidbody::Rigidbody()
 {
-	this->rigid_body = rigid_body;
-	this->rigid_body->setType(reactphysics3d::BodyType::DYNAMIC);
+
 }
 
-reactphysics3d::ProxyShape* RigidBody::addCollisionShape(reactphysics3d::CollisionShape* shape, const TransformD& transform, double mass)
+Rigidbody::~Rigidbody()
 {
-	return this->rigid_body->addCollisionShape(shape, reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())), (reactphysics3d::decimal)mass);
+
 }
 
-void RigidBody::removeCollisionShape(reactphysics3d::ProxyShape* shape_proxy)
+reactphysics3d::ProxyShape* Rigidbody::addCollisionShape(reactphysics3d::CollisionShape* collision_shape, const TransformD& transform)
 {
-	this->rigid_body->removeCollisionShape(shape_proxy);
+	return this->rigidbody->addCollisionShape(collision_shape, reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())), 0.0001);
 }
 
-void RigidBody::setTransform(const TransformD& transform)
+void Rigidbody::removeCollisionShape(reactphysics3d::ProxyShape* proxy_shape)
 {
-	this->rigid_body->setTransform(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())));
+	this->rigidbody->removeCollisionShape(proxy_shape);
 }
 
-TransformD RigidBody::getTransform()
+void Rigidbody::setTransform(const TransformD& transform)
 {
-	const reactphysics3d::Transform& transform_r = this->rigid_body->getTransform();
+	this->rigidbody->setTransform(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())));
+}
+
+TransformD Rigidbody::getTransform()
+{
+	const reactphysics3d::Transform& transform_r = this->rigidbody->getTransform();
 	return TransformD(toVec3D(transform_r.getPosition()), toQuatD(transform_r.getOrientation()));
 }
 
-void RigidBody::setLinearVelocity(const vector3D& velocity)
+void Rigidbody::setLinearVelocity(const vector3D& velocity)
 {
-	this->rigid_body->setLinearVelocity(toVec3R(velocity));
+	this->rigidbody->setLinearVelocity(toVec3R(velocity));
 }
 
-vector3D RigidBody::getLinearVelocity()
+vector3D Rigidbody::getLinearVelocity()
 {
-	return toVec3D(this->rigid_body->getLinearVelocity());
+	return toVec3D(this->rigidbody->getLinearVelocity());
 }
 
-void RigidBody::setAngularVelocity(const vector3D& velocity)
+void Rigidbody::setAngularVelocity(const vector3D& velocity)
 {
-	this->rigid_body->setAngularVelocity(toVec3R(velocity));
+	this->rigidbody->setAngularVelocity(toVec3R(velocity));
 }
 
-vector3D RigidBody::getAngularVelocity()
+vector3D Rigidbody::getAngularVelocity()
 {
-	return toVec3D(this->rigid_body->getAngularVelocity());
+	return toVec3D(this->rigidbody->getAngularVelocity());
 }
 
-void RigidBody::setGravityEnabled(bool enabled)
+void Rigidbody::setGravityEnabled(bool enabled)
 {
-	this->rigid_body->enableGravity(enabled);
+	this->rigidbody->enableGravity(enabled);
 }
 
-bool RigidBody::getGravityEnabled()
+bool Rigidbody::getGravityEnabled()
 {
-	return this->rigid_body->isGravityEnabled();
+	return this->rigidbody->isGravityEnabled();
 }
 
-void RigidBody::applyCenteredForce(const vector3D& force)
+void Rigidbody::setAwake(bool awake)
 {
-	this->rigid_body->applyForceToCenterOfMass(toVec3R(force));
+	this->rigidbody->setIsActive(awake);
 }
 
-void RigidBody::applyForce(const vector3D& world_position, const vector3D& force)
+bool Rigidbody::getAwake()
 {
-	this->rigid_body->applyForce(toVec3R(force), toVec3R(world_position));
+	return this->rigidbody->isActive();
 }
 
-void RigidBody::applyTorque(const vector3D& torque)
+void Rigidbody::applyCenteredForce(const vector3D& force)
 {
-	this->rigid_body->applyTorque(toVec3R(torque));
+	this->rigidbody->applyForceToCenterOfMass(toVec3R(force));
 }
 
-
-
-StaticRigidBody::StaticRigidBody(reactphysics3d::RigidBody* rigid_body)
+void Rigidbody::applyForce(const vector3D& world_position, const vector3D& force)
 {
-	this->rigid_body = rigid_body;
-	this->rigid_body->setType(reactphysics3d::BodyType::STATIC);
+	this->rigidbody->applyForce(toVec3R(force), toVec3R(world_position));
 }
 
-reactphysics3d::ProxyShape* StaticRigidBody::addCollisionShape(reactphysics3d::CollisionShape* shape, const TransformD& transform, double mass)
+void Rigidbody::applyTorque(const vector3D& torque)
 {
-	return this->rigid_body->addCollisionShape(shape, reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())), (reactphysics3d::decimal)mass);
-}
-
-void StaticRigidBody::removeCollisionShape(reactphysics3d::ProxyShape* shape_proxy)
-{
-	this->rigid_body->removeCollisionShape(shape_proxy);
-}
-
-void StaticRigidBody::setTransform(const TransformD& transform)
-{
-	this->rigid_body->setTransform(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())));
-}
-
-TransformD StaticRigidBody::getTransform()
-{
-	const reactphysics3d::Transform& transform_r = this->rigid_body->getTransform();
-	return TransformD(toVec3D(transform_r.getPosition()), toQuatD(transform_r.getOrientation()));
-}
-
-
-
-ProxyShape::ProxyShape(reactphysics3d::ProxyShape* shape_proxy)
-{
-	this->shape_proxy = shape_proxy;
-}
-
-void ProxyShape::setTransform(const TransformD& transform)
-{
-	this->shape_proxy->setLocalToBodyTransform(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())));
-}
-
-TransformD ProxyShape::getTransform()
-{
-	const reactphysics3d::Transform& transform_r = this->shape_proxy->getLocalToWorldTransform();
-	return TransformD(toVec3D(transform_r.getPosition()), toQuatD(transform_r.getOrientation()));
-}
-
-void ProxyShape::setMass(double new_mass)
-{
-}
-
-double ProxyShape::getMass()
-{
-	return (double)this->shape_proxy->getMass();
+	this->rigidbody->applyTorque(toVec3R(torque));
 }

@@ -23,49 +23,35 @@ namespace Genesis
 	{
 		vector3F min;
 		vector3F max;
-		bool valid = false;
 		BoundingBox() {};
 		BoundingBox(vector3F min, vector3F max) : min(min), max(max) {};
 	};
 
 	struct GltfMaterial
 	{
+		bool double_sided = false;
+
 		enum AlphaMode { ALPHAMODE_OPAQUE, ALPHAMODE_MASK, ALPHAMODE_BLEND };
 		AlphaMode alpha_mode = ALPHAMODE_OPAQUE;
 		float alpha_cutoff = 1.0f;
-		float metallic_factor = 1.0f;
-		float roughness_factor = 1.0f;
-		vector4F base_color_factor = vector4F(1.0f);
+
+		vector4F albedo_factor = vector4F(1.0f);
+		vector2F metallic_roughness_factor = vector2F(1.0f);
 		vector4F emissive_factor = vector4F(1.0f);
 
-		Texture2D base_color_texture;
-		Texture2D metallic_roughness_texture;
+		Texture2D albedo_texture;
 		Texture2D normal_texture;
+		Texture2D metallic_roughness_texture;
 		Texture2D occlusion_texture;
 		Texture2D emissive_texture;
 		struct TexCoordSets
 		{
-			uint8_t base_color = 0;
-			uint8_t metallic_toughness = 0;
-			uint8_t specular_glossiness = 0;
-			uint8_t normal = 0;
-			uint8_t occlusion = 0;
-			uint8_t emissive = 0;
-		} tex_coord_sets;
-
-		struct Extension
-		{
-			Texture2D specular_glossiness_texture;
-			Texture2D diffuse_texture;
-			vector4F diffuse_factor = vector4F(1.0f);
-			vector3F specular_factor = vector3F(0.0f);
-		} extension;
-
-		struct PbrWorkflows
-		{
-			bool metallic_roughness = true;
-			bool specular_glossiness = false;
-		} pbrWorkflows;
+			int8_t albedo = -1;
+			int8_t normal = -1;
+			int8_t metallic_roughness = -1;
+			int8_t occlusion = -1;
+			int8_t emissive = -1;
+		} texture_sets;
 	};
 
 	struct GltfMeshPrimitive
@@ -93,6 +79,7 @@ namespace Genesis
 		uint32_t skeleton_root_index;
 		vector<uint32_t> joints;
 		vector<matrix4F> inverse_bind_matrices;
+		vector<matrix4F> joint_matrices;
 	};
 
 	struct GltfAnimationSampler
@@ -129,6 +116,9 @@ namespace Genesis
 
 		vector<uint32_t> child_indices;
 
+		GltfNode* parent_node;
+		vector<GltfNode*> child_nodes;
+
 		GltfMesh *mesh = nullptr;
 		GltfSkin *skin = nullptr;
 	};
@@ -139,17 +129,24 @@ namespace Genesis
 		GltfModel(LegacyBackend* legacy_backend, tinygltf::Model& gltfModel);
 		~GltfModel();
 
-	protected:
-		LegacyBackend* backend;
-
 		vector<Texture2D> textures;
 		vector<GltfMaterial> materials;
 		vector<GltfMesh> meshes;
 
 		vector<GltfNode> node_storage;
+		vector<GltfNode*> root_nodes;
 
 		vector<GltfSkin> skins;
 		vector<GltfAnimation> animations;
+
+		float getAnimationLength(uint32_t animation_index);
+		void playAnimation(uint32_t animation_index, float current_time);
+
+		void updateSkins();
+
+	protected:
+		LegacyBackend* backend;
+
 		vector<string> extensions;
 
 		void loadTextures(tinygltf::Model& gltfModel);
@@ -169,6 +166,8 @@ namespace Genesis
 
 		void loadAnimations(tinygltf::Model& gltfModel);
 		void unloadAnimations();
+
+		void calcHierarchy();
 	};
 
 	class GltfLoader

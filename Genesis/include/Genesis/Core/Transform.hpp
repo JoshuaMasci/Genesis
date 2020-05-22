@@ -22,6 +22,8 @@ namespace Genesis
 		inline void setScale(const vector3F& vec) { this->scale = vec; };
 
 		//Utils
+		void setTransform(const matrix4F& matrix);
+
 		TransformF transformBy(const TransformF& transform1) const;
 		matrix4F getModelMatrix() const;
 		matrix4F getViewMatirx() const;
@@ -48,12 +50,13 @@ namespace Genesis
 		inline vector3D getForward() const { return this->orientation * vector3D(0.0, 0.0, 1.0); };
 
 		//Setters
-		inline void setPosition(const vector3D& vec) { this->position = vec; this->has_changed = true; };
-		inline void setOrientation(const quaternionD& quat) { this->orientation = quat; this->has_changed = true; };
-		inline void setScale(const vector3D& vec) { this->scale = vec; this->has_changed = true; };
+		inline void setPosition(const vector3D& vec) { this->position = vec; this->dirty = true; };
+		inline void setOrientation(const quaternionD& quat) { this->orientation = quat; this->dirty = true; };
+		inline void setScale(const vector3D& vec) { this->scale = vec; this->dirty = true; };
 
 		//Utils
-		TransformD transformBy(const TransformD& transform1) const;
+		//TransformD transformBy(const TransformD& transform1) const;
+		void transformByInplace(const TransformD& parent, const TransformD& child);
 
 		matrix4F getModelMatrix(const vector3D& position_offset = vector3D(0.0));
 		matrix3F getNormalMatrix();
@@ -66,14 +69,7 @@ namespace Genesis
 		quaternionD orientation;
 		vector3D scale;
 
-		bool has_changed;
+		bool dirty;
 		matrix4F untranslated_model_matrix;
-	};
-
-	class TransformUtil
-	{
-	public:
-		static TransformD transformBy(const TransformD& parent, const TransformD& child);
-		static TransformD transformBy(const TransformD& parent, const TransformF& child);
 	};
 };

@@ -18,6 +18,8 @@ void HierarchyWindow::drawWindow(World* world)
 {
 	ImGui::Begin("World Hierarchy");
 
+	//if (ImGui::CollapsingHeader("World", ImGuiTreeNodeFlags_DefaultOpen))
+	//{
 	ImGui::SetNextItemOpen(true);
 	if (ImGui::TreeNode("World"))//TODO World->getName();
 	{
@@ -25,7 +27,7 @@ void HierarchyWindow::drawWindow(World* world)
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY_TREE_HIERARCHY"))
 			{
-				GENESIS_ENGINE_ASSERT_ERROR((payload->DataSize == sizeof(Entity*)), "Payload Data Size wrong size");
+				GENESIS_ENGINE_ASSERT_ERROR(payload->DataSize == sizeof(Entity*), "Payload Data Size wrong size");
 				Entity* moved_entity = *(Entity**)payload->Data;
 
 				GENESIS_ENGINE_INFO("{} to become a child of World", moved_entity->getName());
@@ -54,7 +56,7 @@ void HierarchyWindow::drawWindow(World* world)
 
 void HierarchyWindow::drawEntityTree(Entity* entity)
 {
-	GENESIS_ENGINE_ASSERT_ERROR((entity != nullptr), "Null Entity");
+	GENESIS_ENGINE_ASSERT_ERROR(entity != nullptr, "Null Entity");
 
 	const ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 	ImGuiTreeNodeFlags node_flags = base_flags;
@@ -74,6 +76,13 @@ void HierarchyWindow::drawEntityTree(Entity* entity)
 	{
 		this->selected_entity = entity;
 	}
+	/*if (ImGui::BeginPopupContextItem("Popup"))
+	{
+		ImGui::Button("add child");
+		ImGui::Button("delete");
+
+		ImGui::EndPopup();
+	}*/
 	if (ImGui::BeginDragDropSource())
 	{
 		ImGui::SetDragDropPayload("ENTITY_TREE_HIERARCHY", &entity, sizeof(Entity*));
@@ -84,7 +93,7 @@ void HierarchyWindow::drawEntityTree(Entity* entity)
 	{
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY_TREE_HIERARCHY"))
 		{
-			GENESIS_ENGINE_ASSERT_ERROR((payload->DataSize == sizeof(Entity*)), "Payload Data Size wrong size");
+			GENESIS_ENGINE_ASSERT_ERROR(payload->DataSize == sizeof(Entity*), "Payload Data Size wrong size");
 			Entity* moved_entity = *(Entity**)payload->Data;
 
 			GENESIS_ENGINE_INFO("{} to become a child of {}", moved_entity->getName(), entity->getName());

@@ -23,11 +23,13 @@ namespace Genesis
 		void removeEntity(Entity* entity);
 		inline const vector<Entity*>& getEntities() { return this->root_entities; };
 
+		inline PhysicsWorld* getPhysicsWorld() { return this->physics_world; };
+
 	private:
 		BaseWorldRenderer* world_renderer;
 
 		EntityRegistry* entity_registry = nullptr;
-		Physics::PhysicsWorld* physics_world = nullptr;
+		PhysicsWorld* physics_world = nullptr;
 
 		EntityHandle main_camera;
 

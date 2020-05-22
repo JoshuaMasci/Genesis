@@ -2,9 +2,11 @@
 
 #define TINYGLTF_IMPLEMENTATION
 //#define STB_IMAGE_IMPLEMENTATION
+#define STBI_MSC_SECURE_CRT
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 // #define TINYGLTF_NOEXCEPTION // optional. disable exception handling.
 #include "tiny_gltf.h"
+#include <algorithm>
 
 using namespace Genesis;
 
@@ -18,6 +20,7 @@ GltfModel::GltfModel(LegacyBackend* legacy_backend, tinygltf::Model& gltfModel)
 	this->loadSkins(gltfModel);
 	this->loadNodes(gltfModel);
 	this->loadAnimations(gltfModel);
+	this->calcHierarchy();
 }
 
 GltfModel::~GltfModel()
@@ -63,6 +66,107 @@ TextureWrapMode getWrapMode(int mode)
 	}
 
 	return TextureWrapMode::Repeat;
+}
+
+float GltfModel::getAnimationLength(uint32_t animation_index)
+{
+	if (animation_index < this->animations.size())
+	{
+		return this->animations[animation_index].end_time;
+	}
+
+	return 0.0f;
+}
+
+void GltfModel::playAnimation(uint32_t animation_index, float current_time)
+{
+	/*if (animations.empty()) 
+	{
+		std::cout << ".glTF does not contain animation." << std::endl;
+		return;
+	}
+	if (index > static_cast<uint32_t>(animations.size()) - 1) 
+	{
+		std::cout << "No animation with index " << index << std::endl;
+		return;
+	}*/
+	
+	GltfAnimation& animation = this->animations[animation_index];
+
+	for (GltfAnimationChannel& channel : animation.channels)
+	{
+		GltfAnimationSampler& sampler = animation.samplers[channel.sampler_index];
+		if (sampler.inputs.size() > sampler.outputs_vector4.size()) 
+		{
+			continue;
+		}
+
+		for (size_t i = 0; i < sampler.inputs.size() - 1; i++)
+		{
+			if ((current_time >= sampler.inputs[i]) && (current_time <= sampler.inputs[i + 1]))
+			{
+				float u = std::max(0.0f, current_time - sampler.inputs[i]) / (sampler.inputs[i + 1] - sampler.inputs[i]);
+				if (u <= 1.0f)
+				{
+					switch (channel.path)
+					{
+					case Genesis::GltfAnimationChannel::TRANSLATION:
+						this->node_storage[channel.node_index].local_transform.setPosition(glm::mix(sampler.outputs_vector4[i], sampler.outputs_vector4[i + 1], u));
+						break;
+					case Genesis::GltfAnimationChannel::ROTATION:
+						glm::quat q1;
+						q1.x = sampler.outputs_vector4[i].x;
+						q1.y = sampler.outputs_vector4[i].y;
+						q1.z = sampler.outputs_vector4[i].z;
+						q1.w = sampler.outputs_vector4[i].w;
+						glm::quat q2;
+						q2.x = sampler.outputs_vector4[i + 1].x;
+						q2.y = sampler.outputs_vector4[i + 1].y;
+						q2.z = sampler.outputs_vector4[i + 1].z;
+						q2.w = sampler.outputs_vector4[i + 1].w;
+						this->node_storage[channel.node_index].local_transform.setOrientation(glm::normalize(glm::slerp(q1, q2, u)));
+						break;
+					case Genesis::GltfAnimationChannel::SCALE:
+						this->node_storage[channel.node_index].local_transform.setScale(glm::mix(sampler.outputs_vector4[i], sampler.outputs_vector4[i + 1], u));
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+matrix4F getRootTransform(GltfNode* node)
+{
+	matrix4F matrix = node->local_transform.getModelMatrix();
+	GltfNode* parent = node->parent_node;
+	while (parent != nullptr)
+	{
+		matrix = parent->local_transform.getModelMatrix() * matrix;
+		parent = parent->parent_node;
+	}
+
+	return matrix;
+}
+
+void GltfModel::updateSkins()
+{
+	for (uint32_t skin_index = 0; skin_index < this->skins.size(); skin_index++)
+	{
+		GltfSkin& skin = this->skins[skin_index];
+
+		GltfNode& root_node = this->node_storage[skin.skeleton_root_index];
+
+		matrix4F root_matrix = getRootTransform(&root_node);
+		matrix4F inverse_matrix = glm::inverse(root_matrix);
+
+		for (uint32_t i = 0; i < skin.joints.size(); i++)
+		{
+			GltfNode& joint_node = this->node_storage[skin.joints[i]];
+			matrix4F joint_matrix = getRootTransform(&joint_node) * skin.inverse_bind_matrices[i];
+			skin.joint_matrices[i] = inverse_matrix * joint_matrix;
+		}
+	}
 }
 
 void GltfModel::loadTextures(tinygltf::Model& gltfModel)
@@ -128,102 +232,65 @@ void GltfModel::loadMaterials(tinygltf::Model& gltfModel)
 		tinygltf::Material material = gltfModel.materials[material_index];
 		GltfMaterial& new_material = this->materials[material_index];
 
-		if (material.values.find("baseColorTexture") != material.values.end()) 
-		{
-			new_material.base_color_texture = this->textures[material.values["baseColorTexture"].TextureIndex()];
-			new_material.tex_coord_sets.base_color = material.values["baseColorTexture"].TextureTexCoord();
-		}
-		if (material.values.find("metallicRoughnessTexture") != material.values.end()) 
-		{
-			new_material.metallic_roughness_texture = this->textures[material.values["metallicRoughnessTexture"].TextureIndex()];
-			new_material.tex_coord_sets.metallic_toughness = material.values["metallicRoughnessTexture"].TextureTexCoord();
-		}
-
-		if (material.values.find("roughnessFactor") != material.values.end()) 
-		{
-			new_material.roughness_factor = static_cast<float>(material.values["roughnessFactor"].Factor());
-		}
-		if (material.values.find("metallicFactor") != material.values.end()) 
-		{
-			new_material.metallic_factor = static_cast<float>(material.values["metallicFactor"].Factor());
-		}
-		if (material.values.find("baseColorFactor") != material.values.end()) 
-		{
-			new_material.base_color_factor = glm::make_vec4(material.values["baseColorFactor"].ColorFactor().data());
-		}
-
-		if (material.additionalValues.find("normalTexture") != material.additionalValues.end()) 
-		{
-			new_material.normal_texture = this->textures[material.additionalValues["normalTexture"].TextureIndex()];
-			new_material.tex_coord_sets.normal = material.additionalValues["normalTexture"].TextureTexCoord();
-		}
-		if (material.additionalValues.find("emissiveTexture") != material.additionalValues.end()) 
-		{
-			new_material.emissive_texture = this->textures[material.additionalValues["emissiveTexture"].TextureIndex()];
-			new_material.tex_coord_sets.emissive = material.additionalValues["emissiveTexture"].TextureTexCoord();
-		}
-		if (material.additionalValues.find("occlusionTexture") != material.additionalValues.end()) 
-		{
-			new_material.occlusion_texture = this->textures[material.additionalValues["occlusionTexture"].TextureIndex()];
-			new_material.tex_coord_sets.occlusion = material.additionalValues["occlusionTexture"].TextureTexCoord();
-		}
-
-		if (material.additionalValues.find("alphaMode") != material.additionalValues.end()) 
+		if (material.additionalValues.find("alphaMode") != material.additionalValues.end())
 		{
 			tinygltf::Parameter param = material.additionalValues["alphaMode"];
-			if (param.string_value == "BLEND") 
+			if (param.string_value == "BLEND")
 			{
 				new_material.alpha_mode = GltfMaterial::ALPHAMODE_BLEND;
 			}
-			if (param.string_value == "MASK") 
+			if (param.string_value == "MASK")
 			{
 				new_material.alpha_cutoff = 0.5f;
 				new_material.alpha_mode = GltfMaterial::ALPHAMODE_MASK;
 			}
 		}
-
-		if (material.additionalValues.find("alphaCutoff") != material.additionalValues.end()) {
+		if (material.additionalValues.find("alphaCutoff") != material.additionalValues.end())
+		{
 			new_material.alpha_cutoff = static_cast<float>(material.additionalValues["alphaCutoff"].Factor());
 		}
-		if (material.additionalValues.find("emissiveFactor") != material.additionalValues.end()) 
+
+		if (material.values.find("baseColorFactor") != material.values.end())
+		{
+			new_material.albedo_factor = glm::make_vec4(material.values["baseColorFactor"].ColorFactor().data());
+		}
+		if (material.values.find("metallicFactor") != material.values.end())
+		{
+			new_material.metallic_roughness_factor.x = static_cast<float>(material.values["metallicFactor"].Factor());
+		}
+		if (material.values.find("roughnessFactor") != material.values.end())
+		{
+			new_material.metallic_roughness_factor.y = static_cast<float>(material.values["roughnessFactor"].Factor());
+		}
+		if (material.additionalValues.find("emissiveFactor") != material.additionalValues.end())
 		{
 			new_material.emissive_factor = vector4F(glm::make_vec3(material.additionalValues["emissiveFactor"].ColorFactor().data()), 1.0);
 		}
 
-		// Extensions
-		// @TODO: Find out if there is a nicer way of reading these properties with recent tinygltf headers
-		if (material.extensions.find("KHR_materials_pbrSpecularGlossiness") != material.extensions.end()) 
+		if (material.values.find("baseColorTexture") != material.values.end()) 
 		{
-			auto ext = material.extensions.find("KHR_materials_pbrSpecularGlossiness");
-			if (ext->second.Has("specularGlossinessTexture")) 
-			{
-				auto index = ext->second.Get("specularGlossinessTexture").Get("index");
-				new_material.extension.specular_glossiness_texture = this->textures[index.Get<int>()];
-				auto texCoordSet = ext->second.Get("specularGlossinessTexture").Get("texCoord");
-				new_material.tex_coord_sets.specular_glossiness = texCoordSet.Get<int>();
-				new_material.pbrWorkflows.specular_glossiness = true;
-			}
-			if (ext->second.Has("diffuseTexture")) 
-			{
-				auto index = ext->second.Get("diffuseTexture").Get("index");
-				new_material.extension.diffuse_texture = this->textures[index.Get<int>()];
-			}
-			if (ext->second.Has("diffuseFactor")) 
-			{
-				auto factor = ext->second.Get("diffuseFactor");
-				for (uint32_t i = 0; i < factor.ArrayLen(); i++) {
-					auto val = factor.Get(i);
-					new_material.extension.diffuse_factor[i] = val.IsNumber() ? (float)val.Get<double>() : (float)val.Get<int>();
-				}
-			}
-			if (ext->second.Has("specularFactor")) {
-				auto factor = ext->second.Get("specularFactor");
-				for (uint32_t i = 0; i < factor.ArrayLen(); i++) 
-				{
-					auto val = factor.Get(i);
-					new_material.extension.specular_factor[i] = val.IsNumber() ? (float)val.Get<double>() : (float)val.Get<int>();
-				}
-			}
+			new_material.albedo_texture = this->textures[material.values["baseColorTexture"].TextureIndex()];
+			new_material.texture_sets.albedo = material.values["baseColorTexture"].TextureTexCoord();
+		}
+		if (material.values.find("metallicRoughnessTexture") != material.values.end()) 
+		{
+			new_material.metallic_roughness_texture = this->textures[material.values["metallicRoughnessTexture"].TextureIndex()];
+			new_material.texture_sets.metallic_roughness = material.values["metallicRoughnessTexture"].TextureTexCoord();
+		}
+		if (material.additionalValues.find("normalTexture") != material.additionalValues.end()) 
+		{
+			new_material.normal_texture = this->textures[material.additionalValues["normalTexture"].TextureIndex()];
+			new_material.texture_sets.normal = material.additionalValues["normalTexture"].TextureTexCoord();
+		}
+		if (material.additionalValues.find("emissiveTexture") != material.additionalValues.end()) 
+		{
+			new_material.emissive_texture = this->textures[material.additionalValues["emissiveTexture"].TextureIndex()];
+			new_material.texture_sets.emissive = material.additionalValues["emissiveTexture"].TextureTexCoord();
+		}
+		if (material.additionalValues.find("occlusionTexture") != material.additionalValues.end()) 
+		{
+			new_material.occlusion_texture = this->textures[material.additionalValues["occlusionTexture"].TextureIndex()];
+			new_material.texture_sets.occlusion = material.additionalValues["occlusionTexture"].TextureTexCoord();
 		}
 	}
 }
@@ -444,7 +511,7 @@ void GltfModel::loadSkins(tinygltf::Model& gltfModel)
 
 		new_skin.name = skin.name;
 
-		GENESIS_ENGINE_ASSERT_ERROR((skin.skeleton > -1), "Error: no root node to skeleton");
+		GENESIS_ENGINE_ASSERT_ERROR(skin.skeleton > -1, "Error: no root node to skeleton");
 		new_skin.skeleton_root_index = skin.skeleton;
 
 		new_skin.joints.resize(skin.joints.size());
@@ -453,11 +520,12 @@ void GltfModel::loadSkins(tinygltf::Model& gltfModel)
 			new_skin.joints[joint_index] = skin.joints[joint_index];
 		}
 
-		GENESIS_ENGINE_ASSERT_ERROR((skin.inverseBindMatrices > -1), "Error: no inverse bind matrix");
+		GENESIS_ENGINE_ASSERT_ERROR(skin.inverseBindMatrices > -1, "Error: no inverse bind matrix");
 		const tinygltf::Accessor &accessor = gltfModel.accessors[skin.inverseBindMatrices];
 		const tinygltf::BufferView &bufferView = gltfModel.bufferViews[accessor.bufferView];
 		const tinygltf::Buffer &buffer = gltfModel.buffers[bufferView.buffer];
 		new_skin.inverse_bind_matrices.resize(accessor.count);
+		new_skin.joint_matrices.resize(accessor.count);
 		memcpy(new_skin.inverse_bind_matrices.data(), &buffer.data[accessor.byteOffset + bufferView.byteOffset], accessor.count * sizeof(matrix4F));
 	}
 }
@@ -490,6 +558,11 @@ void GltfModel::loadNodes(tinygltf::Model& gltfModel)
 		if (node.scale.size() == 3)
 		{
 			new_node.local_transform.setScale(glm::make_vec3(node.scale.data()));
+		}
+
+		if (node.matrix.size() == 16)
+		{
+			new_node.local_transform.setTransform(glm::make_mat4x4(node.matrix.data()));
 		}
 
 		new_node.child_indices.resize(node.children.size());
@@ -648,4 +721,24 @@ void GltfModel::loadAnimations(tinygltf::Model& gltfModel)
 
 void GltfModel::unloadAnimations()
 {
+}
+
+void GltfModel::calcHierarchy()
+{
+	for (GltfNode& node : this->node_storage)
+	{
+		for (uint32_t child_index : node.child_indices)
+		{
+			this->node_storage[child_index].parent_node = &node;
+			node.child_nodes.push_back(&this->node_storage[child_index]);
+		}
+	}
+
+	for (GltfNode& node : this->node_storage)
+	{
+		if (node.parent_node == nullptr)
+		{
+			this->root_nodes.push_back(&node);
+		}
+	}
 }

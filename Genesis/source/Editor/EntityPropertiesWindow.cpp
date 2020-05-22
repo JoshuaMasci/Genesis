@@ -26,6 +26,7 @@ void EntityPropertiesWindow::drawWindow(World* world, Entity* selected_entity)
 
 	if (selected_entity != nullptr)
 	{
+		ImGui::Separator();
 		if(ImGui::CollapsingHeader("Entity Properties", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			const size_t entity_name_size = 128;
@@ -35,7 +36,6 @@ void EntityPropertiesWindow::drawWindow(World* world, Entity* selected_entity)
 			{
 				selected_entity->setName(string(entity_name));
 			}
-
 
 			{
 				bool has_changed_transform = false;
@@ -67,9 +67,64 @@ void EntityPropertiesWindow::drawWindow(World* world, Entity* selected_entity)
 					selected_entity->setLocalTransform(local_transform);
 				}
 			}
-
 		}
 
+		if (selected_entity->getRigidbody() != nullptr)
+		{
+			ImGui::Separator();
+			if (ImGui::CollapsingHeader("Rigidbody", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				Rigidbody* rigidbody = selected_entity->getRigidbody();
+
+				bool awake = rigidbody->getAwake();
+				if (ImGui::Checkbox("Awake", &awake))
+				{
+					rigidbody->setAwake(awake);
+				}
+
+				bool gravity = rigidbody->getGravityEnabled();
+				if (ImGui::Checkbox("Gravity Enabled", &gravity))
+				{
+					rigidbody->setGravityEnabled(gravity);
+				}
+
+				vector3D linear_velocity = rigidbody->getLinearVelocity();
+				if (ImGui::InputScalarN("Linear Velocity", ImGuiDataType_::ImGuiDataType_Double, &linear_velocity, 3))
+				{
+					rigidbody->setLinearVelocity(linear_velocity);
+				};
+
+				vector3D angular_velocity = rigidbody->getAngularVelocity();
+				if (ImGui::InputScalarN("Angular Velocity", ImGuiDataType_::ImGuiDataType_Double, &angular_velocity, 3))
+				{
+					rigidbody->setLinearVelocity(angular_velocity);
+				};
+			}
+		}
+
+		ImGui::Separator();
+
+		/*auto size = ImGui::GetContentRegionAvail();
+		size.y = 19;
+		if (ImGui::Button("Add component", size))
+		{
+			ImGui::OpenPopup("add_component");
+		}
+
+		if (ImGui::BeginPopup("add_component"))
+		{
+			if (ImGui::Selectable("Rigidbody"))
+			{
+				//selected_entity->addRigidbody();
+			}
+
+			if (ImGui::Selectable("Box Collider"))
+			{
+				//selected_entity->addCollisionShape((CollisionShape*)new BoxCollisionShape(vector3D(0.5)));
+			}
+
+			ImGui::EndPopup();
+		}*/
 	}
 	else
 	{
@@ -79,83 +134,3 @@ void EntityPropertiesWindow::drawWindow(World* world, Entity* selected_entity)
 	ImGui::End();
 }
 
-/*if (registry->has<NameComponent>(entity))
-		{
-			NameComponent& name_component = registry->get<NameComponent>(entity);
-
-			if (ImGui::CollapsingHeader("NameComponent", ImGuiTreeNodeFlags_None))
-			{
-				const size_t entity_name_size = 128;
-				char entity_name[entity_name_size];
-				strcpy_s(entity_name, entity_name_size, name_component.name.c_str());
-
-				if (ImGui::InputText("Entity Name", entity_name, entity_name_size))
-				{
-					name_component.name = string(entity_name);
-				}
-			}
-		}
-
-
-		if (registry->has<TransformD>(entity))
-		{
-			TransformD& entity_transform = registry->get<TransformD>(entity);
-
-			if (ImGui::CollapsingHeader("TransformD", ImGuiTreeNodeFlags_None))
-			{
-				{
-					vector3D position = entity_transform.getPosition();
-					if (ImGui::InputScalarN("Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
-					{
-						entity_transform.setPosition(position);
-					};
-				}
-				{
-					//TODO rotation
-					vector3D rotation = glm::degrees(glm::eulerAngles(entity_transform.getOrientation()));
-					ImGui::InputScalarN("Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3);
-					//entity_transform.setOrientation(quaternionD(glm::radians(rotation)));
-				}
-				{
-					vector3D scale = entity_transform.getScale();
-					if (ImGui::InputScalarN("Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
-					{
-						entity_transform.setScale(scale);
-					};
-				}
-			}
-		}
-
-		if (registry->has<Camera>(entity))
-		{
-			Camera& camera = registry->get<Camera>(entity);
-
-			if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_None))
-			{
-				ImGui::SliderFloat("fov(x)", &camera.frame_of_view, 5.0f, 140.0f);
-				ImGui::InputFloat("z_near", &camera.z_near);
-				camera.z_near = std::max(camera.z_near, 0.001f);
-				ImGui::InputFloat("z_far", &camera.z_far);
-				camera.z_far = std::max(camera.z_near + 1.0f, camera.z_far);
-			}
-		}
-
-		if (registry->has<Physics::RigidBody>(entity))
-		{
-			Physics::RigidBody& rigidbody = registry->get<Physics::RigidBody>(entity);
-
-			if (ImGui::CollapsingHeader("RigidBody", ImGuiTreeNodeFlags_None))
-			{
-
-			}
-		}
-
-		if (registry->has<Physics::ProxyShape>(entity))
-		{
-			Physics::ProxyShape& shape_proxy = registry->get<Physics::ProxyShape>(entity);
-
-			if (ImGui::CollapsingHeader("CollisionShape", ImGuiTreeNodeFlags_None))
-			{
-				
-			}
-		}*/

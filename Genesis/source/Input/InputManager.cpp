@@ -109,27 +109,27 @@ void InputManager::removeInputDevice(InputDevice* device)
 
 void InputManager::setMouseDevice(MouseDevice* device)
 {
-	GENESIS_ENGINE_ASSERT_ERROR((this->mouse_device != nullptr), "Mouse device already set");
+	GENESIS_ENGINE_ASSERT_ERROR(this->mouse_device != nullptr, "Mouse device already set");
 	this->mouse_device = device;
 	this->addInputDevice(this->mouse_device);
 }
 void InputManager::removeMouseDevice()
 {
-	GENESIS_ENGINE_ASSERT_ERROR((this->mouse_device != nullptr), "Mouse device null");
+	GENESIS_ENGINE_ASSERT_ERROR(this->mouse_device != nullptr, "Mouse device null");
 	this->removeInputDevice(this->mouse_device);
 	this->mouse_device = nullptr;
 }
 
 void InputManager::setKeyboardDevice(KeyboardDevice* device)
 {
-	GENESIS_ENGINE_ASSERT_ERROR((this->keyboard_device != nullptr), "Keyboard device already set");
+	GENESIS_ENGINE_ASSERT_ERROR(this->keyboard_device != nullptr, "Keyboard device already set");
 	this->keyboard_device = device;
 	this->addInputDevice(this->keyboard_device);
 }
 
 void InputManager::removeKeyboardDevice()
 {
-	GENESIS_ENGINE_ASSERT_ERROR((this->keyboard_device != nullptr), "Keyboard device null");
+	GENESIS_ENGINE_ASSERT_ERROR(this->keyboard_device != nullptr, "Keyboard device null");
 	this->removeInputDevice(this->keyboard_device);
 	this->keyboard_device = nullptr;
 }

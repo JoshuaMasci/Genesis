@@ -55,7 +55,7 @@ void Genesis::ObjLoader::loadMesh(RenderingBackend* backend, string mesh_file_pa
 	vector<tinyobj::material_t> materials;
 	string warn, err;
 
-	GENESIS_ENGINE_ASSERT_ERROR((tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, mesh_file_path.c_str())), "Can't load Mesh");
+	GENESIS_ENGINE_ASSERT_ERROR(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, mesh_file_path.c_str()), "Can't load Mesh");
 	
 	vector<Vertex> vertices;
 	vector<uint32_t> indices;
@@ -136,7 +136,7 @@ void ObjLoader::loadMesh(string mesh_file_path, vector<Vertex>& vertices, vector
 	vector<tinyobj::material_t> materials;
 	string warn, err;
 
-	GENESIS_ENGINE_ASSERT_ERROR((tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, mesh_file_path.c_str(), "res/")), "Can't load Mesh");
+	GENESIS_ENGINE_ASSERT_ERROR(tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, mesh_file_path.c_str(), "res/"), "Can't load Mesh");
 
 	float distance = 0.0f;
 
@@ -239,7 +239,7 @@ MaterialDescription MaterialLoader::loadMaterial(const string& material_file_pat
 {
 	std::fstream file_stream;
 	file_stream.open(material_file_path, std::ios::in);
-	GENESIS_ENGINE_ASSERT_ERROR((file_stream.is_open()), "File couldn't be opened");
+	GENESIS_ENGINE_ASSERT_ERROR(file_stream.is_open(), "File couldn't be opened");
 
 	string value;
 

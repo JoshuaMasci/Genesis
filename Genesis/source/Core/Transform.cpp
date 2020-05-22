@@ -9,6 +9,19 @@ TransformF::TransformF(vector3F& position, quaternionF& orientation, vector3F& s
 	this->setScale(scale);
 }
 
+void TransformF::setTransform(const matrix4F& matrix)
+{
+	this->position = vector3D(matrix[3].x, matrix[3].y, matrix[3].z);
+
+	vector3F temp_scale;
+	temp_scale.x = glm::length(vector3F(matrix[0][0], matrix[0][1], matrix[0][2]));
+	temp_scale.y = glm::length(vector3F(matrix[1][0], matrix[1][1], matrix[1][2]));
+	temp_scale.z = glm::length(vector3F(matrix[2][0], matrix[2][1], matrix[2][2]));
+	this->scale = temp_scale;
+
+	this->orientation = glm::toQuat(matrix3F(matrix));
+}
+
 TransformF TransformF::transformBy(const TransformF& transform1) const
 {
 	TransformF result;
@@ -44,14 +57,22 @@ TransformD::TransformD(vector3D position, quaternionD orientation, vector3D scal
 	this->updateModelMatrix();
 }
 
-TransformD TransformD::transformBy(const TransformD& transform1) const
+/*TransformD TransformD::transformBy(const TransformD& transform1) const
 {
 	return TransformD(transform1.position + (transform1.orientation * (this->position * transform1.scale)), transform1.orientation * this->orientation, transform1.scale * this->scale);
+}*/
+
+void TransformD::transformByInplace(const TransformD& parent, const TransformD& child)
+{
+	this->position = parent.position + (parent.orientation * (child.position * parent.scale));
+	this->orientation = parent.orientation * child.orientation;
+	this->scale = parent.scale * child.scale;
+	this->dirty = true;
 }
 
 matrix4F TransformD::getModelMatrix(const vector3D& position_offset)
 {
-	if (this->has_changed == true)
+	if (this->dirty == true)
 	{
 		this->updateModelMatrix();
 	}
@@ -67,7 +88,7 @@ matrix4F TransformD::getModelMatrix(const vector3D& position_offset)
 
 matrix3F TransformD::getNormalMatrix()
 {
-	if (this->has_changed == true)
+	if (this->dirty == true)
 	{
 		this->updateModelMatrix();
 	}
@@ -87,23 +108,5 @@ void TransformD::updateModelMatrix()
 	matrix4F orientation = glm::toMat4(this->orientation);
 	matrix4F scale = glm::scale(matrix4F(1.0f), (vector3F)this->scale);
 	this->untranslated_model_matrix = orientation * scale;
-	this->has_changed = false;
-}
-
-TransformD TransformUtil::transformBy(const TransformD& parent, const TransformD& child)
-{
-	TransformD result;
-	result.setPosition(parent.getPosition() + (parent.getOrientation() * (child.getPosition() * parent.getScale())));
-	result.setOrientation(parent.getOrientation() * child.getOrientation());
-	result.setScale(parent.getScale() * child.getScale());
-	return result;
-}
-
-TransformD TransformUtil::transformBy(const TransformD& parent, const TransformF& child)
-{
-	TransformD result;
-	result.setPosition(parent.getPosition() + (parent.getOrientation() * ((vector3D)child.getPosition() * parent.getScale())));
-	result.setOrientation(parent.getOrientation() * (quaternionD)child.getOrientation());
-	result.setScale(parent.getScale() * (vector3D)child.getScale());
-	return result;
+	this->dirty = false;
 }

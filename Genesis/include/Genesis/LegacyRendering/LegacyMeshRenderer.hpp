@@ -42,8 +42,6 @@ namespace Genesis
 	protected:
 		//TEMP
 		void drawEntity(Entity* entity);
-		LegacyMaterial* material;
-		LegacyMesh* mesh;
 
 		LegacyBackend* legacy_backend;
 

@@ -1,74 +1,67 @@
 #pragma once
 
 #include "Genesis/Physics/ReactPhyscis.hpp"
-#include "Genesis/Physics/PhysicsWorld.hpp"
 
 namespace Genesis
 {
-	namespace Physics
+	class Rigidbody
 	{
-		class RigidBody
-		{
-		public:
-			RigidBody(reactphysics3d::RigidBody* rigid_body);
+	public:
+		Rigidbody();
+		~Rigidbody();
 
-			reactphysics3d::ProxyShape* addCollisionShape(reactphysics3d::CollisionShape* shape, const TransformD& transform, double mass);
-			void removeCollisionShape(reactphysics3d::ProxyShape* shape_proxy);
+		void setStatic() { this->rigidbody->setType(reactphysics3d::BodyType::STATIC); };
 
-			void setTransform(const TransformD& transform);
-			TransformD getTransform();
+		reactphysics3d::ProxyShape* addCollisionShape(reactphysics3d::CollisionShape* collision_shape, const TransformD& transform);
+		void removeCollisionShape(reactphysics3d::ProxyShape* proxy_shape);
 
-			void setLinearVelocity(const vector3D& velocity);
-			vector3D getLinearVelocity();
+		void setTransform(const TransformD& transform);
+		TransformD getTransform();
 
-			void setAngularVelocity(const vector3D& velocity);
-			vector3D getAngularVelocity();
+		void setLinearVelocity(const vector3D& velocity);
+		vector3D getLinearVelocity();
 
-			void setGravityEnabled(bool enabled);
-			bool getGravityEnabled();
+		void setAngularVelocity(const vector3D& velocity);
+		vector3D getAngularVelocity();
 
-			void applyCenteredForce(const vector3D& force);
-			void applyForce(const vector3D& world_position, const vector3D& force);
-			void applyTorque(const vector3D& torque);
+		void setGravityEnabled(bool enabled);
+		bool getGravityEnabled();
 
-			inline reactphysics3d::RigidBody* get() { return this->rigid_body; };
+		void setAwake(bool awake);
+		bool getAwake();
 
-		private:
-			reactphysics3d::RigidBody* rigid_body;
-		};
+		void applyCenteredForce(const vector3D& force);
+		void applyForce(const vector3D& world_position, const vector3D& force);
+		void applyTorque(const vector3D& torque);
 
-		class StaticRigidBody
-		{
-		public:
-			StaticRigidBody(reactphysics3d::RigidBody* rigid_body);
+		inline void setHandle(reactphysics3d::RigidBody* rigidbody_handle) { this->rigidbody = rigidbody_handle; };
+		inline reactphysics3d::RigidBody* getHandle() { return this->rigidbody; };
 
-			reactphysics3d::ProxyShape* addCollisionShape(reactphysics3d::CollisionShape* shape, const TransformD& transform, double mass);
-			void removeCollisionShape(reactphysics3d::ProxyShape* shape_proxy);
+	private:
+		reactphysics3d::RigidBody* rigidbody = nullptr;
+	};
 
-			void setTransform(const TransformD& transform);
-			TransformD getTransform();
+	/*class CollisionShape
+	{
+	public:
+		virtual void updateTransform(const TransformD& root_transform) = 0;
 
-			inline reactphysics3d::RigidBody* get() { return this->rigid_body; };
+		inline reactphysics3d::CollisionShape* getCollisionShape() { return this->collision_shape; };
 
-		private:
-			reactphysics3d::RigidBody* rigid_body;
-		};
+		void setProxyShape(reactphysics3d::ProxyShape* proxy_shape) { this->proxy_shape = proxy_shape; };
+		reactphysics3d::ProxyShape* getProxyShape() { return this->proxy_shape; };
 
-		class ProxyShape
-		{
-		public:
-			ProxyShape(reactphysics3d::ProxyShape* shape_proxy);
+	protected:
+		TransformD current_transform;
+		reactphysics3d::CollisionShape* collision_shape = nullptr;
+		reactphysics3d::ProxyShape* proxy_shape = nullptr;
+	};
 
-			void setTransform(const TransformD& transform);
-			TransformD getTransform();
-
-			void setMass(double new_mass);
-			double getMass();
-
-			inline reactphysics3d::ProxyShape* get() { return this->shape_proxy; };
-
-		private:
-			reactphysics3d::ProxyShape* shape_proxy;
-		};
-	}
+	class BoxCollisionShape : CollisionShape
+	{
+	public:
+		BoxCollisionShape(vector3D size);
+		~BoxCollisionShape();
+		virtual void updateTransform(const TransformD & root_transform) override;
+	};*/
 }
