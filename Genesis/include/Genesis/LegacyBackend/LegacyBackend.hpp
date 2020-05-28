@@ -6,9 +6,6 @@
 
 namespace Genesis
 {
-	typedef void* VertexBuffer;
-	typedef void* IndexBuffer;
-
 	enum class TextureFormat
 	{
 		R = 1,
@@ -46,7 +43,6 @@ namespace Genesis
 		TextureWrapMode wrap_mode;
 		TextureFilterMode filter_mode;
 	};
-	typedef uint32_t Texture2D;
 
 	enum class MultisampleCount
 	{
@@ -137,7 +133,7 @@ namespace Genesis
 		virtual void setUniformMat3f(const string& name, const matrix3F& value) = 0;
 		virtual void setUniformMat4f(const string& name, const matrix4F& value) = 0;
 		
-		virtual void setUniformTexture(const string& name, const uint32_t texture_slot, const Texture2D& value) = 0;
+		virtual void setUniformTexture(const string& name, const uint32_t texture_slot, Texture2D value) = 0;
 
 		virtual void setScissor(vector2I offset, vector2U extent) = 0;
 		virtual void clearScissor() = 0;

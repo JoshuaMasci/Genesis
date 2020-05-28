@@ -4,11 +4,11 @@
 
 namespace Genesis
 {
-	class Rigidbody
+	class RigidBody
 	{
 	public:
-		Rigidbody();
-		~Rigidbody();
+		RigidBody();
+		~RigidBody();
 
 		void setStatic() { this->rigidbody->setType(reactphysics3d::BodyType::STATIC); };
 

@@ -3,13 +3,18 @@
 //LegacyBackend only for now
 #include "Genesis/LegacyBackend/LegacyBackend.hpp"
 
+#include "Genesis/Resource/PbrMaterial.hpp"
+#include "Genesis/Resource/PbrMesh.hpp"
+#include "Genesis/Resource/Animation.hpp"
+#include "Genesis/Resource/Skeleton.hpp"
+
 #include "tiny_gltf.h"
 
 namespace Genesis
 {
 	struct GltfNode;
 
-	struct GltfVertex
+	/*struct GltfVertex
 	{
 		vector3F position;
 		vector3F normal;
@@ -17,17 +22,17 @@ namespace Genesis
 		vector2F uv1;
 		vector4F joint0;
 		vector4F weight0;
-	};
+	};*/
 
-	struct BoundingBox
+	struct GltfBoundingBox
 	{
 		vector3F min;
 		vector3F max;
-		BoundingBox() {};
-		BoundingBox(vector3F min, vector3F max) : min(min), max(max) {};
+		GltfBoundingBox() {};
+		GltfBoundingBox(vector3F min, vector3F max) : min(min), max(max) {};
 	};
 
-	struct GltfMaterial
+	/*struct GltfMaterial
 	{
 		bool double_sided = false;
 
@@ -52,15 +57,15 @@ namespace Genesis
 			int8_t occlusion = -1;
 			int8_t emissive = -1;
 		} texture_sets;
-	};
+	};*/
 
-	struct GltfMeshPrimitive
+	/*struct GltfMeshPrimitive
 	{
 		uint32_t first_index;
 		uint32_t index_count;
 		uint32_t vertex_count;
 		GltfMaterial* material;
-		BoundingBox bounding_box;
+		GltfBoundingBox bounding_box;
 	};
 
 	struct GltfMesh
@@ -69,9 +74,9 @@ namespace Genesis
 		IndexBuffer indices;
 
 		vector<GltfMeshPrimitive> primitives;
-		BoundingBox bounding_box;
-		BoundingBox axis_aligned_bounding_box;
-	};
+		GltfBoundingBox bounding_box;
+		GltfBoundingBox axis_aligned_bounding_box;
+	};*/
 
 	struct GltfSkin
 	{
@@ -82,7 +87,7 @@ namespace Genesis
 		vector<matrix4F> joint_matrices;
 	};
 
-	struct GltfAnimationSampler
+	/*struct GltfAnimationSampler
 	{
 		enum InterpolationType { LINEAR, STEP, CUBICSPLINE };
 		InterpolationType interpolation;
@@ -105,7 +110,7 @@ namespace Genesis
 		vector<GltfAnimationChannel> channels;
 		float start_time = std::numeric_limits<float>::max();
 		float end_time = std::numeric_limits<float>::min();
-	};
+	};*/
 
 	struct GltfNode
 	{
@@ -119,7 +124,7 @@ namespace Genesis
 		GltfNode* parent_node;
 		vector<GltfNode*> child_nodes;
 
-		GltfMesh *mesh = nullptr;
+		PbrMesh *mesh = nullptr;
 		GltfSkin *skin = nullptr;
 	};
 
@@ -130,14 +135,16 @@ namespace Genesis
 		~GltfModel();
 
 		vector<Texture2D> textures;
-		vector<GltfMaterial> materials;
-		vector<GltfMesh> meshes;
+		vector<PbrMaterial> materials;
+		vector<PbrMesh> meshes;
 
 		vector<GltfNode> node_storage;
 		vector<GltfNode*> root_nodes;
 
 		vector<GltfSkin> skins;
-		vector<GltfAnimation> animations;
+		vector<Animation> animations;
+
+		PbrMaterial& getMaterial(uint32_t index) { return this->materials[index]; };
 
 		float getAnimationLength(uint32_t animation_index);
 		void playAnimation(uint32_t animation_index, float current_time);
@@ -169,11 +176,4 @@ namespace Genesis
 
 		void calcHierarchy();
 	};
-
-	class GltfLoader
-	{
-	public:
-		//static GltfModel& loadModel(string filename, string file_path);
-	};
-
 }

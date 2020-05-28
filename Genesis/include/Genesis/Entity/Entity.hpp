@@ -6,7 +6,7 @@ namespace Genesis
 {
 	//Prototype Defintions;
 	class World;
-	class Rigidbody;
+	class RigidBody;
 	class CollisionShape;
 
 	typedef uint64_t EntityId;
@@ -57,7 +57,7 @@ namespace Genesis
 		void removeRigidbody();
 
 		bool hasRigidbody() { return this->rigidbody != nullptr; };
-		Rigidbody* getRigidbody() { return this->rigidbody; };
+		RigidBody* getRigidbody() { return this->rigidbody; };
 
 		template<typename T, typename... TArgs> T* addComponent(TArgs&&... mArgs)
 		{
@@ -130,7 +130,7 @@ namespace Genesis
 		void removeFromWorld();
 
 		//Fixed Components
-		Rigidbody* rigidbody = nullptr;
+		RigidBody* rigidbody = nullptr;
 
 		//Components
 		map<size_t, Component*> component_map;

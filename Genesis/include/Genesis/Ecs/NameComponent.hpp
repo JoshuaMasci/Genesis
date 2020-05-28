@@ -4,6 +4,6 @@ namespace Genesis
 {
 	struct NameComponent
 	{
-		string name;
+		char name[128];
 	};
 }

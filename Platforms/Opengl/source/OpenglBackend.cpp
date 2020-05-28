@@ -230,9 +230,10 @@ GLenum getDepthFormat(DepthFormat format)
 
 Texture2D OpenglBackend::createTexture(const TextureCreateInfo& create_info, void* data)
 {
-	GLuint texture;
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	OpenglTexture2D* texture = new OpenglTexture2D();
+
+	glGenTextures(1, &texture->texture_handle);
+	glBindTexture(GL_TEXTURE_2D, texture->texture_handle);
 
 	GLenum gl_format = getFormat(create_info.format);
 
@@ -277,7 +278,8 @@ Texture2D OpenglBackend::createTexture(const TextureCreateInfo& create_info, voi
 
 void OpenglBackend::destoryTexture(Texture2D texture)
 {
-	glDeleteTextures(1, &(GLuint)texture);
+	glDeleteTextures(1, &((OpenglTexture2D*)texture)->texture_handle);
+	delete (OpenglTexture2D*)texture;
 }
 
 ShaderProgram OpenglBackend::createShaderProgram(const char* vert_data, uint32_t vert_size, const char* frag_data, uint32_t frag_size)
@@ -324,7 +326,7 @@ Framebuffer OpenglBackend::createFramebuffer(const FramebufferCreateInfo& create
 			glFramebufferTexture2D(GL_FRAMEBUFFER, (GLenum)(GL_COLOR_ATTACHMENT0 + i), GL_TEXTURE_2D_MULTISAMPLE, attachment, 0);
 		}
 
-		framebuffer->attachements[i] = attachment;
+		framebuffer->attachements[i].texture_handle = attachment;
 	}
 
 	if (create_info.depth_attachment != nullptr)
@@ -349,7 +351,7 @@ Framebuffer OpenglBackend::createFramebuffer(const FramebufferCreateInfo& create
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, depth_attachment, 0);
 		}
 
-		framebuffer->depth_attachement = depth_attachment;
+		framebuffer->depth_attachement.texture_handle = depth_attachment;
 	}
 
 
@@ -362,11 +364,14 @@ void OpenglBackend::destoryFramebuffer(Framebuffer framebuffer)
 {
 	OpenglFramebuffer* opengl_framebuffer = (OpenglFramebuffer*)framebuffer;
 
-	glDeleteTextures((GLsizei)(opengl_framebuffer->attachements.size()), opengl_framebuffer->attachements.data());
+	for (size_t i = 0; i < opengl_framebuffer->attachements.size(); i++)
+	{
+		glDeleteTextures(1, &opengl_framebuffer->attachements[i].texture_handle);
+	}
 
 	if (opengl_framebuffer->has_depth)
 	{
-		glDeleteTextures(1, &opengl_framebuffer->depth_attachement);
+		glDeleteTextures(1, &opengl_framebuffer->depth_attachement.texture_handle);
 	}
 
 	glDeleteFramebuffers(1, &opengl_framebuffer->frame_buffer);
@@ -376,12 +381,12 @@ void OpenglBackend::destoryFramebuffer(Framebuffer framebuffer)
 
 Texture2D OpenglBackend::getFramebufferColorAttachment(Framebuffer framebuffer, uint32_t index)
 {
-	return (Texture2D)((OpenglFramebuffer*)framebuffer)->attachements[index];
+	return (Texture2D)&((OpenglFramebuffer*)framebuffer)->attachements[index];
 }
 
 Texture2D OpenglBackend::getFramebufferDepthAttachment(Framebuffer framebuffer)
 {
-	return (Texture2D)((OpenglFramebuffer*)framebuffer)->depth_attachement;
+	return (Texture2D)&((OpenglFramebuffer*)framebuffer)->depth_attachement;
 }
 
 void OpenglBackend::bindFramebuffer(Framebuffer framebuffer)
@@ -682,11 +687,11 @@ void OpenglBackend::setUniformMat4f(const string& name, const matrix4F& value)
 	glUniformMatrix4fv(current_program->getUniformLocation(name), 1, GL_FALSE, &value[0][0]);
 }
 
-void OpenglBackend::setUniformTexture(const string& name, const uint32_t texture_slot, const Texture2D& value)
+void OpenglBackend::setUniformTexture(const string& name, const uint32_t texture_slot, Texture2D value)
 {
 	GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
 	glActiveTexture(GL_TEXTURE0 + texture_slot);
-	glBindTexture(GL_TEXTURE_2D, (GLuint)value);
+	glBindTexture(GL_TEXTURE_2D, ((OpenglTexture2D*)value)->texture_handle);
 	glUniform1i(current_program->getUniformLocation(name), texture_slot);
 }
 

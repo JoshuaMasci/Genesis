@@ -1,7 +1,7 @@
 #include "Genesis/Editor/EntityPropertiesWindow.hpp"
 
 #include "Genesis/Entity/Entity.hpp"
-#include "Genesis/Entity/NameComponent.hpp"
+#include "Genesis/Ecs/NameComponent.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
 
@@ -74,7 +74,7 @@ void EntityPropertiesWindow::drawWindow(World* world, Entity* selected_entity)
 			ImGui::Separator();
 			if (ImGui::CollapsingHeader("Rigidbody", ImGuiTreeNodeFlags_DefaultOpen))
 			{
-				Rigidbody* rigidbody = selected_entity->getRigidbody();
+				RigidBody* rigidbody = selected_entity->getRigidbody();
 
 				bool awake = rigidbody->getAwake();
 				if (ImGui::Checkbox("Awake", &awake))

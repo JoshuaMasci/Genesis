@@ -162,7 +162,7 @@ void Entity::removeChild(Entity* child)
 void Entity::createRigidbody()
 {
 	GENESIS_ENGINE_ASSERT_ERROR(rigidbody == nullptr, ("{}:{} already has a rigidbody", this->id, this->name));
-	this->rigidbody = new Rigidbody();
+	this->rigidbody = new RigidBody();
 
 	if (this->world != nullptr)
 	{

@@ -8,10 +8,6 @@ LegacyMeshRenderer::LegacyMeshRenderer(LegacyBackend* backend)
 {
 	this->legacy_backend = backend;
 
-	this->mesh_pool = new LegacyMeshPool(this->legacy_backend);
-	this->texture_pool = new LegacyTexturePool(this->legacy_backend);
-	this->material_pool = new LegacyMaterialPool(this->legacy_backend, this->texture_pool);
-
 	{
 		string vert_data = "";
 		string frag_data = "";
@@ -46,9 +42,7 @@ LegacyMeshRenderer::LegacyMeshRenderer(LegacyBackend* backend)
 
 LegacyMeshRenderer::~LegacyMeshRenderer()
 {
-	delete this->material_pool;
-	delete this->texture_pool;
-	delete this->mesh_pool;
+
 }
 
 void writeEnvironmentUniform(LegacyBackend* backend, Genesis::SceneData* environment)
@@ -104,6 +98,9 @@ void writeSpotLightUniform(LegacyBackend* backend, const SpotLight& light, const
 	backend->setUniform3f("spot_light.direction", light_transform.getForward());
 	backend->setUniform1f("spot_light.cutoff", light.cutoff);
 }
+
+#include "Genesis/Resource/PbrMesh.hpp"
+#include "Genesis/Resource/PbrMaterial.hpp"
 
 void LegacyMeshRenderer::drawAmbientPass(EntityRegistry* entity_registry, SceneData* environment, Frustum* frustum)
 {

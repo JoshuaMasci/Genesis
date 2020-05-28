@@ -81,7 +81,6 @@ void Application::run()
 
 }
 
-#include "Genesis/Entity/DebugCamera.hpp"
 void Application::update(TimeStep time_step)
 {
 	GENESIS_PROFILE_FUNCTION("Application::update");

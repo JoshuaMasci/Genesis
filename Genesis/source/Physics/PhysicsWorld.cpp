@@ -32,7 +32,7 @@ void PhysicsWorld::addEntity(Entity* entity)
 	react_transform.setPosition(toVec3R(transform.getPosition()));
 	react_transform.setOrientation(toQuatR(transform.getOrientation()));
 
-	Rigidbody* rigidbody = entity->getRigidbody();
+	RigidBody* rigidbody = entity->getRigidbody();
 	rigidbody->setHandle(this->dynamics_world->createRigidBody(react_transform));
 }
 
@@ -41,7 +41,7 @@ void PhysicsWorld::removeEntity(Entity* entity)
 	GENESIS_ENGINE_ASSERT_ERROR(entity != nullptr, "Physics World tried to remove a null entity");
 	GENESIS_ENGINE_ASSERT_ERROR(entity->getRigidbody() != nullptr, "Physics World tried to remove a null rigidbody");
 
-	Rigidbody* rigidbody = entity->getRigidbody();
+	RigidBody* rigidbody = entity->getRigidbody();
 	reactphysics3d::RigidBody* react_rigidbody = rigidbody->getHandle();
 	this->dynamics_world->destroyRigidBody(react_rigidbody);
 	rigidbody->setHandle(nullptr);

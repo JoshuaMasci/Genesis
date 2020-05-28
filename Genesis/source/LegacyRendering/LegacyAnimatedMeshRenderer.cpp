@@ -81,18 +81,18 @@ void LegacyAnimatedMeshRenderer::drawSpotPass(EntityRegistry* entity_registry, S
 {
 }
 
-void drawNode(LegacyBackend* backend, GltfNode* node, const TransformF& global_transform)
+void drawNode(LegacyBackend* backend, GltfModel* model, GltfNode* node, const TransformF& global_transform)
 {
 	TransformF& render_transform = node->local_transform.transformBy(global_transform);
 
 	if (node->mesh != nullptr)
 	{
-		GltfMesh* mesh = node->mesh;
+		PbrMesh* mesh = node->mesh;
 
 		//Joint Info
 		if (node->skin != nullptr)
 		{
-			backend->setUniform1u("skin.joint_count", node->skin->joint_matrices.size());
+			backend->setUniform1u("skin.joint_count", (uint32_t)node->skin->joint_matrices.size());
 
 			for (uint32_t i = 0; i < node->skin->joint_matrices.size(); i++)
 			{
@@ -108,28 +108,46 @@ void drawNode(LegacyBackend* backend, GltfNode* node, const TransformF& global_t
 		backend->setUniformMat4f("matrices.model", render_transform.getModelMatrix());
 		backend->setUniformMat3f("matrices.normal", render_transform.getNormalMatrix());
 
-		backend->bindVertexBuffer(mesh->vertices);
-		backend->bindIndexBuffer(mesh->indices);
+		backend->bindVertexBuffer(mesh->vertex_buffer);
+		backend->bindIndexBuffer(mesh->index_buffer);
 
-		for (GltfMeshPrimitive& primitive : mesh->primitives)
+		for (PbrMeshPrimitive& primitive : mesh->primitives)
 		{
-			GltfMaterial& material = *primitive.material;
-
+			PbrMaterial& material = model->getMaterial(primitive.material_index);
 			backend->setUniform4f("material.albedo", material.albedo_factor);
 			backend->setUniform2f("material.metallic_roughness", material.metallic_roughness_factor);
 			backend->setUniform4f("material.emissive", material.emissive_factor);
 
-			backend->setUniform1i("material.albedo_texture_set", material.texture_sets.albedo);
-			backend->setUniform1i("material.metallic_roughness_texture_set", material.texture_sets.metallic_roughness);
-			backend->setUniform1i("material.normal_texture_set", material.texture_sets.normal);
-			backend->setUniform1i("material.occlusion_texture_set", material.texture_sets.occlusion);
-			backend->setUniform1i("material.emissive_texture_set", material.texture_sets.emissive);
+			backend->setUniform1i("material.albedo_uv", material.albedo_uv);
+			backend->setUniform1i("material.metallic_roughness_uv", material.metallic_roughness_uv);
+			backend->setUniform1i("material.normal_uv", material.normal_uv);
+			backend->setUniform1i("material.occlusion_uv", material.occlusion_uv);
+			backend->setUniform1i("material.emissive_uv", material.emissive_uv);
 
-			backend->setUniformTexture("material_textures[0]", 0, material.albedo_texture);
-			backend->setUniformTexture("material_textures[1]", 1, material.metallic_roughness_texture);
-			backend->setUniformTexture("material_textures[2]", 2, material.normal_texture);
-			backend->setUniformTexture("material_textures[3]", 3, material.occlusion_texture);
-			backend->setUniformTexture("material_textures[4]", 4, material.emissive_texture);
+			if (material.albedo_texture != nullptr)
+			{
+				backend->setUniformTexture("material_textures[0]", 0, material.albedo_texture);
+			}
+
+			if (material.metallic_roughness_texture != nullptr)
+			{
+				backend->setUniformTexture("material_textures[1]", 1, material.metallic_roughness_texture);
+			}
+
+			if (material.normal_texture != nullptr)
+			{
+				backend->setUniformTexture("material_textures[2]", 2, material.normal_texture);
+			}
+
+			if (material.occlusion_texture != nullptr)
+			{
+				backend->setUniformTexture("material_textures[3]", 3, material.occlusion_texture);
+			}
+
+			if (material.emissive_texture != nullptr)
+			{
+				backend->setUniformTexture("material_textures[4]", 4, material.emissive_texture);
+			}
 
 			backend->drawIndex(primitive.index_count, primitive.first_index);
 		}
@@ -137,7 +155,7 @@ void drawNode(LegacyBackend* backend, GltfNode* node, const TransformF& global_t
 
 	for (GltfNode* child : node->child_nodes)
 	{
-		drawNode(backend, child, render_transform);
+		drawNode(backend, model, child, render_transform);
 	}
 }
 
@@ -151,7 +169,6 @@ void LegacyAnimatedMeshRenderer::drawAmbientPass(World* world, SceneData* enviro
 		time -= model->getAnimationLength(0);
 	}
 
-
 	model->updateSkins();
 
 	this->legacy_backend->bindShaderProgram(this->program);
@@ -164,7 +181,7 @@ void LegacyAnimatedMeshRenderer::drawAmbientPass(World* world, SceneData* enviro
 
 	for (GltfNode* root : this->model->root_nodes)
 	{
-		drawNode(this->legacy_backend, root, transform);
+		drawNode(this->legacy_backend, model, root, transform);
 	}
 
 	this->legacy_backend->bindShaderProgram(nullptr);

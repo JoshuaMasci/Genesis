@@ -1,6 +1,6 @@
 #include "Genesis/Editor/HierarchyWindow.hpp"
 
-#include "Genesis/Entity/NameComponent.hpp"
+#include "Genesis/Ecs/NameComponent.hpp"
 
 using namespace Genesis;
 

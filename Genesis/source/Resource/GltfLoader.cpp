@@ -91,43 +91,37 @@ void GltfModel::playAnimation(uint32_t animation_index, float current_time)
 		return;
 	}*/
 	
-	GltfAnimation& animation = this->animations[animation_index];
+	Animation& animation = this->animations[animation_index];
 
-	for (GltfAnimationChannel& channel : animation.channels)
+	for (AnimationChannel& channel : animation.channels)
 	{
-		GltfAnimationSampler& sampler = animation.samplers[channel.sampler_index];
-		if (sampler.inputs.size() > sampler.outputs_vector4.size()) 
+		for (size_t i = 0; i < channel.timesteps.size() - 1; i++)
 		{
-			continue;
-		}
-
-		for (size_t i = 0; i < sampler.inputs.size() - 1; i++)
-		{
-			if ((current_time >= sampler.inputs[i]) && (current_time <= sampler.inputs[i + 1]))
+			if ((current_time >= channel.timesteps[i]) && (current_time <= channel.timesteps[i + 1]))
 			{
-				float u = std::max(0.0f, current_time - sampler.inputs[i]) / (sampler.inputs[i + 1] - sampler.inputs[i]);
+				float u = std::max(0.0f, current_time - channel.timesteps[i]) / (channel.timesteps[i + 1] - channel.timesteps[i]);
 				if (u <= 1.0f)
 				{
 					switch (channel.path)
 					{
-					case Genesis::GltfAnimationChannel::TRANSLATION:
-						this->node_storage[channel.node_index].local_transform.setPosition(glm::mix(sampler.outputs_vector4[i], sampler.outputs_vector4[i + 1], u));
+					case Genesis::AnimationChannel::TRANSLATION:
+						//this->node_storage[channel.node_index].local_transform.setPosition(glm::mix(channel.values[i], channel.values[i + 1], u));
 						break;
-					case Genesis::GltfAnimationChannel::ROTATION:
+					case Genesis::AnimationChannel::ROTATION:
 						glm::quat q1;
-						q1.x = sampler.outputs_vector4[i].x;
-						q1.y = sampler.outputs_vector4[i].y;
-						q1.z = sampler.outputs_vector4[i].z;
-						q1.w = sampler.outputs_vector4[i].w;
+						q1.x = channel.values[i].x;
+						q1.y = channel.values[i].y;
+						q1.z = channel.values[i].z;
+						q1.w = channel.values[i].w;
 						glm::quat q2;
-						q2.x = sampler.outputs_vector4[i + 1].x;
-						q2.y = sampler.outputs_vector4[i + 1].y;
-						q2.z = sampler.outputs_vector4[i + 1].z;
-						q2.w = sampler.outputs_vector4[i + 1].w;
-						this->node_storage[channel.node_index].local_transform.setOrientation(glm::normalize(glm::slerp(q1, q2, u)));
+						q2.x = channel.values[i + 1].x;
+						q2.y = channel.values[i + 1].y;
+						q2.z = channel.values[i + 1].z;
+						q2.w = channel.values[i + 1].w;
+						//this->node_storage[channel.node_index].local_transform.setOrientation(glm::normalize(glm::slerp(q1, q2, u)));
 						break;
-					case Genesis::GltfAnimationChannel::SCALE:
-						this->node_storage[channel.node_index].local_transform.setScale(glm::mix(sampler.outputs_vector4[i], sampler.outputs_vector4[i + 1], u));
+					case Genesis::AnimationChannel::SCALE:
+						//this->node_storage[channel.node_index].local_transform.setScale(glm::mix(channel.values[i], channel.values[i + 1], u));
 						break;
 					}
 				}
@@ -230,19 +224,19 @@ void GltfModel::loadMaterials(tinygltf::Model& gltfModel)
 	for (size_t material_index = 0; material_index < gltfModel.materials.size(); material_index++)
 	{
 		tinygltf::Material material = gltfModel.materials[material_index];
-		GltfMaterial& new_material = this->materials[material_index];
+		PbrMaterial& new_material = this->materials[material_index];
 
 		if (material.additionalValues.find("alphaMode") != material.additionalValues.end())
 		{
 			tinygltf::Parameter param = material.additionalValues["alphaMode"];
 			if (param.string_value == "BLEND")
 			{
-				new_material.alpha_mode = GltfMaterial::ALPHAMODE_BLEND;
+				new_material.alpha_mode = PbrMaterial::ALPHAMODE_BLEND;
 			}
 			if (param.string_value == "MASK")
 			{
 				new_material.alpha_cutoff = 0.5f;
-				new_material.alpha_mode = GltfMaterial::ALPHAMODE_MASK;
+				new_material.alpha_mode = PbrMaterial::ALPHAMODE_MASK;
 			}
 		}
 		if (material.additionalValues.find("alphaCutoff") != material.additionalValues.end())
@@ -270,27 +264,27 @@ void GltfModel::loadMaterials(tinygltf::Model& gltfModel)
 		if (material.values.find("baseColorTexture") != material.values.end()) 
 		{
 			new_material.albedo_texture = this->textures[material.values["baseColorTexture"].TextureIndex()];
-			new_material.texture_sets.albedo = material.values["baseColorTexture"].TextureTexCoord();
+			new_material.albedo_uv = material.values["baseColorTexture"].TextureTexCoord();
 		}
 		if (material.values.find("metallicRoughnessTexture") != material.values.end()) 
 		{
 			new_material.metallic_roughness_texture = this->textures[material.values["metallicRoughnessTexture"].TextureIndex()];
-			new_material.texture_sets.metallic_roughness = material.values["metallicRoughnessTexture"].TextureTexCoord();
+			new_material.metallic_roughness_uv = material.values["metallicRoughnessTexture"].TextureTexCoord();
 		}
 		if (material.additionalValues.find("normalTexture") != material.additionalValues.end()) 
 		{
 			new_material.normal_texture = this->textures[material.additionalValues["normalTexture"].TextureIndex()];
-			new_material.texture_sets.normal = material.additionalValues["normalTexture"].TextureTexCoord();
+			new_material.normal_uv = material.additionalValues["normalTexture"].TextureTexCoord();
 		}
 		if (material.additionalValues.find("emissiveTexture") != material.additionalValues.end()) 
 		{
 			new_material.emissive_texture = this->textures[material.additionalValues["emissiveTexture"].TextureIndex()];
-			new_material.texture_sets.emissive = material.additionalValues["emissiveTexture"].TextureTexCoord();
+			new_material.emissive_uv = material.additionalValues["emissiveTexture"].TextureTexCoord();
 		}
 		if (material.additionalValues.find("occlusionTexture") != material.additionalValues.end()) 
 		{
 			new_material.occlusion_texture = this->textures[material.additionalValues["occlusionTexture"].TextureIndex()];
-			new_material.texture_sets.occlusion = material.additionalValues["occlusionTexture"].TextureTexCoord();
+			new_material.occlusion_uv = material.additionalValues["occlusionTexture"].TextureTexCoord();
 		}
 	}
 }
@@ -306,9 +300,9 @@ void GltfModel::loadMeshes(tinygltf::Model& gltfModel)
 	for (size_t mesh_index = 0; mesh_index < gltfModel.meshes.size(); mesh_index++)
 	{
 		tinygltf::Mesh mesh = gltfModel.meshes[mesh_index];
-		GltfMesh& new_mesh = this->meshes[mesh_index];
+		PbrMesh& new_mesh = this->meshes[mesh_index];
 
-		vector<GltfVertex> vertex_buffer;
+		vector<PbrMeshVertex> vertex_buffer;
 		vector<uint32_t> index_buffer;
 
 		new_mesh.primitives.resize(mesh.primitives.size());
@@ -318,7 +312,7 @@ void GltfModel::loadMeshes(tinygltf::Model& gltfModel)
 			uint32_t index_start = static_cast<uint32_t>(index_buffer.size());
 
 			const tinygltf::Primitive &primitive = mesh.primitives[primitive_index];
-			GltfMeshPrimitive& new_primitive = new_mesh.primitives[primitive_index];
+			PbrMeshPrimitive& new_primitive = new_mesh.primitives[primitive_index];
 
 			uint32_t index_count = 0;
 			uint32_t vertex_count = 0;
@@ -399,7 +393,7 @@ void GltfModel::loadMeshes(tinygltf::Model& gltfModel)
 				vertex_buffer.resize(vertex_start + position_accessor.count);
 				for (size_t vertex_index = 0; vertex_index < position_accessor.count; vertex_index++)
 				{
-					GltfVertex vertex{};
+					PbrMeshVertex vertex{};
 					vertex.position = vector4F(glm::make_vec3(&buffer_postion[vertex_index * position_byte_stride]), 1.0f);
 					vertex.normal = glm::normalize(vector3F(buffer_normals ? glm::make_vec3(&buffer_normals[vertex_index * normal_byte_stride]) : vector3F(0.0f)));
 					vertex.uv0 = buffer_uv0 ? glm::make_vec2(&buffer_uv0[vertex_index * uv0_byte_stride]) : vector3F(0.0f);
@@ -464,7 +458,7 @@ void GltfModel::loadMeshes(tinygltf::Model& gltfModel)
 			new_primitive.first_index = index_start;
 			new_primitive.index_count = index_count;
 			new_primitive.vertex_count = vertex_count;
-			new_primitive.material = (primitive.material > -1) ? &materials[primitive.material] : &materials.back();
+			new_primitive.material_index = primitive.material;
 			new_primitive.bounding_box = { position_min, position_max };
 		}
 
@@ -487,8 +481,8 @@ void GltfModel::loadMeshes(tinygltf::Model& gltfModel)
 		create_info.input_elements = elements.data();
 		create_info.input_elements_count = (uint32_t)elements.size();
 
-		new_mesh.vertices = this->backend->createVertexBuffer(vertex_buffer.data(), vertex_buffer.size() * sizeof(GltfVertex), create_info);
-		new_mesh.indices = this->backend->createIndexBuffer(index_buffer.data(), index_buffer.size() * sizeof(uint32_t), IndexType::uint32);
+		new_mesh.vertex_buffer = this->backend->createVertexBuffer(vertex_buffer.data(), vertex_buffer.size() * sizeof(PbrMeshVertex), create_info);
+		new_mesh.index_buffer = this->backend->createIndexBuffer(index_buffer.data(), index_buffer.size() * sizeof(uint32_t), IndexType::uint32);
 	}
 }
 
@@ -496,8 +490,8 @@ void GltfModel::unloadMeshes()
 {
 	for (size_t i = 0; i < this->meshes.size(); i++)
 	{
-		this->backend->destoryVertexBuffer(this->meshes[i].vertices);
-		this->backend->destoryIndexBuffer(this->meshes[i].indices);
+		this->backend->destoryVertexBuffer(this->meshes[i].vertex_buffer);
+		this->backend->destoryIndexBuffer(this->meshes[i].index_buffer);
 	}
 }
 
@@ -603,7 +597,7 @@ void GltfModel::loadAnimations(tinygltf::Model& gltfModel)
 	for (size_t animation_index = 0; animation_index < gltfModel.animations.size(); animation_index++)
 	{
 		const tinygltf::Animation& animation = gltfModel.animations[animation_index];
-		GltfAnimation& new_animation = this->animations[animation_index];
+		Animation& new_animation = this->animations[animation_index];
 
 		new_animation.name = animation.name;
 
@@ -612,8 +606,7 @@ void GltfModel::loadAnimations(tinygltf::Model& gltfModel)
 			new_animation.name = string("Animation_" + std::to_string(animation_index));
 		}
 
-		new_animation.samplers.resize(animation.samplers.size());
-		for (size_t sampler_index = 0; sampler_index < animation.samplers.size(); sampler_index++)
+		/*for (size_t sampler_index = 0; sampler_index < animation.samplers.size(); sampler_index++)
 		{
 			const tinygltf::AnimationSampler& sampler = animation.samplers[sampler_index];
 			GltfAnimationSampler& new_sampler = new_animation.samplers[sampler_index];
@@ -692,29 +685,112 @@ void GltfModel::loadAnimations(tinygltf::Model& gltfModel)
 				}
 				}
 			}
-		}
+		}*/
 
 		new_animation.channels.resize(animation.channels.size());
 		for (size_t channel_index = 0; channel_index < animation.channels.size(); channel_index++)
 		{
 			tinygltf::AnimationChannel channel = animation.channels[channel_index];
-			GltfAnimationChannel& new_channel = new_animation.channels[channel_index];
+			AnimationChannel& new_channel = new_animation.channels[channel_index];
 
 			if (channel.target_path == "rotation")
 			{
-				new_channel.path = GltfAnimationChannel::PathType::ROTATION;
+				new_channel.path = AnimationChannel::PathType::ROTATION;
 			}
 			if (channel.target_path == "translation")
 			{
-				new_channel.path = GltfAnimationChannel::PathType::TRANSLATION;
+				new_channel.path = AnimationChannel::PathType::TRANSLATION;
 			}
 			if (channel.target_path == "scale")
 			{
-				new_channel.path = GltfAnimationChannel::PathType::SCALE;
+				new_channel.path = AnimationChannel::PathType::SCALE;
 			}
 
-			new_channel.sampler_index = (uint32_t)channel.sampler;
-			new_channel.node_index = (uint32_t)channel.target_node;
+			if (channel.sampler != -1)
+			{
+				const tinygltf::AnimationSampler& sampler = animation.samplers[channel.sampler];
+
+				if (sampler.interpolation == "LINEAR")
+				{
+					new_channel.interpolation = AnimationChannel::InterpolationType::LINEAR;
+				}
+				else if (sampler.interpolation == "STEP")
+				{
+					new_channel.interpolation = AnimationChannel::InterpolationType::STEP;
+				}
+				else if (sampler.interpolation == "CUBICSPLINE")
+				{
+					new_channel.interpolation = AnimationChannel::InterpolationType::CUBICSPLINE;
+				}
+
+				// Read sampler input time values
+				{
+					const tinygltf::Accessor& input_accessor = gltfModel.accessors[sampler.input];
+					const tinygltf::BufferView& input_buffer_view = gltfModel.bufferViews[input_accessor.bufferView];
+					const tinygltf::Buffer& input_buffer = gltfModel.buffers[input_buffer_view.buffer];
+					assert(input_accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
+					const float *input_data = static_cast<const float*>((void*)&input_buffer.data[input_accessor.byteOffset + input_buffer_view.byteOffset]);
+
+					new_channel.timesteps.resize(input_accessor.count);
+					for (size_t index = 0; index < input_accessor.count; index++)
+					{
+						float value = input_data[index];
+						new_channel.timesteps[index] = value;
+
+						new_animation.start_time = std::min(value, new_animation.start_time);
+						new_animation.end_time = std::max(value, new_animation.end_time);
+					}
+				}
+
+				// Read sampler output T/R/S values 
+				{
+					const tinygltf::Accessor &accessor = gltfModel.accessors[sampler.output];
+					const tinygltf::BufferView &buffer_view = gltfModel.bufferViews[accessor.bufferView];
+					const tinygltf::Buffer &buffer = gltfModel.buffers[buffer_view.buffer];
+
+					assert(accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
+
+					const void *dataPtr = &buffer.data[accessor.byteOffset + buffer_view.byteOffset];
+
+					new_channel.values.resize(accessor.count);
+
+					switch (accessor.type)
+					{
+					case TINYGLTF_TYPE_VEC3:
+					{
+						const vector3F *buf = static_cast<const vector3F*>(dataPtr);
+						for (size_t index = 0; index < accessor.count; index++)
+						{
+							new_channel.values[index] = vector4F(buf[index], 0.0f);
+						}
+						break;
+					}
+					case TINYGLTF_TYPE_VEC4:
+					{
+						const vector4F *buf = static_cast<const vector4F*>(dataPtr);
+						for (size_t index = 0; index < accessor.count; index++)
+						{
+							new_channel.values[index] = vector4F(buf[index]);
+						}
+						break;
+					}
+					default:
+					{
+						GENESIS_ENGINE_WARNING("Unknown sampler type");
+						break;
+					}
+					}
+				}
+
+
+			}
+			else
+			{
+
+			}
+
+			//new_channel.sampler_index = (uint32_t)channel.sampler;
+			//new_channel.node_index = (uint32_t)channel.target_node;
 		}
 	}
 }

@@ -7,6 +7,10 @@
 #include "Genesis/LegacyRendering/LegacyWorldRenderer.hpp"
 #include "Genesis/LegacyRendering/LegacyImGui.hpp"
 
+#include "Genesis/Rendering/Camera.hpp"
+#include "Genesis/Ecs/DebugCamera.hpp"
+
+
 SandboxApplication::SandboxApplication()
 {
 	Genesis::Logging::console_sink->setConsoleWindow(&this->console_window);
@@ -18,7 +22,20 @@ SandboxApplication::SandboxApplication()
 	this->world_renderer = new Genesis::LegacyWorldRenderer(this->legacy_backend);
 	this->ui_renderer = new Genesis::LegacyImGui(this->legacy_backend, this->input_manager, this->window);
 
-	this->world = new Genesis::World(this->world_renderer);
+	this->ecs_world = new Genesis::EcsWorld();
+	this->ecs_world->physics_world = new Genesis::PhysicsWorld(Genesis::vector3D(0.0));
+	{
+		this->ecs_world->main_camera = this->ecs_world->entity_registry.create();
+		this->ecs_world->entity_registry.assign<Genesis::TransformD>(this->ecs_world->main_camera, Genesis::vector3D(0.0, 0.0, -20.0));
+		this->ecs_world->entity_registry.assign<Genesis::Camera>(this->ecs_world->main_camera, 77.0f);
+		this->ecs_world->entity_registry.assign<Genesis::DebugCamera>(this->ecs_world->main_camera, 5.0, 0.3);
+	}
+
+	//Systems
+	{
+		this->physics_system = new Genesis::PhyscisSystem();
+	}
+
 
 	{
 		this->offscreen_size = Genesis::vector2U(2048, 2048);
@@ -35,9 +52,12 @@ SandboxApplication::SandboxApplication()
 
 SandboxApplication::~SandboxApplication()
 {
+	delete this->physics_system;
+	delete this->ecs_world->physics_world;
+	delete this->ecs_world;
+
 	this->legacy_backend->destoryFramebuffer(this->offscreen_framebuffer);
 
-	delete this->world;
 	delete this->world_renderer;
 	delete this->legacy_backend;
 
@@ -49,10 +69,9 @@ void SandboxApplication::update(Genesis::TimeStep time_step)
 	GENESIS_PROFILE_FUNCTION("SandboxApplication::update");
 	Genesis::Application::update(time_step);
 
-	if (this->world != nullptr)
-	{
-		this->world->runSimulation(this, time_step);
-	}
+	Genesis::DebugCamera::update(this->input_manager, this->ecs_world->entity_registry.get<Genesis::DebugCamera>(this->ecs_world->main_camera), this->ecs_world->entity_registry.get<Genesis::TransformD>(this->ecs_world->main_camera), time_step);
+
+	this->physics_system->update(this->ecs_world, time_step);
 }
 
 #include "imgui.h"
@@ -105,16 +124,16 @@ void SandboxApplication::render(Genesis::TimeStep time_step)
 
 		this->legacy_backend->bindFramebuffer(this->offscreen_framebuffer);
 		this->legacy_backend->clearFramebuffer(true, true);
-		this->world_renderer->drawWorld(this->world, Genesis::vector2U(size.x, size.y));
+		//this->world_renderer->drawWorld(nullptr, Genesis::vector2U(size.x, size.y));
 		this->legacy_backend->bindFramebuffer(nullptr);
 
-		ImGui::Image((void*)(intptr_t)this->legacy_backend->getFramebufferColorAttachment(this->offscreen_framebuffer, 0), size, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->offscreen_framebuffer, 0), size, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 		ImGui::End();
 	}
 
 	this->console_window.drawWindow("Console");
-	this->world_view_window.drawWindow(this->world);
-	this->entity_properties_window.drawWindow(this->world, this->world_view_window.getSelectedEntity());
+	//this->world_view_window.drawWindow(this->world);
+	//this->entity_properties_window.drawWindow(this->world, this->world_view_window.getSelectedEntity());
 
 	this->ui_renderer->endFrame();
 

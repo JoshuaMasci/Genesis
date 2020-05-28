@@ -2,7 +2,7 @@
 
 #include "Genesis/Entity/Entity.hpp"
 
-#include "Genesis/Entity/DebugCamera.hpp"
+#include "Genesis/Ecs/DebugCamera.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
 
 #include "Genesis/Rendering/Camera.hpp"
@@ -26,20 +26,6 @@ World::World(BaseWorldRenderer* world_renderer)
 		this->entity_registry->assign<TransformD>(this->main_camera, vector3D(0.0, 0.0, -20.0));
 		this->entity_registry->assign<Camera>(this->main_camera, 77.0f);
 		this->entity_registry->assign<DebugCamera>(this->main_camera, 5.0, 0.3);
-	}
-
-	{
-		/*Entity* entity_1 = new Entity(1);
-		entity_1->createRigidbody();
-		entity_1->addComponent<BoxShape>(vector3D(0.5));
-		this->addEntity(entity_1);
-
-		Entity* entity_2 = new Entity(2);
-		entity_2->createRigidbody();
-		entity_2->setLocalPosition(vector3D(0.0, -2.0, 0.0));
-		entity_2->addComponent<BoxShape>(vector3D(0.5));
-		this->addEntity(entity_2);
-		entity_2->getRigidbody()->setStatic();*/
 	}
 }
 

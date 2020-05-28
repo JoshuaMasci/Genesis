@@ -13,34 +13,33 @@ struct Environment
 };
 uniform Environment environment;
 
-// albedo_texture
-// normal_texture
-// metallic_roughness_texture
-// occlusion_texture
-// emissive_texture
 struct Material
 {
 	vec4 albedo;
 	vec2 metallic_roughness;
 	vec4 emissive;
 	
-	int albedo_texture_set;
-	int metallic_roughness_texture_set;
-	int normal_texture_set;	
-	int occlusion_texture_set;
-	int emissive_texture_set;
+	int albedo_uv;
+	int metallic_roughness_uv;
+	int normal_uv;	
+	int occlusion_uv;
+	int emissive_uv;
 };
 uniform Material material;
+// albedo_texture
+// normal_texture
+// metallic_roughness_texture
+// occlusion_texture
+// emissive_texture
 uniform sampler2D material_textures[5];
 
 layout(location = 0) out vec4 out_color;
 void main()
 {
 	vec4 albedo = material.albedo;
-	if (material.albedo_texture_set > -1) 
+	if (material.albedo_uv > -1) 
 	{
-		albedo *= texture(material_textures[0], material.albedo_texture_set == 0 ? frag_uv0 : frag_uv1);
+		albedo *= texture(material_textures[0], material.albedo_uv == 0 ? frag_uv0 : frag_uv1);
 	}
-	
 	out_color = albedo;
 }

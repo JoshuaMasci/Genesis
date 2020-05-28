@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Genesis/Physics/PhysicsWorld.hpp"
-#include "Genesis/Entity/EntitySystem.hpp"
+#include "Genesis/Ecs/Entt.hpp"
 #include "Genesis/Rendering/BaseWorldRenderer.hpp"
 
 namespace Genesis

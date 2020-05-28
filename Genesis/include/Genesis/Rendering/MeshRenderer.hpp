@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Entity/EntitySystem.hpp"
+#include "Genesis/Ecs/Entt.hpp"
 #include "Genesis/Rendering/Frustum.hpp"
 #include "Genesis/Rendering/Lights.hpp"
 #include "Genesis/Entity/World.hpp"

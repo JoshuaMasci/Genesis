@@ -22,7 +22,7 @@ namespace Genesis
 
 		struct OpenglTexture2D
 		{
-			GLuint texture;
+			GLuint texture_handle;
 		};
 
 		struct OpenglFramebuffer
@@ -31,9 +31,10 @@ namespace Genesis
 			bool is_multisampled;
 
 			GLuint frame_buffer;
-			vector<GLuint> attachements;
+			vector<OpenglTexture2D> attachements;
+
 			bool has_depth;
-			GLuint depth_attachement;
+			OpenglTexture2D depth_attachement;
 		};
 
 		class OpenglBackend : public LegacyBackend
@@ -83,7 +84,7 @@ namespace Genesis
 			virtual void setUniform4f(const string& name, const vector4F& value) override;
 			virtual void setUniformMat3f(const string& name, const matrix3F& value) override;
 			virtual void setUniformMat4f(const string& name, const matrix4F& value) override;
-			virtual void setUniformTexture(const string& name, const uint32_t texture_slot, const Texture2D& value) override;
+			virtual void setUniformTexture(const string& name, const uint32_t texture_slot, Texture2D value) override;
 
 			virtual void setScissor(vector2I offset, vector2U extent) override;
 			virtual void clearScissor() override;

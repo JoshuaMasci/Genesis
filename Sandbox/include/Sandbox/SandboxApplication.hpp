@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Genesis/Entity/World.hpp>
+#include <Genesis/Ecs/EcsWorld.hpp>
+
 #include <Genesis/Rendering/BaseWorldRenderer.hpp>
 #include "Genesis/Rendering/BaseImGui.hpp"
 
@@ -9,6 +11,9 @@
 #include <Genesis/Editor/ConsoleWindow.hpp>
 #include <Genesis/Editor/HierarchyWindow.hpp>
 #include <Genesis/Editor/EntityPropertiesWindow.hpp>
+
+#include "Genesis/Physics/PhysicsSystem.hpp"
+
 class SandboxApplication : public Genesis::Application
 {
 public:
@@ -20,7 +25,9 @@ public:
 protected:
 	Genesis::LegacyBackend* legacy_backend;
 
-	Genesis::World* world;
+	Genesis::EcsWorld* ecs_world;
+	Genesis::PhyscisSystem* physics_system;
+
 	Genesis::BaseWorldRenderer* world_renderer;
 	Genesis::BaseImGui* ui_renderer;
 	
