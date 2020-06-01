@@ -14,8 +14,8 @@ layout(location = 3) out vec2 frag_uv1;
 
 struct Environment
 {
-	vec3 camera_position;
 	vec3 ambient_light;
+	vec3 camera_position;
 	mat4 view_projection_matrix;
 };
 uniform Environment environment;
@@ -56,7 +56,6 @@ void main()
 		vert_position = matrices.model * vert_position;
 		vert_normal = normalize(transpose(inverse(mat3(matrices.model))) * in_normal);
 	}
-		
 	
     gl_Position = environment.view_projection_matrix * vert_position;
 	

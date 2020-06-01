@@ -1,6 +1,6 @@
 #include "Genesis/Editor/EntityPropertiesWindow.hpp"
 
-#include "Genesis/Entity/Entity.hpp"
+#include "imgui.h"
 #include "Genesis/Ecs/NameComponent.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
@@ -15,10 +15,68 @@ EntityPropertiesWindow::~EntityPropertiesWindow()
 {
 }
 
-#include "imgui.h"
+void Genesis::EntityPropertiesWindow::drawWindow(EcsWorld* world, EntityHandle selected_entity)
+{
+	EntityRegistry* registry = &world->entity_registry;
 
+	ImGui::Begin("Entity Properties");
 
-void EntityPropertiesWindow::drawWindow(World* world, Entity* selected_entity)
+	if (selected_entity != entt::null)
+	{
+		if(registry->has<NameComponent>(selected_entity))
+		{
+			auto& name_component = registry->get<NameComponent>(selected_entity);
+
+			ImGui::Separator();
+			ImGui::InputText("Entity Name", name_component.data, name_component.data_size);
+		}
+
+		if (registry->has<TransformD>(selected_entity))
+		{
+			auto& transform_component = registry->get<TransformD>(selected_entity);
+
+			ImGui::Separator();
+			if (ImGui::CollapsingHeader("Entity Properties", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				vector3D position = transform_component.getPosition();
+				if (ImGui::InputScalarN("Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
+				{
+					transform_component.setPosition(position);
+				}
+
+				vector3D rotation = glm::degrees(glm::eulerAngles(transform_component.getOrientation()));
+				if (ImGui::InputScalarN("Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
+				{
+					transform_component.setOrientation(quaternionD(glm::radians(rotation)));
+				}
+
+				vector3D scale = transform_component.getScale();
+				if (ImGui::InputScalarN("Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
+				{
+					transform_component.setScale(scale);
+				}
+			}
+		}
+
+		if (registry->has<Camera>(selected_entity))
+		{
+			auto& camera_component = registry->get<Camera>(selected_entity);
+			ImGui::Separator();
+			if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+			{
+				ImGui::SliderFloat("fov(x)", &camera_component.frame_of_view, 5.0f, 140.0f);
+				ImGui::InputFloat("z_near", &camera_component.z_near);
+				camera_component.z_near = std::max(camera_component.z_near, 0.001f);
+				ImGui::InputFloat("z_far", &camera_component.z_far);
+				camera_component.z_far = std::max(camera_component.z_near + 1.0f, camera_component.z_far);
+			}
+		}
+	}
+
+	ImGui::End();
+}
+
+/*void EntityPropertiesWindow::drawWindow(World* world, Entity* selected_entity)
 {
 	ImGui::ShowDemoWindow();
 
@@ -124,7 +182,7 @@ void EntityPropertiesWindow::drawWindow(World* world, Entity* selected_entity)
 			}
 
 			ImGui::EndPopup();
-		}*/
+		}
 	}
 	else
 	{
@@ -133,4 +191,4 @@ void EntityPropertiesWindow::drawWindow(World* world, Entity* selected_entity)
 
 	ImGui::End();
 }
-
+*/

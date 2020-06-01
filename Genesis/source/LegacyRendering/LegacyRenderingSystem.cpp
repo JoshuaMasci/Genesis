@@ -89,7 +89,22 @@ void LegacyRenderingSystem::render(vector2U screen_size, EcsWorld* world, TimeSt
 
 	//Frustum frustum(view_projection_matrix);
 
+	{
+		PipelineSettings settings;
+		settings.cull_mode = CullMode::Back;
+		settings.depth_test = DepthTest::Test_And_Write;
+		settings.depth_op = DepthOp::Less;
+		settings.blend_op = BlendOp::None;
+		settings.src_factor = BlendFactor::One;
+		settings.dst_factor = BlendFactor::Zero;
+		this->backend->setPipelineState(settings);
+	}
+
 	this->backend->bindShaderProgram(this->shader_program);
+
+	this->backend->setUniform3f("environment.ambient_light", vector3F(1.0f));
+	this->backend->setUniform3f("environment.camera_position", (vector3F)camera_transform.getPosition());
+	this->backend->setUniformMat4f("environment.view_projection_matrix", view_projection_matrix);
 
 	auto& view = world->entity_registry.view<PbrMesh, TransformD>();
 	for (EntityHandle entity : view)
@@ -107,8 +122,7 @@ void LegacyRenderingSystem::render(vector2U screen_size, EcsWorld* world, TimeSt
 
 		for (PbrMeshPrimitive& primitive : mesh.primitives)
 		{
-			PbrMaterial material;// = model->getMaterial(primitive.material_index);
-			material.albedo_factor = vector4F(1.0f, 0.0f, 0.8f, 1.0f);
+			PbrMaterial& material = *primitive.temp_material_ptr;
 			writeMaterialUniform(this->backend, material);
 			backend->drawIndex(primitive.index_count, primitive.first_index);
 		}

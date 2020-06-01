@@ -4,12 +4,11 @@
 #include "SDL2_Platform.hpp" 
 #include "SDL2_Window.hpp" 
 #include "OpenglBackend.hpp"
-#include "Genesis/LegacyRendering/LegacyWorldRenderer.hpp"
 #include "Genesis/LegacyRendering/LegacyImGui.hpp"
 
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Ecs/DebugCamera.hpp"
-
+#include "Genesis/Ecs/NameComponent.hpp"
 
 SandboxApplication::SandboxApplication()
 {
@@ -19,26 +18,28 @@ SandboxApplication::SandboxApplication()
 	this->window = new Genesis::SDL2_Window(Genesis::vector2U(1600, 900), "Sandbox: ");
 
 	this->legacy_backend = new Genesis::Opengl::OpenglBackend((Genesis::SDL2_Window*) window);
-	this->world_renderer = new Genesis::LegacyWorldRenderer(this->legacy_backend);
 	this->ui_renderer = new Genesis::LegacyImGui(this->legacy_backend, this->input_manager, this->window);
 
-	this->ecs_world = new Genesis::EcsWorld();
+	this->world = new Genesis::World();
+
+	/*this->ecs_world = new Genesis::EcsWorld();
 	this->ecs_world->physics_world = new Genesis::PhysicsWorld(Genesis::vector3D(0.0));
 	{
 		this->ecs_world->main_camera = this->ecs_world->entity_registry.create();
 		this->ecs_world->entity_registry.assign<Genesis::TransformD>(this->ecs_world->main_camera, Genesis::vector3D(0.0, 0.0, -20.0));
 		this->ecs_world->entity_registry.assign<Genesis::Camera>(this->ecs_world->main_camera, 77.0f);
 		this->ecs_world->entity_registry.assign<Genesis::DebugCamera>(this->ecs_world->main_camera, 5.0, 0.3);
+		this->ecs_world->entity_registry.assign<Genesis::NameComponent>(this->ecs_world->main_camera, "Main_Camera");
 	}
 
 	//Systems
 	{
 		this->physics_system = new Genesis::PhyscisSystem();
-	}
-
+		this->rendering_system = new Genesis::LegacyRenderingSystem(this->legacy_backend);
+	}*/
 
 	{
-		this->offscreen_size = Genesis::vector2U(2048, 2048);
+		this->offscreen_size = Genesis::vector2U(1024);
 		Genesis::FramebufferAttachmentInfo color_attachment = { Genesis::TextureFormat::RGBA, Genesis::MultisampleCount::Sample_1 };
 		Genesis::FramebufferDepthInfo depth_attachment = {Genesis::DepthFormat::depth_24,  Genesis::MultisampleCount::Sample_1 };
 		Genesis::FramebufferCreateInfo create_info = {};
@@ -48,17 +49,66 @@ SandboxApplication::SandboxApplication()
 		create_info.size = this->offscreen_size;
 		this->offscreen_framebuffer = this->legacy_backend->createFramebuffer(create_info);
 	}
+
+	{
+		Genesis::string file_name = "res/CesiumMan.gltf";
+
+		tinygltf::Model gltfModel;
+		tinygltf::TinyGLTF loader;
+		Genesis::string error;
+		Genesis::string warning;
+		bool return_value;
+
+		if (file_name.substr(file_name.find_last_of(".") + 1) == "gltf")
+		{
+			return_value = loader.LoadASCIIFromFile(&gltfModel, &error, &warning, file_name);
+		}
+		else if (file_name.substr(file_name.find_last_of(".") + 1) == "glb")
+		{
+			return_value = loader.LoadBinaryFromFile(&gltfModel, &error, &warning, file_name);
+		}
+		else
+		{
+			GENESIS_ENGINE_ERROR("Unknown File extension");
+		}
+
+		if (!error.empty())
+		{
+			GENESIS_ENGINE_ERROR("Error: {}", error);
+		}
+
+		if (!warning.empty())
+		{
+			GENESIS_ENGINE_WARNING("Warning: {}", warning);
+		}
+
+		if (!return_value)
+		{
+			GENESIS_ENGINE_CRITICAL("Failed to parse glTF");
+		}
+
+		this->model = new Genesis::GltfModel(this->legacy_backend, gltfModel);
+
+		/*Genesis::EntityHandle entity = this->ecs_world->entity_registry.create();
+		this->ecs_world->entity_registry.assign<Genesis::TransformD>(entity);
+		this->ecs_world->entity_registry.assign<Genesis::PbrMesh>(entity, this->model->meshes[0]);
+		this->ecs_world->entity_registry.assign<Genesis::NameComponent>(entity, "Entity");*/
+	}
 }
 
 SandboxApplication::~SandboxApplication()
 {
-	delete this->physics_system;
-	delete this->ecs_world->physics_world;
-	delete this->ecs_world;
+	delete this->model;
+
+	delete this->world;
+
+	//delete this->rendering_system;
+	//delete this->physics_system;
+
+	//delete this->ecs_world->physics_world;
+	//delete this->ecs_world;
 
 	this->legacy_backend->destoryFramebuffer(this->offscreen_framebuffer);
-
-	delete this->world_renderer;
 	delete this->legacy_backend;
 
 	Genesis::Logging::console_sink->setConsoleWindow(nullptr);
@@ -69,9 +119,7 @@ void SandboxApplication::update(Genesis::TimeStep time_step)
 	GENESIS_PROFILE_FUNCTION("SandboxApplication::update");
 	Genesis::Application::update(time_step);
 
-	Genesis::DebugCamera::update(this->input_manager, this->ecs_world->entity_registry.get<Genesis::DebugCamera>(this->ecs_world->main_camera), this->ecs_world->entity_registry.get<Genesis::TransformD>(this->ecs_world->main_camera), time_step);
-
-	this->physics_system->update(this->ecs_world, time_step);
+	this->world->runSimulation(this, time_step);
 }
 
 #include "imgui.h"
@@ -120,20 +168,41 @@ void SandboxApplication::render(Genesis::TimeStep time_step)
 		ImGui::Begin("GameView");
 		ImVec2 vMin = ImGui::GetWindowContentRegionMin();
 		ImVec2 vMax = ImGui::GetWindowContentRegionMax();
-		ImVec2 size = ImVec2(vMax.x - vMin.x, vMax.y - vMin.y);
+		ImVec2 window_size = ImVec2(vMax.x - vMin.x, vMax.y - vMin.y);
+
+		//Rebuild Framebuffer
+		Genesis::vector2U new_framebuffer_size = Genesis::vector2U((uint32_t)window_size.x, (uint32_t)window_size.y);
+		if (new_framebuffer_size != this->offscreen_size)
+		{
+			this->legacy_backend->destoryFramebuffer(this->offscreen_framebuffer);
+
+			this->offscreen_size = new_framebuffer_size;
+
+			Genesis::FramebufferAttachmentInfo color_attachment = { Genesis::TextureFormat::RGBA, Genesis::MultisampleCount::Sample_1 };
+			Genesis::FramebufferDepthInfo depth_attachment = { Genesis::DepthFormat::depth_24,  Genesis::MultisampleCount::Sample_1 };
+			Genesis::FramebufferCreateInfo create_info = {};
+			create_info.attachments = &color_attachment;
+			create_info.attachment_count = 1;
+			create_info.depth_attachment = &depth_attachment;
+			create_info.size = this->offscreen_size;
+			this->offscreen_framebuffer = this->legacy_backend->createFramebuffer(create_info);
+		}
 
 		this->legacy_backend->bindFramebuffer(this->offscreen_framebuffer);
 		this->legacy_backend->clearFramebuffer(true, true);
-		//this->world_renderer->drawWorld(nullptr, Genesis::vector2U(size.x, size.y));
+
+		//TODO render here
+		//this->rendering_system->render(this->offscreen_size, this->ecs_world, time_step);
+
 		this->legacy_backend->bindFramebuffer(nullptr);
 
-		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->offscreen_framebuffer, 0), size, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->offscreen_framebuffer, 0), window_size, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 		ImGui::End();
 	}
 
-	this->console_window.drawWindow("Console");
-	//this->world_view_window.drawWindow(this->world);
-	//this->entity_properties_window.drawWindow(this->world, this->world_view_window.getSelectedEntity());
+	this->console_window.drawWindow();
+	this->world_view_window.drawWindow(this->world);
+	//this->entity_properties_window.drawWindow(this->ecs_world, this->world_view_window.selected_entity);
 
 	this->ui_renderer->endFrame();
 

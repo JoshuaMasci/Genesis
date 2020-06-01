@@ -1,7 +1,8 @@
 #include "Genesis/Physics/PhysicsWorld.hpp"
 
-#include "Genesis/Entity/Entity.hpp"
 #include "Genesis/Physics/Rigidbody.hpp"
+
+#include "Genesis/Entity/Entity.hpp"
 
 using namespace Genesis;
 
@@ -24,10 +25,9 @@ void PhysicsWorld::simulate(TimeStep time_step)
 void PhysicsWorld::addEntity(Entity* entity)
 {
 	GENESIS_ENGINE_ASSERT_ERROR(entity != nullptr, "Physics World tried to add a null entity");
-	GENESIS_ENGINE_ASSERT_ERROR(entity->isRoot(), "Entity must be root to have a rigidbody");
 	GENESIS_ENGINE_ASSERT_ERROR(entity->getRigidbody() != nullptr, "Physics World tried to add a null rigidbody");
 	
-	TransformD& transform = entity->getLocalTransform();
+	TransformD& transform = entity->getWorldTransform();
 	reactphysics3d::Transform react_transform;
 	react_transform.setPosition(toVec3R(transform.getPosition()));
 	react_transform.setOrientation(toQuatR(transform.getOrientation()));

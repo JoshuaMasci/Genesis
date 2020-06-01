@@ -15,14 +15,6 @@ namespace Genesis
 	class Entity
 	{
 		friend class World;
-
-		enum class TransformDirtyFlag
-		{
-			None = 0,
-			Global = 1, //Just update global transform
-			All = 2 //Update global and root transforms
-		};
-
 	public:
 		Entity(EntityId id);
 		Entity(EntityId id, string name);
@@ -32,32 +24,46 @@ namespace Genesis
 		const inline string getName() { return this->name; };
 		void setName(const string& new_name) { this->name = new_name; };
 
-		void updateTransform(TransformDirtyFlag parent_flag = TransformDirtyFlag::None);
-		void onTransformUpdate(TransformDirtyFlag transform_dirty);
-
-		inline void setLocalTransform(const TransformD& transform) { this->local_transform = transform; this->transform_dirty = true; };
-		inline void setLocalPosition(const vector3D& position) { this->local_transform.setPosition(position); this->transform_dirty = true; };
-		inline void setLocalOrientation(const quaternionD& orientation) { this->local_transform.setOrientation(orientation); this->transform_dirty = true; };
-		inline void setLocalScale(const vector3D& scale) { this->local_transform.setScale(scale); this->transform_dirty = true; };
-
-		inline TransformD getLocalTransform() { return this->local_transform; };
-		inline TransformD getRootTransform() { return this->root_transform; };
-		inline TransformD getGlobalTransform() { return this->global_transform; };
+		TransformD getWorldTransform();
+		void setTransform(const TransformD& transform);
 
 		inline World* getWorld() { return this->world; };
-		inline Entity* getRoot() { return this->root; };
-		inline bool isRoot() { return this == this->root; };
-		inline Entity* getParent() { return this->parent; };
-
-		void addChild(Entity* child);
-		void removeChild(Entity* child);
-		inline const vector<Entity*>& getChildren() { return this->children; };
 
 		void createRigidbody();
 		void removeRigidbody();
 
 		bool hasRigidbody() { return this->rigidbody != nullptr; };
 		RigidBody* getRigidbody() { return this->rigidbody; };
+
+	protected:
+		//Entity Info
+		EntityId id = InvalidEntity;
+		string name;
+
+		//Transform
+		TransformD world_transform;
+
+		//Hierarchy Info 
+		World* world = nullptr;
+
+		void addtoWorld(World* world);
+		void removeFromWorld();
+
+		RigidBody* rigidbody = nullptr;
+	};
+
+	class Node
+	{
+		friend class Entity;
+	public:
+
+		inline TransformD getLocalTransform() { return this->local_transform; };
+		inline TransformD getRootTransform() { return this->root_transform; };
+		inline TransformD getGlobalTransform() { return this->root_transform; };//TODO
+
+		void addChild(Node* child);
+		void removeChild(Node* child);
+		inline const vector<Node*>& getChildren() { return this->children; };
 
 		template<typename T, typename... TArgs> T* addComponent(TArgs&&... mArgs)
 		{
@@ -110,29 +116,18 @@ namespace Genesis
 		};
 
 	protected:
-		//Entity Info
-		EntityId id = InvalidEntity;
 		string name;
 
-		//Transform
 		TransformD local_transform;
 		TransformD root_transform;//relative to root
-		TransformD global_transform;
-		bool transform_dirty = true;
 
-		//Hierarchy Info 
-		World* world = nullptr;
 		Entity* root = nullptr;
-		Entity* parent = nullptr;
-		vector<Entity*> children;
 
-		void addtoWorld(World* world);
-		void removeFromWorld();
-
-		//Fixed Components
-		RigidBody* rigidbody = nullptr;
+		Node* parent = nullptr;
+		vector<Node*> children;
 
 		//Components
 		map<size_t, Component*> component_map;
 	};
+
 }

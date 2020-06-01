@@ -29,9 +29,11 @@ namespace Genesis
 
 		void addMessage(ConsoleMessage& message);
 
-		void drawWindow(const string& window_name);
+		void drawWindow();
 
 	protected:
+		string name;
+
 		bool auto_scroll;
 		vector<ConsoleMessage> messages;
 

@@ -4,6 +4,7 @@ using namespace Genesis;
 
 ConsoleWindow::ConsoleWindow()
 {
+	this->name = "Console";
 }
 
 ConsoleWindow::~ConsoleWindow()
@@ -17,9 +18,9 @@ void ConsoleWindow::addMessage(ConsoleMessage& message)
 
 #include "imgui.h"
 
-void ConsoleWindow::drawWindow(const string& window_name)
+void ConsoleWindow::drawWindow()
 {
-	ImGui::Begin(window_name.c_str());
+	ImGui::Begin(this->name.c_str());
 
 	// Options menu
 	if (ImGui::BeginPopup("Options"))

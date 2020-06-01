@@ -9,36 +9,85 @@ Entity::Entity(EntityId id)
 {
 	this->id = id;
 	this->name = "Entity_" + std::to_string(id);
-
-	//Assume this will be the root
-	this->root = this;
 }
 
 Entity::Entity(EntityId id, string name)
 {
 	this->id = id;
 	this->name = name;
-
-	//Assume this will be the root
-	this->root = this;
 }
 
 Entity::~Entity()
 {
-	for (Entity* child : this->children)
-	{
-		delete child;
-	}
-
-	for (auto component : this->component_map)
-	{
-		delete component.second;
-	}
-
 	delete this->rigidbody;
 }
 
-void Entity::updateTransform(TransformDirtyFlag parent_flag)
+TransformD Entity::getWorldTransform()
+{
+	if (this->rigidbody != nullptr)
+	{
+		this->world_transform = this->rigidbody->getTransform();
+	}
+
+	return this->world_transform;
+}
+
+void Entity::setTransform(const TransformD& transform)
+{
+	this->world_transform = transform;
+
+	if (this->rigidbody != nullptr)
+	{
+		this->rigidbody->setTransform(this->world_transform);
+	}
+}
+
+void Entity::createRigidbody()
+{
+	GENESIS_ENGINE_ASSERT_ERROR(rigidbody == nullptr, ("{}:{} already has a rigidbody", this->id, this->name));
+	this->rigidbody = new RigidBody();
+
+	if (this->world != nullptr)
+	{
+		this->world->getPhysicsWorld()->addEntity(this);
+	}
+}
+
+void Entity::removeRigidbody()
+{
+	GENESIS_ENGINE_ASSERT_ERROR(rigidbody != nullptr, ("{}:{} doesn't has a rigidbody", this->id, this->name));
+
+	if (this->world != nullptr)
+	{
+		this->world->getPhysicsWorld()->removeEntity(this);
+	}
+}
+
+void Entity::addtoWorld(World* world)
+{
+	GENESIS_ENGINE_ASSERT_ERROR(world != nullptr, ("{}:{} tried to join a null world", this->id, this->name));
+	GENESIS_ENGINE_ASSERT_ERROR(this->world == nullptr, ("{}:{} already in a world", this->id, this->name));
+	this->world = world;
+
+	if (this->rigidbody != nullptr)
+	{
+		this->world->getPhysicsWorld()->addEntity(this);
+	}
+}
+
+void Entity::removeFromWorld()
+{
+	GENESIS_ENGINE_ASSERT_ERROR(this->world != nullptr, ("{}:{} not in a world", this->id, this->name));
+
+	if (this->rigidbody != nullptr)
+	{
+		this->world->getPhysicsWorld()->removeEntity(this);
+	}
+
+	this->world = nullptr;
+}
+
+/*void Entity::updateTransform(TransformDirtyFlag parent_flag)
 {
 	TransformDirtyFlag entity_flag = TransformDirtyFlag::None;
 
@@ -115,26 +164,26 @@ void Entity::onTransformUpdate(TransformDirtyFlag transform_dirty)
 	{
 		this->rigidbody->setTransform(this->local_transform);
 	}
-}
+}*/
 
-void Entity::addChild(Entity* child)
+void Node::addChild(Node* child)
 {
-	GENESIS_ENGINE_ASSERT_ERROR(child != nullptr, ("{}:{} tried to add a null child", this->id, this->name));
-	GENESIS_ENGINE_ASSERT_ERROR(child->parent == nullptr && child->world == nullptr, ("{}:{} already has a parent", child->id, child->name));
+	GENESIS_ENGINE_ASSERT_ERROR(child != nullptr, ("{} tried to add a null child", this->name));
+	GENESIS_ENGINE_ASSERT_ERROR(child->parent == nullptr, ("{} already has a parent", child->name));
 
 	child->root = this->root;
 	child->parent = this;
 	this->children.push_back(child);
 
-	if (this->world != nullptr)
+	if (this->root->getWorld() != nullptr)
 	{
-		child->addtoWorld(this->world);
+		//child->addtoWorld(this->root->getWorld());
 	}
 }
 
-void Entity::removeChild(Entity* child)
+void Node::removeChild(Node* child)
 {
-	GENESIS_ENGINE_ASSERT_ERROR(child != nullptr, ("{}:{} tried to remove a null child", this->id, this->name));
+	GENESIS_ENGINE_ASSERT_ERROR(child != nullptr, ("{} tried to remove a null child", this->name));
 
 	for (size_t i = 0; i < this->children.size(); i++)
 	{
@@ -146,82 +195,14 @@ void Entity::removeChild(Entity* child)
 				this->children[i] = this->children[last_index];
 			}
 			this->children.pop_back();
-			if (this->world != nullptr)
+			if (this->parent != nullptr)
 			{
-				child->removeFromWorld();
+				//child->removeFromWorld();
 			}
 			child->root = nullptr;
 			child->parent = nullptr;
 			return;
 		}
 	}
-
-	GENESIS_ENGINE_ERROR("{}:{} is not a child of {}:{}", child->id, child->name, this->id, this->name);
-}
-
-void Entity::createRigidbody()
-{
-	GENESIS_ENGINE_ASSERT_ERROR(rigidbody == nullptr, ("{}:{} already has a rigidbody", this->id, this->name));
-	this->rigidbody = new RigidBody();
-
-	if (this->world != nullptr)
-	{
-		this->world->getPhysicsWorld()->addEntity(this);
-	}
-}
-
-void Entity::removeRigidbody()
-{
-	GENESIS_ENGINE_ASSERT_ERROR(rigidbody != nullptr, ("{}:{} doesn't has a rigidbody", this->id, this->name));
-
-	if (this->world != nullptr)
-	{
-		this->world->getPhysicsWorld()->removeEntity(this);
-	}
-}
-
-void Entity::addtoWorld(World* world)
-{
-	GENESIS_ENGINE_ASSERT_ERROR(world != nullptr, ("{}:{} tried to join a null world", this->id, this->name));
-	GENESIS_ENGINE_ASSERT_ERROR(this->world == nullptr, ("{}:{} already in a world", this->id, this->name));
-	this->world = world;
-	this->transform_dirty = true;
-
-	if (this->rigidbody != nullptr)
-	{
-		this->world->getPhysicsWorld()->addEntity(this);
-	}
-
-	for (auto component : this->component_map)
-	{
-		component.second->addtoWorld(world);
-	}
-
-	for (Entity* child : this->children)
-	{
-		child->addtoWorld(this->world);
-	}
-
-}
-
-void Entity::removeFromWorld()
-{
-	GENESIS_ENGINE_ASSERT_ERROR(this->world != nullptr, ("{}:{} not in a world", this->id, this->name));
-
-	for (Entity* child : this->children)
-	{
-		child->removeFromWorld();
-	}
-
-	for (auto component : this->component_map)
-	{
-		component.second->removeFromWorld();
-	}
-
-	if (this->rigidbody != nullptr)
-	{
-		this->world->getPhysicsWorld()->removeEntity(this);
-	}
-
-	this->world = nullptr;
+	GENESIS_ENGINE_ERROR("{} is not a child of {}", child->name, this->name);
 }

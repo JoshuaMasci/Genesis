@@ -6,6 +6,8 @@
 
 namespace Genesis
 {
+	struct PbrMaterial;
+
 	struct PbrMeshVertex
 	{
 		vector3F position;
@@ -23,6 +25,8 @@ namespace Genesis
 		uint32_t vertex_count;
 		uint32_t material_index;
 		BoundingBox bounding_box;
+
+		PbrMaterial* temp_material_ptr;
 	};
 
 	struct PbrMesh

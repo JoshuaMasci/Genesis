@@ -7,8 +7,8 @@ layout(location = 3) in vec2 frag_uv1;
 
 struct Environment
 {
-	vec3 camera_position;
 	vec3 ambient_light;
+	vec3 camera_position;
 	mat4 view_projection_matrix;
 };
 uniform Environment environment;

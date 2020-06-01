@@ -1,24 +1,23 @@
 #pragma once
 
+#include "Genesis/Ecs/EcsWorld.hpp"
 #include "Genesis/Entity/World.hpp"
-#include "Genesis/Entity/Entity.hpp"
 
 namespace Genesis
 {
-	class World;
-
 	class HierarchyWindow
 	{
 	public:
 		HierarchyWindow();
 		~HierarchyWindow();
 
+		void drawWindow(EcsWorld* world);
 		void drawWindow(World* world);
 
-		Entity* getSelectedEntity() { return this->selected_entity; };
-
-	protected:
-		void drawEntityTree(Entity* entity);
-		Entity* selected_entity = nullptr;
+		EntityHandle selected_entity = entt::null;
+		Entity* selected_entity_ptr = nullptr;
+	private:
+		void drawEntityHierarchy(EntityRegistry& registry, EntityHandle entity);
+		void drawEntity(Entity* entity);
 	};
 }

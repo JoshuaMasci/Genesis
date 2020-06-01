@@ -1,10 +1,10 @@
 #include "Genesis/Resource/GltfLoader.hpp"
 
 #define TINYGLTF_IMPLEMENTATION
-//#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
 #define STBI_MSC_SECURE_CRT
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-// #define TINYGLTF_NOEXCEPTION // optional. disable exception handling.
+//#define TINYGLTF_NOEXCEPTION // optional. disable exception handling.
 #include "tiny_gltf.h"
 #include <algorithm>
 
@@ -460,6 +460,8 @@ void GltfModel::loadMeshes(tinygltf::Model& gltfModel)
 			new_primitive.vertex_count = vertex_count;
 			new_primitive.material_index = primitive.material;
 			new_primitive.bounding_box = { position_min, position_max };
+
+			new_primitive.temp_material_ptr = &this->materials[primitive.material];
 		}
 
 		for (auto primitive : new_mesh.primitives)

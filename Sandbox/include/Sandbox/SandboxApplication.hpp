@@ -1,9 +1,8 @@
 #pragma once
 
-#include <Genesis/Entity/World.hpp>
 #include <Genesis/Ecs/EcsWorld.hpp>
+#include <Genesis/Entity/World.hpp>
 
-#include <Genesis/Rendering/BaseWorldRenderer.hpp>
 #include "Genesis/Rendering/BaseImGui.hpp"
 
 #include <Genesis/LegacyBackend/LegacyBackend.hpp>
@@ -13,6 +12,9 @@
 #include <Genesis/Editor/EntityPropertiesWindow.hpp>
 
 #include "Genesis/Physics/PhysicsSystem.hpp"
+#include "Genesis/LegacyRendering/LegacyRenderingSystem.hpp"
+
+#include "Genesis/Resource/GltfLoader.hpp"
 
 class SandboxApplication : public Genesis::Application
 {
@@ -25,10 +27,12 @@ public:
 protected:
 	Genesis::LegacyBackend* legacy_backend;
 
-	Genesis::EcsWorld* ecs_world;
-	Genesis::PhyscisSystem* physics_system;
+	Genesis::World* world;
 
-	Genesis::BaseWorldRenderer* world_renderer;
+	//Genesis::EcsWorld* ecs_world;
+	//Genesis::PhyscisSystem* physics_system;
+	//Genesis::LegacyRenderingSystem* rendering_system;
+
 	Genesis::BaseImGui* ui_renderer;
 	
 	Genesis::vector2U offscreen_size;
@@ -37,6 +41,8 @@ protected:
 	Genesis::ConsoleWindow console_window;
 	Genesis::HierarchyWindow world_view_window;
 	Genesis::EntityPropertiesWindow entity_properties_window;
+
+	Genesis::GltfModel* model;
 };
 
 
