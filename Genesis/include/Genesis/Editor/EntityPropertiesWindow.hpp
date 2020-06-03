@@ -1,10 +1,8 @@
 #pragma once
 
-#include "Genesis/Ecs/EcsSystem.hpp"
-
 namespace Genesis
 {
-	class World;
+	class Entity;
 
 	class EntityPropertiesWindow
 	{
@@ -12,6 +10,6 @@ namespace Genesis
 		EntityPropertiesWindow();
 		~EntityPropertiesWindow();
 
-		void drawWindow(EcsWorld* world, EntityHandle selected_entity);
+		void drawWindow(Entity* selected_entity);
 	};
 }

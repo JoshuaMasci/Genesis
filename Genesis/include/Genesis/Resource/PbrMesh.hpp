@@ -14,8 +14,8 @@ namespace Genesis
 		vector3F normal;
 		vector2F uv0;
 		vector2F uv1;
-		vector4F joint0;
-		vector4F weight0;
+		vector4F joints;
+		vector4F weights;
 	};
 
 	struct PbrMeshPrimitive

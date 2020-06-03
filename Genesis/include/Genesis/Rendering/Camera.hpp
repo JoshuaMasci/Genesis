@@ -4,12 +4,12 @@ namespace Genesis
 {
 	struct Camera
 	{
-		Camera(float fov = 75.0f)
+		Camera(float fov = 95.0f)
 		{
 			this->frame_of_view = fov;
 		};
 
-		float frame_of_view = 75.0f;
+		float frame_of_view = 95.0f;
 		float z_near = 0.1f;
 		float z_far = 1000.0f;
 

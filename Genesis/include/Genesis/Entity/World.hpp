@@ -5,6 +5,7 @@
 namespace Genesis
 {
 	class Entity;
+	class Node;
 
 	class World
 	{
@@ -20,9 +21,14 @@ namespace Genesis
 
 		inline PhysicsWorld* getPhysicsWorld() { return this->physics_world; };
 
+		void setActiveCamera(Node* node) { this->active_camera = node; };
+		Node* getActiveCamrea() { return this->active_camera; };
+
 	private:
 		PhysicsWorld* physics_world = nullptr;
 
 		vector<Entity*> entities;
+
+		Node* active_camera = nullptr;
 	};
 }

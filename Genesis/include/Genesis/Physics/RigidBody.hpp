@@ -10,9 +10,11 @@ namespace Genesis
 		RigidBody();
 		~RigidBody();
 
+		inline bool inWorld() { return this->rigidbody != nullptr; };
+
 		void setStatic() { this->rigidbody->setType(reactphysics3d::BodyType::STATIC); };
 
-		reactphysics3d::ProxyShape* addCollisionShape(reactphysics3d::CollisionShape* collision_shape, const TransformD& transform);
+		reactphysics3d::ProxyShape* addCollisionShape(reactphysics3d::CollisionShape* collision_shape, const TransformF& transform);
 		void removeCollisionShape(reactphysics3d::ProxyShape* proxy_shape);
 
 		void setTransform(const TransformD& transform);

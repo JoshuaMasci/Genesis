@@ -7,36 +7,61 @@
 #include "Genesis/LegacyRendering/LegacyImGui.hpp"
 
 #include "Genesis/Rendering/Camera.hpp"
-#include "Genesis/Ecs/DebugCamera.hpp"
-#include "Genesis/Ecs/NameComponent.hpp"
+
+#include "Genesis/Entity/Entity.hpp"
+
+#include "Genesis/Physics/CollisionComponent.hpp"
+#include "Genesis/Entity/Mesh.hpp"
+
+#include "imgui.h"
+
+namespace Genesis
+{
+	Node* addNode(GltfNode* node, GltfModel* model)
+	{
+		Node* new_node = new Node(node->name);
+		new_node->setLocalTransform(node->local_transform);
+
+		if (node->mesh != nullptr)
+		{
+			new_node->addComponent<MeshComponent>(node->mesh);
+		}
+
+		for (auto child_nodes : node->child_nodes)
+		{
+			new_node->addChild(addNode(child_nodes, model));
+		}
+
+		return new_node;
+	}
+
+	Entity* LoadModelToWorld(GltfModel* model)
+	{
+		Entity* entity = new Entity(12, "Gltf_Model");
+		Node* entity_node = entity->getRootNode();
+
+		for (auto root_node : model->root_nodes)
+		{
+			entity_node->addChild(addNode(root_node, model));
+		}
+
+		return entity;
+	}
+}
 
 SandboxApplication::SandboxApplication()
 {
 	Genesis::Logging::console_sink->setConsoleWindow(&this->console_window);
 
 	this->platform = new Genesis::SDL2_Platform(this);
-	this->window = new Genesis::SDL2_Window(Genesis::vector2U(1600, 900), "Sandbox: ");
+	this->window = new Genesis::SDL2_Window(Genesis::vector2U(1600, 900), "Sandbox Editor");
 
 	this->legacy_backend = new Genesis::Opengl::OpenglBackend((Genesis::SDL2_Window*) window);
 	this->ui_renderer = new Genesis::LegacyImGui(this->legacy_backend, this->input_manager, this->window);
 
 	this->world = new Genesis::World();
 
-	/*this->ecs_world = new Genesis::EcsWorld();
-	this->ecs_world->physics_world = new Genesis::PhysicsWorld(Genesis::vector3D(0.0));
-	{
-		this->ecs_world->main_camera = this->ecs_world->entity_registry.create();
-		this->ecs_world->entity_registry.assign<Genesis::TransformD>(this->ecs_world->main_camera, Genesis::vector3D(0.0, 0.0, -20.0));
-		this->ecs_world->entity_registry.assign<Genesis::Camera>(this->ecs_world->main_camera, 77.0f);
-		this->ecs_world->entity_registry.assign<Genesis::DebugCamera>(this->ecs_world->main_camera, 5.0, 0.3);
-		this->ecs_world->entity_registry.assign<Genesis::NameComponent>(this->ecs_world->main_camera, "Main_Camera");
-	}
-
-	//Systems
-	{
-		this->physics_system = new Genesis::PhyscisSystem();
-		this->rendering_system = new Genesis::LegacyRenderingSystem(this->legacy_backend);
-	}*/
+	this->world_renderer = new Genesis::LegacyWorldRenderer(this->legacy_backend);
 
 	{
 		this->offscreen_size = Genesis::vector2U(1024);
@@ -89,11 +114,21 @@ SandboxApplication::SandboxApplication()
 
 		this->model = new Genesis::GltfModel(this->legacy_backend, gltfModel);
 
-		/*Genesis::EntityHandle entity = this->ecs_world->entity_registry.create();
-		this->ecs_world->entity_registry.assign<Genesis::TransformD>(entity);
-		this->ecs_world->entity_registry.assign<Genesis::PbrMesh>(entity, this->model->meshes[0]);
-		this->ecs_world->entity_registry.assign<Genesis::NameComponent>(entity, "Entity");*/
+		Genesis::Entity* entity = LoadModelToWorld(this->model);
+		this->world->addEntity(entity);
 	}
+
+	Genesis::Entity* entity = new Genesis::Entity(0);
+	this->world->addEntity(entity);
+	entity->createRigidbody();
+	entity->getRootNode()->createCollisionShape();
+	entity->getRootNode()->getCollisionShape()->updateShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(0.5, 0.5, 0.5)));
+
+	entity = new Genesis::Entity(1);
+	this->world->addEntity(entity);
+	entity->createRigidbody();
+	entity->getRootNode()->createCollisionShape();
+	entity->getRootNode()->getCollisionShape()->updateShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(0.5, 0.5, 0.5)));
 }
 
 SandboxApplication::~SandboxApplication()
@@ -102,11 +137,7 @@ SandboxApplication::~SandboxApplication()
 
 	delete this->world;
 
-	//delete this->rendering_system;
-	//delete this->physics_system;
-
-	//delete this->ecs_world->physics_world;
-	//delete this->ecs_world;
+	delete this->world_renderer;
 
 	this->legacy_backend->destoryFramebuffer(this->offscreen_framebuffer);
 	delete this->legacy_backend;
@@ -121,8 +152,6 @@ void SandboxApplication::update(Genesis::TimeStep time_step)
 
 	this->world->runSimulation(this, time_step);
 }
-
-#include "imgui.h"
 
 void SandboxApplication::render(Genesis::TimeStep time_step)
 {
@@ -192,7 +221,7 @@ void SandboxApplication::render(Genesis::TimeStep time_step)
 		this->legacy_backend->clearFramebuffer(true, true);
 
 		//TODO render here
-		//this->rendering_system->render(this->offscreen_size, this->ecs_world, time_step);
+		this->world_renderer->drawWorld(this->offscreen_framebuffer, this->offscreen_size, this->world);
 
 		this->legacy_backend->bindFramebuffer(nullptr);
 
@@ -202,7 +231,7 @@ void SandboxApplication::render(Genesis::TimeStep time_step)
 
 	this->console_window.drawWindow();
 	this->world_view_window.drawWindow(this->world);
-	//this->entity_properties_window.drawWindow(this->ecs_world, this->world_view_window.selected_entity);
+	this->entity_properties_window.drawWindow(this->world_view_window.selected_entity_ptr);
 
 	this->ui_renderer->endFrame();
 

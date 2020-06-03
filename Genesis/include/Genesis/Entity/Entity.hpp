@@ -7,7 +7,7 @@ namespace Genesis
 	//Prototype Defintions;
 	class World;
 	class RigidBody;
-	class CollisionShape;
+	class CollisionComponent;
 
 	typedef uint64_t EntityId;
 	const EntityId InvalidEntity = 0;
@@ -25,9 +25,10 @@ namespace Genesis
 		void setName(const string& new_name) { this->name = new_name; };
 
 		TransformD getWorldTransform();
-		void setTransform(const TransformD& transform);
+		void setWorldTransform(const TransformD& transform);
 
 		inline World* getWorld() { return this->world; };
+		inline Node* getRootNode() { return this->root_node; };
 
 		void createRigidbody();
 		void removeRigidbody();
@@ -36,6 +37,9 @@ namespace Genesis
 		RigidBody* getRigidbody() { return this->rigidbody; };
 
 	protected:
+		void addtoWorld(World* world);
+		void removeFromWorld();
+
 		//Entity Info
 		EntityId id = InvalidEntity;
 		string name;
@@ -45,9 +49,7 @@ namespace Genesis
 
 		//Hierarchy Info 
 		World* world = nullptr;
-
-		void addtoWorld(World* world);
-		void removeFromWorld();
+		Node* root_node = nullptr;
 
 		RigidBody* rigidbody = nullptr;
 	};
@@ -56,14 +58,26 @@ namespace Genesis
 	{
 		friend class Entity;
 	public:
+		Node(string name = "");
+		~Node();
 
-		inline TransformD getLocalTransform() { return this->local_transform; };
-		inline TransformD getRootTransform() { return this->root_transform; };
-		inline TransformD getGlobalTransform() { return this->root_transform; };//TODO
+		const inline string getName() { return this->name; };
+		void setName(const string& new_name) { this->name = new_name; };
+
+		void setLocalTransform(const TransformF& transform);
+		inline TransformF getLocalTransform() { return this->local_transform; };
+		inline TransformF getRootTransform() { return this->root_transform; };
+		TransformD getGlobalTransform();
+
+		inline Entity* getRootEntity() { return this->root; };
 
 		void addChild(Node* child);
 		void removeChild(Node* child);
 		inline const vector<Node*>& getChildren() { return this->children; };
+
+		void createCollisionShape();
+		void removeCollisionShape();
+		inline CollisionComponent* getCollisionShape() { return this->collision_shape; };
 
 		template<typename T, typename... TArgs> T* addComponent(TArgs&&... mArgs)
 		{
@@ -72,16 +86,16 @@ namespace Genesis
 				Component* component = new T(this, std::forward<TArgs>(mArgs)...);
 				this->component_map[typeid(T).hash_code()] = component;
 
-				if (this->world != nullptr)
+				if (this->root != nullptr && this->root->getWorld() != nullptr)
 				{
-					component->addtoWorld(this->world);
+					component->addtoWorld(this->root->getWorld());
 				}
 
 				return (T*)component;
 			}
 			else
 			{
-				GENESIS_ENGINE_ERROR("{}:{} already has {}", this->id, this->name, typeid(T).name());
+				GENESIS_ENGINE_ERROR("{} already has {}", this->name, typeid(T).name());
 				return nullptr;
 			}
 		};
@@ -106,7 +120,7 @@ namespace Genesis
 			{
 				size_t type = typeid(T).hash_code();
 
-				if (this->world != nullptr)
+				if (this->root != nullptr && this->root->getWorld() != nullptr)
 				{
 					this->component_map[type]->removeFromWorld();
 				}
@@ -116,10 +130,17 @@ namespace Genesis
 		};
 
 	protected:
+		void addtoWorld(World* world);
+		void removeFromWorld();
+		void updateTransform();
+
+		void addToEntity();
+		void removeFromEntity();
+
 		string name;
 
-		TransformD local_transform;
-		TransformD root_transform;//relative to root
+		TransformF local_transform;
+		TransformF root_transform;//relative to root
 
 		Entity* root = nullptr;
 
@@ -127,6 +148,7 @@ namespace Genesis
 		vector<Node*> children;
 
 		//Components
+		CollisionComponent* collision_shape;
 		map<size_t, Component*> component_map;
 	};
 

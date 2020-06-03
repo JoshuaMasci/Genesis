@@ -24,7 +24,6 @@ namespace Genesis
 		//Utils
 		void setTransform(const matrix4F& matrix);
 
-		TransformF transformBy(const TransformF& transform1) const;
 		matrix4F getModelMatrix() const;
 		matrix4F getViewMatirx() const;
 		matrix3F getNormalMatrix() const;
@@ -54,10 +53,6 @@ namespace Genesis
 		inline void setOrientation(const quaternionD& quat) { this->orientation = quat; this->dirty = true; };
 		inline void setScale(const vector3D& vec) { this->scale = vec; this->dirty = true; };
 
-		//Utils
-		//TransformD transformBy(const TransformD& transform1) const;
-		void transformByInplace(const TransformD& parent, const TransformD& child);
-
 		matrix4F getModelMatrix(const vector3D& position_offset = vector3D(0.0));
 		matrix3F getNormalMatrix();
 		matrix4F getViewMatirx(const vector3D& position_offset = vector3D(0.0));
@@ -71,5 +66,13 @@ namespace Genesis
 
 		bool dirty;
 		matrix4F untranslated_model_matrix;
+	};
+
+	class TransformUtils
+	{
+	public:
+		static void transformByInplace(TransformF& destination, const TransformF& parent, const TransformF& child);
+		static void transformByInplace(TransformD& destination, const TransformD& parent, const TransformD& child);
+		static TransformD transformBy(const TransformD& parent, const TransformF& child);
 	};
 };
