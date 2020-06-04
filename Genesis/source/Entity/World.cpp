@@ -32,7 +32,7 @@ namespace Genesis
 
 		for (Entity* entity : this->entities)
 		{
-			//entity->updateTransform();
+			entity->onUpdate(time_step);
 		}
 	}
 

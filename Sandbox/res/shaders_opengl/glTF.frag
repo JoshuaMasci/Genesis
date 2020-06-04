@@ -24,13 +24,16 @@ struct Material
 	int normal_uv;	
 	int occlusion_uv;
 	int emissive_uv;
+	
+	// albedo_texture
+	// normal_texture
+	// metallic_roughness_texture
+	// occlusion_texture
+	// emissive_texture
+	sampler2D material_textures[5];
 };
 uniform Material material;
-// albedo_texture
-// normal_texture
-// metallic_roughness_texture
-// occlusion_texture
-// emissive_texture
+
 uniform sampler2D material_textures[5];
 
 layout(location = 0) out vec4 out_color;
@@ -39,7 +42,7 @@ void main()
 	vec4 albedo = material.albedo;
 	if (material.albedo_uv > -1) 
 	{
-		albedo *= texture(material_textures[0], material.albedo_uv == 0 ? frag_uv0 : frag_uv1);
+		albedo *= texture(material.material_textures[0], material.albedo_uv == 0 ? frag_uv0 : frag_uv1);
 	}
 	out_color = albedo;
 }

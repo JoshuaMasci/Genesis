@@ -1,5 +1,0 @@
-//light_ambient.slib
-vec4 calcLightColor(vec3 normal, vec3 position)
-{
-	return vec4(environment.ambient_light, 1.0);
-}

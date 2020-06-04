@@ -1,8 +1,0 @@
-//light_point.slib
-
-uniform PointLight point_light;
-
-vec4 calcLightColor(vec3 normal, vec3 position)
-{
-	return CalcPointLight(point_light, normal, position);
-}

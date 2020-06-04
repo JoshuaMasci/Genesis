@@ -383,8 +383,8 @@ namespace Genesis
 					device->addAxis("Debug_Pitch", AxisSettings(3, 0.1, false));
 					device->addAxis("Debug_Yaw", AxisSettings(2, 0.1, true));
 
-					device->addButton("Debug_RollLeft", (ButtonIndex)10);
-					device->addButton("Debug_RollRight", (ButtonIndex)9);
+					device->addButton("Debug_RollLeft", (ButtonIndex)9);
+					device->addButton("Debug_RollRight", (ButtonIndex)10);
 
 					device->addAxis("Debug_ForwardBackward", AxisSettings(1, 0.1, true));
 					device->addAxis("Debug_LeftRight", AxisSettings(0, 0.1, true));

@@ -72,6 +72,11 @@ namespace Genesis
 		}
 	}
 
+	void Entity::onUpdate(TimeStep time_step)
+	{
+		this->root_node->onUpdate(time_step);
+	}
+
 	void Entity::addtoWorld(World* world)
 	{
 		GENESIS_ENGINE_ASSERT_ERROR(world != nullptr, ("{}:{} tried to join a null world", this->id, this->name));
@@ -265,6 +270,19 @@ namespace Genesis
 	void Node::removeCollisionShape()
 	{
 		delete this->collision_shape;
+	}
+
+	void Node::onUpdate(TimeStep time_step)
+	{
+		for (auto component : this->component_map)
+		{
+			component.second->onUpdate(time_step);
+		}
+
+		for (auto child : this->children)
+		{
+			child->onUpdate(time_step);
+		}
 	}
 
 	void Node::addtoWorld(World* world)

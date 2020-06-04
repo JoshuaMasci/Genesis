@@ -36,6 +36,8 @@ namespace Genesis
 		bool hasRigidbody() { return this->rigidbody != nullptr; };
 		RigidBody* getRigidbody() { return this->rigidbody; };
 
+		void onUpdate(TimeStep time_step);
+
 	protected:
 		void addtoWorld(World* world);
 		void removeFromWorld();
@@ -128,6 +130,8 @@ namespace Genesis
 				this->component_map.erase(type);
 			}
 		};
+
+		void onUpdate(TimeStep time_step);
 
 	protected:
 		void addtoWorld(World* world);

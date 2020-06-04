@@ -12,6 +12,7 @@
 
 #include "Genesis/Physics/CollisionComponent.hpp"
 #include "Genesis/Entity/Mesh.hpp"
+#include "Genesis/Entity/DebugCamera.hpp"
 
 #include "imgui.h"
 
@@ -60,6 +61,7 @@ SandboxApplication::SandboxApplication()
 	this->ui_renderer = new Genesis::LegacyImGui(this->legacy_backend, this->input_manager, this->window);
 
 	this->world = new Genesis::World();
+	this->secondary_world = new Genesis::World();
 
 	this->world_renderer = new Genesis::LegacyWorldRenderer(this->legacy_backend);
 
@@ -73,6 +75,7 @@ SandboxApplication::SandboxApplication()
 		create_info.depth_attachment = &depth_attachment;
 		create_info.size = this->offscreen_size;
 		this->offscreen_framebuffer = this->legacy_backend->createFramebuffer(create_info);
+		this->secondary_framebuffer = this->legacy_backend->createFramebuffer(create_info);
 	}
 
 	{
@@ -115,27 +118,128 @@ SandboxApplication::SandboxApplication()
 		this->model = new Genesis::GltfModel(this->legacy_backend, gltfModel);
 
 		Genesis::Entity* entity = LoadModelToWorld(this->model);
+		this->secondary_world->addEntity(entity);
+	}
+
+	{
+		Genesis::string file_name = "res/Porthole.glb";
+
+		tinygltf::Model gltfModel;
+		tinygltf::TinyGLTF loader;
+		Genesis::string error;
+		Genesis::string warning;
+		bool return_value;
+
+		if (file_name.substr(file_name.find_last_of(".") + 1) == "gltf")
+		{
+			return_value = loader.LoadASCIIFromFile(&gltfModel, &error, &warning, file_name);
+		}
+		else if (file_name.substr(file_name.find_last_of(".") + 1) == "glb")
+		{
+			return_value = loader.LoadBinaryFromFile(&gltfModel, &error, &warning, file_name);
+		}
+		else
+		{
+			GENESIS_ENGINE_ERROR("Unknown File extension");
+		}
+
+		if (!error.empty())
+		{
+			GENESIS_ENGINE_ERROR("Error: {}", error);
+		}
+
+		if (!warning.empty())
+		{
+			GENESIS_ENGINE_WARNING("Warning: {}", warning);
+		}
+
+		if (!return_value)
+		{
+			GENESIS_ENGINE_CRITICAL("Failed to parse glTF");
+		}
+
+		this->cube_model = new Genesis::GltfModel(this->legacy_backend, gltfModel);
+		Genesis::Entity* entity = LoadModelToWorld(this->cube_model);
 		this->world->addEntity(entity);
 	}
 
-	Genesis::Entity* entity = new Genesis::Entity(0);
-	this->world->addEntity(entity);
-	entity->createRigidbody();
-	entity->getRootNode()->createCollisionShape();
-	entity->getRootNode()->getCollisionShape()->updateShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(0.5, 0.5, 0.5)));
+	{
+		Genesis::string file_name = "res/Porthole_Inside.glb";
 
-	entity = new Genesis::Entity(1);
-	this->world->addEntity(entity);
-	entity->createRigidbody();
-	entity->getRootNode()->createCollisionShape();
-	entity->getRootNode()->getCollisionShape()->updateShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(0.5, 0.5, 0.5)));
+		tinygltf::Model gltfModel;
+		tinygltf::TinyGLTF loader;
+		Genesis::string error;
+		Genesis::string warning;
+		bool return_value;
+
+		if (file_name.substr(file_name.find_last_of(".") + 1) == "gltf")
+		{
+			return_value = loader.LoadASCIIFromFile(&gltfModel, &error, &warning, file_name);
+		}
+		else if (file_name.substr(file_name.find_last_of(".") + 1) == "glb")
+		{
+			return_value = loader.LoadBinaryFromFile(&gltfModel, &error, &warning, file_name);
+		}
+		else
+		{
+			GENESIS_ENGINE_ERROR("Unknown File extension");
+		}
+
+		if (!error.empty())
+		{
+			GENESIS_ENGINE_ERROR("Error: {}", error);
+		}
+
+		if (!warning.empty())
+		{
+			GENESIS_ENGINE_WARNING("Warning: {}", warning);
+		}
+
+		if (!return_value)
+		{
+			GENESIS_ENGINE_CRITICAL("Failed to parse glTF");
+		}
+
+		this->inside_model = new Genesis::GltfModel(this->legacy_backend, gltfModel);
+		Genesis::Entity* entity = LoadModelToWorld(this->inside_model);
+		this->secondary_world->addEntity(entity);
+	}
+
+	{
+		Genesis::Entity* camera = new Genesis::Entity(0, "Main Camera");
+		camera->setWorldTransform(Genesis::vector3D(0.0, 0.0, -10.0));
+		camera->getRootNode()->addComponent<Genesis::DebugCamera1>(5.0, 0.3, this->input_manager);
+		this->world->addEntity(camera);
+		this->world->setActiveCamera(camera->getRootNode());
+
+		/*Genesis::Entity* entity = new Genesis::Entity(0);
+		this->world->addEntity(entity);
+		entity->createRigidbody();
+		entity->getRootNode()->createCollisionShape();
+		entity->getRootNode()->getCollisionShape()->updateShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(2.0, 2.0, 2.0)));
+		entity->getRootNode()->addComponent<Genesis::MeshComponent>(&this->cube_model->meshes[0]);
+		entity->getRootNode()->setLocalTransform(Genesis::TransformF(Genesis::vector3F(), Genesis::quaternionF(), Genesis::vector3F(2.0f)));
+
+		entity = new Genesis::Entity(1);
+		this->world->addEntity(entity);
+		entity->createRigidbody();
+		entity->getRootNode()->createCollisionShape();
+		entity->getRootNode()->getCollisionShape()->updateShape(new reactphysics3d::BoxShape(reactphysics3d::Vector3(1.0, 1.0, 1.0)));
+		entity->getRootNode()->addComponent<Genesis::MeshComponent>(&this->cube_model->meshes[0]);*/
+	}
+
+	{
+
+	}
 }
 
 SandboxApplication::~SandboxApplication()
 {
 	delete this->model;
+	delete this->cube_model;
 
 	delete this->world;
+	delete this->secondary_world;
 
 	delete this->world_renderer;
 
@@ -151,6 +255,7 @@ void SandboxApplication::update(Genesis::TimeStep time_step)
 	Genesis::Application::update(time_step);
 
 	this->world->runSimulation(this, time_step);
+	this->secondary_world->runSimulation(this, time_step);
 }
 
 void SandboxApplication::render(Genesis::TimeStep time_step)
@@ -193,6 +298,11 @@ void SandboxApplication::render(Genesis::TimeStep time_step)
 		ImGui::End();
 	}
 
+	static bool value = true;
+	ImGui::Begin("Box");
+	ImGui::Checkbox("View", &value);
+	ImGui::End();
+
 	{
 		ImGui::Begin("GameView");
 		ImVec2 vMin = ImGui::GetWindowContentRegionMin();
@@ -215,17 +325,29 @@ void SandboxApplication::render(Genesis::TimeStep time_step)
 			create_info.depth_attachment = &depth_attachment;
 			create_info.size = this->offscreen_size;
 			this->offscreen_framebuffer = this->legacy_backend->createFramebuffer(create_info);
+			this->secondary_framebuffer = this->legacy_backend->createFramebuffer(create_info);
 		}
 
-		this->legacy_backend->bindFramebuffer(this->offscreen_framebuffer);
-		this->legacy_backend->clearFramebuffer(true, true);
+		{
+			Genesis::Node* camera_node = world->getActiveCamrea();
 
-		//TODO render here
-		this->world_renderer->drawWorld(this->offscreen_framebuffer, this->offscreen_size, this->world);
+			Genesis::Camera camera = Genesis::Camera(95.0f);
+			Genesis::TransformD camera_transform = camera_node->getGlobalTransform();
 
-		this->legacy_backend->bindFramebuffer(nullptr);
+			this->world_renderer->drawWorld(this->secondary_framebuffer, this->offscreen_size, this->secondary_world, camera, camera_transform);
 
-		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->offscreen_framebuffer, 0), window_size, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+			this->world_renderer->drawWorldWithWindow(this->offscreen_framebuffer, this->offscreen_size, this->world, camera, camera_transform, &this->cube_model->meshes[1], Genesis::TransformD(), this->legacy_backend->getFramebufferColorAttachment(this->secondary_framebuffer, 0));
+		}
+
+		if (value)
+		{
+			ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->offscreen_framebuffer, 0), window_size, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+		}
+		else
+		{
+			ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->secondary_framebuffer, 0), window_size, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+		}
+
 		ImGui::End();
 	}
 

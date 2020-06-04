@@ -25,11 +25,13 @@ protected:
 	Genesis::LegacyBackend* legacy_backend;
 
 	Genesis::World* world;
+	Genesis::World* secondary_world;
 
 	Genesis::BaseImGui* ui_renderer;
 	
 	Genesis::vector2U offscreen_size;
 	Genesis::Framebuffer offscreen_framebuffer;
+	Genesis::Framebuffer secondary_framebuffer;
 
 	Genesis::ConsoleWindow console_window;
 	Genesis::WorldViewWindow world_view_window;
@@ -38,6 +40,8 @@ protected:
 	Genesis::LegacyWorldRenderer* world_renderer;
 
 	Genesis::GltfModel* model;
+	Genesis::GltfModel* cube_model;
+	Genesis::GltfModel* inside_model;
 };
 
 

@@ -461,7 +461,14 @@ namespace Genesis
 				new_primitive.material_index = primitive.material;
 				new_primitive.bounding_box = { position_min, position_max };
 
-				new_primitive.temp_material_ptr = &this->materials[primitive.material];
+				if (primitive.material > -1)
+				{
+					new_primitive.temp_material_ptr = &this->materials[primitive.material];
+				}
+				else
+				{
+					new_primitive.temp_material_ptr = &this->materials.back();
+				}
 			}
 
 			for (auto primitive : new_mesh.primitives)
