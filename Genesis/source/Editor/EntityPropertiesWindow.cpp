@@ -49,6 +49,13 @@ namespace Genesis
 						has_changed_transform = true;
 					}
 
+					vector3D scale = local_transform.getScale();
+					if (ImGui::InputScalarN("World Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
+					{
+						local_transform.setScale(scale);
+						has_changed_transform = true;
+					}
+
 					if (has_changed_transform)
 					{
 						selected_entity->setWorldTransform(local_transform);

@@ -364,6 +364,11 @@ namespace Genesis
 
 		void OpenglBackend::destoryFramebuffer(Framebuffer framebuffer)
 		{
+			if (framebuffer == nullptr)
+			{
+				return;
+			}
+
 			OpenglFramebuffer* opengl_framebuffer = (OpenglFramebuffer*)framebuffer;
 
 			for (size_t i = 0; i < opengl_framebuffer->attachements.size(); i++)

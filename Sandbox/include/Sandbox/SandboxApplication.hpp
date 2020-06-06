@@ -30,8 +30,6 @@ protected:
 	Genesis::BaseImGui* ui_renderer;
 	
 	Genesis::vector2U offscreen_size;
-	Genesis::Framebuffer offscreen_framebuffer;
-	Genesis::Framebuffer secondary_framebuffer;
 
 	Genesis::ConsoleWindow console_window;
 	Genesis::WorldViewWindow world_view_window;

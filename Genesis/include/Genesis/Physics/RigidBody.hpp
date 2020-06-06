@@ -18,7 +18,7 @@ namespace Genesis
 		void removeCollisionShape(reactphysics3d::ProxyShape* proxy_shape);
 
 		void setTransform(const TransformD& transform);
-		TransformD getTransform();
+		void getTransform(TransformD& transform);
 
 		void setLinearVelocity(const vector3D& velocity);
 		vector3D getLinearVelocity();

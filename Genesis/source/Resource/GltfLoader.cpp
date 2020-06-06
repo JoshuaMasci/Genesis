@@ -302,7 +302,7 @@ namespace Genesis
 			tinygltf::Mesh mesh = gltfModel.meshes[mesh_index];
 			PbrMesh& new_mesh = this->meshes[mesh_index];
 
-			vector<PbrMeshVertex> vertex_buffer;
+			vector<PbrMeshVertexAnimated> vertex_buffer;
 			vector<uint32_t> index_buffer;
 
 			new_mesh.primitives.resize(mesh.primitives.size());
@@ -393,7 +393,7 @@ namespace Genesis
 					vertex_buffer.resize(vertex_start + position_accessor.count);
 					for (size_t vertex_index = 0; vertex_index < position_accessor.count; vertex_index++)
 					{
-						PbrMeshVertex vertex{};
+						PbrMeshVertexAnimated vertex{};
 						vertex.position = vector4F(glm::make_vec3(&buffer_postion[vertex_index * position_byte_stride]), 1.0f);
 						vertex.normal = glm::normalize(vector3F(buffer_normals ? glm::make_vec3(&buffer_normals[vertex_index * normal_byte_stride]) : vector3F(0.0f)));
 						vertex.uv0 = buffer_uv0 ? glm::make_vec2(&buffer_uv0[vertex_index * uv0_byte_stride]) : vector3F(0.0f);
@@ -490,7 +490,7 @@ namespace Genesis
 			create_info.input_elements = elements.data();
 			create_info.input_elements_count = (uint32_t)elements.size();
 
-			new_mesh.vertex_buffer = this->backend->createVertexBuffer(vertex_buffer.data(), vertex_buffer.size() * sizeof(PbrMeshVertex), create_info);
+			new_mesh.vertex_buffer = this->backend->createVertexBuffer(vertex_buffer.data(), vertex_buffer.size() * sizeof(PbrMeshVertexAnimated), create_info);
 			new_mesh.index_buffer = this->backend->createIndexBuffer(index_buffer.data(), index_buffer.size() * sizeof(uint32_t), IndexType::uint32);
 		}
 	}

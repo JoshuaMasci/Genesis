@@ -20,6 +20,8 @@ namespace Genesis
 		Entity(EntityId id, string name);
 		~Entity();
 
+		void onUpdate(TimeStep time_step);
+
 		const inline EntityId getId() { return this->id; };
 		const inline string getName() { return this->name; };
 		void setName(const string& new_name) { this->name = new_name; };
@@ -36,7 +38,9 @@ namespace Genesis
 		bool hasRigidbody() { return this->rigidbody != nullptr; };
 		RigidBody* getRigidbody() { return this->rigidbody; };
 
-		void onUpdate(TimeStep time_step);
+		bool hasSubworld() { return this->subworld != nullptr; };
+		World* getSubworld() { return this->subworld; };
+		void setSubworld(World* world) { GENESIS_ENGINE_ASSERT_ERROR(!this->hasSubworld(), ("{} already has subworld", this->name)); this->subworld = world; };
 
 	protected:
 		void addtoWorld(World* world);
@@ -54,6 +58,8 @@ namespace Genesis
 		Node* root_node = nullptr;
 
 		RigidBody* rigidbody = nullptr;
+
+		World* subworld = nullptr;
 	};
 
 	class Node
@@ -62,6 +68,8 @@ namespace Genesis
 	public:
 		Node(string name = "");
 		~Node();
+
+		void onUpdate(TimeStep time_step);
 
 		const inline string getName() { return this->name; };
 		void setName(const string& new_name) { this->name = new_name; };
@@ -130,8 +138,6 @@ namespace Genesis
 				this->component_map.erase(type);
 			}
 		};
-
-		void onUpdate(TimeStep time_step);
 
 	protected:
 		void addtoWorld(World* world);

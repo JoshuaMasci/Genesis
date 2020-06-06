@@ -15,16 +15,20 @@ namespace Genesis
 
 		void runSimulation(Application* application, TimeStep time_step);
 
+		inline PhysicsWorld* getPhysicsWorld() { return this->physics_world; };
+
 		void addEntity(Entity* entity);
 		void removeEntity(Entity* entity);
 		inline const vector<Entity*>& getEntities() { return this->entities; };
 
-		inline PhysicsWorld* getPhysicsWorld() { return this->physics_world; };
-
 		void setActiveCamera(Node* node) { this->active_camera = node; };
 		Node* getActiveCamrea() { return this->active_camera; };
 
+		TransformD getWorldOrgin();
+
 	private:
+		Entity* parent_entity = nullptr;
+
 		PhysicsWorld* physics_world = nullptr;
 
 		vector<Entity*> entities;

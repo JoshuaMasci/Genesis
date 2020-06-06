@@ -31,11 +31,16 @@ namespace Genesis
 		delete this->rigidbody;
 	}
 
+	void Entity::onUpdate(TimeStep time_step)
+	{
+		this->root_node->onUpdate(time_step);
+	}
+
 	TransformD Entity::getWorldTransform()
 	{
 		if (this->rigidbody != nullptr && this->rigidbody->inWorld())
 		{
-			this->world_transform = this->rigidbody->getTransform();
+			this->rigidbody->getTransform(this->world_transform);
 		}
 
 		return this->world_transform;
@@ -43,11 +48,19 @@ namespace Genesis
 
 	void Entity::setWorldTransform(const TransformD& transform)
 	{
+		vector3D old_scale = this->world_transform.getScale();
+
 		this->world_transform = transform;
 
 		if (this->rigidbody != nullptr && this->rigidbody->inWorld())
 		{
 			this->rigidbody->setTransform(this->world_transform);
+		}
+		
+		//Scale has changed
+		if (old_scale != transform.getScale())
+		{
+			this->root_node->updateTransform();
 		}
 	}
 
@@ -70,11 +83,6 @@ namespace Genesis
 		{
 			this->world->getPhysicsWorld()->removeEntity(this);
 		}
-	}
-
-	void Entity::onUpdate(TimeStep time_step)
-	{
-		this->root_node->onUpdate(time_step);
 	}
 
 	void Entity::addtoWorld(World* world)
@@ -101,85 +109,6 @@ namespace Genesis
 		this->world = nullptr;
 	}
 
-	/*void Entity::updateTransform(TransformDirtyFlag parent_flag)
-	{
-		TransformDirtyFlag entity_flag = TransformDirtyFlag::None;
-
-		if (this->isRoot())
-		{
-			//Update rigidbody position
-			if (this->rigidbody != nullptr && this->rigidbody->getHandle() != nullptr)
-			{
-				TransformD transform = this->rigidbody->getTransform();
-				if (transform.getPosition() != this->local_transform.getPosition())
-				{
-					this->setLocalPosition(transform.getPosition());
-				}
-
-				if (transform.getOrientation() != this->local_transform.getOrientation())
-				{
-					this->setLocalOrientation(transform.getOrientation());
-				}
-			}
-
-			if (this->transform_dirty)
-			{
-				this->global_transform = this->local_transform;
-				entity_flag = TransformDirtyFlag::Global;
-				this->transform_dirty = false;
-
-				//if scale changed
-				if (this->local_transform.getScale() != this->root_transform.getScale())
-				{
-					this->root_transform = TransformD(vector3D(0.0), quaternionD(1.0, 0.0, 0.0, 0.0), this->local_transform.getScale());
-
-					//Force update of all root transforms
-					entity_flag = TransformDirtyFlag::All;
-				}
-			}
-		}
-		else
-		{
-			if (this->transform_dirty || parent_flag == TransformDirtyFlag::All)
-			{
-				this->global_transform.transformByInplace(this->parent->global_transform, this->local_transform);
-				this->root_transform.transformByInplace(this->parent->root_transform, this->local_transform);
-				entity_flag = TransformDirtyFlag::All;
-				this->transform_dirty = false;
-			}
-			else if (parent_flag == TransformDirtyFlag::Global)
-			{
-				this->global_transform.transformByInplace(this->parent->global_transform, this->local_transform);
-				entity_flag = TransformDirtyFlag::Global;
-			}
-		}
-
-		if (entity_flag != TransformDirtyFlag::None)
-		{
-			this->onTransformUpdate(entity_flag);
-		}
-
-		for (Entity* child : this->children)
-		{
-			child->updateTransform(entity_flag);
-		}
-	}
-
-	void Entity::onTransformUpdate(TransformDirtyFlag transform_dirty)
-	{
-		//GENESIS_ENGINE_INFO("{}:{} transform dirty {}", this->id, this->name, transform_dirty);
-
-		for (auto component : this->component_map)
-		{
-			component.second->onTransformUpdate();
-		}
-
-		if (this->rigidbody != nullptr)
-		{
-			this->rigidbody->setTransform(this->local_transform);
-		}
-	}*/
-
 	Node::Node(string name)
 		:name(name)
 	{
@@ -199,6 +128,19 @@ namespace Genesis
 		}
 	}
 
+	void Node::onUpdate(TimeStep time_step)
+	{
+		for (auto component : this->component_map)
+		{
+			component.second->onUpdate(time_step);
+		}
+
+		for (auto child : this->children)
+		{
+			child->onUpdate(time_step);
+		}
+	}
+
 	void Node::setLocalTransform(const TransformF& transform)
 	{
 		this->local_transform = transform;
@@ -208,7 +150,11 @@ namespace Genesis
 	TransformD Node::getGlobalTransform()
 	{
 		GENESIS_ENGINE_ASSERT_ERROR(this->root != nullptr, ("{} must be attached to entity to have global transform", this->name));
-		return TransformUtils::transformBy(this->root->getWorldTransform(), this->root_transform);
+
+		//Don't apply scale since it is applied at the root node
+		TransformD world_transform = this->root->getWorldTransform();
+		world_transform.setScale(vector3D(1.0f));
+		return TransformUtils::transformBy(world_transform, this->root_transform);
 	}
 
 	void Node::addChild(Node* child)
@@ -272,19 +218,6 @@ namespace Genesis
 		delete this->collision_shape;
 	}
 
-	void Node::onUpdate(TimeStep time_step)
-	{
-		for (auto component : this->component_map)
-		{
-			component.second->onUpdate(time_step);
-		}
-
-		for (auto child : this->children)
-		{
-			child->onUpdate(time_step);
-		}
-	}
-
 	void Node::addtoWorld(World* world)
 	{
 		for (auto component : this->component_map)
@@ -317,9 +250,16 @@ namespace Genesis
 		{
 			TransformUtils::transformByInplace(this->root_transform, this->parent->root_transform, this->local_transform);
 		}
+		else if (this->parent == nullptr && this->root != nullptr)
+		{
+			//Only apply scale
+			TransformF parent_transform;
+			parent_transform.setScale((vector3F)this->root->getWorldTransform().getScale());
+			TransformUtils::transformByInplace(this->root_transform, parent_transform, this->local_transform);
+		}
 		else
 		{
-			this->root_transform = this->local_transform;
+			this->root_transform = this->root_transform;
 		}
 
 		for (auto child : this->children)

@@ -89,26 +89,33 @@ namespace Genesis
 		this->dirty = false;
 	}
 
-	void TransformUtils::transformByInplace(TransformF& destination, const TransformF& parent, const TransformF& child)
+	void TransformUtils::transformByInplace(TransformF& destination, const TransformF& origin, const TransformF& local)
 	{
-		destination.setPosition(parent.getPosition() + (parent.getOrientation() * (child.getPosition() * parent.getScale())));
-		destination.setOrientation(parent.getOrientation() * child.getOrientation());
-		destination.setScale(parent.getScale() * child.getScale());
+		destination.setPosition(origin.getPosition() + (origin.getOrientation() * (local.getPosition() * origin.getScale())));
+		destination.setOrientation(origin.getOrientation() * local.getOrientation());
+		destination.setScale(origin.getScale() * local.getScale());
 	}
 
-	void TransformUtils::transformByInplace(TransformD& destination, const TransformD& parent, const TransformD& child)
+	void TransformUtils::transformByInplace(TransformD& destination, const TransformD& origin, const TransformD& local)
 	{
-		destination.setPosition(parent.getPosition() + (parent.getOrientation() * (child.getPosition() * parent.getScale())));
-		destination.setOrientation(parent.getOrientation() * child.getOrientation());
-		destination.setScale(parent.getScale() * child.getScale());
+		destination.setPosition(origin.getPosition() + (origin.getOrientation() * (local.getPosition() * origin.getScale())));
+		destination.setOrientation(origin.getOrientation() * local.getOrientation());
+		destination.setScale(origin.getScale() * local.getScale());
 	}
 
-	TransformD TransformUtils::transformBy(const TransformD& parent, const TransformF& child)
+	TransformD TransformUtils::transformBy(const TransformD& origin, const TransformF& local)
 	{
 		TransformD transform;
-		transform.setPosition(parent.getPosition() + (parent.getOrientation() * ((vector3D)child.getPosition() * parent.getScale())));
-		transform.setOrientation(parent.getOrientation() * (quaternionD)child.getOrientation());
-		transform.setScale(parent.getScale() * (vector3D)child.getScale());
+		transform.setPosition(origin.getPosition() + (origin.getOrientation() * ((vector3D)local.getPosition() * origin.getScale())));
+		transform.setOrientation(origin.getOrientation() * (quaternionD)local.getOrientation());
+		transform.setScale(origin.getScale() * (vector3D)local.getScale());
 		return transform;
+	}
+
+	void TransformUtils::untransformByInplace(TransformD& destination, const TransformD& origin, const TransformD& global)
+	{
+		destination.setPosition((glm::inverse(origin.getOrientation()) * (global.getPosition() - origin.getPosition())) / origin.getScale());
+		destination.setOrientation(glm::inverse(origin.getOrientation()) * global.getOrientation());
+		destination.setScale(global.getScale() / origin.getScale());
 	}
 }

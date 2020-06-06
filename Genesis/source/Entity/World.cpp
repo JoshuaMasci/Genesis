@@ -66,4 +66,16 @@ namespace Genesis
 
 		GENESIS_ENGINE_ERROR("{}:{} is not in world", entity->id, entity->name);
 	}
+
+	TransformD World::getWorldOrgin()
+	{
+		if (this->parent_entity != nullptr)
+		{
+			return this->parent_entity->getWorldTransform();
+		}
+		else
+		{
+			return TransformD();
+		}
+	}
 }

@@ -27,10 +27,11 @@ namespace Genesis
 		this->rigidbody->setTransform(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())));
 	}
 
-	TransformD RigidBody::getTransform()
+	void RigidBody::getTransform(TransformD& transform)
 	{
 		const reactphysics3d::Transform& transform_r = this->rigidbody->getTransform();
-		return TransformD(toVec3D(transform_r.getPosition()), toQuatD(transform_r.getOrientation()));
+		transform.setPosition(toVec3D(transform_r.getPosition()));
+		transform.setOrientation(toQuatD(transform_r.getOrientation()));
 	}
 
 	void RigidBody::setLinearVelocity(const vector3D& velocity)

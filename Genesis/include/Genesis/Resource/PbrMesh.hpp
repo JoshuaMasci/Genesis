@@ -8,7 +8,15 @@ namespace Genesis
 {
 	struct PbrMaterial;
 
-	struct PbrMeshVertex
+	struct PbrMeshVertexStatic
+	{
+		vector3F position;
+		vector3F normal;
+		vector2F uv0;
+		vector2F uv1;
+	};
+
+	struct PbrMeshVertexAnimated
 	{
 		vector3F position;
 		vector3F normal;

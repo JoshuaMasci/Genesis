@@ -71,8 +71,10 @@ namespace Genesis
 	class TransformUtils
 	{
 	public:
-		static void transformByInplace(TransformF& destination, const TransformF& parent, const TransformF& child);
-		static void transformByInplace(TransformD& destination, const TransformD& parent, const TransformD& child);
-		static TransformD transformBy(const TransformD& parent, const TransformF& child);
+		static void transformByInplace(TransformF& destination, const TransformF& origin, const TransformF& local);
+		static void transformByInplace(TransformD& destination, const TransformD& origin, const TransformD& local);
+		static TransformD transformBy(const TransformD& origin, const TransformF& local);
+
+		static void untransformByInplace(TransformD& destination, const TransformD& origin, const TransformD& global);
 	};
 };

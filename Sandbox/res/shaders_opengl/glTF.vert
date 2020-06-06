@@ -27,31 +27,31 @@ struct Matrices
 };
 uniform Matrices matrices;
 
-#define MAX_NUM_JOINTS 128
-struct Skin
-{
-	mat4 joint_matrices[MAX_NUM_JOINTS];
-	uint joint_count;
-};
-uniform Skin skin;
+//#define MAX_NUM_JOINTS 128
+//struct Skin
+//{
+//	mat4 joint_matrices[MAX_NUM_JOINTS];
+//	uint joint_count;
+//};
+//uniform Skin skin;
 
 void main()
 {
 	vec4 vert_position = vec4(in_position, 1.0);
 	vec3 vert_normal = in_normal;
 	
-	if (skin.joint_count > 0) 
-	{
-		mat4 skin_matrix = 
-			in_weight0.x * skin.joint_matrices[int(in_joint0.x)] +
-			in_weight0.y * skin.joint_matrices[int(in_joint0.y)] +
-			in_weight0.z * skin.joint_matrices[int(in_joint0.z)] +
-			in_weight0.w * skin.joint_matrices[int(in_joint0.w)];
-			
-		vert_position = (matrices.model * skin_matrix) * vert_position;
-		vert_normal = normalize(transpose(inverse(mat3(matrices.model * skin_matrix))) * in_normal);
-	}
-	else
+	//if (skin.joint_count > 0) 
+	//{
+	//	mat4 skin_matrix = 
+	//		in_weight0.x * skin.joint_matrices[int(in_joint0.x)] +
+	//		in_weight0.y * skin.joint_matrices[int(in_joint0.y)] +
+	//		in_weight0.z * skin.joint_matrices[int(in_joint0.z)] +
+	//		in_weight0.w * skin.joint_matrices[int(in_joint0.w)];
+	//		
+	//	vert_position = (matrices.model * skin_matrix) * vert_position;
+	//	vert_normal = normalize(transpose(inverse(mat3(matrices.model * skin_matrix))) * in_normal);
+	//}
+	//else
 	{
 		vert_position = matrices.model * vert_position;
 		vert_normal = normalize(transpose(inverse(mat3(matrices.model))) * in_normal);
