@@ -40,7 +40,7 @@ namespace Genesis
 
 		bool hasSubworld() { return this->subworld != nullptr; };
 		World* getSubworld() { return this->subworld; };
-		void setSubworld(World* world) { GENESIS_ENGINE_ASSERT_ERROR(!this->hasSubworld(), ("{} already has subworld", this->name)); this->subworld = world; };
+		void setSubworld(World* world);
 
 	protected:
 		void addtoWorld(World* world);

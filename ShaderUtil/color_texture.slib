@@ -1,5 +1,0 @@
-//color_texture.slib
-vec4 calcBaseColor(vec2 uv)
-{
-	return texture(material_textures[0], uv);
-}

@@ -1,4 +1,4 @@
-#include "Genesis/Entity/World.hpp"
+#include "Genesis/World/World.hpp"
 
 #include "Genesis/Entity/Entity.hpp"
 
@@ -7,9 +7,13 @@
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lights.hpp"
 
+//TEMP
+#include "Genesis/Component/PlayerCharacter.hpp"
+
 namespace Genesis
 {
-	World::World()
+	World::World(WorldId id)
+		:world_id(id)
 	{
 		this->physics_world = new PhysicsWorld(vector3D(0.0, 0.0, 0.0));
 	}
@@ -25,7 +29,7 @@ namespace Genesis
 		delete this->physics_world;
 	}
 
-	void World::runSimulation(Application* application, TimeStep time_step)
+	void World::update(TimeStep time_step)
 	{
 		GENESIS_PROFILE_FUNCTION("World::runSimulation");
 		physics_world->simulate(time_step);
@@ -77,5 +81,15 @@ namespace Genesis
 		{
 			return TransformD();
 		}
+	}
+
+	Node* World::castRay(vector3D start_position, vector3D end_pos)
+	{
+		if (this->physics_world != nullptr)
+		{
+			return this->physics_world->castRay(start_position, end_pos);
+		}
+
+		return nullptr;
 	}
 }

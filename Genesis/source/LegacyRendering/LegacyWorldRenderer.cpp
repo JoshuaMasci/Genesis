@@ -1,6 +1,6 @@
 #include "Genesis/LegacyRendering/LegacyWorldRenderer.hpp"
 
-#include "Genesis/Entity/World.hpp"
+#include "Genesis/World/World.hpp"
 #include "Genesis/Entity/Entity.hpp"
 
 #include "Genesis/Platform/FileSystem.hpp"
@@ -9,7 +9,7 @@
 #include "Genesis/Resource/PbrMesh.hpp"
 #include "Genesis/Resource/PbrMaterial.hpp"
 
-#include "Genesis/Entity/Mesh.hpp"
+#include "Genesis/Component/Mesh.hpp"
 
 namespace Genesis
 {
@@ -21,12 +21,12 @@ namespace Genesis
 		string vert_data = "";
 		string frag_data = "";
 
-		FileSystem::loadFileString("res/shaders_opengl/glTF.vert", vert_data);
-		FileSystem::loadFileString("res/shaders_opengl/glTF.frag", frag_data);
+		FileSystem::loadFileString("res/shaders_opengl/Model.vert", vert_data);
+		FileSystem::loadFileString("res/shaders_opengl/Model.frag", frag_data);
 		this->pbr_program = this->backend->createShaderProgram(vert_data.data(), (uint32_t)vert_data.size(), frag_data.data(), (uint32_t)frag_data.size());
 
-		FileSystem::loadFileString("res/shaders_opengl/Window.vert", vert_data);
-		FileSystem::loadFileString("res/shaders_opengl/Window.frag", frag_data);
+		FileSystem::loadFileString("res/shaders_opengl/Model.vert", vert_data);
+		FileSystem::loadFileString("res/shaders_opengl/Model_Window.frag", frag_data);
 		this->window_program = this->backend->createShaderProgram(vert_data.data(), (uint32_t)vert_data.size(), frag_data.data(), (uint32_t)frag_data.size());
 
 		this->framebuffers.resize(this->framebuffer_count);
@@ -64,7 +64,7 @@ namespace Genesis
 
 
 
-	Framebuffer LegacyWorldRenderer::drawScene(World* world, Camera& camera, TransformD& camera_transform, uint8_t framebuffer_return)
+	Framebuffer LegacyWorldRenderer::drawScene(World* world, Camera& camera, TransformD& camera_transform)
 	{
 		this->window_to_view_map.clear();
 
@@ -109,7 +109,7 @@ namespace Genesis
 
 		this->drawWorld(this->framebuffers[0], this->framebuffer_size, world, camera, camera_transform);
 
-		return this->framebuffers[framebuffer_return];
+		return this->framebuffers[0];
 	}
 
 	void writeMaterialUniform(LegacyBackend* backend, const PbrMaterial& material)
@@ -126,34 +126,34 @@ namespace Genesis
 
 		if (material.albedo_texture != nullptr)
 		{
-			backend->setUniformTexture("material.material_textures[0]", 0, material.albedo_texture);
+			backend->setUniformTexture("material.albedo_texture", 0, material.albedo_texture);
 		}
 
 		if (material.metallic_roughness_texture != nullptr)
 		{
-			backend->setUniformTexture("material.material_textures[1]", 1, material.metallic_roughness_texture);
+			backend->setUniformTexture("material.metallic_roughness_texture", 1, material.metallic_roughness_texture);
 		}
 
 		if (material.normal_texture != nullptr)
 		{
-			backend->setUniformTexture("material.material_textures[2]", 2, material.normal_texture);
+			backend->setUniformTexture("material.normal_texture", 2, material.normal_texture);
 		}
 
 		if (material.occlusion_texture != nullptr)
 		{
-			backend->setUniformTexture("material.material_textures[3]", 3, material.occlusion_texture);
+			backend->setUniformTexture("material.occlusion_texture", 3, material.occlusion_texture);
 		}
 
 		if (material.emissive_texture != nullptr)
 		{
-			backend->setUniformTexture("material.material_textures[4]", 4, material.emissive_texture);
+			backend->setUniformTexture("material.emissive_texture", 4, material.emissive_texture);
 		}
 	}
 
 	void writeTransformUniform(LegacyBackend* backend, TransformD& transform)
 	{
 		backend->setUniformMat4f("matrices.model", transform.getModelMatrix());
-		backend->setUniformMat3f("matrices.normal", transform.getNormalMatrix());
+		//backend->setUniformMat3f("matrices.normal", transform.getNormalMatrix());
 	}
 
 
@@ -192,8 +192,11 @@ namespace Genesis
 
 		this->backend->bindShaderProgram(this->window_program);
 
-		this->backend->setUniform2f("screen_size", (vector2F)framebuffer_size);
-		backend->setUniformMat4f("matrices.view_projection_matrix", view_projection_matrix);
+		this->backend->setUniform2f("camera_view.framebuffer_size", (vector2F)framebuffer_size);
+
+		this->backend->setUniform3f("environment.ambient_light", vector3F(1.0f));
+		this->backend->setUniform3f("environment.camera_position", (vector3F)camera_transform.getPosition());
+		this->backend->setUniformMat4f("environment.view_projection_matrix", view_projection_matrix);
 
 		for (Entity* entity : world->getEntities())
 		{
@@ -243,15 +246,15 @@ namespace Genesis
 				backend->setUniformMat4f("matrices.model", transform.getModelMatrix());
 
 				size_t window_index = this->window_to_view_map[window];
-				this->backend->setUniformTexture("framebuffer", 0, this->backend->getFramebufferColorAttachment(this->framebuffers[window_index], 0));
+				this->backend->setUniformTexture("camera_view.framebuffer", 5, this->backend->getFramebufferColorAttachment(this->framebuffers[window_index], 0));
 
 				backend->bindVertexBuffer(mesh->vertex_buffer);
 				backend->bindIndexBuffer(mesh->index_buffer);
 
 				for (PbrMeshPrimitive& primitive : mesh->primitives)
 				{
-					//PbrMaterial& material = *primitive.temp_material_ptr;
-					//writeMaterialUniform(this->backend, material);
+					PbrMaterial& material = *primitive.temp_material_ptr;
+					writeMaterialUniform(this->backend, material);
 					backend->drawIndex(primitive.index_count, primitive.first_index);
 				}
 			}

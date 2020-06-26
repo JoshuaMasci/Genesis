@@ -1,6 +1,6 @@
 #include "Genesis/Physics/CollisionComponent.hpp"
 
-#include "Genesis/Entity/World.hpp"
+#include "Genesis/World/World.hpp"
 #include "Genesis/Entity/Entity.hpp"
 #include "Genesis/Physics/Rigidbody.hpp"
 
@@ -53,6 +53,7 @@ namespace Genesis
 			if (this->parent->getRootEntity()->hasRigidbody())
 			{
 				this->proxy_shape = this->parent->getRootEntity()->getRigidbody()->addCollisionShape(this->shape, this->parent->getRootTransform());
+				this->proxy_shape->setUserData(this->parent);
 			}
 		}
 	}

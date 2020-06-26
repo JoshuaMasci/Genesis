@@ -1,6 +1,6 @@
 #include "Genesis/Entity/Entity.hpp"
 
-#include "Genesis/Entity/World.hpp"
+#include "Genesis/World/World.hpp"
 #include "Genesis/Physics/ReactPhyscis.hpp"
 #include "Genesis/Physics/Rigidbody.hpp"
 #include "Genesis/Physics/CollisionComponent.hpp"
@@ -82,6 +82,16 @@ namespace Genesis
 		if (this->world != nullptr)
 		{
 			this->world->getPhysicsWorld()->removeEntity(this);
+		}
+	}
+
+	void Entity::setSubworld(World* world)
+	{
+		GENESIS_ENGINE_ASSERT_ERROR(!this->hasSubworld(), ("{} already has subworld", this->name)); 
+		this->subworld = world; 
+		if (this->subworld != nullptr) 
+		{ 
+			this->subworld->parent_entity = this; 
 		}
 	}
 

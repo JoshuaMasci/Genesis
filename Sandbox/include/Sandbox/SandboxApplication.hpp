@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Genesis/Entity/World.hpp>
+#include <Genesis/World/World.hpp>
 
 #include "Genesis/Rendering/BaseImGui.hpp"
 
@@ -38,8 +38,9 @@ protected:
 	Genesis::LegacyWorldRenderer* world_renderer;
 
 	Genesis::GltfModel* model;
-	Genesis::GltfModel* cube_model;
+	Genesis::GltfModel* outside_model;
 	Genesis::GltfModel* inside_model;
+	Genesis::GltfModel* glass_model;
 };
 
 

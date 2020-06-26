@@ -1,0 +1,30 @@
+struct DirectionalLight
+{
+    vec3 color;
+    float intensity;
+	
+	vec3 direction;
+};
+
+struct PointLight
+{
+    vec3 color;
+    float intensity;
+
+    vec2 attenuation;
+	vec3 position;
+    float range;
+};
+
+struct SpotLight
+{
+	vec3 color;
+    float intensity;
+
+    vec2 attenuation;
+	vec3 position;
+    float range;
+	
+    vec3 direction;
+    float cutoff;
+};

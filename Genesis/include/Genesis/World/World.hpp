@@ -4,16 +4,20 @@
 
 namespace Genesis
 {
+	typedef uint32_t WorldId;
+
 	class Entity;
 	class Node;
 
 	class World
 	{
 	public:
-		World();
+		World(WorldId id);
 		~World();
 
-		void runSimulation(Application* application, TimeStep time_step);
+		inline WorldId getId() { return this->world_id; };
+
+		void update(TimeStep time_step);
 
 		inline PhysicsWorld* getPhysicsWorld() { return this->physics_world; };
 
@@ -26,7 +30,13 @@ namespace Genesis
 
 		TransformD getWorldOrgin();
 
+		Node* castRay(vector3D start_position, vector3D end_pos);
+
 	private:
+		friend class Entity;
+
+		const WorldId world_id;
+
 		Entity* parent_entity = nullptr;
 
 		PhysicsWorld* physics_world = nullptr;

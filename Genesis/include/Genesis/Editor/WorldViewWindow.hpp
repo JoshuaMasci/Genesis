@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Entity/World.hpp"
+#include "Genesis/World/World.hpp"
 
 namespace Genesis
 {

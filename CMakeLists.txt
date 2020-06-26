@@ -3,8 +3,6 @@ project(Genesis)
 
 option (INCLUDE_EASY_PROFILER "Includes Profiling tool" ON)
 
-add_subdirectory(ShaderUtil)
-
 add_subdirectory(Genesis)
 
 add_subdirectory(Platforms/SDL2)

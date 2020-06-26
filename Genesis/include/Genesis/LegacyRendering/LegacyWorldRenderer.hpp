@@ -18,7 +18,7 @@ namespace Genesis
 
 		void rebuildFramebuffers(vector2U size);
 
-		Framebuffer drawScene(World* world, Camera& camera, TransformD& camera_transform, uint8_t framebuffer_return);
+		Framebuffer drawScene(World* world, Camera& camera, TransformD& camera_transform);
 
 		void drawWorld(Framebuffer framebuffer, vector2U framebuffer_size, World* world, Camera& camera, TransformD& camera_transform, vector3F temp_scale = vector3F(1.0f));
 

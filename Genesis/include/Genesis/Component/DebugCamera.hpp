@@ -7,10 +7,10 @@
 
 namespace Genesis
 {
-	class DebugCamera1 : public Component
+	class DebugCamera : public Component
 	{
 	public:
-		DebugCamera1(Node* node, double linear, double angular, InputManager* input_manager)
+		DebugCamera(Node* node, double linear, double angular, InputManager* input_manager)
 			:Component(node)
 		{
 			this->linear_speed = linear;
