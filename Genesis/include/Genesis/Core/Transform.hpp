@@ -64,8 +64,8 @@ namespace Genesis
 		quaternionD orientation;
 		vector3D scale;
 
-		bool dirty;
 		matrix4F untranslated_model_matrix;
+		bool dirty;
 	};
 
 	class TransformUtils

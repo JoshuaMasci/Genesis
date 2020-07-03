@@ -1,12 +1,10 @@
 #pragma once
 
-#include <concurrentqueue.h>
 #include <thread>
-#include <functional>
 
 namespace Genesis
 {
-	typedef std::function<void(uint32_t)> JobType;
+	typedef function<void(uint32_t)> JobType;
 	typedef std::atomic<uint16_t> JobCounter;
 
 	struct JobStruct

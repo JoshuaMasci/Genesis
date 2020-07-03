@@ -6,6 +6,8 @@
 #include "Genesis/Platform/Window.hpp"
 #include "Genesis/RenderingBackend/RenderingBackend.hpp"
 
+#include "Genesis/ECS/EntityRegistry.hpp"
+
 namespace Genesis 
 {
 	Application::Application()

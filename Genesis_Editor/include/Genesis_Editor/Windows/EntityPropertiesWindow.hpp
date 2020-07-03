@@ -1,15 +1,15 @@
 #pragma once
 
+#include "Genesis/ECS/EntityRegistry.hpp"
+
 namespace Genesis
 {
-	class Entity;
-
 	class EntityPropertiesWindow
 	{
 	public:
 		EntityPropertiesWindow();
 		~EntityPropertiesWindow();
 
-		void drawWindow(Entity* selected_entity);
+		void drawWindow(EntityRegistry* registry, EntityWorld* world, EntityId selected_entity);
 	};
 }

@@ -18,17 +18,10 @@ namespace Genesis
 
 		void rebuildFramebuffers(vector2U size);
 
-		Framebuffer drawScene(World* world, Camera& camera, TransformD& camera_transform);
-
-		void drawWorld(Framebuffer framebuffer, vector2U framebuffer_size, World* world, Camera& camera, TransformD& camera_transform, vector3F temp_scale = vector3F(1.0f));
+		Framebuffer drawScene(Camera& camera, TransformD& camera_transform);
 
 	protected:
-		map<WindowMeshComponent*, size_t> window_to_view_map;
-
 		LegacyBackend* backend;
-
-		void drawNodeMesh(Node* node);
-		void drawNodeWindow(Node* node);
 
 		ShaderProgram pbr_program;
 		ShaderProgram window_program;

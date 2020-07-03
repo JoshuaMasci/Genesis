@@ -9,4 +9,6 @@ add_subdirectory(Platforms/SDL2)
 add_subdirectory(Platforms/Opengl)
 #add_subdirectory(Platforms/Vulkan)
 
+add_subdirectory(Genesis_Editor)
+
 add_subdirectory(Sandbox)

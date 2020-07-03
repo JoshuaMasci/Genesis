@@ -1,12 +1,13 @@
 #pragma once
 
-#include <string>
 
+#include <parallel_hashmap/phmap.h>
+#include <concurrentqueue.h>
+
+#include <string>
 #include <vector>
-#include <set>
-#include <map>
-#include <unordered_map>
-#include <queue>
+#include <bitset>
+#include <functional>
 
 #define has_value(list, value) (list.find(value) != list.end())
 
@@ -14,12 +15,15 @@ namespace Genesis
 {
 	typedef double TimeStep;
 
-	//Puts these std classes in the Genesis namespace
+	//Puts these classes in the Genesis namespace
+	using phmap::flat_hash_map;
+	using phmap::flat_hash_set;
+	using moodycamel::ConcurrentQueue;
+
 	using std::string;
 	using std::vector;
-	using std::set;
-	using std::map;
-	using std::unordered_map;
-	using std::queue;
+	using std::bitset;
+	using std::function;
+	using std::hash;
 };
 

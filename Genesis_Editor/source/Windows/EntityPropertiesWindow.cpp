@@ -1,11 +1,16 @@
-#include "Genesis/Editor/EntityPropertiesWindow.hpp"
+#include "Genesis_Editor/Windows/EntityPropertiesWindow.hpp"
 
 #include "imgui.h"
-#include "Genesis/Entity/Entity.hpp"
-#include "Genesis/Physics/RigidBody.hpp"
+
+#include "Genesis/Component/NameComponent.hpp"
 
 namespace Genesis
 {
+	struct TestComponent
+	{
+		uint8_t x;
+	};
+
 	EntityPropertiesWindow::EntityPropertiesWindow()
 	{
 	}
@@ -14,7 +19,75 @@ namespace Genesis
 	{
 	}
 
-	void Genesis::EntityPropertiesWindow::drawWindow(Entity* selected_entity)
+	void EntityPropertiesWindow::drawWindow(EntityRegistry* registry, EntityWorld* world, EntityId selected_entity)
+	{
+		static bool registered = false;
+		if (!registered)
+		{
+			registry->registerComponent<TestComponent>();
+			registered = true;
+		}
+
+		ImGui::Begin("Entity Properties");
+
+		if (selected_entity != InvalidEntity)
+		{
+			if (world->hasComponent<NameComponent>(selected_entity))
+			{
+				if (ImGui::CollapsingHeader("Name Component", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					NameComponent* name_component = world->getComponent<NameComponent>(selected_entity);
+					ImGui::InputText("Entity Name", name_component->data, name_component->SIZE);
+				}
+			}
+
+			if (world->hasComponent<TransformD>(selected_entity))
+			{
+				if (ImGui::CollapsingHeader("World Transform", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					TransformD& transform_component = *world->getComponent<TransformD>(selected_entity);
+
+					vector3D position = transform_component.getPosition();
+					if (ImGui::InputScalarN("World Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
+					{
+						transform_component.setPosition(position);
+					};
+
+					vector3D rotation = glm::degrees(glm::eulerAngles(transform_component.getOrientation()));
+					if (ImGui::InputScalarN("World Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
+					{
+						transform_component.setOrientation(quaternionD(glm::radians(rotation)));
+					}
+
+					vector3D scale = transform_component.getScale();
+					if (ImGui::InputScalarN("World Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
+					{
+						transform_component.setScale(scale);
+					}
+				}
+			}
+
+			if (world->hasComponent<TestComponent>(selected_entity))
+			{
+				if (ImGui::CollapsingHeader("Test Component", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					TestComponent& test_component = *world->getComponent<TestComponent>(selected_entity);
+					uint8_t step = 1;
+					uint8_t fast_step = 5;
+					ImGui::InputScalar("X", ImGuiDataType_::ImGuiDataType_U8, &test_component.x, &step, &fast_step);
+				}
+			}
+			else
+			{
+				world->addComponent<TestComponent>(selected_entity);
+			}
+
+		}
+
+		ImGui::End();
+	}
+
+	/*void Genesis::EntityPropertiesWindow::drawWindow()
 	{
 		ImGui::Begin("Entity Properties");
 
@@ -100,7 +173,7 @@ namespace Genesis
 		}
 
 		ImGui::End();
-	}
+	}*/
 }
 /*void EntityPropertiesWindow::drawWindow(World* world, Entity* selected_entity)
 {

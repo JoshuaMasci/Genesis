@@ -16,6 +16,7 @@ target_compile_features(Genesis_Engine PUBLIC cxx_std_17)
 
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/glm/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/parallel-hashmap-master/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/entt-3.3.2/src/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/spdlog-1.5.0/include/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/imgui-docking/)

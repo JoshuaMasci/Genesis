@@ -16,7 +16,7 @@ namespace Genesis
 	{
 		string name;
 		Bone* root_bone;
-		map<string,Bone*> bone_hash;
+		//flat_hash_map<string,Bone*> bone_hash;
 
 		uint32_t bone_count;
 		Bone bone_storage[128];

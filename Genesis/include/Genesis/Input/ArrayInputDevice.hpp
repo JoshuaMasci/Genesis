@@ -66,7 +66,7 @@ namespace Genesis
 		vector<ButtonValue> button_values;
 		vector<AxisValue> axis_values;
 
-		map<string, ButtonIndex> button_bindings;
-		map<string, AxisSettings> axis_bindings;
+		flat_hash_map<string, ButtonIndex> button_bindings;
+		flat_hash_map<string, AxisSettings> axis_bindings;
 	};
 };

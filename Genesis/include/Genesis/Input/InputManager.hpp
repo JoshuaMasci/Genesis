@@ -42,7 +42,7 @@ namespace Genesis
 		MouseDevice* mouse_device;
 		KeyboardDevice* keyboard_device;
 
-		set<InputDevice*> devices;
+		flat_hash_set<InputDevice*> devices;
 
 		//Menu Mode Mouse
 		vector2F current_mouse_position;

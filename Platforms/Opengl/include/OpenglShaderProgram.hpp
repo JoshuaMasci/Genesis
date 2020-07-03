@@ -20,7 +20,7 @@ namespace Genesis
 
 			GLuint buildShader(const char* data, uint32_t size, GLuint type);
 
-			map<string, GLint> uniform_locations;
+			flat_hash_map<string, GLint> uniform_locations;
 		};
 	}
 }
