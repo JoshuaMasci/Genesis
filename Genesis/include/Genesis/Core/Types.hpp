@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <parallel_hashmap/phmap.h>
 #include <concurrentqueue.h>
 

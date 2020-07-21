@@ -1,4 +1,0 @@
-vec4 calcBaseColor(vec2 uv)
-{
-	return material.albedo;
-}

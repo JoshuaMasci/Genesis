@@ -21,14 +21,15 @@ namespace Genesis
 			this->pool_signature = signature;
 
 			size_t offset = 0;
-
+			size_t index = 0;
 			for (size_t i = 0; i < signature.size(); i++)
 			{
 				if (signature[i])
 				{
 					this->component_info.push_back({ registry_component_info[i].component_id, registry_component_info[i].component_size, offset, registry_component_info[i].component_delete_function });
-					this->component_index_map[registry_component_info[i].component_id] = i;
+					this->component_index_map[registry_component_info[i].component_id] = index;
 					offset += registry_component_info[i].component_size;
+					index++;
 				}
 			}
 
@@ -124,16 +125,26 @@ namespace Genesis
 
 		void* getComponent(EntityId entity, ComponentId component_id)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(has_value(this->entities_handle_to_index, entity), "Entity Index does not exist in Entity Signature table");
-			GENESIS_ENGINE_ASSERT_ERROR(has_value(this->component_index_map, component_id), "Component Offest does not exist in Entity Signature table");
-
-			return this->memory_block->getBlock(this->entities_handle_to_index[entity], this->component_info[this->component_index_map[component_id]].offset);
+			GENESIS_ENGINE_ASSERT_ERROR(has_value(this->entities_handle_to_index, entity), "Entity does not exist in Entity Pool");
+			return this->getComponentIndex(this->entities_handle_to_index[entity], component_id);
 		};
+
+		void* getComponentIndex(size_t entity_index, ComponentId component_id)
+		{
+			GENESIS_ENGINE_ASSERT_ERROR(entity_index < this->entities_index_to_handle.size(), "Entity Index out of range");
+			GENESIS_ENGINE_ASSERT_ERROR(has_value(this->component_index_map, component_id), "Component does not exist in Entity Pool");
+			return this->memory_block->getBlock(entity_index, this->component_info[this->component_index_map[component_id]].offset);
+		}
 
 		vector<PoolComponentInfo>& getComponentInfo()
 		{
 			return this->component_info;
 		};
+
+		size_t getEntityCount()
+		{
+			return this->entities_index_to_handle.size();
+		}
 
 	protected:
 		const size_t GROWTH_RATE = 2;

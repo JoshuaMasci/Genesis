@@ -27,21 +27,64 @@ int main(int argc, char** argv)
 	return 0;
 }
 
-//Hardcode For now
+//Hardcoded for now
 #include "SDL2_Platform.hpp" 
 #include "SDL2_Window.hpp" 
 #include "OpenglBackend.hpp"
 #include "Genesis/LegacyRendering/LegacyImGui.hpp"
 
-#include "Genesis/Rendering/Camera.hpp"
-
 #include "imgui.h"
 
 //Components
 #include "Genesis/Component/NameComponent.hpp"
+#include "Genesis/Resource/PbrMesh.hpp"
+#include "Genesis/Resource/PbrMaterial.hpp"
+#include "Genesis/Rendering/Camera.hpp"
+#include "Genesis/Rendering/Lights.hpp"
+#include "Genesis/Physics/RigidBody.hpp"
+
+#include "Genesis/ECS/EntitySystem.hpp"
 
 namespace Genesis
 {
+	void loadNode(EntityWorld* world, GltfNode* node)
+	{
+		if (node == nullptr)
+		{
+			return;
+		}
+
+		EntityId entity = world->createEntity<TransformD>();
+
+		world->initalizeComponent<TransformD>(entity, TransformUtils::toTransformD(node->local_transform));
+
+		if (!node->name.empty())
+		{
+			world->addComponent<NameComponent>(entity, node->name.c_str());
+		}
+
+		if (node->mesh != nullptr)
+		{
+			(*world->addComponent<PbrMesh>(entity)) = *node->mesh;
+			(*world->addComponent<PbrMaterial>(entity)) = *node->mesh->primitives[0].temp_material_ptr;
+
+			world->addComponent<RigidBody>(entity);
+		}
+
+		for (auto child_node : node->child_nodes)
+		{
+			loadNode(world, child_node);
+		}
+	}
+
+	void loadScene(EntityWorld* world, GltfModel* scene)
+	{
+		for (auto root_node : scene->root_nodes)
+		{
+			loadNode(world, root_node);
+		}
+	}
+
 	EditorApplication::EditorApplication()
 	{
 		this->platform = new SDL2_Platform(this);
@@ -50,28 +93,88 @@ namespace Genesis
 		this->legacy_backend = new Opengl::OpenglBackend((SDL2_Window*) window);
 		this->ui_renderer = new LegacyImGui(this->legacy_backend, this->input_manager, this->window);
 
-
 		this->console_window = new ConsoleWindow();
 		//Logging::console_sink->setConsoleWindow(this->console_window);
 
 		this->world_view_window = new WorldViewWindow();
 		this->entity_properties_window = new EntityPropertiesWindow();
-		this->scene_view_window = new SceneViewWindow(this->legacy_backend);
+		this->scene_view_window = new SceneViewWindow(this->input_manager, this->legacy_backend);
 
 		this->editor_registry = new EntityRegistry();
 		this->editor_registry->registerComponent<TransformD>();
 		this->editor_registry->registerComponent<NameComponent>();
+		this->editor_registry->registerComponent<PbrMesh>();
+		this->editor_registry->registerComponent<PbrMaterial>();
+		this->editor_registry->registerComponent<Camera>();
+		this->editor_registry->registerComponent<DirectionalLight>();
+		this->editor_registry->registerComponent<PointLight>();
+		this->editor_registry->registerComponent<SpotLight>();
+		this->editor_registry->registerComponent<RigidBody>();
 
-		this->editor_base_world = this->editor_registry->createWorld();
+		{
+			this->editor_base_world = this->editor_registry->createWorld();
 
-		EntityId entity = this->editor_base_world->createEntity<TransformD, NameComponent>();
-		NameComponent* name = this->editor_base_world->getComponent<NameComponent>(entity);
-		strcpy_s(name->data, "Test_Entity");
-		this->editor_base_world->initalizeComponent<TransformD>(entity);
+			EntityId entity = this->editor_base_world->createEntity<TransformD, NameComponent, Camera, DirectionalLight>();
+			this->editor_base_world->initalizeComponent<NameComponent>(entity, "Test_Entity");
+			this->editor_base_world->initalizeComponent<TransformD>(entity)->setOrientation( glm::angleAxis(glm::radians(90.0), vector3D(1.0f, 0.0, 0.0)) );
+			this->editor_base_world->initalizeComponent<Camera>(entity);
+			this->editor_base_world->initalizeComponent<DirectionalLight>(entity, vector3F(1.0f), 0.4f, true);
+		}
+
+		{
+			const string file_name = "res/Shapes.glb";
+
+			tinygltf::Model gltfModel;
+			tinygltf::TinyGLTF loader;
+			string error;
+			string warning;
+			bool return_value;
+
+			if (file_name.substr(file_name.find_last_of(".") + 1) == "gltf")
+			{
+				return_value = loader.LoadASCIIFromFile(&gltfModel, &error, &warning, file_name);
+			}
+			else if (file_name.substr(file_name.find_last_of(".") + 1) == "glb")
+			{
+				return_value = loader.LoadBinaryFromFile(&gltfModel, &error, &warning, file_name);
+			}
+			else
+			{
+				GENESIS_ENGINE_ERROR("Unknown File extension");
+			}
+
+			if (!error.empty())
+			{
+				GENESIS_ENGINE_ERROR("Error: {}", error);
+			}
+
+			if (!warning.empty())
+			{
+				GENESIS_ENGINE_WARNING("Warning: {}", warning);
+			}
+
+			if (!return_value)
+			{
+				GENESIS_ENGINE_CRITICAL("Failed to parse glTF");
+			}
+
+			this->scene_model = new GltfModel(this->legacy_backend, gltfModel);
+			loadScene(this->editor_base_world, this->scene_model);
+		}
+
+		this->editor_base_world->forEachPool<RigidBody, TransformD>([&](EntityPool* pool)
+		{
+			for (size_t i = 0; i < pool->getEntityCount(); i++)
+			{
+				GENESIS_ENGINE_INFO("Rigidbody");
+			}
+		});
 	}
 
 	EditorApplication::~EditorApplication()
 	{
+		delete this->scene_model;
+
 		delete this->editor_registry;
 
 		delete this->console_window;
@@ -88,6 +191,8 @@ namespace Genesis
 	{
 		GENESIS_PROFILE_FUNCTION("EditorApplication::update");
 		Application::update(time_step);
+
+		this->scene_view_window->udpate(time_step);
 	}
 
 	void EditorApplication::render(TimeStep time_step)
@@ -107,6 +212,11 @@ namespace Genesis
 		{
 			if (ImGui::BeginMenu("File"))
 			{
+				if (ImGui::MenuItem("Load Scene", ""))
+				{
+
+				}
+
 				if (ImGui::MenuItem("Exit", "")) { this->close(); };
 				ImGui::EndMenu();
 			}
@@ -122,7 +232,6 @@ namespace Genesis
 			ImGui::LabelText(std::to_string(stats.triangles_count).c_str(), "Tris count");
 			ImGui::End();
 		}
-
 
 		this->console_window->drawWindow();
 		this->world_view_window->drawWindow(this->editor_registry, this->editor_base_world);

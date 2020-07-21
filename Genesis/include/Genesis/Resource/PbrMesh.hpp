@@ -41,7 +41,19 @@ namespace Genesis
 	{
 		VertexBuffer vertex_buffer;
 		IndexBuffer index_buffer;
+		uint32_t index_count;
+
 		vector<PbrMeshPrimitive> primitives;
+		BoundingBox bounding_box;
+	};
+
+
+	struct MeshComponent
+	{
+		VertexBuffer vertex_buffer;
+		IndexBuffer index_buffer;
+		uint32_t index_count;
+		uint32_t index_offset;
 		BoundingBox bounding_box;
 	};
 }

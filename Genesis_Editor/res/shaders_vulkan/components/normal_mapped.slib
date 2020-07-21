@@ -1,6 +1,0 @@
-vec3 calcNormal(vec2 uv)
-{
-	vec3 normal = texture(normal_map, uv).xyz;
-	normal = (normal * 2.0) - 1.0f;
-	return tangent_space_matrix * normal;
-}

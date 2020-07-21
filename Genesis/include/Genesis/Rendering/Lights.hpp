@@ -9,12 +9,6 @@ namespace Genesis
 		float intensity;
 	};
 
-	struct ShadowCaster
-	{
-		bool shadow_map_enabled;
-		vector2F shadow_map_size;
-	};
-
 	struct DirectionalLight : BaseLight
 	{
 		DirectionalLight(vector3F color = vector3F(0.0f), float intensity = 0.0f, bool enabled = true)

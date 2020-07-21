@@ -1,4 +1,0 @@
-vec4 calcBaseColor(vec2 uv)
-{
-	return texture(albedo_map, uv);
-}

@@ -2,32 +2,25 @@
 
 #include "Genesis/LegacyBackend/LegacyBackend.hpp"
 #include "Genesis/Rendering/Camera.hpp"
+#include "Genesis/ECS/EntityRegistry.hpp"
 
 namespace Genesis
 {
-	class World;
-	class Node;
-	struct PbrMesh;
-	class WindowMeshComponent;
 
 	class LegacyWorldRenderer
 	{
 	public:
-		LegacyWorldRenderer(LegacyBackend* backend, vector2U size);
+		LegacyWorldRenderer(LegacyBackend* backend);
 		~LegacyWorldRenderer();
 
-		void rebuildFramebuffers(vector2U size);
-
-		Framebuffer drawScene(Camera& camera, TransformD& camera_transform);
+		void drawScene(vector2U target_size, Framebuffer target_framebuffer, EntityWorld* world, Camera& camera, TransformD& camera_transform);
 
 	protected:
 		LegacyBackend* backend;
 
-		ShaderProgram pbr_program;
-		ShaderProgram window_program;
-		
-		const uint8_t framebuffer_count = 8;
-		vector2U framebuffer_size;
-		vector<Framebuffer> framebuffers;
+		ShaderProgram ambient_program;
+		ShaderProgram directional_program;
+		//ShaderProgram pbr_point_program;
+		//ShaderProgram pbr_spot_program;
 	};
 }

@@ -7,7 +7,7 @@
 
 namespace Genesis
 {
-	class DebugCamera : public Component
+	class DebugCamera
 	{
 	public:
 		DebugCamera(Node* node, double linear, double angular, InputManager* input_manager)

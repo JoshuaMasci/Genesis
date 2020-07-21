@@ -43,29 +43,43 @@ vec4 getAlbedo(Material material)
 };
 uniform Material material;
 
-struct CameraView
+struct BaseLight
 {
-	vec2 framebuffer_size;
-	sampler2D framebuffer;
+    vec3 color;
+    float intensity;
 };
 
-vec4 getCameraView(CameraView view)
+struct DirectionalLight
 {
-	vec2 uv = gl_FragCoord.xy / view.framebuffer_size;
-	return texture(view.framebuffer, uv);  
+	BaseLight base;
+	vec3 direction;
 };
-uniform CameraView camera_view;
+
+vec4 CalcLight(BaseLight base, vec3 direction, vec3 normal, vec3 worldPos)
+{
+    float diffuseFactor = dot(normal, -direction);
+    
+    vec4 diffuseColor = vec4(0.0, 0.0, 0.0, 0.0);
+    
+    if(diffuseFactor > 0.0)
+    {
+        diffuseColor = vec4(base.color, 1.0) * base.intensity * diffuseFactor;
+    }
+    
+    return diffuseColor;
+}
+
+vec4 CalcDirectionalLight(DirectionalLight directional, vec3 normal, vec3 worldPos)
+{
+    return CalcLight(directional.base, directional.direction, normal, worldPos);
+}
+
+uniform DirectionalLight directional_light;
 
 layout(location = 0) out vec4 out_color;
 void main()
 {
-	vec4 view_color = getCameraView(camera_view);
-	view_color.xyz = view_color.xyz * environment.ambient_light;
-	vec4 window_color = getAlbedo(material);
-	
-	view_color.xyz *= view_color.w;
-	window_color.xyz *= window_color.w;
-	
-	out_color.w = window_color.w + (view_color.w * (1.0 - window_color.w));
-	out_color.xyz = window_color.xyz + (view_color.xyz * (1.0 - window_color.w));
+	vec4 color = getAlbedo(material);
+	color.xyz = (color * CalcDirectionalLight(directional_light, frag_normal, frag_world_pos)).xyz;
+	out_color = color;
 }

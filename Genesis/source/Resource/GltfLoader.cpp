@@ -226,7 +226,7 @@ namespace Genesis
 			tinygltf::Material material = gltfModel.materials[material_index];
 			PbrMaterial& new_material = this->materials[material_index];
 
-			if (material.additionalValues.find("alphaMode") != material.additionalValues.end())
+			/*if (material.additionalValues.find("alphaMode") != material.additionalValues.end())
 			{
 				tinygltf::Parameter param = material.additionalValues["alphaMode"];
 				if (param.string_value == "BLEND")
@@ -242,7 +242,7 @@ namespace Genesis
 			if (material.additionalValues.find("alphaCutoff") != material.additionalValues.end())
 			{
 				new_material.alpha_cutoff = static_cast<float>(material.additionalValues["alphaCutoff"].Factor());
-			}
+			}*/
 
 			if (material.values.find("baseColorFactor") != material.values.end())
 			{
@@ -492,6 +492,7 @@ namespace Genesis
 
 			new_mesh.vertex_buffer = this->backend->createVertexBuffer(vertex_buffer.data(), vertex_buffer.size() * sizeof(PbrMeshVertexAnimated), create_info);
 			new_mesh.index_buffer = this->backend->createIndexBuffer(index_buffer.data(), index_buffer.size() * sizeof(uint32_t), IndexType::uint32);
+			new_mesh.index_count = (uint32_t)index_buffer.size();
 		}
 	}
 

@@ -8,7 +8,6 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
 #define GLM_FORCE_XYZW_ONLY
-#define PI_D 3.14159265358979323846264338327950288
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -20,6 +19,9 @@
 
 namespace Genesis
 {
+	static const float PI_F = 3.14159265358979323846264338327950288f;
+	static const double PI_D = 3.14159265358979323846264338327950288;
+
 	typedef glm::u32vec2 vector2U;
 	typedef glm::u32vec3 vector3U;
 	typedef glm::u32vec4 vector4U;

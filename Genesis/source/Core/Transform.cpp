@@ -118,4 +118,9 @@ namespace Genesis
 		destination.setOrientation(glm::inverse(origin.getOrientation()) * global.getOrientation());
 		destination.setScale(global.getScale() / origin.getScale());
 	}
+
+	TransformD TransformUtils::toTransformD(const TransformF& transform)
+	{
+		return TransformD((vector3D) transform.getPosition(), (quaternionD) transform.getOrientation(), (vector3D) transform.getScale());
+	}
 }

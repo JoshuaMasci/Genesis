@@ -20,5 +20,10 @@ namespace Genesis
 			matrix[1][1] *= -1.0f;
 			return matrix;
 		};
+
+		matrix4F getProjectionMatrix(vector2U image_size)
+		{
+			return this->getProjectionMatrix(((float)image_size.x) / ((float)image_size.y));
+		};
 	};
 }

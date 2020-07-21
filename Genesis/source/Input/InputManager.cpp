@@ -109,7 +109,7 @@ namespace Genesis
 
 	void InputManager::setMouseDevice(MouseDevice* device)
 	{
-		GENESIS_ENGINE_ASSERT_ERROR(this->mouse_device != nullptr, "Mouse device already set");
+		GENESIS_ENGINE_ASSERT_ERROR(this->mouse_device == nullptr, "Mouse device already set");
 		this->mouse_device = device;
 		this->addInputDevice(this->mouse_device);
 	}
@@ -122,7 +122,7 @@ namespace Genesis
 
 	void InputManager::setKeyboardDevice(KeyboardDevice* device)
 	{
-		GENESIS_ENGINE_ASSERT_ERROR(this->keyboard_device != nullptr, "Keyboard device already set");
+		GENESIS_ENGINE_ASSERT_ERROR(this->keyboard_device == nullptr, "Keyboard device already set");
 		this->keyboard_device = device;
 		this->addInputDevice(this->keyboard_device);
 	}
@@ -142,5 +142,39 @@ namespace Genesis
 	vector2F InputManager::getMousePosition()
 	{
 		return this->current_mouse_position;
+	}
+
+
+	bool InputManager::getButtonDown(fnv_hash32 hash)
+	{
+		if (has_value(this->button_states, hash))
+		{
+			return this->button_states[hash].current_state;
+		}
+
+		return false;
+	}
+
+	bool InputManager::getButtonPressed(fnv_hash32 hash)
+	{
+		if (has_value(this->button_states, hash))
+		{
+			return this->button_states[hash].current_state && !this->button_states[hash].previous_state;
+		}
+
+		return false;
+	}
+
+	void InputManager::updateButtonState(fnv_hash32 hash, bool state, Timestamp timestamp)
+	{
+		this->button_states[hash].timestamp = timestamp;
+		if (state)
+		{
+			this->button_states[hash].current_state++;
+		}
+		else
+		{
+			this->button_states[hash].current_state--;
+		}
 	}
 }

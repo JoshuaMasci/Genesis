@@ -3,14 +3,14 @@
 #include "imgui.h"
 
 #include "Genesis/Component/NameComponent.hpp"
+#include "Genesis/Rendering/Camera.hpp"
+#include "Genesis/Rendering/Lights.hpp"
+
+#include "Genesis/Resource/PbrMesh.hpp"
+#include "Genesis/Resource/PbrMaterial.hpp"
 
 namespace Genesis
 {
-	struct TestComponent
-	{
-		uint8_t x;
-	};
-
 	EntityPropertiesWindow::EntityPropertiesWindow()
 	{
 	}
@@ -21,13 +21,6 @@ namespace Genesis
 
 	void EntityPropertiesWindow::drawWindow(EntityRegistry* registry, EntityWorld* world, EntityId selected_entity)
 	{
-		static bool registered = false;
-		if (!registered)
-		{
-			registry->registerComponent<TestComponent>();
-			registered = true;
-		}
-
 		ImGui::Begin("Entity Properties");
 
 		if (selected_entity != InvalidEntity)
@@ -67,19 +60,49 @@ namespace Genesis
 				}
 			}
 
-			if (world->hasComponent<TestComponent>(selected_entity))
+			if (world->hasComponent<Camera>(selected_entity))
 			{
-				if (ImGui::CollapsingHeader("Test Component", ImGuiTreeNodeFlags_DefaultOpen))
+				if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					TestComponent& test_component = *world->getComponent<TestComponent>(selected_entity);
-					uint8_t step = 1;
-					uint8_t fast_step = 5;
-					ImGui::InputScalar("X", ImGuiDataType_::ImGuiDataType_U8, &test_component.x, &step, &fast_step);
+					Camera& camera_component = *world->getComponent<Camera>(selected_entity);
+
+					ImGui::SliderFloat("Fov X", &camera_component.frame_of_view, 5.0f, 140.0f);
+					ImGui::InputFloat("Z Near", &camera_component.z_near);
+					camera_component.z_near = std::max(camera_component.z_near, 0.001f);
+					ImGui::InputFloat("Z Far", &camera_component.z_far);
+					camera_component.z_far = std::max(camera_component.z_near + 1.0f, camera_component.z_far);
 				}
 			}
-			else
+
+			if (world->hasComponent<DirectionalLight>(selected_entity))
 			{
-				world->addComponent<TestComponent>(selected_entity);
+				if (ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					DirectionalLight& light_component = *world->getComponent<DirectionalLight>(selected_entity);
+
+					ImGui::SliderFloat("Intensity", &light_component.intensity, 0.0f, 1.0f);
+					ImGui::ColorEdit3("Color", &light_component.color.x, 0);
+					ImGui::Checkbox("Enabled", &light_component.enabled);
+				}
+			}
+
+			if (world->hasComponent<PbrMaterial>(selected_entity))
+			{
+				if (ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					PbrMaterial& material_component = *world->getComponent<PbrMaterial>(selected_entity);
+
+					ImGui::ColorEdit4("Albedo Color", &material_component.albedo_factor.x, 0);
+					ImGui::SliderFloat("Metallic Factor", &material_component.metallic_roughness_factor.x, 0.0f, 1.0f);
+					ImGui::SliderFloat("Roughness Factor", &material_component.metallic_roughness_factor.y, 0.0f, 1.0f);
+					ImGui::ColorEdit4("Emissive Color", &material_component.emissive_factor.x, 0);
+
+					//ImGui::SliderFloat("Intensity", &light_component.intensity, 0.0f, 1.0f);
+					//ImGui::ColorEdit3("Color", &light_component.color.x, 0);
+					//ImGui::Checkbox("Enabled", &light_component.enabled);
+
+					ImGui::Checkbox("Cull Backface", &material_component.cull_backface);
+				}
 			}
 
 		}

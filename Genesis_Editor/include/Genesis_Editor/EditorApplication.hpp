@@ -11,6 +11,8 @@
 #include "Genesis_Editor/Windows/EntityPropertiesWindow.hpp"
 #include "Genesis_Editor/Windows/SceneViewWindow.hpp"
 
+#include "Genesis/Resource/GltfLoader.hpp"
+
 namespace Genesis
 {
 	class EditorApplication : public Application
@@ -35,6 +37,8 @@ namespace Genesis
 
 		EntityRegistry* editor_registry;
 		EntityWorld* editor_base_world;
+
+		GltfModel* scene_model = nullptr;
 	};
 }
 

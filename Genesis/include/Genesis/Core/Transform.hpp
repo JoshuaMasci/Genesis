@@ -76,5 +76,7 @@ namespace Genesis
 		static TransformD transformBy(const TransformD& origin, const TransformF& local);
 
 		static void untransformByInplace(TransformD& destination, const TransformD& origin, const TransformD& global);
+
+		static TransformD toTransformD(const TransformF& transform);
 	};
 };

@@ -273,7 +273,7 @@ namespace Genesis
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter);
 
-			glTexImage2D(GL_TEXTURE_2D, 0, gl_format, create_info.size.x, create_info.size.y, 0, gl_format, GL_UNSIGNED_BYTE, data);
+			GLCall(glTexImage2D(GL_TEXTURE_2D, 0, gl_format, create_info.size.x, create_info.size.y, 0, gl_format, GL_UNSIGNED_BYTE, data));
 
 			return (Texture2D)texture;
 		}

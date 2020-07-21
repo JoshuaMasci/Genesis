@@ -45,10 +45,53 @@ namespace Genesis
 	class EntityWorld
 	{
 	public:
+		template<class Component>
+		ComponentId getComponentID()
+		{
+			return this->component_registry_info->getComponentID<Component>();
+		};
+
+		template<class... Components>
+		EntitySignature getSignature()
+		{
+			return this->component_registry_info->getSignature<Components...>();
+		}
 
 		flat_hash_map<EntityId, EntitySignature>& getAllEntities()
 		{
 			return this->entity_map;
+		}
+
+		template<class... Components>
+		vector<EntityPool*>* getEntityPools() { return this->getEntityPools(this->component_registry_info->getSignature<Components...>()); }
+		vector<EntityPool*>* getEntityPools(EntitySignature entity_signature)
+		{
+			if (!has_value(this->entity_pool_cache, entity_signature))
+			{
+				//Create cache
+				auto& cache = this->entity_pool_cache[entity_signature];
+
+				for (auto pool : this->entity_pool_map)
+				{
+					if ((pool.first & entity_signature) == entity_signature)
+					{
+						cache.push_back(pool.second);
+					}
+				}
+			}
+
+			return &this->entity_pool_cache[entity_signature];
+		}
+
+		template<class... Components>
+		void forEachPool(function<void(EntityPool*)> function)
+		{
+			auto& pools = *this->getEntityPools(this->component_registry_info->getSignature<Components...>());
+
+			for (size_t i = 0; i < pools.size(); i++)
+			{
+				function(pools[i]);
+			}
 		}
 
 		//Entity Functions
@@ -114,7 +157,7 @@ namespace Genesis
 			EntityPool* source_pool = this->getEntityPool(entity_signature);
 
 			//Check if the entity already has the component
-			if ((entity_signature & component_sig).none())
+			if (entity_signature[new_component_id] == false)
 			{
 				EntitySignature new_entity_signature = entity_signature | component_sig;
 				EntityPool* destination_pool = this->getEntityPool(new_entity_signature);
@@ -153,6 +196,45 @@ namespace Genesis
 			return (Component*)source_pool->getComponent(entity, new_component_id);
 		}
 
+		template<class Component>
+		void removeComponent(EntityId entity)
+		{
+			ComponentId new_component_id = this->component_registry_info->getComponentID<Component>();
+			EntitySignature component_sig(0);
+			component_sig[new_component_id] = true;
+
+			GENESIS_ENGINE_ASSERT_ERROR(has_value(this->entity_map, entity), "Entity doesn't exist");
+			EntitySignature entity_signature = this->entity_map[entity];
+			EntityPool* source_pool = this->getEntityPool(entity_signature);
+
+			if (entity_signature[new_component_id] == true)
+			{
+				EntitySignature new_entity_signature = entity_signature & component_sig.flip();
+				EntityPool* destination_pool = this->getEntityPool(new_entity_signature);
+				destination_pool->addEntity(entity);
+				
+				//Copy all old components
+				vector<EntityPool::PoolComponentInfo>& destination_pool_components = destination_pool->getComponentInfo();
+				for (size_t i = 0; i < destination_pool_components.size(); i++)
+				{
+					EntityPool::PoolComponentInfo& component_info = destination_pool_components[i];
+					
+					void* source_ptr = source_pool->getComponent(entity, component_info.id);
+					void* destination_ptr = destination_pool->getComponent(entity, component_info.id);
+
+					memcpy_s(destination_ptr, component_info.size, source_ptr, component_info.size);
+				}
+
+				source_pool->removeEntity(entity);
+				this->entity_map[entity] = new_entity_signature;
+
+				return;
+			}
+
+			GENESIS_ENGINE_ERROR("Component with ID:{} doesn't exist on Entity:{}", new_component_id, entity);
+			return;
+		}
+
 	protected:
 		friend class EntityRegistry;
 
@@ -175,6 +257,15 @@ namespace Genesis
 			if (!has_value(this->entity_pool_map, pool_signature))
 			{
 				this->entity_pool_map[pool_signature] = new EntityPool(pool_signature, this->component_registry_info->component_info);
+
+				//Add pool to cache
+				for (auto pool_cache : this->entity_pool_cache)
+				{
+					if (pool_cache.first == pool_signature)
+					{
+						pool_cache.second.push_back(this->entity_pool_map[pool_signature]);
+					}
+				}
 			}
 
 			return this->entity_pool_map[pool_signature];
@@ -223,7 +314,7 @@ namespace Genesis
 		flat_hash_map<EntitySignature, EntityPool*, hash<EntitySignature>> entity_pool_map;
 
 		//Used to quickly access any Entity Pool that matches a given signature
-		flat_hash_map<EntitySignature, vector<EntityPool*>> entity_pool_cache;
+		flat_hash_map<EntitySignature, vector<EntityPool*>, hash<EntitySignature>> entity_pool_cache;
 	};
 
 	class EntityRegistry
