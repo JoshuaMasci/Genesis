@@ -515,7 +515,7 @@ namespace Genesis
 
 			new_skin.name = skin.name;
 
-			GENESIS_ENGINE_ASSERT_ERROR(skin.skeleton > -1, "Error: no root node to skeleton");
+			GENESIS_ENGINE_ASSERT(skin.skeleton > -1, "Error: no root node to skeleton");
 			new_skin.skeleton_root_index = skin.skeleton;
 
 			new_skin.joints.resize(skin.joints.size());
@@ -524,7 +524,7 @@ namespace Genesis
 				new_skin.joints[joint_index] = skin.joints[joint_index];
 			}
 
-			GENESIS_ENGINE_ASSERT_ERROR(skin.inverseBindMatrices > -1, "Error: no inverse bind matrix");
+			GENESIS_ENGINE_ASSERT(skin.inverseBindMatrices > -1, "Error: no inverse bind matrix");
 			const tinygltf::Accessor &accessor = gltfModel.accessors[skin.inverseBindMatrices];
 			const tinygltf::BufferView &bufferView = gltfModel.bufferViews[accessor.bufferView];
 			const tinygltf::Buffer &buffer = gltfModel.buffers[bufferView.buffer];

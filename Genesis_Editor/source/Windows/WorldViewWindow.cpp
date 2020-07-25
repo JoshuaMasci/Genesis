@@ -20,39 +20,37 @@ namespace Genesis
 		
 		if (ImGui::CollapsingHeader("World", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			EntitySignature name_signature = registry->getSignature<NameComponent>();
-
 			for (auto entity : world->getAllEntities())
 			{
 				const ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Leaf;
 				ImGuiTreeNodeFlags node_flags = base_flags;
 
-				if (this->selected_entity == entity.first)
+				if (this->selected_entity == entity)
 				{
 					node_flags |= ImGuiTreeNodeFlags_Selected;
 				}
 
 				bool node_open;
-				if (world->hasComponent<NameComponent>(entity.first))
+				if (world->hasComponent<NameComponent>(entity))
 				{
-					NameComponent* name = world->getComponent<NameComponent>(entity.first);
+					NameComponent* name = world->getComponent<NameComponent>(entity);
 					node_open = ImGui::TreeNodeEx(name->data, node_flags, name->data);
 				}
 				else
 				{
-					string name = "Entity:" + std::to_string(entity.first);
+					string name = "Entity:" + std::to_string(entity);
 					node_open = ImGui::TreeNodeEx(name.c_str(), node_flags, name.c_str());
 				}
 
 				if (ImGui::IsItemClicked())
 				{
-					if (this->selected_entity == entity.first)
+					if (this->selected_entity == entity)
 					{
 						this->selected_entity = InvalidEntity;
 					}
 					else
 					{
-						this->selected_entity = entity.first;
+						this->selected_entity = entity;
 					}
 				}
 

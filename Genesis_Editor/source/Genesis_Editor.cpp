@@ -54,9 +54,9 @@ namespace Genesis
 			return;
 		}
 
-		EntityId entity = world->createEntity<TransformD>();
+		EntityId entity = world->createEntity();
 
-		world->initalizeComponent<TransformD>(entity, TransformUtils::toTransformD(node->local_transform));
+		world->addComponent<TransformD>(entity, TransformUtils::toTransformD(node->local_transform));
 
 		if (!node->name.empty())
 		{
@@ -114,11 +114,17 @@ namespace Genesis
 		{
 			this->editor_base_world = this->editor_registry->createWorld();
 
-			EntityId entity = this->editor_base_world->createEntity<TransformD, NameComponent, Camera, DirectionalLight>();
-			this->editor_base_world->initalizeComponent<NameComponent>(entity, "Test_Entity");
-			this->editor_base_world->initalizeComponent<TransformD>(entity)->setOrientation( glm::angleAxis(glm::radians(90.0), vector3D(1.0f, 0.0, 0.0)) );
-			this->editor_base_world->initalizeComponent<Camera>(entity);
-			this->editor_base_world->initalizeComponent<DirectionalLight>(entity, vector3F(1.0f), 0.4f, true);
+			EntityId entity = this->editor_base_world->createEntity();
+			this->editor_base_world->addComponent<NameComponent>(entity, "Test_Entity");
+			this->editor_base_world->addComponent<TransformD>(entity)->setOrientation( glm::angleAxis(glm::radians(90.0), vector3D(1.0f, 0.0, 0.0)) );
+			this->editor_base_world->addComponent<Camera>(entity);
+			this->editor_base_world->addComponent<DirectionalLight>(entity, vector3F(1.0f), 0.4f, true);
+
+			entt::entity entity2 = this->editor_registry_entt.create();
+			this->editor_registry_entt.assign<NameComponent>(entity2, "Test_Entity");
+			this->editor_registry_entt.assign<TransformD>(entity2).setOrientation(glm::angleAxis(glm::radians(90.0), vector3D(1.0f, 0.0, 0.0)));
+			this->editor_registry_entt.assign<Camera>(entity2);
+			this->editor_registry_entt.assign<DirectionalLight>(entity2, vector3F(1.0f), 0.4f, true);
 		}
 
 		{
@@ -162,13 +168,28 @@ namespace Genesis
 			loadScene(this->editor_base_world, this->scene_model);
 		}
 
-		this->editor_base_world->forEachPool<RigidBody, TransformD>([&](EntityPool* pool)
+		const ComponentId transform_id = this->editor_registry->getComponentID<TransformD>();
+		const ComponentId rigidbody_id = this->editor_registry->getComponentID<RigidBody>();
+		MultiComponentView view = this->editor_base_world->getMultiComponentView({ transform_id, rigidbody_id });
+		for (size_t i = 0; i < view.getSize(); i++)
+		{
+			TransformD* transform = (TransformD*)view.getComponent(i, 0);
+			RigidBody* rigidbody = (RigidBody*)view.getComponent(i, 1);
+			if (transform != nullptr && rigidbody != nullptr)
+			{
+				GENESIS_ENGINE_INFO("Rigidbody");
+			}
+		}
+
+
+
+		/*this->editor_base_world->forEachPool<RigidBody, TransformD>([&](EntityPool* pool)
 		{
 			for (size_t i = 0; i < pool->getEntityCount(); i++)
 			{
 				GENESIS_ENGINE_INFO("Rigidbody");
 			}
-		});
+		});*/
 	}
 
 	EditorApplication::~EditorApplication()

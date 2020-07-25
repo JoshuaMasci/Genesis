@@ -102,12 +102,12 @@ namespace Genesis
 
 		matrix4F view_projection_matrix = camera.getProjectionMatrix(target_size) * camera_transform.getViewMatirx();
 
-		const ComponentId TransformId = world->getComponentID<TransformD>();
+		/*const ComponentId TransformId = world->getComponentID<TransformD>();
 		const ComponentId MeshId = world->getComponentID<PbrMesh>();
 		const ComponentId MaterialId = world->getComponentID<PbrMaterial>();
-		const ComponentId DirectionalId = world->getComponentID<DirectionalLight>();
+		const ComponentId DirectionalId = world->getComponentID<DirectionalLight>();*/
 
-		auto entity_mesh_pools = world->getEntityPools<TransformD, PbrMesh, PbrMaterial>();
+		//auto entity_mesh_pools = world->getEntityPools<TransformD, PbrMesh, PbrMaterial>();
 
 		const PipelineSettings ambient_settings = { CullMode::Back, DepthTest::Test_And_Write, DepthOp::Less, BlendOp::None,  BlendFactor::One, BlendFactor::Zero };
 		this->backend->setPipelineState(ambient_settings);
@@ -118,7 +118,7 @@ namespace Genesis
 
 			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
 
-			for (EntityPool* pool : *entity_mesh_pools)
+			/*for (EntityPool* pool : *entity_mesh_pools)
 			{
 				for (size_t i = 0; i < pool->getEntityCount(); i++)
 				{
@@ -134,7 +134,7 @@ namespace Genesis
 
 					this->backend->drawIndex(mesh->index_count, 0);
 				}
-			}
+			}*/
 		}
 
 		const PipelineSettings light_settings = { CullMode::Back, DepthTest::Test_Only, DepthOp::Equal, BlendOp::Add,  BlendFactor::One, BlendFactor::One };
@@ -142,7 +142,7 @@ namespace Genesis
 
 		//Draw directional light pass
 		{
-			auto directional_light_pools = world->getEntityPools<TransformD, DirectionalLight>();
+			/*auto directional_light_pools = world->getEntityPools<TransformD, DirectionalLight>();
 
 			this->backend->bindShaderProgram(this->directional_program);
 
@@ -179,7 +179,7 @@ namespace Genesis
 					}
 
 				}
-			}
+			}*/
 		}
 
 		this->backend->bindShaderProgram(nullptr);

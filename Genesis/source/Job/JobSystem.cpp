@@ -60,7 +60,7 @@ namespace Genesis
 		(*counter)++;
 
 		bool has_enqueued = this->job_queue.try_enqueue({ job, counter });
-		GENESIS_ENGINE_ASSERT_ERROR(has_enqueued == true, "Failed to enqueue job");
+		GENESIS_ENGINE_ASSERT(has_enqueued == true, "Failed to enqueue job");
 	}
 
 	void JobSystem::addJobs(JobType* jobs, size_t job_count, JobCounter* counter)
@@ -70,7 +70,7 @@ namespace Genesis
 		for (size_t i = 0; i < job_count; i++)
 		{
 			bool has_enqueued = this->job_queue.try_enqueue({ jobs[i], counter });
-			GENESIS_ENGINE_ASSERT_ERROR(has_enqueued == true, "Failed to enqueue job");
+			GENESIS_ENGINE_ASSERT(has_enqueued == true, "Failed to enqueue job");
 		}
 	}
 

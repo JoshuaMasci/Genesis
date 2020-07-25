@@ -13,6 +13,8 @@
 
 #include "Genesis/Resource/GltfLoader.hpp"
 
+#include "entt/entt.hpp"
+
 namespace Genesis
 {
 	class EditorApplication : public Application
@@ -39,6 +41,8 @@ namespace Genesis
 		EntityWorld* editor_base_world;
 
 		GltfModel* scene_model = nullptr;
+
+		entt::registry editor_registry_entt;
 	};
 }
 

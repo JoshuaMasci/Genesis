@@ -36,7 +36,7 @@ namespace Genesis
 
 			this->opengl_context = ((SDL2_Window*)window)->GL_CreateContext();
 
-			GENESIS_ENGINE_ASSERT_ERROR(glewInit() == GLEW_OK, "Glew couldn't be initialized");
+			GENESIS_ENGINE_ASSERT(glewInit() == GLEW_OK, "Glew couldn't be initialized");
 
 			GLint major, minor;
 			glGetIntegerv(GL_MAJOR_VERSION, &major);
@@ -630,73 +630,73 @@ namespace Genesis
 
 		void OpenglBackend::setUniform1i(const string& name, const int32_t& value)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform1i(current_program->getUniformLocation(name), value);
 		}
 
 		void OpenglBackend::setUniform1u(const string& name, const uint32_t& value)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform1ui(current_program->getUniformLocation(name), value);
 		}
 
 		void OpenglBackend::setUniform2u(const string& name, const vector2U& value)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform2ui(current_program->getUniformLocation(name), value.x, value.y);
 		}
 
 		void OpenglBackend::setUniform3u(const string& name, const vector3U& value)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform3ui(current_program->getUniformLocation(name), value.x, value.y, value.z);
 		}
 
 		void OpenglBackend::setUniform4u(const string& name, const vector4U& value)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform4ui(current_program->getUniformLocation(name), value.x, value.y, value.z, value.w);
 		}
 
 		void OpenglBackend::setUniform1f(const string& name, const float& value)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform1f(current_program->getUniformLocation(name), value);
 		}
 
 		void OpenglBackend::setUniform2f(const string& name, const vector2F& value)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform2f(current_program->getUniformLocation(name), value.x, value.y);
 		}
 
 		void OpenglBackend::setUniform3f(const string& name, const vector3F& value)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform3f(current_program->getUniformLocation(name), value.x, value.y, value.z);
 		}
 
 		void OpenglBackend::setUniform4f(const string& name, const vector4F& value)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform4f(current_program->getUniformLocation(name), value.x, value.y, value.z, value.w);
 		}
 
 		void OpenglBackend::setUniformMat3f(const string& name, const matrix3F& value)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniformMatrix3fv(current_program->getUniformLocation(name), 1, GL_FALSE, &value[0][0]);
 		}
 
 		void OpenglBackend::setUniformMat4f(const string& name, const matrix4F& value)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniformMatrix4fv(current_program->getUniformLocation(name), 1, GL_FALSE, &value[0][0]);
 		}
 
 		void OpenglBackend::setUniformTexture(const string& name, const uint32_t texture_slot, Texture2D value)
 		{
-			GENESIS_ENGINE_ASSERT_ERROR(this->current_program != nullptr, "Shader Not Bound");
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glActiveTexture(GL_TEXTURE0 + texture_slot);
 			glBindTexture(GL_TEXTURE_2D, ((OpenglTexture2D*)value)->texture_handle);
 			glUniform1i(current_program->getUniformLocation(name), texture_slot);

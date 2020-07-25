@@ -16,12 +16,10 @@ namespace Genesis
 		}
 	};
 
-	typedef uint64_t EntityId;
-	const EntityId InvalidEntity = std::numeric_limits<EntityId>::max();
+	typedef uint32_t EntityId;
+	typedef uint32_t ComponentId;
 
-	typedef uint64_t ComponentId;
-	const size_t MAX_COMPONENTS = sizeof(ComponentId) * 8;
-	typedef bitset<MAX_COMPONENTS> EntitySignature;
+	const EntityId InvalidEntity = std::numeric_limits<EntityId>::max();
 
 	typedef function<void(void*)> ComponentDeleteFunction;
 	struct ComponentInfo
