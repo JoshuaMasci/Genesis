@@ -25,6 +25,11 @@ namespace Genesis
 	{
 		Invalid,
 
+		R_8,
+		RG_8,
+		RGB_8,
+		RGBA_8,
+
 		RGBA_8_Unorm,
 
 		R_16_Float,

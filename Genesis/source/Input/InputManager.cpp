@@ -10,7 +10,7 @@ namespace Genesis
 	{
 	}
 
-	bool InputManager::getButtonDown(string name)
+	/*bool InputManager::getButtonDown(string name)
 	{
 		for (auto device : this->devices)
 		{
@@ -95,6 +95,11 @@ namespace Genesis
 		{
 			device->updateValues();
 		}
+
+		for (auto button : this->button_states)
+		{
+			button.second.previous_state = button.second.current_state;
+		}
 	}
 
 	void InputManager::addInputDevice(InputDevice* device)
@@ -142,39 +147,147 @@ namespace Genesis
 	vector2F InputManager::getMousePosition()
 	{
 		return this->current_mouse_position;
+	}*/
+
+	bool InputManager::getKeyboardDown(KeyboardButton button)
+	{
+		GENESIS_ENGINE_ASSERT(button < KeyboardButton::SIZE, "Keyboard button out of range");
+		return this->keyboard_buttons[(size_t)button].current_state;
 	}
 
-
-	bool InputManager::getButtonDown(fnv_hash32 hash)
+	bool InputManager::getKeyboardPressed(KeyboardButton button)
 	{
-		if (has_value(this->button_states, hash))
+		GENESIS_ENGINE_ASSERT(button < KeyboardButton::SIZE, "Keyboard button out of range");
+		return this->keyboard_buttons[(size_t)button].current_state && !this->keyboard_buttons[(size_t)button].previous_state;
+	}
+
+	void InputManager::updateKeyboardState(KeyboardButton button, bool state)
+	{
+		GENESIS_ENGINE_ASSERT(button < KeyboardButton::SIZE, "Keyboard button out of range");
+		this->keyboard_buttons[(size_t)button].current_state = state;
+	}
+
+	string& InputManager::getInputText()
+	{
+		return this->keyboard_input_text;
+	}
+
+	void InputManager::updateInputText(const string& text)
+	{
+		this->keyboard_input_text = text;
+	}
+
+	bool InputManager::getMouseDown(MouseButton button)
+	{
+		GENESIS_ENGINE_ASSERT(button < MouseButton::SIZE, "Mouse button out of range");
+		return this->mouse_buttons[(size_t)button].current_state;
+	}
+
+	bool InputManager::getMousePressed(MouseButton button)
+	{
+		GENESIS_ENGINE_ASSERT(button < MouseButton::SIZE, "Mouse button out of range");
+		return this->mouse_buttons[(size_t)button].current_state && !this->mouse_buttons[(size_t)button].previous_state;
+	}
+
+	void InputManager::updateMouseState(MouseButton button, bool state)
+	{
+		GENESIS_ENGINE_ASSERT(button < MouseButton::SIZE, "Mouse button out of range");
+		this->mouse_buttons[(size_t)button].current_state = state;
+	}
+
+	vector2F InputManager::getMousePosition()
+	{
+		return this->mouse_postion;
+	}
+
+	void InputManager::updateMousePosition(const vector2F& position)
+	{
+		this->mouse_postion = position;
+	}
+
+	bool InputManager::getButtonDown(fnv_hash32 string_hash)
+	{
+		if (has_value(this->button_values, string_hash))
 		{
-			return this->button_states[hash].current_state;
+			return this->button_values[string_hash].current_state;
 		}
 
 		return false;
 	}
 
-	bool InputManager::getButtonPressed(fnv_hash32 hash)
+	bool InputManager::getButtonPressed(fnv_hash32 string_hash)
 	{
-		if (has_value(this->button_states, hash))
+		if (has_value(this->button_values, string_hash))
 		{
-			return this->button_states[hash].current_state && !this->button_states[hash].previous_state;
+			return this->button_values[string_hash].current_state && !this->button_values[string_hash].previous_state;
 		}
 
 		return false;
 	}
 
-	void InputManager::updateButtonState(fnv_hash32 hash, bool state, Timestamp timestamp)
+	float InputManager::getAxis(fnv_hash32 string_hash)
 	{
-		this->button_states[hash].timestamp = timestamp;
-		if (state)
+		if (has_value(this->axis_values, string_hash))
 		{
-			this->button_states[hash].current_state++;
+			return this->axis_values[string_hash].value;
 		}
-		else
+
+		return 0.0f;
+	}
+
+	float InputManager::getButtonAxis(fnv_hash32 axis, fnv_hash32 pos_button, fnv_hash32 neg_button, bool clamp_value)
+	{
+		bool pos_value = this->getButtonDown(pos_button);
+		bool neg_value = this->getButtonDown(neg_button);
+
+		if (pos_value && neg_value)
 		{
-			this->button_states[hash].current_state--;
+			return 0.0;
 		}
+		else if (pos_value && !neg_value)
+		{
+			return 1.0;
+		}
+		else if (!pos_value && neg_value)
+		{
+			return -1.0;	
+		}
+
+		float value = this->getAxis(axis);
+
+		if (clamp_value)
+		{
+			glm::clamp(value, -1.0f, 1.0f);
+		}
+
+		return value;
+	}
+
+	void InputManager::update()
+	{
+		for (size_t i = 0; i < (size_t)KeyboardButton::SIZE; i++)
+		{
+			this->keyboard_buttons[i].previous_state = this->keyboard_buttons[i].current_state;
+		}
+
+		for (size_t i = 0; i < (size_t)MouseButton::SIZE; i++)
+		{
+			this->mouse_buttons[i].previous_state = this->mouse_buttons[i].current_state;
+		}
+
+		for (auto button : this->button_values)
+		{
+			button.second.previous_state = button.second.current_state;
+		}
+	}
+
+	void InputManager::updateButtonValue(fnv_hash32 string_hash, bool state)
+	{
+		this->button_values[string_hash].current_state = state;
+	}
+
+	void InputManager::updateAxisValue(fnv_hash32 string_hash, float value)
+	{
+		this->axis_values[string_hash].value = value;
 	}
 }

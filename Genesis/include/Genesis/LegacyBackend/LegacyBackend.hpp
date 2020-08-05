@@ -6,14 +6,6 @@
 
 namespace Genesis
 {
-	enum class TextureFormat
-	{
-		R = 1,
-		RG = 2,
-		RGB = 3,
-		RGBA = 4
-	};
-
 	enum class DepthFormat
 	{
 		depth_16,
@@ -39,7 +31,7 @@ namespace Genesis
 	struct TextureCreateInfo
 	{
 		vector2U size;
-		TextureFormat format;
+		ImageFormat format;
 		TextureWrapMode wrap_mode;
 		TextureFilterMode filter_mode;
 	};
@@ -57,7 +49,7 @@ namespace Genesis
 
 	struct FramebufferAttachmentInfo
 	{
-		TextureFormat format;
+		ImageFormat format;
 		MultisampleCount samples;
 	};
 
@@ -104,6 +96,7 @@ namespace Genesis
 		virtual void destoryTexture(Texture2D texture) = 0;
 
 		virtual ShaderProgram createShaderProgram(const char* vert_data, uint32_t vert_size, const char* frag_data, uint32_t frag_size) = 0;
+		virtual ShaderProgram createComputeShader(const char* data, uint32_t size) = 0;
 		virtual void destoryShaderProgram(ShaderProgram program) = 0;
 
 		virtual Framebuffer createFramebuffer(const FramebufferCreateInfo& create_info) = 0;
@@ -134,6 +127,7 @@ namespace Genesis
 		virtual void setUniformMat4f(const string& name, const matrix4F& value) = 0;
 		
 		virtual void setUniformTexture(const string& name, const uint32_t texture_slot, Texture2D value) = 0;
+		virtual void setUniformTextureImage(const string& name, const uint32_t texture_slot, Texture2D value) = 0;
 
 		virtual void setScissor(vector2I offset, vector2U extent) = 0;
 		virtual void clearScissor() = 0;
@@ -143,6 +137,8 @@ namespace Genesis
 		virtual void drawIndex(uint32_t index_count, uint32_t index_offset = 0) = 0;
 
 		virtual void draw(VertexBuffer vertex_buffer, IndexBuffer index_buffer, uint32_t triangle_count) = 0;
+
+		virtual void dispatchCompute(uint32_t groups_x = 1, uint32_t groups_y = 1, uint32_t groups_z = 1) = 0;
 
 		//Stats
 		virtual FrameStats getLastFrameStats() = 0;

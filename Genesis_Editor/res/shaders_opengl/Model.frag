@@ -47,6 +47,6 @@ layout(location = 0) out vec4 out_color;
 void main()
 {
 	vec4 color = getAlbedo(material);
-	color.xyz = color.xyz * environment.ambient_light;
+	color.xyz = color.xyz * environment.ambient_light;	
 	out_color = color;
 }

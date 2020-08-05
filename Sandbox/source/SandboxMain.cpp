@@ -5,8 +5,8 @@
 int main(int argc, char** argv)
 {
 	GENESIS_PROFILE_START(); 
-	Genesis::Logging::inti_engine_logging("");
-	Genesis::Logging::inti_client_logging("Sandbox", "");
+	Genesis::Logging::inti_engine_logging();
+	Genesis::Logging::inti_client_logging("Sandbox");
 
 	//ALPHA
 	SandboxApplication* sandbox = new SandboxApplication();

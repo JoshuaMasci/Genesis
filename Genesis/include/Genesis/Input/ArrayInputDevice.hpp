@@ -2,22 +2,18 @@
 
 #include "Genesis/Input/InputDevice.hpp"
 
+#include "Genesis/Core/Fnv1aHash.hpp"
+
 #define INVALID_INDEX 65535
 
 namespace Genesis
 {
 	typedef uint32_t Timestamp;
 
-	typedef uint16_t ButtonIndex;//May do settings later
+	typedef uint16_t ButtonIndex;
+	typedef uint16_t AxisIndex;
 
-	enum class AxisRange
-	{
-		FULL,
-		FORWARD,
-		BACKWARD
-	};
-
-	struct AxisSettings
+	/*struct AxisSettings
 	{
 		AxisSettings(uint16_t axis_index = INVALID_INDEX, double deadzone = 0.0, bool inverted = false, AxisRange range = AxisRange::FULL, double sensitivity = 1.0)
 		{
@@ -68,5 +64,55 @@ namespace Genesis
 
 		flat_hash_map<string, ButtonIndex> button_bindings;
 		flat_hash_map<string, AxisSettings> axis_bindings;
+	};*/
+
+	enum class AxisRange
+	{
+		FULL,
+		FORWARD,
+		BACKWARD
+	};
+
+	struct AxisSettings
+	{
+		AxisSettings(float deadzone = 0.0f, bool inverted = false, AxisRange range = AxisRange::FULL, float sensitivity = 1.0f)
+		{
+			this->deadzone = deadzone;
+			this->inverted = inverted;
+			this->range = range;
+			this->sensitivity = sensitivity;
+		};
+
+		float deadzone = 0.0f;
+		bool inverted = false;
+		AxisRange range = AxisRange::FULL;
+		float sensitivity = 1.0f;
+	};
+
+	class ArrayInputDevice : public InputDevice
+	{
+		struct AxisSettingsInternal
+		{
+			fnv_hash32 binding;
+			AxisSettings settings;
+		};
+
+	protected:
+		vector<vector<fnv_hash32>> button_settings;
+		vector<vector<AxisSettingsInternal>> axis_settings;
+
+	public:
+		ArrayInputDevice(const string& device_name, InputManager* manager, size_t number_of_buttons, size_t number_of_axes);
+
+		void addButtonBinding(size_t index, fnv_hash32 binding);
+		void removeButtonBinding(size_t index, fnv_hash32 binding);
+
+		void addAxisBinding(size_t index, fnv_hash32 binding, AxisSettings settings);
+		void removeAxisBinding(size_t index, fnv_hash32 binding);
+		AxisSettings* getAxisSettings(size_t index, fnv_hash32 binding);
+
+		void updateButtonValue(size_t index, bool state);
+		void updateAxisValue(size_t index, float value);
+
 	};
 };

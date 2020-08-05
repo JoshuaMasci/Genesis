@@ -1,21 +1,22 @@
 #pragma once
 
-#include <Genesis/ECS/EntityRegistry.hpp>
+#include "Genesis/Ecs/Ecs.hpp"
+
 #include <Genesis/Input/InputManager.hpp>
 #include <Genesis/LegacyBackend/LegacyBackend.hpp>
 #include <Genesis/LegacyRendering/LegacyWorldRenderer.hpp>
 
 namespace Genesis
 {
-	class SceneViewWindow
+	class SceneWindow
 	{
 	public:
-		SceneViewWindow(InputManager* input_manager, LegacyBackend* legacy_backend);
-		~SceneViewWindow();
+		SceneWindow(InputManager* input_manager, LegacyBackend* legacy_backend);
+		~SceneWindow();
 
 		void udpate(TimeStep time_step);
 
-		void drawWindow(EntityWorld* world);
+		void drawWindow(EntityRegisty& world);
 
 	private:
 		bool is_window_active = false;
@@ -26,7 +27,6 @@ namespace Genesis
 		LegacyWorldRenderer* world_renderer = nullptr;
 
 		Framebuffer framebuffer = nullptr;
-		Framebuffer gamma_correct_framebuffer = nullptr;
 		vector2U framebuffer_size = vector2U(0);
 
 		Camera scene_camera;

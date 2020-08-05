@@ -9,70 +9,63 @@
 
 namespace Genesis
 {
-	typedef uint32_t Timestamp;
-
 	class InputManager
 	{
+	protected:
+		struct ButtonValue
+		{
+			bool current_state;
+			bool previous_state;
+		};
+
+		struct AxisValue
+		{
+			float value;
+		};
+
+		//Keyboard
+		ButtonValue keyboard_buttons[(size_t)KeyboardButton::SIZE] = { {false, false} };
+		string keyboard_input_text = "";
+
+		//Mouse
+		ButtonValue mouse_buttons[(size_t)MouseButton::SIZE] = { {false, false} };
+		vector2F mouse_postion = vector2F(0.0f);
+
+		//Generic Input
+		flat_hash_map<fnv_hash32, ButtonValue> button_values;
+		flat_hash_map<fnv_hash32, AxisValue> axis_values;
+
 	public:
 		InputManager(string config_folder_path);
 		~InputManager();
 
-		bool getButtonDown(string name);
-		bool getButtonPressed(string name);
-		double getAxis(string name);
-
-		double getButtonAxisCombo(string axis_name, string pos_button_name, string neg_button_name, bool clamp_value = true);
-
-		void update();
-
-		void addInputDevice(InputDevice* device);
-		void removeInputDevice(InputDevice* device);
-
-		void setMouseDevice(MouseDevice* device);
-		void removeMouseDevice();
-
-		void setKeyboardDevice(KeyboardDevice* device);
-		void removeKeyboardDevice();
-
-		//Menu Mode Mouse Functions
-		void setMousePosition(vector2F position);
-		vector2F getMousePosition();
-
 		//Keyboard
-		string getInputText() { return this->keyboard_device->getInputText(); };
-		bool getKeyboardButtonState(KeyboardButton button) { return this->keyboard_device->getButtonState(button); };
+		bool getKeyboardDown(KeyboardButton button);
+		bool getKeyboardPressed(KeyboardButton button);
+		void updateKeyboardState(KeyboardButton button, bool state);
 
+		string& getInputText();
+		void updateInputText(const string& text);
 
-		//Prototype functions for next refactor using compile time string hashing
-		bool getButtonDown(fnv_hash32 hash);
-		bool getButtonPressed(fnv_hash32 hash);
+		//Mouse
+		bool getMouseDown(MouseButton button);
+		bool getMousePressed(MouseButton button);
+		void updateMouseState(MouseButton button, bool state);
 
-		void updateButtonState(fnv_hash32 hash, bool state, Timestamp timestamp);
+		vector2F getMousePosition();
+		void updateMousePosition(const vector2F& position);
 
-	private:
-		MouseDevice* mouse_device = nullptr;
-		KeyboardDevice* keyboard_device = nullptr;
+		//Generic Input
+		bool getButtonDown(fnv_hash32 string_hash);
+		bool getButtonPressed(fnv_hash32 string_hash);
 
-		flat_hash_set<InputDevice*> devices;
+		float getAxis(fnv_hash32 string_hash);
 
-		//Menu Mode Mouse
-		vector2F current_mouse_position;
-		bool current_mouse_state[5];
+		float getButtonAxis(fnv_hash32 pos_button, fnv_hash32 neg_button, fnv_hash32 axis, bool clamp_value = true);
 
-		struct ButtonStateTemp
-		{
-			uint8_t current_state;
-			uint8_t previous_state;
-			Timestamp timestamp;
-		};
-		flat_hash_map<fnv_hash32, ButtonStateTemp> button_states;
-
-		struct AxisValueTemp
-		{
-			float value;
-			Timestamp timestamp;
-		};
-		flat_hash_map<fnv_hash32, AxisValueTemp> axis_states;
-
+		//Updates
+		void update();
+		void updateButtonValue(fnv_hash32 string_hash, bool state);
+		void updateAxisValue(fnv_hash32 string_hash, float value);
 	};
 };

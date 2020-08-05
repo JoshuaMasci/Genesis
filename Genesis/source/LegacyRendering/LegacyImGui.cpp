@@ -20,7 +20,7 @@ namespace Genesis
 
 		TextureCreateInfo create_info = {};
 		create_info.size = vector2U(width, height);
-		create_info.format = TextureFormat::RGBA;
+		create_info.format = ImageFormat::RGBA_8_Unorm;
 		create_info.filter_mode = TextureFilterMode::Nearest;
 		create_info.wrap_mode = TextureWrapMode::Clamp_Edge;
 		this->texture_atlas = this->backend->createTexture(create_info, pixels);

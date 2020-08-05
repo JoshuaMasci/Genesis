@@ -88,29 +88,61 @@ namespace Genesis
 		frag_data.clear();
 		FileSystem::loadFileString("res/shaders_opengl//ModelDirectional.frag", frag_data);
 		this->directional_program = this->backend->createShaderProgram(vert_data.data(), (uint32_t)vert_data.size(), frag_data.data(), (uint32_t)frag_data.size());
+
+		string comp_data = "";
+		FileSystem::loadFileString("res/shaders_opengl/GammaCorrection.glsl", comp_data);
+		this->gamma_correction_program = this->backend->createComputeShader(comp_data.data(), (uint32_t)comp_data.size());
 	}
 
 	LegacyWorldRenderer::~LegacyWorldRenderer()
 	{
 		this->backend->destoryShaderProgram(this->ambient_program);
+		this->backend->destoryShaderProgram(this->directional_program);
+		this->backend->destoryShaderProgram(this->gamma_correction_program);
 	}
 
-	void LegacyWorldRenderer::drawScene(vector2U target_size, Framebuffer target_framebuffer, EntityWorld* world, Camera& camera, TransformD& camera_transform)
+	void LegacyWorldRenderer::drawScene(vector2U target_size, Framebuffer target_framebuffer, EntityRegisty& world, Camera& camera, TransformD& camera_transform)
 	{
 		this->backend->bindFramebuffer(target_framebuffer);
 		this->backend->clearFramebuffer(true, true);
 
 		matrix4F view_projection_matrix = camera.getProjectionMatrix(target_size) * camera_transform.getViewMatirx();
 
-		/*const ComponentId TransformId = world->getComponentID<TransformD>();
-		const ComponentId MeshId = world->getComponentID<PbrMesh>();
-		const ComponentId MaterialId = world->getComponentID<PbrMaterial>();
-		const ComponentId DirectionalId = world->getComponentID<DirectionalLight>();*/
-
-		//auto entity_mesh_pools = world->getEntityPools<TransformD, PbrMesh, PbrMaterial>();
-
-		const PipelineSettings ambient_settings = { CullMode::Back, DepthTest::Test_And_Write, DepthOp::Less, BlendOp::None,  BlendFactor::One, BlendFactor::Zero };
+		const PipelineSettings ambient_settings = { CullMode::Back, DepthTest::Test_And_Write, DepthOp::Less, BlendOp::None, BlendFactor::One, BlendFactor::Zero };
 		this->backend->setPipelineState(ambient_settings);
+
+		struct MeshStruct
+		{
+			PbrMesh mesh;
+			PbrMaterial material;
+			TransformD transform;
+		};
+		static vector<MeshStruct> meshes;
+		meshes.clear();
+		{
+			auto mesh_group = world.view<PbrMesh, PbrMaterial, TransformD>();
+			for (EntityHandle entity : mesh_group)
+			{
+				auto&[mesh, material, transform] = mesh_group.get<PbrMesh, PbrMaterial, TransformD>(entity);
+				meshes.push_back({ mesh , material, transform });
+			}
+		}
+
+		struct DirectionalLightStruct
+		{
+			DirectionalLight light;
+			TransformD transform;
+		};
+		static vector<DirectionalLightStruct> directional_lights;
+		directional_lights.clear();
+		{
+			auto directional_light_group = world.view<DirectionalLight, TransformD>();
+			for (EntityHandle entity : directional_light_group)
+			{
+				auto&[light, transform] = directional_light_group.get<DirectionalLight, TransformD>(entity);
+				directional_lights.push_back({light, transform});
+			}
+		}
 
 		//Draw ambient pass
 		{
@@ -118,71 +150,52 @@ namespace Genesis
 
 			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
 
-			/*for (EntityPool* pool : *entity_mesh_pools)
+			for (MeshStruct& mesh : meshes)
 			{
-				for (size_t i = 0; i < pool->getEntityCount(); i++)
-				{
-					TransformD* transform = (TransformD*)pool->getComponentIndex(i, TransformId);
-					PbrMesh* mesh = (PbrMesh*)pool->getComponentIndex(i, MeshId);
-					PbrMaterial* material = (PbrMaterial*)pool->getComponentIndex(i, MaterialId);
+				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
+				LegacyShaderUniform::writeMaterialUniform(this->backend, mesh.material);
 
-					LegacyShaderUniform::writeTransformUniform(this->backend, *transform);
-					LegacyShaderUniform::writeMaterialUniform(this->backend, *material);
+				this->backend->bindVertexBuffer(mesh.mesh.vertex_buffer);
+				this->backend->bindIndexBuffer(mesh.mesh.index_buffer);
 
-					this->backend->bindVertexBuffer(mesh->vertex_buffer);
-					this->backend->bindIndexBuffer(mesh->index_buffer);
-
-					this->backend->drawIndex(mesh->index_count, 0);
-				}
-			}*/
+				this->backend->drawIndex(mesh.mesh.index_count, 0);
+			}
 		}
 
-		const PipelineSettings light_settings = { CullMode::Back, DepthTest::Test_Only, DepthOp::Equal, BlendOp::Add,  BlendFactor::One, BlendFactor::One };
+		const PipelineSettings light_settings = { CullMode::Back, DepthTest::Test_Only, DepthOp::Equal, BlendOp::Add, BlendFactor::One, BlendFactor::One };
 		this->backend->setPipelineState(light_settings);
 
 		//Draw directional light pass
 		{
-			/*auto directional_light_pools = world->getEntityPools<TransformD, DirectionalLight>();
-
 			this->backend->bindShaderProgram(this->directional_program);
-
 			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
 
-			for (EntityPool* pool : *entity_mesh_pools)
+			for (MeshStruct& mesh : meshes)
 			{
-				for (size_t i = 0; i < pool->getEntityCount(); i++)
+				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
+				LegacyShaderUniform::writeMaterialUniform(this->backend, mesh.material);
+
+				this->backend->bindVertexBuffer(mesh.mesh.vertex_buffer);
+				this->backend->bindIndexBuffer(mesh.mesh.index_buffer);
+
+				for (DirectionalLightStruct& light : directional_lights)
 				{
-					TransformD* transform = (TransformD*)pool->getComponentIndex(i, TransformId);
-					PbrMesh* mesh = (PbrMesh*)pool->getComponentIndex(i, MeshId);
-					PbrMaterial* material = (PbrMaterial*)pool->getComponentIndex(i, MaterialId);
-
-					LegacyShaderUniform::writeTransformUniform(this->backend, *transform);
-					LegacyShaderUniform::writeMaterialUniform(this->backend, *material);
-
-					this->backend->bindVertexBuffer(mesh->vertex_buffer);
-					this->backend->bindIndexBuffer(mesh->index_buffer);
-
-					//For each light
-					for (EntityPool* light_pool : *directional_light_pools)
+					if (light.light.enabled)
 					{
-						for (size_t i = 0; i < light_pool->getEntityCount(); i++)
-						{
-							TransformD* light_transform = (TransformD*)light_pool->getComponentIndex(i, TransformId);
-							DirectionalLight* light = (DirectionalLight*)light_pool->getComponentIndex(i, DirectionalId);
-							
-							if (light->enabled)
-							{
-								LegacyShaderUniform::writeDirectionalLight(this->backend, *light, (vector3F)light_transform->getForward());
-								this->backend->drawIndex(mesh->index_count, 0);
-							}
-						}
+						LegacyShaderUniform::writeDirectionalLight(this->backend, light.light, (vector3F)light.transform.getForward());
+						this->backend->drawIndex(mesh.mesh.index_count, 0);
 					}
-
 				}
-			}*/
+			}
 		}
 
-		this->backend->bindShaderProgram(nullptr);
 		this->backend->bindFramebuffer(nullptr);
+
+		//Gamma Correction
+		this->backend->bindShaderProgram(this->gamma_correction_program);
+		this->backend->setUniform1f("gamma", 2.2f);
+		this->backend->setUniformTextureImage("target", 0, this->backend->getFramebufferColorAttachment(target_framebuffer, 0));
+		this->backend->dispatchCompute(target_size.x, target_size.y, 1);
+		this->backend->bindShaderProgram(nullptr);
 	}
 }

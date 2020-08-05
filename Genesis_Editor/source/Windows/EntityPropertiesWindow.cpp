@@ -19,26 +19,26 @@ namespace Genesis
 	{
 	}
 
-	void EntityPropertiesWindow::drawWindow(EntityRegistry* registry, EntityWorld* world, EntityId selected_entity)
+	void EntityPropertiesWindow::drawWindow(EntityRegisty& world, EntityHandle selected_entity)
 	{
 		ImGui::Begin("Entity Properties");
 
-		if (selected_entity != InvalidEntity)
+		if (world.valid(selected_entity))
 		{
-			if (world->hasComponent<NameComponent>(selected_entity))
+			if (world.has<NameComponent>(selected_entity))
 			{
 				if (ImGui::CollapsingHeader("Name Component", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					NameComponent* name_component = world->getComponent<NameComponent>(selected_entity);
-					ImGui::InputText("Entity Name", name_component->data, name_component->SIZE);
+					NameComponent& name_component = world.get<NameComponent>(selected_entity);
+					ImGui::InputText("Entity Name", name_component.data, name_component.SIZE);
 				}
 			}
 
-			if (world->hasComponent<TransformD>(selected_entity))
+			if (world.has<TransformD>(selected_entity))
 			{
 				if (ImGui::CollapsingHeader("World Transform", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					TransformD& transform_component = *world->getComponent<TransformD>(selected_entity);
+					TransformD& transform_component = world.get<TransformD>(selected_entity);
 
 					vector3D position = transform_component.getPosition();
 					if (ImGui::InputScalarN("World Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
@@ -60,11 +60,11 @@ namespace Genesis
 				}
 			}
 
-			if (world->hasComponent<Camera>(selected_entity))
+			if (world.has<Camera>(selected_entity))
 			{
 				if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					Camera& camera_component = *world->getComponent<Camera>(selected_entity);
+					Camera& camera_component = world.get<Camera>(selected_entity);
 
 					ImGui::SliderFloat("Fov X", &camera_component.frame_of_view, 5.0f, 140.0f);
 					ImGui::InputFloat("Z Near", &camera_component.z_near);
@@ -74,11 +74,11 @@ namespace Genesis
 				}
 			}
 
-			if (world->hasComponent<DirectionalLight>(selected_entity))
+			if (world.has<DirectionalLight>(selected_entity))
 			{
 				if (ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					DirectionalLight& light_component = *world->getComponent<DirectionalLight>(selected_entity);
+					DirectionalLight& light_component = world.get<DirectionalLight>(selected_entity);
 
 					ImGui::SliderFloat("Intensity", &light_component.intensity, 0.0f, 1.0f);
 					ImGui::ColorEdit3("Color", &light_component.color.x, 0);
@@ -86,11 +86,11 @@ namespace Genesis
 				}
 			}
 
-			if (world->hasComponent<PbrMaterial>(selected_entity))
+			if (world.has<PbrMaterial>(selected_entity))
 			{
 				if (ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					PbrMaterial& material_component = *world->getComponent<PbrMaterial>(selected_entity);
+					PbrMaterial& material_component = world.get<PbrMaterial>(selected_entity);
 
 					ImGui::ColorEdit4("Albedo Color", &material_component.albedo_factor.x, 0);
 					ImGui::SliderFloat("Metallic Factor", &material_component.metallic_roughness_factor.x, 0.0f, 1.0f);

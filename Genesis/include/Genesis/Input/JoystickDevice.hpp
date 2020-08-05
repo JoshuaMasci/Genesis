@@ -4,12 +4,12 @@
 
 namespace Genesis
 {
-	enum class HatDirection
+	enum class HatButtons
 	{
 		Up = 0,
-		Right,
-		Down,
-		Left,
+		Right = 1,
+		Down = 2,
+		Left = 3,
 	};
 
 	const string HatDirectionName[]
@@ -20,7 +20,7 @@ namespace Genesis
 		" Left"
 	};
 
-	enum class HatState
+	enum class HatDirection
 	{
 		Centered,
 		Up,
@@ -36,15 +36,14 @@ namespace Genesis
 	class JoystickDevice: public ArrayInputDevice
 	{
 	public:
-		JoystickDevice(string name, uint16_t number_of_buttons, uint16_t number_of_hats, uint16_t number_of_axes);
-		~JoystickDevice();
+		JoystickDevice(const string& device_name, InputManager* manager, size_t number_of_buttons, size_t number_of_hats, size_t number_of_axes);
 
-		void addHatButton(string name, uint16_t index, HatDirection state);
-		void updateHat(uint16_t index, HatState state, Timestamp time);
+		void addHatBinding(size_t hat_index, HatDirection direction, fnv_hash32 binding);
+		void removeHatBinding(size_t hat_index, HatDirection direction, fnv_hash32 binding);
 
-		virtual string getButtonName(uint16_t index) override;
+		void updateHatValue(size_t hat_index, HatDirection direction);
 
 	protected:
-		uint16_t number_of_buttons;
+		size_t number_of_buttons;
 	};
 };

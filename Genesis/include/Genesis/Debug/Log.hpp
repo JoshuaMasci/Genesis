@@ -13,8 +13,8 @@ namespace Genesis
 	class Logging
 	{
 	public:
-		static void inti_engine_logging(std::string engine_file_output);
-		static void inti_client_logging(std::string client_name, std::string client_file_output);
+		static void inti_engine_logging();
+		static void inti_client_logging(std::string client_name);
 
 		static std::shared_ptr<spdlog::logger> Engine;
 		static std::shared_ptr<spdlog::logger> Application;

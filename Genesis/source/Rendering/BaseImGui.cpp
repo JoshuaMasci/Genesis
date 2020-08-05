@@ -111,32 +111,34 @@ namespace Genesis
 	}
 
 	const KeyboardButton keyboard_buttons[] = { KeyboardButton::Tab, KeyboardButton::Left, KeyboardButton::Right, KeyboardButton::Up, KeyboardButton::Down, KeyboardButton::Pageup, KeyboardButton::Pagedown, KeyboardButton::Home, KeyboardButton::Insert, KeyboardButton::End, KeyboardButton::Delete, KeyboardButton::Backspace, KeyboardButton::Space, KeyboardButton::Enter, KeyboardButton::Pad_Enter, KeyboardButton::A, KeyboardButton::C, KeyboardButton::V, KeyboardButton::X, KeyboardButton::Y, KeyboardButton::Z };
+	const MouseButton mouse_buttons[] = { MouseButton::Left, MouseButton::Right, MouseButton::Middle, MouseButton::Extra1, MouseButton::Extra2};
+
 
 	void BaseImGui::update()
 	{
 		ImGuiIO& io = ImGui::GetIO();
 
 		vector2F window_size = this->window->getWindowSize();
-
 		io.DisplaySize = { window_size.x, window_size.y };
 
-		vector2F mouse_pos = this->input_manager->getMousePosition();
-		io.MousePos = ImVec2(mouse_pos.x, mouse_pos.y);
-
-		//TODO Input
-		io.MouseDown[0] = this->input_manager->getButtonDown("Mouse_Left");
-		io.MouseDown[1] = this->input_manager->getButtonDown("Mouse_Right");
-		io.MouseDown[2] = this->input_manager->getButtonDown("Mouse_Middle");
-		io.MouseDown[3] = this->input_manager->getButtonDown("Mouse_X1");
-		io.MouseDown[4] = this->input_manager->getButtonDown("Mouse_X2");
-
-		if (this->input_manager->getButtonDown("Mouse_ForwardScroll"))
+		//Mouse
 		{
-			io.MouseWheel += 1;
-		}
-		else if (this->input_manager->getButtonDown("Mouse_BackwardScroll"))
-		{
-			io.MouseWheel -= 1;
+			vector2F mouse_pos = this->input_manager->getMousePosition();
+			io.MousePos = ImVec2(mouse_pos.x, mouse_pos.y);
+
+			for (size_t i = 0; i < _countof(mouse_buttons); i++)
+			{
+				io.MouseDown[i] = this->input_manager->getMouseDown(mouse_buttons[i]);
+			}
+
+			if (this->input_manager->getMouseDown(MouseButton::ForwardScroll))
+			{
+				io.MouseWheel += 1;
+			}
+			else if (this->input_manager->getMouseDown(MouseButton::BackwardScroll))
+			{
+				io.MouseWheel -= 1;
+			}
 		}
 
 		//Keyboard
@@ -149,7 +151,7 @@ namespace Genesis
 
 			for (size_t i = 0; i < _countof(keyboard_buttons); i++)
 			{
-				io.KeysDown[(int)keyboard_buttons[i]] = this->input_manager->getKeyboardButtonState(keyboard_buttons[i]);
+				io.KeysDown[(int)keyboard_buttons[i]] = this->input_manager->getKeyboardDown(keyboard_buttons[i]); //TODO figure out if needs pressed or down
 			}
 		}
 	}

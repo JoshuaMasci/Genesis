@@ -3,8 +3,8 @@
 int main(int argc, char** argv)
 {
 	GENESIS_PROFILE_START(); 
-	Genesis::Logging::inti_engine_logging("");
-	Genesis::Logging::inti_client_logging("Genesis_Editor", "");
+	Genesis::Logging::inti_engine_logging();
+	Genesis::Logging::inti_client_logging("Genesis_Editor");
 
 	Genesis::EditorApplication* editor = new Genesis::EditorApplication();
 	GENESIS_INFO("Genesis_Editor Started");
@@ -37,38 +37,36 @@ int main(int argc, char** argv)
 
 //Components
 #include "Genesis/Component/NameComponent.hpp"
+#include "Genesis/Component/Hierarchy.hpp"
 #include "Genesis/Resource/PbrMesh.hpp"
 #include "Genesis/Resource/PbrMaterial.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lights.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
 
-#include "Genesis/ECS/EntitySystem.hpp"
-
 namespace Genesis
 {
-	void loadNode(EntityWorld* world, GltfNode* node)
+	void loadNode(entt::registry& world, GltfNode* node)
 	{
 		if (node == nullptr)
 		{
 			return;
 		}
 
-		EntityId entity = world->createEntity();
+		EntityHandle entity = world.create();
 
-		world->addComponent<TransformD>(entity, TransformUtils::toTransformD(node->local_transform));
+		world.assign<TransformD>(entity, TransformUtils::toTransformD(node->local_transform));
 
 		if (!node->name.empty())
 		{
-			world->addComponent<NameComponent>(entity, node->name.c_str());
+			world.assign<NameComponent>(entity, node->name.c_str());
 		}
 
 		if (node->mesh != nullptr)
 		{
-			(*world->addComponent<PbrMesh>(entity)) = *node->mesh;
-			(*world->addComponent<PbrMaterial>(entity)) = *node->mesh->primitives[0].temp_material_ptr;
-
-			world->addComponent<RigidBody>(entity);
+			world.assign<PbrMesh>(entity, *node->mesh);
+			world.assign<PbrMaterial>(entity, *node->mesh->primitives[0].temp_material_ptr);
+			world.assign<RigidBody>(entity);
 		}
 
 		for (auto child_node : node->child_nodes)
@@ -77,12 +75,29 @@ namespace Genesis
 		}
 	}
 
-	void loadScene(EntityWorld* world, GltfModel* scene)
+	void loadScene(entt::registry& world, GltfModel* scene)
 	{
 		for (auto root_node : scene->root_nodes)
 		{
 			loadNode(world, root_node);
 		}
+	}
+
+	EntityHandle createHierarchy(EntityRegisty& registry, size_t count)
+	{
+		EntityHandle entity = registry.create();
+		registry.assign<Hierarchy>(entity);
+
+		string name = "Entity Hiearchy " + std::to_string(count);
+		registry.assign<NameComponent>(entity, name.c_str());
+
+		if (count > 1)
+		{
+			EntityHandle child = createHierarchy(registry, count - 1);
+			Hierarchy::addChild(registry, entity, child);
+		}
+
+		return entity;
 	}
 
 	EditorApplication::EditorApplication()
@@ -94,41 +109,24 @@ namespace Genesis
 		this->ui_renderer = new LegacyImGui(this->legacy_backend, this->input_manager, this->window);
 
 		this->console_window = new ConsoleWindow();
-		//Logging::console_sink->setConsoleWindow(this->console_window);
+		Logging::console_sink->setConsoleWindow(this->console_window);
 
-		this->world_view_window = new WorldViewWindow();
+		this->entity_list_window = new EntityListWindow();
 		this->entity_properties_window = new EntityPropertiesWindow();
-		this->scene_view_window = new SceneViewWindow(this->input_manager, this->legacy_backend);
-
-		this->editor_registry = new EntityRegistry();
-		this->editor_registry->registerComponent<TransformD>();
-		this->editor_registry->registerComponent<NameComponent>();
-		this->editor_registry->registerComponent<PbrMesh>();
-		this->editor_registry->registerComponent<PbrMaterial>();
-		this->editor_registry->registerComponent<Camera>();
-		this->editor_registry->registerComponent<DirectionalLight>();
-		this->editor_registry->registerComponent<PointLight>();
-		this->editor_registry->registerComponent<SpotLight>();
-		this->editor_registry->registerComponent<RigidBody>();
+		this->scene_window = new SceneWindow(this->input_manager, this->legacy_backend);
 
 		{
-			this->editor_base_world = this->editor_registry->createWorld();
-
-			EntityId entity = this->editor_base_world->createEntity();
-			this->editor_base_world->addComponent<NameComponent>(entity, "Test_Entity");
-			this->editor_base_world->addComponent<TransformD>(entity)->setOrientation( glm::angleAxis(glm::radians(90.0), vector3D(1.0f, 0.0, 0.0)) );
-			this->editor_base_world->addComponent<Camera>(entity);
-			this->editor_base_world->addComponent<DirectionalLight>(entity, vector3F(1.0f), 0.4f, true);
-
-			entt::entity entity2 = this->editor_registry_entt.create();
-			this->editor_registry_entt.assign<NameComponent>(entity2, "Test_Entity");
-			this->editor_registry_entt.assign<TransformD>(entity2).setOrientation(glm::angleAxis(glm::radians(90.0), vector3D(1.0f, 0.0, 0.0)));
-			this->editor_registry_entt.assign<Camera>(entity2);
-			this->editor_registry_entt.assign<DirectionalLight>(entity2, vector3F(1.0f), 0.4f, true);
+			EntityHandle entity = this->editor_registry.create();
+			this->editor_registry.assign<NameComponent>(entity, "Test_Entity");
+			this->editor_registry.assign<TransformD>(entity).setOrientation(glm::angleAxis(glm::radians(90.0), vector3D(1.0f, 0.0, 0.0)));
+			this->editor_registry.assign<Camera>(entity);
+			this->editor_registry.assign<DirectionalLight>(entity, vector3F(1.0f), 0.4f, true);
 		}
 
+		createHierarchy(editor_registry, 10);
+
 		{
-			const string file_name = "res/Shapes.glb";
+			const string file_name = "res/RoundShip.glb";
 
 			tinygltf::Model gltfModel;
 			tinygltf::TinyGLTF loader;
@@ -165,23 +163,8 @@ namespace Genesis
 			}
 
 			this->scene_model = new GltfModel(this->legacy_backend, gltfModel);
-			loadScene(this->editor_base_world, this->scene_model);
+			loadScene(this->editor_registry, this->scene_model);
 		}
-
-		const ComponentId transform_id = this->editor_registry->getComponentID<TransformD>();
-		const ComponentId rigidbody_id = this->editor_registry->getComponentID<RigidBody>();
-		MultiComponentView view = this->editor_base_world->getMultiComponentView({ transform_id, rigidbody_id });
-		for (size_t i = 0; i < view.getSize(); i++)
-		{
-			TransformD* transform = (TransformD*)view.getComponent(i, 0);
-			RigidBody* rigidbody = (RigidBody*)view.getComponent(i, 1);
-			if (transform != nullptr && rigidbody != nullptr)
-			{
-				GENESIS_ENGINE_INFO("Rigidbody");
-			}
-		}
-
-
 
 		/*this->editor_base_world->forEachPool<RigidBody, TransformD>([&](EntityPool* pool)
 		{
@@ -196,16 +179,14 @@ namespace Genesis
 	{
 		delete this->scene_model;
 
-		delete this->editor_registry;
-
 		delete this->console_window;
-		delete this->world_view_window;
+		delete this->entity_list_window;
 		delete this->entity_properties_window;
-		delete this->scene_view_window;
+		delete this->scene_window;
 
 		delete this->legacy_backend;
 
-		//Logging::console_sink->setConsoleWindow(nullptr);
+		Logging::console_sink->setConsoleWindow(nullptr);
 	}
 
 	void EditorApplication::update(TimeStep time_step)
@@ -213,7 +194,7 @@ namespace Genesis
 		GENESIS_PROFILE_FUNCTION("EditorApplication::update");
 		Application::update(time_step);
 
-		this->scene_view_window->udpate(time_step);
+		this->scene_window->udpate(time_step);
 	}
 
 	void EditorApplication::render(TimeStep time_step)
@@ -255,9 +236,9 @@ namespace Genesis
 		}
 
 		this->console_window->drawWindow();
-		this->world_view_window->drawWindow(this->editor_registry, this->editor_base_world);
-		this->entity_properties_window->drawWindow(this->editor_registry, this->editor_base_world, this->world_view_window->getSelected());
-		this->scene_view_window->drawWindow(this->editor_base_world);
+		this->entity_list_window->drawWindow(this->editor_registry);
+		this->entity_properties_window->drawWindow(this->editor_registry, this->entity_list_window->getSelected());
+		this->scene_window->drawWindow(this->editor_registry);
 
 		this->ui_renderer->endFrame();
 

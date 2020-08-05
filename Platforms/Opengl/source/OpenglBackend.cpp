@@ -198,20 +198,43 @@ namespace Genesis
 			delete index_buffer;
 		}
 
-		GLenum getFormat(TextureFormat format)
+		GLImageFormat getFormat(ImageFormat format)
 		{
 			switch (format)
 			{
-			case TextureFormat::R:
-				return GL_R;
-			case TextureFormat::RG:
-				return GL_RG;
-			case TextureFormat::RGB:
-				return GL_RGB;
-			case TextureFormat::RGBA:
-				return GL_RGBA;
+			case Genesis::ImageFormat::R_8:
+				return { GL_R8, GL_RED, GL_UNSIGNED_BYTE };
+			case Genesis::ImageFormat::RG_8:
+				return { GL_RG8, GL_RG, GL_UNSIGNED_BYTE };
+			case Genesis::ImageFormat::RGB_8:
+				return { GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE };
+			case Genesis::ImageFormat::RGBA_8:
+			case Genesis::ImageFormat::RGBA_8_Unorm:
+				return { GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE };
+			case Genesis::ImageFormat::R_16_Float:
+				return { GL_R16F, GL_RED, GL_HALF_FLOAT };
+			case Genesis::ImageFormat::RG_16_Float:
+				return { GL_RG16F, GL_RG, GL_HALF_FLOAT };
+			case Genesis::ImageFormat::RGB_16_Float:
+				return { GL_RGB16F, GL_RGB, GL_HALF_FLOAT };
+			case Genesis::ImageFormat::RGBA_16_Float:
+				return { GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT };
+			case Genesis::ImageFormat::R_32_Float:
+				return { GL_R32F, GL_RED, GL_FLOAT };
+			case Genesis::ImageFormat::RG_32_Float:
+				return { GL_RG32F, GL_RG, GL_FLOAT };
+			case Genesis::ImageFormat::RGB_32_Float:
+				return { GL_RGB32F, GL_RGB, GL_FLOAT };
+			case Genesis::ImageFormat::RGBA_32_Float:
+				return { GL_RGBA32F, GL_RGBA, GL_FLOAT };
+			case Genesis::ImageFormat::D_16_Unorm:
+				return { GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT };
+			case Genesis::ImageFormat::D_32_Float:
+				return { GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT };
+			case Genesis::ImageFormat::Invalid:
+			default:
+				return GLImageFormat();
 			}
-			return 0;
 		}
 
 		GLenum getDepthFormat(DepthFormat format)
@@ -225,7 +248,7 @@ namespace Genesis
 			case DepthFormat::depth_32:
 				return GL_DEPTH_COMPONENT32;
 			case DepthFormat::depth_32f:
-				return GL_DEPTH_COMPONENT32;
+				return GL_DEPTH_COMPONENT32F;
 			}
 			return 0;
 		}
@@ -237,7 +260,9 @@ namespace Genesis
 			glGenTextures(1, &texture->texture_handle);
 			glBindTexture(GL_TEXTURE_2D, texture->texture_handle);
 
-			GLenum gl_format = getFormat(create_info.format);
+			GLImageFormat gl_format = getFormat(create_info.format);
+
+			texture->format = gl_format;
 
 			GLenum gl_wrap_mode;
 			switch (create_info.wrap_mode)
@@ -273,7 +298,7 @@ namespace Genesis
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter);
 
-			GLCall(glTexImage2D(GL_TEXTURE_2D, 0, gl_format, create_info.size.x, create_info.size.y, 0, gl_format, GL_UNSIGNED_BYTE, data));
+			GLCall(glTexImage2D(GL_TEXTURE_2D, 0, gl_format.internal_format, create_info.size.x, create_info.size.y, 0, gl_format.format, gl_format.type, data));
 
 			return (Texture2D)texture;
 		}
@@ -286,7 +311,14 @@ namespace Genesis
 
 		ShaderProgram OpenglBackend::createShaderProgram(const char* vert_data, uint32_t vert_size, const char* frag_data, uint32_t frag_size)
 		{
-			return (ShaderProgram)new OpenglShaderProgram(vert_data, vert_size, frag_data, frag_size);
+			ShaderStageInfo info[] = { {vert_data, vert_size, GL_VERTEX_SHADER}, {frag_data, frag_size, GL_FRAGMENT_SHADER} };
+			return (ShaderProgram)new OpenglShaderProgram(info, _countof(info));
+		}
+
+		ShaderProgram OpenglBackend::createComputeShader(const char* data, uint32_t size)
+		{
+			ShaderStageInfo info = { data, size, GL_COMPUTE_SHADER };
+			return(ShaderProgram)new OpenglShaderProgram(&info, 1);
 		}
 
 		void OpenglBackend::destoryShaderProgram(ShaderProgram program)
@@ -311,12 +343,12 @@ namespace Genesis
 				GLuint attachment;
 				glGenTextures(1, &attachment);
 
-				GLenum gl_format = getFormat(create_info.attachments[i].format);
+				GLImageFormat gl_format = getFormat(create_info.attachments[i].format);
 
 				if (create_info.attachments[i].samples == MultisampleCount::Sample_1)
 				{
 					glBindTexture(GL_TEXTURE_2D, attachment);
-					glTexImage2D(GL_TEXTURE_2D, 0, gl_format, create_info.size.x, create_info.size.y, 0, gl_format, GL_UNSIGNED_BYTE, NULL);
+					glTexImage2D(GL_TEXTURE_2D, 0, gl_format.internal_format, create_info.size.x, create_info.size.y, 0, gl_format.format, gl_format.type , NULL);
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 					glFramebufferTexture2D(GL_FRAMEBUFFER, (GLenum)(GL_COLOR_ATTACHMENT0 + i), GL_TEXTURE_2D, attachment, 0);
@@ -324,11 +356,12 @@ namespace Genesis
 				else
 				{
 					glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, attachment);
-					glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, (GLsizei)create_info.attachments[i].samples, gl_format, create_info.size.x, create_info.size.y, true);
+					glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, (GLsizei)create_info.attachments[i].samples, gl_format.internal_format, create_info.size.x, create_info.size.y, true);
 					glFramebufferTexture2D(GL_FRAMEBUFFER, (GLenum)(GL_COLOR_ATTACHMENT0 + i), GL_TEXTURE_2D_MULTISAMPLE, attachment, 0);
 				}
 
 				framebuffer->attachements[i].texture_handle = attachment;
+				framebuffer->attachements[i].format = gl_format;
 			}
 
 			if (create_info.depth_attachment != nullptr)
@@ -355,7 +388,6 @@ namespace Genesis
 
 				framebuffer->depth_attachement.texture_handle = depth_attachment;
 			}
-
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -702,6 +734,13 @@ namespace Genesis
 			glUniform1i(current_program->getUniformLocation(name), texture_slot);
 		}
 
+		void OpenglBackend::setUniformTextureImage(const string& name, const uint32_t texture_slot, Texture2D value)
+		{
+			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
+			glBindImageTexture(texture_slot, ((OpenglTexture2D*)value)->texture_handle, 0, GL_FALSE, 0, GL_READ_WRITE, ((OpenglTexture2D*)value)->format.internal_format);
+			glUniform1i(current_program->getUniformLocation(name), texture_slot);
+		}
+
 		void OpenglBackend::setScissor(vector2I offset, vector2U extent)
 		{
 			glEnable(GL_SCISSOR_TEST);
@@ -764,20 +803,19 @@ namespace Genesis
 			glBindVertexArray(vertex->vertex_array_object);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index->index_buffer);
 
-			if (index->type == IndexType::uint32)
-			{
-				glDrawElements(GL_TRIANGLES, triangle_count, GL_UNSIGNED_INT, 0);
-			}
-			else
-			{
-				glDrawElements(GL_TRIANGLES, triangle_count, GL_UNSIGNED_SHORT, 0);
-			}
+			glDrawElements(GL_TRIANGLES, triangle_count, (index->type == IndexType::uint32) ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT, 0);
 
 			glBindVertexArray(0);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 			this->current_frame_stats.draw_calls++;
 			this->current_frame_stats.triangles_count += triangle_count / 3;
+		}
+
+		void OpenglBackend::dispatchCompute(uint32_t groups_x, uint32_t groups_y, uint32_t groups_z)
+		{
+			GLCall(glDispatchCompute((GLuint)groups_x, (GLuint)groups_y, (GLuint)groups_z));
+			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 		}
 
 		FrameStats OpenglBackend::getLastFrameStats()

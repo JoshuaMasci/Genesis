@@ -1,51 +1,32 @@
 #include "Genesis/Input/MouseDevice.hpp"
 
+#include "Genesis/Input/InputManager.hpp"
+
 namespace Genesis
-{
-	MouseDevice::MouseDevice(string name)
-		:ArrayInputDevice(name, 7, 2)
+{	
+	MouseDevice::MouseDevice(const string& device_name, InputManager* manager)
+		:ArrayInputDevice(device_name, manager, (uint16_t)MouseButton::SIZE, 2)
 	{
-
 	}
 
-	MouseDevice::~MouseDevice()
+	void MouseDevice::addMouseBinding(MouseButton button, fnv_hash32 string_hash)
 	{
-
+		this->addButtonBinding((size_t)button, string_hash);
 	}
 
-	//A wrapper for updateButton
-	void MouseDevice::updateMouseButton(MouseButton button, bool state, Timestamp time)
+	void MouseDevice::removeMouseBinding(MouseButton button, fnv_hash32 string_hash)
 	{
-		this->updateButton((int32_t)button, state, time);
+		this->removeButtonBinding((size_t)button, string_hash);
 	}
 
-	//A wrapper for updateAxis
-	void MouseDevice::updateMouseAxis(MouseAxis axis, int32_t movement_in_pixels, Timestamp time)
+	void MouseDevice::updateMouseState(MouseButton button, bool state)
 	{
-		double value = ((double)movement_in_pixels) / pixel_divisor;
-		this->updateAxis((int16_t)axis, value, time);
+		this->input_manager->updateMouseState(button, state);
+		this->updateButtonValue((size_t)button, state);
 	}
 
-	void MouseDevice::updateValues()
+	void MouseDevice::updateMousePosition(const vector2F& position)
 	{
-		ArrayInputDevice::updateValues();//Call super
-
-		//Always clear the scroll wheel
-		this->updateButton((int16_t)MouseButton::ForwardScroll, false, 0);//Update time doesnt matter
-		this->updateButton((int16_t)MouseButton::BackwardScroll, false, 0);
-
-		//Clear mouse movements
-		this->updateAxis((int16_t)MouseAxis::X, 0.0, 0);//Clear time so that it doesn't get used
-		this->updateAxis((int16_t)MouseAxis::Y, 0.0, 0);
-	}
-
-	string MouseDevice::getAxisName(uint16_t index)
-	{
-		return string();
-	}
-
-	string MouseDevice::getButtonName(uint16_t index)
-	{
-		return string();
+		this->input_manager->updateMousePosition(position);
 	}
 }

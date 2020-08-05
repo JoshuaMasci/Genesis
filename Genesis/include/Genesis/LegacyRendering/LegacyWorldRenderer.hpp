@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Genesis/Ecs/Ecs.hpp"
+
 #include "Genesis/LegacyBackend/LegacyBackend.hpp"
 #include "Genesis/Rendering/Camera.hpp"
-#include "Genesis/ECS/EntityRegistry.hpp"
 
 namespace Genesis
 {
@@ -13,14 +14,16 @@ namespace Genesis
 		LegacyWorldRenderer(LegacyBackend* backend);
 		~LegacyWorldRenderer();
 
-		void drawScene(vector2U target_size, Framebuffer target_framebuffer, EntityWorld* world, Camera& camera, TransformD& camera_transform);
+		void drawScene(vector2U target_size, Framebuffer target_framebuffer, EntityRegisty& world, Camera& camera, TransformD& camera_transform);
 
 	protected:
 		LegacyBackend* backend;
 
 		ShaderProgram ambient_program;
 		ShaderProgram directional_program;
-		//ShaderProgram pbr_point_program;
-		//ShaderProgram pbr_spot_program;
+		//ShaderProgram point_program;
+		//ShaderProgram spot_program;
+
+		ShaderProgram gamma_correction_program;
 	};
 }

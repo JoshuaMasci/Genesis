@@ -4,16 +4,15 @@
 
 #include <Genesis/LegacyBackend/LegacyBackend.hpp>
 #include <Genesis/LegacyRendering/LegacyWorldRenderer.hpp>
-#include <Genesis/ECS/EntityRegistry.hpp>
 #include <Genesis/Editor/ConsoleWindow.hpp>
 
-#include "Genesis_Editor/Windows/WorldViewWindow.hpp"
+#include "Genesis_Editor/Windows/EntityListWindow.hpp"
 #include "Genesis_Editor/Windows/EntityPropertiesWindow.hpp"
-#include "Genesis_Editor/Windows/SceneViewWindow.hpp"
+#include "Genesis_Editor/Windows/SceneWindow.hpp"
 
 #include "Genesis/Resource/GltfLoader.hpp"
 
-#include "entt/entt.hpp"
+#include "Genesis/Ecs/Ecs.hpp"
 
 namespace Genesis
 {
@@ -33,16 +32,13 @@ namespace Genesis
 		vector2U offscreen_size;
 
 		ConsoleWindow* console_window;
-		WorldViewWindow* world_view_window;
+		EntityListWindow* entity_list_window;
 		EntityPropertiesWindow* entity_properties_window;
-		SceneViewWindow* scene_view_window;
-
-		EntityRegistry* editor_registry;
-		EntityWorld* editor_base_world;
+		SceneWindow* scene_window;
 
 		GltfModel* scene_model = nullptr;
 
-		entt::registry editor_registry_entt;
+		EntityRegisty editor_registry;
 	};
 }
 

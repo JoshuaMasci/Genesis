@@ -7,12 +7,11 @@ namespace Genesis
 {
 	namespace Opengl
 	{
-
 		OpenglShaderProgram::OpenglShaderProgram(const char* vert_data, uint32_t vert_size, const char* frag_data, uint32_t frag_size)
 		{
 			this->program_id = glCreateProgram();
-			GLuint vertex_id = buildShader(vert_data, vert_size, GL_VERTEX_SHADER);
-			GLuint fragment_id = buildShader(frag_data, frag_size, GL_FRAGMENT_SHADER);
+			GLuint vertex_id = buildShader({ vert_data, vert_size, GL_VERTEX_SHADER });
+			GLuint fragment_id = buildShader({ frag_data, frag_size, GL_FRAGMENT_SHADER });
 			if (vertex_id == 0 || fragment_id == 0)
 			{
 				GENESIS_ENGINE_ERROR("Shaders did not compile\n");
@@ -42,22 +41,57 @@ namespace Genesis
 			glDeleteShader(fragment_id);
 		}
 
+		OpenglShaderProgram::OpenglShaderProgram(const ShaderStageInfo* stages, uint32_t size)
+		{
+			this->program_id = glCreateProgram();
+
+			vector<GLuint> stage_ids(size);
+			for (size_t i = 0; i < stage_ids.size(); i++)
+			{
+				stage_ids[i] = this->buildShader(stages[i]);
+				glAttachShader(this->program_id, stage_ids[i]);
+			}
+
+			glLinkProgram(this->program_id);
+
+			GLint result = GL_FALSE;
+			int info_log_length;
+
+			// Check the program
+			glGetProgramiv(this->program_id, GL_LINK_STATUS, &result);
+			glGetProgramiv(this->program_id, GL_INFO_LOG_LENGTH, &info_log_length);
+			if (info_log_length > 0)
+			{
+				vector<char> program_error_message(info_log_length + 1);
+				glGetProgramInfoLog(this->program_id, info_log_length, NULL, &program_error_message[0]);
+				if (program_error_message.size() > 2)
+				{
+					GENESIS_ENGINE_ERROR("Shader Error: {}", &program_error_message[0]);
+				}
+			}
+
+			for (size_t i = 0; i < stage_ids.size(); i++)
+			{
+				glDeleteShader(stage_ids[i]);
+			}
+		}
+
 		OpenglShaderProgram::~OpenglShaderProgram()
 		{
 			glDeleteProgram(this->program_id);
 		}
 
-		GLuint OpenglShaderProgram::buildShader(const char* data, uint32_t size, GLuint type)
+		GLuint OpenglShaderProgram::buildShader(const ShaderStageInfo& info)
 		{
-			GLuint shader_id = glCreateShader(type);
+			GLuint shader_id = glCreateShader(info.type);
 
 			GLint result = GL_FALSE;
 			int info_log_length;
 
-			const GLint value = size;
+			const GLint value = info.size;
 
 			// Compile  Shader
-			glShaderSource(shader_id, 1, &data, &value);
+			glShaderSource(shader_id, 1, &info.data, &value);
 			glCompileShader(shader_id);
 
 			// Check  Shader

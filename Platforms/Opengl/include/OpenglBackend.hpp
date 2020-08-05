@@ -20,9 +20,17 @@ namespace Genesis
 			IndexType type;
 		};
 
+		struct GLImageFormat
+		{
+			GLenum internal_format = 0;
+			GLenum format = 0;
+			GLenum type = 0;
+		};
+
 		struct OpenglTexture2D
 		{
 			GLuint texture_handle;
+			GLImageFormat format;
 		};
 
 		struct OpenglFramebuffer
@@ -58,6 +66,7 @@ namespace Genesis
 			virtual void destoryTexture(Texture2D texture) override;
 
 			virtual ShaderProgram createShaderProgram(const char* vert_data, uint32_t vert_size, const char* frag_data, uint32_t frag_size) override;
+			virtual ShaderProgram createComputeShader(const char* data, uint32_t size) override;
 			virtual void destoryShaderProgram(ShaderProgram program) override;
 
 			virtual Framebuffer createFramebuffer(const FramebufferCreateInfo& create_info) override;
@@ -85,6 +94,7 @@ namespace Genesis
 			virtual void setUniformMat3f(const string& name, const matrix3F& value) override;
 			virtual void setUniformMat4f(const string& name, const matrix4F& value) override;
 			virtual void setUniformTexture(const string& name, const uint32_t texture_slot, Texture2D value) override;
+			virtual void setUniformTextureImage(const string& name, const uint32_t texture_slot, Texture2D value) override;
 
 			virtual void setScissor(vector2I offset, vector2U extent) override;
 			virtual void clearScissor() override;
@@ -94,6 +104,8 @@ namespace Genesis
 			virtual void drawIndex(uint32_t index_count, uint32_t index_offset = 0) override;
 
 			virtual void draw(VertexBuffer vertex_buffer, IndexBuffer index_buffer, uint32_t triangle_count) override;
+
+			virtual void dispatchCompute(uint32_t groups_x = 1, uint32_t groups_y = 1, uint32_t groups_z = 1) override;
 
 			virtual FrameStats getLastFrameStats() override;
 

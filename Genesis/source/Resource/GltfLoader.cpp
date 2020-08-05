@@ -191,7 +191,23 @@ namespace Genesis
 			tinygltf::Image image = gltfModel.images[texture.source];
 
 			TextureCreateInfo info = {};
-			info.format = (TextureFormat)image.component;
+
+			switch (image.component)
+			{
+			case 1:
+				info.format = ImageFormat::R_8;
+				break;
+			case 2:
+				info.format = ImageFormat::RG_8;
+				break;
+			case 3:
+				info.format = ImageFormat::RGB_8;
+				break;
+			case 4:
+				info.format = ImageFormat::RGBA_8;
+				break;
+			}
+
 			info.size = { image.width, image.height };
 
 			if (texture.sampler == -1)

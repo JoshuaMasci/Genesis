@@ -12,7 +12,8 @@ namespace Genesis
 		Extra1,
 		Extra2,
 		ForwardScroll,
-		BackwardScroll
+		BackwardScroll,
+		SIZE
 	};
 
 	enum class MouseAxis
@@ -24,18 +25,12 @@ namespace Genesis
 	class MouseDevice : public ArrayInputDevice
 	{
 	public:
-		MouseDevice(string name);
-		~MouseDevice();
+		MouseDevice(const string& device_name, InputManager* manager);
 
-		void updateMouseButton(MouseButton button, bool state, Timestamp time);
-		void updateMouseAxis(MouseAxis axis, int32_t movement_in_pixels, Timestamp time);
+		void addMouseBinding(MouseButton button, fnv_hash32 string_hash);
+		void removeMouseBinding(MouseButton button, fnv_hash32 string_hash);
 
-		virtual void updateValues();
-
-		virtual string getAxisName(uint16_t index) override;
-		virtual string getButtonName(uint16_t index) override;
-
-	protected:
-		const double pixel_divisor = 100.0;
+		void updateMouseState(MouseButton button, bool state);
+		void updateMousePosition(const vector2F& position);
 	};
-};
+}

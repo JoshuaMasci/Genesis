@@ -4,67 +4,38 @@
 
 #include "Genesis/Input/InputManager.hpp"
 
+#include "Genesis/Core/Fnv1aHash.hpp"
+
 namespace Genesis
 {
 	SDL2_Platform::SDL2_Platform(Application* app)
-		:Platform(app)
+		:Platform(app),
+		keyboard_device("SDL2 Keyboard", this->application->input_manager),
+		mouse_device("SDL2 Mouse", this->application->input_manager)
 	{
 		SDL_Init(SDL_INIT_EVENTS | SDL_INIT_JOYSTICK);
 		SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
 		//Create Keyboard Device
-		this->keyboard_device = new KeyboardDevice("SDL2 Keyboard");
-		this->application->input_manager->setKeyboardDevice(this->keyboard_device);
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::W, StringHash32("Debug_Forward"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::S, StringHash32("Debug_Backward"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::LShift, StringHash32("Debug_Up"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::LCtrl, StringHash32("Debug_Down"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::A, StringHash32("Debug_Left"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::D, StringHash32("Debug_Right"));
 
-		this->keyboard_device->addButton("Debug_Forward", (ButtonIndex)KeyboardButton::W);
-		this->keyboard_device->addButton("Debug_Backward", (ButtonIndex)KeyboardButton::S);
-		this->keyboard_device->addButton("Debug_Up", (ButtonIndex)KeyboardButton::LShift);
-		this->keyboard_device->addButton("Debug_Down", (ButtonIndex)KeyboardButton::LCtrl);
-		this->keyboard_device->addButton("Debug_Left", (ButtonIndex)KeyboardButton::A);
-		this->keyboard_device->addButton("Debug_Right", (ButtonIndex)KeyboardButton::D);
-
-		this->keyboard_device->addButton("Debug_PitchUp", (ButtonIndex)KeyboardButton::Up);
-		this->keyboard_device->addButton("Debug_PitchDown", (ButtonIndex)KeyboardButton::Down);
-		this->keyboard_device->addButton("Debug_YawLeft", (ButtonIndex)KeyboardButton::Left);
-		this->keyboard_device->addButton("Debug_YawRight", (ButtonIndex)KeyboardButton::Right);
-		this->keyboard_device->addButton("Debug_RollLeft", (ButtonIndex)KeyboardButton::Q);
-		this->keyboard_device->addButton("Debug_RollRight", (ButtonIndex)KeyboardButton::E);
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::Up, StringHash32("Debug_PitchUp"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::Down, StringHash32("Debug_PitchDown"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::Left, StringHash32("Debug_YawLeft"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::Right, StringHash32("Debug_YawRight"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::Q, StringHash32("Debug_RollLeft"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::E, StringHash32("Debug_RollRight"));
 
 		//Create Mouse Device
-		this->mouse_device = new MouseDevice("SDL2 Mouse");
-		this->application->input_manager->setMouseDevice(this->mouse_device);
-
-		this->mouse_device->addButton("Mouse_Left", (ButtonIndex)MouseButton::Left);
-		this->mouse_device->addButton("Mouse_Middle", (ButtonIndex)MouseButton::Middle);
-		this->mouse_device->addButton("Mouse_Right", (ButtonIndex)MouseButton::Right);
-		this->mouse_device->addButton("Mouse_X1", (ButtonIndex)MouseButton::Extra1);
-		this->mouse_device->addButton("Mouse_X2", (ButtonIndex)MouseButton::Extra2);
-		this->mouse_device->addButton("Mouse_ForwardScroll", (ButtonIndex)MouseButton::ForwardScroll);
-		this->mouse_device->addButton("Mouse_BackwardScroll", (ButtonIndex)MouseButton::BackwardScroll);
 	}
 
 	SDL2_Platform::~SDL2_Platform()
 	{
-		if (this->keyboard_device != nullptr)
-		{
-			this->application->input_manager->removeKeyboardDevice();
-			delete this->keyboard_device;
-		}
-
-		if (this->mouse_device != nullptr)
-		{
-			this->application->input_manager->removeMouseDevice();
-			delete this->mouse_device;
-		}
-
-		//Delete Input Devices
-		for (auto device : this->joystick_devices)
-		{
-			this->application->input_manager->removeInputDevice(device.second);
-			delete device.second;
-			SDL_JoystickClose(SDL_JoystickFromInstanceID(device.first));
-		}
-
 		SDL_Quit();
 	}
 
@@ -84,31 +55,6 @@ namespace Genesis
 			return MouseButton::Extra2;
 		default:
 			return (MouseButton)65535;//Return the largest possible value, should error out somewhere
-		}
-	}
-
-	HatState getGenesisHatState(uint8_t state)
-	{
-		switch (state)
-		{
-		case SDL_HAT_UP:
-			return HatState::Up;
-		case SDL_HAT_RIGHT:
-			return HatState::Right;
-		case SDL_HAT_DOWN:
-			return HatState::Down;
-		case SDL_HAT_LEFT:
-			return HatState::Left;
-		case SDL_HAT_RIGHTUP:
-			return HatState::RightUp;
-		case SDL_HAT_RIGHTDOWN:
-			return HatState::RightDown;
-		case SDL_HAT_LEFTUP:
-			return HatState::LeftUp;
-		case SDL_HAT_LEFTDOWN:
-			return HatState::LeftDown;
-		default:
-			return HatState::Centered;//SDL_HAT_CENTERED and error cases
 		}
 	}
 
@@ -285,8 +231,38 @@ namespace Genesis
 		}
 	}
 
+	HatDirection getGenesisHatDirection(uint8_t state)
+	{
+		switch (state)
+		{
+		case SDL_HAT_UP:
+			return HatDirection::Up;
+		case SDL_HAT_RIGHT:
+			return HatDirection::Right;
+		case SDL_HAT_DOWN:
+			return HatDirection::Down;
+		case SDL_HAT_LEFT:
+			return HatDirection::Left;
+		case SDL_HAT_RIGHTUP:
+			return HatDirection::RightUp;
+		case SDL_HAT_RIGHTDOWN:
+			return HatDirection::RightDown;
+		case SDL_HAT_LEFTUP:
+			return HatDirection::LeftUp;
+		case SDL_HAT_LEFTDOWN:
+			return HatDirection::LeftDown;
+		default:
+			return HatDirection::Centered;//SDL_HAT_CENTERED and error cases
+		}
+	}
+
 	void SDL2_Platform::onUpdate(TimeStep time_step)
 	{
+		//Clear values
+		this->keyboard_device.updateInputText("");
+		this->mouse_device.updateMouseState(MouseButton::ForwardScroll, false);
+		this->mouse_device.updateMouseState(MouseButton::BackwardScroll, false);
+
 		//Event Loop
 		SDL_Event event;
 		while (SDL_PollEvent(&event))
@@ -296,74 +272,46 @@ namespace Genesis
 				//Close Application
 				this->application->close();
 			}
+
 			//Keyboard
 			else if (event.type == SDL_KEYDOWN)
 			{
-				if (this->keyboard_device != nullptr)
-				{
-					this->keyboard_device->updateKeyboardButton(getGenesisKeyboardButton(event.key.keysym.scancode), true, event.key.timestamp);
-				}
+				this->keyboard_device.updateKeyboardState(getGenesisKeyboardButton(event.key.keysym.scancode), true);
 			}
 			else if (event.type == SDL_KEYUP)
 			{
-				if (this->keyboard_device != nullptr)
-				{
-					this->keyboard_device->updateKeyboardButton(getGenesisKeyboardButton(event.key.keysym.scancode), false, event.key.timestamp);
-				}
+				this->keyboard_device.updateKeyboardState(getGenesisKeyboardButton(event.key.keysym.scancode), false);
 			}
 			else if (event.type == SDL_TEXTINPUT)
 			{
-				if (this->keyboard_device != nullptr)
-				{
-					this->keyboard_device->updateInputText(event.text.text);
-				}
+				this->keyboard_device.updateInputText(event.text.text);
 			}
 
 			//MOUSE
 			else if (event.type == SDL_MOUSEBUTTONDOWN)
 			{
-				if (this->mouse_device != nullptr)
-				{
-					this->mouse_device->updateMouseButton(getGenesisMouseButton(event.button.button), true, event.button.timestamp);
-				}
+				this->mouse_device.updateMouseState(getGenesisMouseButton(event.button.button), true);
 			}
 			else if (event.type == SDL_MOUSEBUTTONUP)
 			{
-				if (this->mouse_device != nullptr)
-				{
-					this->mouse_device->updateMouseButton(getGenesisMouseButton(event.button.button), false, event.button.timestamp);
-				}
+				this->mouse_device.updateMouseState(getGenesisMouseButton(event.button.button), false);
+
 			}
 			else if (event.type == SDL_MOUSEWHEEL)
 			{
-				if (this->mouse_device != nullptr)
+				if (event.wheel.y > 0) // scroll up
 				{
-					if (event.wheel.y > 0) // scroll up
-					{
-						this->mouse_device->updateMouseButton(MouseButton::ForwardScroll, true, event.button.timestamp);
-					}
-					else if (event.wheel.y < 0) // scroll down
-					{
-						this->mouse_device->updateMouseButton(MouseButton::BackwardScroll, true, event.button.timestamp);
-					}
+					this->mouse_device.updateMouseState(MouseButton::ForwardScroll, true);
+				}
+				else if (event.wheel.y < 0) // scroll down
+				{
+					this->mouse_device.updateMouseState(MouseButton::BackwardScroll, true);
 				}
 			}
 			else if (event.type == SDL_MOUSEMOTION)
 			{
-				if (this->mouse_device != nullptr)
-				{
-					//Only works when mouse is captued and is not in menu mode
-					if (true)
-					{
-						//Capture Mode
-						this->mouse_device->updateMouseAxis(MouseAxis::X, event.motion.xrel, event.motion.timestamp);
-						this->mouse_device->updateMouseAxis(MouseAxis::Y, event.motion.yrel, event.motion.timestamp);
-
-						//Menu Mode
-						vector2F pos = { (float)event.motion.x , (float)event.motion.y };
-						this->application->input_manager->setMousePosition(pos);
-					}
-				}
+				vector2F pos = { (float)event.motion.x , (float)event.motion.y };
+				this->mouse_device.updateMousePosition(pos);
 			}
 
 			//Joystick
@@ -372,39 +320,34 @@ namespace Genesis
 				//Create new Joystick Device
 				int32_t id = event.jdevice.which;
 				SDL_Joystick* joystick = SDL_JoystickOpen(id);
-				JoystickDevice* device = new JoystickDevice(SDL_JoystickName(joystick), SDL_JoystickNumButtons(joystick), SDL_JoystickNumHats(joystick), SDL_JoystickNumAxes(joystick));
+				JoystickDevice* device = new JoystickDevice(SDL_JoystickName(joystick), this->application->input_manager, SDL_JoystickNumButtons(joystick), SDL_JoystickNumHats(joystick), SDL_JoystickNumAxes(joystick));
 				this->joystick_devices[id] = device;
-
+				
 				GENESIS_ENGINE_INFO("SDL Joystick Added: {}", device->getName());
-
+				
 				//Settings
-				if (true)
+				if (device->getName() == "PS4 Controller")
 				{
-					device->addAxis("Debug_Pitch", AxisSettings(3, 0.1, false));
-					device->addAxis("Debug_Yaw", AxisSettings(2, 0.1, true));
+					device->addAxisBinding(3, StringHash32("Debug_Pitch"), AxisSettings(0.1f, false));
+					device->addAxisBinding(2, StringHash32("Debug_Yaw"), AxisSettings(0.1f, true));
 
-					device->addButton("Debug_RollLeft", (ButtonIndex)9);
-					device->addButton("Debug_RollRight", (ButtonIndex)10);
+					device->addButtonBinding(9, StringHash32("Debug_RollLeft"));
+					device->addButtonBinding(10, StringHash32("Debug_RollRight"));
 
-					device->addAxis("Debug_ForwardBackward", AxisSettings(1, 0.1, true));
-					device->addAxis("Debug_LeftRight", AxisSettings(0, 0.1, true));
+					device->addAxisBinding(1, StringHash32("Debug_ForwardBackward"), AxisSettings(0.1f, true));
+					device->addAxisBinding(0, StringHash32("Debug_LeftRight"), AxisSettings(0.1f, true));
 				}
-
-
-				this->application->input_manager->addInputDevice(device);
 			}
 			else if (event.type == SDL_JOYDEVICEREMOVED)
 			{
-
 				//Destroy Joystick Device
 				int32_t id = event.jdevice.which;
 				JoystickDevice* device = this->joystick_devices[id];
+				
+				GENESIS_ENGINE_INFO("SDL Joystick Removed: {}", device->getName());				\
 
-				GENESIS_ENGINE_INFO("SDL Joystick Removed: {}", device->getName());
-
-				this->application->input_manager->removeInputDevice(device);
 				this->joystick_devices.erase(id);
-
+				
 				delete device;
 				SDL_JoystickClose(SDL_JoystickFromInstanceID(id));
 			}
@@ -412,26 +355,27 @@ namespace Genesis
 			{
 				int32_t id = event.jbutton.which;
 				JoystickDevice* device = this->joystick_devices[id];
-				device->updateButton(event.jbutton.button, true, event.jbutton.timestamp);
+				device->updateButtonValue(event.jbutton.button, true);
 			}
 			else if (event.type == SDL_JOYBUTTONUP)
 			{
 				int32_t id = event.jbutton.which;
 				JoystickDevice* device = this->joystick_devices[id];
-				device->updateButton(event.jbutton.button, false, event.jbutton.timestamp);
+				device->updateButtonValue(event.jbutton.button, false);
 			}
 			else if (event.type == SDL_JOYAXISMOTION)
 			{
 				int32_t id = event.jaxis.which;
 				JoystickDevice* device = this->joystick_devices[id];
-				device->updateAxis(event.jaxis.axis, ((double)event.jaxis.value) / 32767.0, event.jaxis.timestamp);
+				float value = (float)event.jaxis.value / (float)std::numeric_limits<Sint16>::max();
+				device->updateAxisValue(event.jaxis.axis, value);
 			}
 			else if (event.type == SDL_JOYHATMOTION)
 			{
 				int32_t id = event.jhat.which;
 				JoystickDevice* device = this->joystick_devices[id];
 				int32_t hat = event.jhat.hat;
-				device->updateHat(hat, getGenesisHatState(event.jhat.value), event.jhat.timestamp);
+				device->updateHatValue(hat, getGenesisHatDirection(event.jhat.value));
 			}
 		}
 	}

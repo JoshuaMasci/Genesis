@@ -233,25 +233,15 @@ namespace Genesis
 		"Keypad ."
 	};
 
-
 	class KeyboardDevice : public ArrayInputDevice
 	{
 	public:
-		KeyboardDevice(string name);
-		~KeyboardDevice();
+		KeyboardDevice(const string& device_name, InputManager* manager);
 
-		virtual void updateValues() override;
+		void addKeyboardBinding(KeyboardButton button, fnv_hash32 string_hash);
+		void removeKeyboardBinding(KeyboardButton button, fnv_hash32 string_hash);
 
-		void updateKeyboardButton(KeyboardButton button, bool state, Timestamp time);
+		void updateKeyboardState(KeyboardButton button, bool state);
 		void updateInputText(string input_text);
-		string getInputText();
-
-		bool getButtonState(KeyboardButton button);
-
-		virtual string getAxisName(uint16_t index) override;
-		virtual string getButtonName(uint16_t index) override;
-	protected:
-
-		string input_text;
 	};
 };
