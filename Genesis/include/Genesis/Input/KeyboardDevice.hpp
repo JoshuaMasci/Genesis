@@ -65,6 +65,7 @@ namespace Genesis
 
 		Semicolon,
 		Apostrophe,
+		Grave,
 
 		Comma,
 		Period,
@@ -85,8 +86,8 @@ namespace Genesis
 		F11,
 		F12,
 
-		Printscreen,
-		Scrolllock,
+		PrintScreen,
+		ScrollLock,
 		Pause,
 		Insert,
 

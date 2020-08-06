@@ -42,6 +42,10 @@ namespace Genesis
 	constexpr fnv_hash32 debug_yaw_left = StringHash32("Debug_YawLeft");
 	constexpr fnv_hash32 debug_yaw_right = StringHash32("Debug_YawRight");
 
+	constexpr fnv_hash32 debug_roll_axis = StringHash32("Debug_Roll");
+	constexpr fnv_hash32 debug_roll_left = StringHash32("Debug_RollLeft");
+	constexpr fnv_hash32 debug_roll_right = StringHash32("Debug_RollRight");
+
 	void SceneWindow::udpate(TimeStep time_step)
 	{		
 		if (this->is_window_active)
@@ -55,9 +59,7 @@ namespace Genesis
 			quaternionD orientation = this->scene_camera_transform.getOrientation();
 			orientation = glm::angleAxis((double)this->input_manager->getButtonAxis(debug_pitch_axis, debug_pitch_up, debug_pitch_down) * this->angular_speed * (PI_D * 2.0) * time_step, this->scene_camera_transform.getLeft()) * orientation;
 			orientation = glm::angleAxis((double)this->input_manager->getButtonAxis(debug_yaw_axis, debug_yaw_left, debug_yaw_right) * this->angular_speed * (PI_D * 2.0) * time_step, this->scene_camera_transform.getUp()) * orientation;
-
-			//orientation = glm::angleAxis(input_manager->getButtonAxisCombo("Debug_Yaw", "Debug_YawLeft", "Debug_YawRight", false) * this->angular_speed * (PI_D * 2.0) * time_step, this->scene_camera_transform.getUp()) * orientation;
-			//orientation = glm::angleAxis(input_manager->getButtonAxisCombo("Debug_Roll", "Debug_RollRight", "Debug_RollLeft", false) * this->angular_speed * (PI_D)* time_step, this->scene_camera_transform.getForward()) * orientation;
+			orientation = glm::angleAxis((double)this->input_manager->getButtonAxis(debug_roll_axis, debug_roll_left, debug_roll_right) * this->angular_speed * (PI_D) * time_step, this->scene_camera_transform.getForward()) * orientation;
 			this->scene_camera_transform.setOrientation(orientation);
 		}
 	}

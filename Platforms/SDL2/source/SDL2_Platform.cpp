@@ -168,6 +168,8 @@ namespace Genesis
 			return KeyboardButton::Semicolon;
 		case SDL_SCANCODE_APOSTROPHE:
 			return KeyboardButton::Apostrophe;
+		case SDL_SCANCODE_GRAVE:
+			return KeyboardButton::Grave;
 		case SDL_SCANCODE_COMMA:
 			return KeyboardButton::Comma;
 		case SDL_SCANCODE_PERIOD:
@@ -201,9 +203,9 @@ namespace Genesis
 		case SDL_SCANCODE_F12:
 			return KeyboardButton::F12;
 		case SDL_SCANCODE_PRINTSCREEN:
-			return KeyboardButton::Printscreen;
+			return KeyboardButton::PrintScreen;
 		case SDL_SCANCODE_SCROLLLOCK:
-			return KeyboardButton::Scrolllock;
+			return KeyboardButton::ScrollLock;
 		case SDL_SCANCODE_PAUSE:
 			return KeyboardButton::Pause;
 		case SDL_SCANCODE_INSERT:
@@ -276,11 +278,19 @@ namespace Genesis
 			//Keyboard
 			else if (event.type == SDL_KEYDOWN)
 			{
-				this->keyboard_device.updateKeyboardState(getGenesisKeyboardButton(event.key.keysym.scancode), true);
+				KeyboardButton button = getGenesisKeyboardButton(event.key.keysym.scancode);
+				if (button != KeyboardButton::SIZE)
+				{
+					this->keyboard_device.updateKeyboardState(getGenesisKeyboardButton(event.key.keysym.scancode), true);
+				}
 			}
 			else if (event.type == SDL_KEYUP)
 			{
-				this->keyboard_device.updateKeyboardState(getGenesisKeyboardButton(event.key.keysym.scancode), false);
+				KeyboardButton button = getGenesisKeyboardButton(event.key.keysym.scancode);
+				if (button != KeyboardButton::SIZE)
+				{
+					this->keyboard_device.updateKeyboardState(getGenesisKeyboardButton(event.key.keysym.scancode), false);
+				}
 			}
 			else if (event.type == SDL_TEXTINPUT)
 			{

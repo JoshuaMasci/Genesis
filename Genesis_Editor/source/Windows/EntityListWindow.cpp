@@ -82,11 +82,13 @@ namespace Genesis
 
 			auto view = registry.view<ParentNode>(entt::exclude_t<ChildNode>());
 
-			for (EntityHandle entity : view)
+			registry.each([&](auto entity)
 			{
-				ParentNode& hierarchy = view.get<ParentNode>(entity);
-				this->drawEntityTree(registry, entity);
-			}
+				if (!registry.has<ChildNode>(entity))
+				{
+					this->drawEntityTree(registry, entity);
+				}
+			});
 		}
 
 		ImGui::End();

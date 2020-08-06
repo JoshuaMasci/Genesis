@@ -47,11 +47,43 @@ int main(int argc, char** argv)
 
 namespace Genesis
 {
-	void loadNode(entt::registry& world, GltfNode* node)
+	EntityHandle loadNode(entt::registry& world, GltfNode* node)
 	{
 		if (node == nullptr)
 		{
-			return;
+			return null_entity;
+		}
+
+		EntityHandle entity = world.create();
+
+		world.assign<LocalTransform>(entity, TransformUtils::toTransformD(node->local_transform));
+
+		if (!node->name.empty())
+		{
+			world.assign<NameComponent>(entity, node->name.c_str());
+		}
+
+		if (node->mesh != nullptr)
+		{
+			world.assign<WorldTransform>(entity);
+			world.assign<PbrMesh>(entity, *node->mesh);
+			world.assign<PbrMaterial>(entity, *node->mesh->primitives[0].temp_material_ptr);
+		}
+
+		for (auto child_node : node->child_nodes)
+		{
+			EntityHandle child = loadNode(world, child_node);
+			Hierarchy::addChild(world, entity, child);
+		}
+
+		return entity;
+	}
+
+	EntityHandle loadRootNode(entt::registry& world, GltfNode* node)
+	{
+		if (node == nullptr)
+		{
+			return null_entity;
 		}
 
 		EntityHandle entity = world.create();
@@ -67,12 +99,12 @@ namespace Genesis
 		{
 			world.assign<PbrMesh>(entity, *node->mesh);
 			world.assign<PbrMaterial>(entity, *node->mesh->primitives[0].temp_material_ptr);
-			world.assign<RigidBody>(entity);
 		}
 
 		for (auto child_node : node->child_nodes)
 		{
-			loadNode(world, child_node);
+			EntityHandle child = loadNode(world, child_node);
+			Hierarchy::addChild(world, entity, child);
 		}
 	}
 
@@ -80,7 +112,7 @@ namespace Genesis
 	{
 		for (auto root_node : scene->root_nodes)
 		{
-			loadNode(world, root_node);
+			loadRootNode(world, root_node);
 		}
 	}
 
@@ -118,15 +150,13 @@ namespace Genesis
 		{
 			EntityHandle entity = this->editor_registry.create();
 			this->editor_registry.assign<NameComponent>(entity, "Test_Entity");
-			this->editor_registry.assign<WorldTransform>(entity).setOrientation(glm::angleAxis(glm::radians(90.0), vector3D(1.0f, 0.0, 0.0)));
+			this->editor_registry.assign<WorldTransform>(entity).setOrientation(glm::angleAxis(glm::radians(80.0), vector3D(1.0f, 0.0, 0.1)));
 			this->editor_registry.assign<Camera>(entity);
 			this->editor_registry.assign<DirectionalLight>(entity, vector3F(1.0f), 0.4f, true);
 		}
 
-		createHierarchy(editor_registry, 3, "Entity Hiearchy ");
-
 		{
-			const string file_name = "res/RoundShip.glb";
+			const string file_name = "res/Cube.glb";
 
 			tinygltf::Model gltfModel;
 			tinygltf::TinyGLTF loader;
@@ -193,11 +223,17 @@ namespace Genesis
 	{
 		if (!registry.has<ChildNode>(entity))
 		{
+			//Root Node
+			if (registry.has<WorldTransform>(entity))
+			{
+				return registry.get<WorldTransform>(entity);
+			}
+
 			return TransformD();
 		}
 		ChildNode& child_node = registry.get<ChildNode>(entity);
 
-		if (child_node.parent == null_entity || registry.valid(child_node.parent))
+		if (child_node.parent == null_entity || !registry.valid(child_node.parent))
 		{
 			return TransformD();
 		}
@@ -219,14 +255,12 @@ namespace Genesis
 
 		this->scene_window->udpate(time_step);
 
-		/*	Hierarchy/Transform resolve system
-		*	This system will resolve the world transform for all entites with a world transform that aren't a root entity
-		*/
-
+		// Hierarchy/Transform resolve system
+		// This system will resolve the world transform for all entites with a world transform that aren't a root entity
 		auto& view = this->editor_registry.view<WorldTransform, ChildNode>();
 		for (EntityHandle entity : view)
 		{
-			auto&[transform, child_node] = view.get<WorldTransform, ChildNode>(entity);
+			WorldTransform& transform = view.get<WorldTransform>(entity);
 			transform = (WorldTransform)calcWorldTransform(editor_registry, entity);
 		}
 	}
