@@ -1,6 +1,7 @@
 #include "Genesis/LegacyRendering/LegacyWorldRenderer.hpp"
 
 #include "Genesis/Platform/FileSystem.hpp"
+#include "Genesis/Component/TransformComponents.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 
 #include "Genesis/Resource/PbrMesh.hpp"
@@ -101,7 +102,7 @@ namespace Genesis
 		this->backend->destoryShaderProgram(this->gamma_correction_program);
 	}
 
-	void LegacyWorldRenderer::drawScene(vector2U target_size, Framebuffer target_framebuffer, EntityRegisty& world, Camera& camera, TransformD& camera_transform)
+	void LegacyWorldRenderer::drawScene(vector2U target_size, Framebuffer target_framebuffer, EntityRegistry& world, Camera& camera, TransformD& camera_transform)
 	{
 		this->backend->bindFramebuffer(target_framebuffer);
 		this->backend->clearFramebuffer(true, true);
@@ -120,11 +121,11 @@ namespace Genesis
 		static vector<MeshStruct> meshes;
 		meshes.clear();
 		{
-			auto mesh_group = world.view<PbrMesh, PbrMaterial, TransformD>();
+			auto mesh_group = world.view<PbrMesh, PbrMaterial, WorldTransform>();
 			for (EntityHandle entity : mesh_group)
 			{
-				auto&[mesh, material, transform] = mesh_group.get<PbrMesh, PbrMaterial, TransformD>(entity);
-				meshes.push_back({ mesh , material, transform });
+				auto&[mesh, material, transform] = mesh_group.get<PbrMesh, PbrMaterial, WorldTransform>(entity);
+				meshes.push_back({ mesh , material, (TransformD)transform });
 			}
 		}
 
@@ -136,11 +137,11 @@ namespace Genesis
 		static vector<DirectionalLightStruct> directional_lights;
 		directional_lights.clear();
 		{
-			auto directional_light_group = world.view<DirectionalLight, TransformD>();
+			auto directional_light_group = world.view<DirectionalLight, WorldTransform>();
 			for (EntityHandle entity : directional_light_group)
 			{
-				auto&[light, transform] = directional_light_group.get<DirectionalLight, TransformD>(entity);
-				directional_lights.push_back({light, transform});
+				auto&[light, transform] = directional_light_group.get<DirectionalLight, WorldTransform>(entity);
+				directional_lights.push_back({light, (TransformD)transform});
 			}
 		}
 

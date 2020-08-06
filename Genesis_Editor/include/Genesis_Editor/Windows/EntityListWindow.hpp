@@ -10,12 +10,12 @@ namespace Genesis
 		EntityListWindow();
 		~EntityListWindow();
 
-		void drawWindow(EntityRegisty& registry);
+		void drawWindow(EntityRegistry& registry);
 
 		EntityHandle getSelected() { return this->selected_entity; };
 	private:
 
-		void drawEntityTree(EntityRegisty& registry, EntityHandle entity);
+		void drawEntityTree(EntityRegistry& registry, EntityHandle entity);
 
 		EntityHandle selected_entity = null_entity;
 	};

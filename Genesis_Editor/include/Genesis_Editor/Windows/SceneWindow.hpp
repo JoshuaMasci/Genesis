@@ -16,7 +16,7 @@ namespace Genesis
 
 		void udpate(TimeStep time_step);
 
-		void drawWindow(EntityRegisty& world);
+		void drawWindow(EntityRegistry& world);
 
 	private:
 		bool is_window_active = false;

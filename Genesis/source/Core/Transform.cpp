@@ -112,6 +112,15 @@ namespace Genesis
 		return transform;
 	}
 
+	TransformD TransformUtils::transformBy(const TransformD& origin, const TransformD& local)
+	{
+		TransformD transform;
+		transform.setPosition(origin.getPosition() + (origin.getOrientation() * (local.getPosition() * origin.getScale())));
+		transform.setOrientation(origin.getOrientation() * local.getOrientation());
+		transform.setScale(origin.getScale() * local.getScale());
+		return transform;
+	}
+
 	void TransformUtils::untransformByInplace(TransformD& destination, const TransformD& origin, const TransformD& global)
 	{
 		destination.setPosition((glm::inverse(origin.getOrientation()) * (global.getPosition() - origin.getPosition())) / origin.getScale());

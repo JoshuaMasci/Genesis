@@ -36,6 +36,7 @@ int main(int argc, char** argv)
 #include "imgui.h"
 
 //Components
+#include "Genesis/Component/TransformComponents.hpp"
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Component/Hierarchy.hpp"
 #include "Genesis/Resource/PbrMesh.hpp"
@@ -55,7 +56,7 @@ namespace Genesis
 
 		EntityHandle entity = world.create();
 
-		world.assign<TransformD>(entity, TransformUtils::toTransformD(node->local_transform));
+		world.assign<WorldTransform>(entity, TransformUtils::toTransformD(node->local_transform));
 
 		if (!node->name.empty())
 		{
@@ -83,17 +84,16 @@ namespace Genesis
 		}
 	}
 
-	EntityHandle createHierarchy(EntityRegisty& registry, size_t count)
+	EntityHandle createHierarchy(EntityRegistry& registry, size_t count, char* name_temp)
 	{
 		EntityHandle entity = registry.create();
-		registry.assign<Hierarchy>(entity);
 
-		string name = "Entity Hiearchy " + std::to_string(count);
+		string name = name_temp + std::to_string(count);
 		registry.assign<NameComponent>(entity, name.c_str());
 
 		if (count > 1)
 		{
-			EntityHandle child = createHierarchy(registry, count - 1);
+			EntityHandle child = createHierarchy(registry, count - 1, name_temp);
 			Hierarchy::addChild(registry, entity, child);
 		}
 
@@ -118,12 +118,12 @@ namespace Genesis
 		{
 			EntityHandle entity = this->editor_registry.create();
 			this->editor_registry.assign<NameComponent>(entity, "Test_Entity");
-			this->editor_registry.assign<TransformD>(entity).setOrientation(glm::angleAxis(glm::radians(90.0), vector3D(1.0f, 0.0, 0.0)));
+			this->editor_registry.assign<WorldTransform>(entity).setOrientation(glm::angleAxis(glm::radians(90.0), vector3D(1.0f, 0.0, 0.0)));
 			this->editor_registry.assign<Camera>(entity);
 			this->editor_registry.assign<DirectionalLight>(entity, vector3F(1.0f), 0.4f, true);
 		}
 
-		createHierarchy(editor_registry, 10);
+		createHierarchy(editor_registry, 3, "Entity Hiearchy ");
 
 		{
 			const string file_name = "res/RoundShip.glb";
@@ -189,12 +189,46 @@ namespace Genesis
 		Logging::console_sink->setConsoleWindow(nullptr);
 	}
 
+	TransformD calcWorldTransform(EntityRegistry& registry, EntityHandle entity)
+	{
+		if (!registry.has<ChildNode>(entity))
+		{
+			return TransformD();
+		}
+		ChildNode& child_node = registry.get<ChildNode>(entity);
+
+		if (child_node.parent == null_entity || registry.valid(child_node.parent))
+		{
+			return TransformD();
+		}
+
+		TransformD local_transform = TransformD();
+
+		if (registry.has<LocalTransform>(entity))
+		{
+			local_transform = (TransformD)registry.get<LocalTransform>(entity);
+		}
+
+		return TransformUtils::transformBy(calcWorldTransform(registry, child_node.parent), local_transform);
+	}
+
 	void EditorApplication::update(TimeStep time_step)
 	{
 		GENESIS_PROFILE_FUNCTION("EditorApplication::update");
 		Application::update(time_step);
 
 		this->scene_window->udpate(time_step);
+
+		/*	Hierarchy/Transform resolve system
+		*	This system will resolve the world transform for all entites with a world transform that aren't a root entity
+		*/
+
+		auto& view = this->editor_registry.view<WorldTransform, ChildNode>();
+		for (EntityHandle entity : view)
+		{
+			auto&[transform, child_node] = view.get<WorldTransform, ChildNode>(entity);
+			transform = (WorldTransform)calcWorldTransform(editor_registry, entity);
+		}
 	}
 
 	void EditorApplication::render(TimeStep time_step)

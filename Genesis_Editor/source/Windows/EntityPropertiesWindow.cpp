@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 
+#include "Genesis/Component/TransformComponents.hpp"
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lights.hpp"
@@ -19,7 +20,7 @@ namespace Genesis
 	{
 	}
 
-	void EntityPropertiesWindow::drawWindow(EntityRegisty& world, EntityHandle selected_entity)
+	void EntityPropertiesWindow::drawWindow(EntityRegistry& world, EntityHandle selected_entity)
 	{
 		ImGui::Begin("Entity Properties");
 
@@ -34,26 +35,55 @@ namespace Genesis
 				}
 			}
 
-			if (world.has<TransformD>(selected_entity))
+			/*
+				If the entity has a local transform it means it is a child of another entity
+				this means even if it has a world transfom it can not be edited.
+			*/
+			if (world.has<LocalTransform>(selected_entity))
 			{
-				if (ImGui::CollapsingHeader("World Transform", ImGuiTreeNodeFlags_DefaultOpen))
+				if (ImGui::CollapsingHeader("Local Transform", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					TransformD& transform_component = world.get<TransformD>(selected_entity);
+					LocalTransform& transform_component = world.get<LocalTransform>(selected_entity);
 
 					vector3D position = transform_component.getPosition();
-					if (ImGui::InputScalarN("World Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
+					if (ImGui::InputScalarN("Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
 					{
 						transform_component.setPosition(position);
 					};
 
 					vector3D rotation = glm::degrees(glm::eulerAngles(transform_component.getOrientation()));
-					if (ImGui::InputScalarN("World Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
+					if (ImGui::InputScalarN("Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
 					{
 						transform_component.setOrientation(quaternionD(glm::radians(rotation)));
 					}
 
 					vector3D scale = transform_component.getScale();
-					if (ImGui::InputScalarN("World Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
+					if (ImGui::InputScalarN("Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
+					{
+						transform_component.setScale(scale);
+					}
+				}
+			}
+			else if (world.has<WorldTransform>(selected_entity))
+			{
+				if (ImGui::CollapsingHeader("World Transform", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					WorldTransform& transform_component = world.get<WorldTransform>(selected_entity);
+
+					vector3D position = transform_component.getPosition();
+					if (ImGui::InputScalarN("Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
+					{
+						transform_component.setPosition(position);
+					};
+
+					vector3D rotation = glm::degrees(glm::eulerAngles(transform_component.getOrientation()));
+					if (ImGui::InputScalarN("Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
+					{
+						transform_component.setOrientation(quaternionD(glm::radians(rotation)));
+					}
+
+					vector3D scale = transform_component.getScale();
+					if (ImGui::InputScalarN("Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
 					{
 						transform_component.setScale(scale);
 					}

@@ -14,7 +14,7 @@ namespace Genesis
 		LegacyWorldRenderer(LegacyBackend* backend);
 		~LegacyWorldRenderer();
 
-		void drawScene(vector2U target_size, Framebuffer target_framebuffer, EntityRegisty& world, Camera& camera, TransformD& camera_transform);
+		void drawScene(vector2U target_size, Framebuffer target_framebuffer, EntityRegistry& world, Camera& camera, TransformD& camera_transform);
 
 	protected:
 		LegacyBackend* backend;

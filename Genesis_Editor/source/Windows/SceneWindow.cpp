@@ -62,7 +62,7 @@ namespace Genesis
 		}
 	}
 
-	void SceneWindow::drawWindow(EntityRegisty& world)
+	void SceneWindow::drawWindow(EntityRegistry& world)
 	{
 		ImGui::Begin("Scene View");
 

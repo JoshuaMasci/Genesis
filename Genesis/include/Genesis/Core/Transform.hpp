@@ -4,6 +4,11 @@ namespace Genesis
 {
 	class TransformF
 	{
+	protected:
+		vector3F position;
+		quaternionF orientation;
+		vector3F scale;
+
 	public:
 		TransformF(vector3F& position = vector3F(0.0f), quaternionF& orientation = quaternionF(1.0f, 0.0f, 0.0f, 0.0f), vector3F& scale = vector3F(1.0f));
 
@@ -27,15 +32,20 @@ namespace Genesis
 		matrix4F getModelMatrix() const;
 		matrix4F getViewMatirx() const;
 		matrix3F getNormalMatrix() const;
-
-	private:
-		vector3F position;
-		quaternionF orientation;
-		vector3F scale;
 	};
 
 	class TransformD
 	{
+	protected:
+		void updateModelMatrix();
+
+		vector3D position;
+		quaternionD orientation;
+		vector3D scale;
+
+		matrix4F untranslated_model_matrix;
+		bool dirty;
+
 	public:
 		TransformD(vector3D position = vector3D(0.0), quaternionD orientation = quaternionD(1.0, 0.0, 0.0, 0.0), vector3D scale = vector3D(1.0));
 
@@ -56,16 +66,6 @@ namespace Genesis
 		matrix4F getModelMatrix(const vector3D& position_offset = vector3D(0.0));
 		matrix3F getNormalMatrix();
 		matrix4F getViewMatirx(const vector3D& position_offset = vector3D(0.0));
-
-	private:
-		void updateModelMatrix();
-
-		vector3D position;
-		quaternionD orientation;
-		vector3D scale;
-
-		matrix4F untranslated_model_matrix;
-		bool dirty;
 	};
 
 	class TransformUtils
@@ -74,6 +74,7 @@ namespace Genesis
 		static void transformByInplace(TransformF& destination, const TransformF& origin, const TransformF& local);
 		static void transformByInplace(TransformD& destination, const TransformD& origin, const TransformD& local);
 		static TransformD transformBy(const TransformD& origin, const TransformF& local);
+		static TransformD transformBy(const TransformD& origin, const TransformD& local);
 
 		static void untransformByInplace(TransformD& destination, const TransformD& origin, const TransformD& global);
 

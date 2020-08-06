@@ -38,7 +38,7 @@ namespace Genesis
 
 		GltfModel* scene_model = nullptr;
 
-		EntityRegisty editor_registry;
+		EntityRegistry editor_registry;
 	};
 }
 
