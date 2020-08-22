@@ -32,10 +32,12 @@ int main(int argc, char** argv)
 #include "SDL2_Window.hpp" 
 #include "OpenglBackend.hpp"
 #include "Genesis/LegacyRendering/LegacyImGui.hpp"
+#include "Genesis/Platform/FileSystem.hpp"
 
 #include "imgui.h"
 
 //Components
+#include "Genesis/Component/MeshComponent.hpp"
 #include "Genesis/Component/TransformComponents.hpp"
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Component/Hierarchy.hpp"
@@ -44,6 +46,8 @@ int main(int argc, char** argv)
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lights.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
+
+#include "Genesis/Resource/ObjLoader.hpp"
 
 namespace Genesis
 {
@@ -56,7 +60,7 @@ namespace Genesis
 
 		EntityHandle entity = world.create();
 
-		world.assign<LocalTransform>(entity, TransformUtils::toTransformD(node->local_transform));
+		world.assign<TransformD>(entity, TransformUtils::toTransformD(node->local_transform));
 
 		if (!node->name.empty())
 		{
@@ -88,7 +92,7 @@ namespace Genesis
 
 		EntityHandle entity = world.create();
 
-		world.assign<WorldTransform>(entity, TransformUtils::toTransformD(node->local_transform));
+		world.assign<TransformD>(entity, TransformUtils::toTransformD(node->local_transform));
 
 		if (!node->name.empty())
 		{
@@ -97,6 +101,7 @@ namespace Genesis
 
 		if (node->mesh != nullptr)
 		{
+			world.assign<WorldTransform>(entity);
 			world.assign<PbrMesh>(entity, *node->mesh);
 			world.assign<PbrMaterial>(entity, *node->mesh->primitives[0].temp_material_ptr);
 		}
@@ -106,6 +111,8 @@ namespace Genesis
 			EntityHandle child = loadNode(world, child_node);
 			Hierarchy::addChild(world, entity, child);
 		}
+
+		return entity;
 	}
 
 	void loadScene(entt::registry& world, GltfModel* scene)
@@ -150,13 +157,14 @@ namespace Genesis
 		{
 			EntityHandle entity = this->editor_registry.create();
 			this->editor_registry.assign<NameComponent>(entity, "Test_Entity");
-			this->editor_registry.assign<WorldTransform>(entity).setOrientation(glm::angleAxis(glm::radians(80.0), vector3D(1.0f, 0.0, 0.1)));
+			this->editor_registry.assign<TransformD>(entity).setOrientation(glm::angleAxis(glm::radians(80.0), vector3D(1.0f, 0.0, 0.1)));
+			this->editor_registry.assign<WorldTransform>(entity);
 			this->editor_registry.assign<Camera>(entity);
 			this->editor_registry.assign<DirectionalLight>(entity, vector3F(1.0f), 0.4f, true);
 		}
 
 		{
-			const string file_name = "res/Cube.glb";
+			const string file_name = "res/Cube_Test.glb";
 
 			tinygltf::Model gltfModel;
 			tinygltf::TinyGLTF loader;
@@ -195,14 +203,6 @@ namespace Genesis
 			this->scene_model = new GltfModel(this->legacy_backend, gltfModel);
 			loadScene(this->editor_registry, this->scene_model);
 		}
-
-		/*this->editor_base_world->forEachPool<RigidBody, TransformD>([&](EntityPool* pool)
-		{
-			for (size_t i = 0; i < pool->getEntityCount(); i++)
-			{
-				GENESIS_ENGINE_INFO("Rigidbody");
-			}
-		});*/
 	}
 
 	EditorApplication::~EditorApplication()
@@ -224,9 +224,9 @@ namespace Genesis
 		if (!registry.has<ChildNode>(entity))
 		{
 			//Root Node
-			if (registry.has<WorldTransform>(entity))
+			if (registry.has<TransformD>(entity))
 			{
-				return registry.get<WorldTransform>(entity);
+				return registry.get<TransformD>(entity);
 			}
 
 			return TransformD();
@@ -240,9 +240,9 @@ namespace Genesis
 
 		TransformD local_transform = TransformD();
 
-		if (registry.has<LocalTransform>(entity))
+		if (registry.has<TransformD>(entity))
 		{
-			local_transform = (TransformD)registry.get<LocalTransform>(entity);
+			local_transform = registry.get<TransformD>(entity);
 		}
 
 		return TransformUtils::transformBy(calcWorldTransform(registry, child_node.parent), local_transform);
@@ -256,8 +256,8 @@ namespace Genesis
 		this->scene_window->udpate(time_step);
 
 		// Hierarchy/Transform resolve system
-		// This system will resolve the world transform for all entites with a world transform that aren't a root entity
-		auto& view = this->editor_registry.view<WorldTransform, ChildNode>();
+		// This system will resolve the world transform for all entites with a world transform
+		auto& view = this->editor_registry.view<WorldTransform>();
 		for (EntityHandle entity : view)
 		{
 			WorldTransform& transform = view.get<WorldTransform>(entity);
@@ -284,7 +284,22 @@ namespace Genesis
 			{
 				if (ImGui::MenuItem("Load Scene", ""))
 				{
+					string filename = FileSystem::getFileDialog("");
+					Mesh mesh = ObjLoader::loadMesh(this->legacy_backend, filename);
+					
+					EntityHandle entity = this->editor_registry.create();
 
+					this->editor_registry.assign<NameComponent>(entity, "Mesh Test");
+
+					this->editor_registry.assign<TransformD>(entity);
+					this->editor_registry.assign<WorldTransform>(entity);
+					PbrMesh& pbr_mesh = this->editor_registry.assign<PbrMesh>(entity);
+					pbr_mesh.vertex_buffer = mesh.vertex_buffer;
+					pbr_mesh.index_buffer = mesh.index_buffer;
+					pbr_mesh.index_count = mesh.index_count;
+
+					PbrMaterial& material = this->editor_registry.assign<PbrMaterial>(entity);
+					material.albedo_factor = vector4F(1.0f, 0.0f, 1.0, 1.0f);
 				}
 
 				if (ImGui::MenuItem("Exit", "")) { this->close(); };
@@ -293,6 +308,8 @@ namespace Genesis
 			ImGui::EndMenuBar();
 		}
 		this->ui_renderer->endDocking();
+
+		//ImGui::ShowDemoWindow();
 
 		{
 			FrameStats stats = this->legacy_backend->getLastFrameStats();

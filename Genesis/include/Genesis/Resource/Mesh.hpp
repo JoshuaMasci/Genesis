@@ -5,44 +5,50 @@
 
 namespace Genesis
 {
-	struct PbrMaterial;
-
-	struct PbrMeshVertexStatic
+	struct MeshVertex
 	{
 		vector3F position;
 		vector3F normal;
-		vector2F uv0;
-		vector2F uv1;
+		vector3F tangent;
+		vector3F bitangent;
+		vector2F uv;
 	};
 
-	struct PbrMeshVertexAnimated
+	struct MeshVertexAnimated
 	{
 		vector3F position;
 		vector3F normal;
-		vector2F uv0;
-		vector2F uv1;
+		vector3F tangent;
+		vector3F bitangent;
+		vector2F uv;
+
 		vector4F joints;
 		vector4F weights;
 	};
 
-	struct PbrMeshPrimitive
+
+	struct MeshPrimitive
 	{
 		uint32_t first_index;
 		uint32_t index_count;
 		uint32_t vertex_count;
-		uint32_t material_index;
 		BoundingBox bounding_box;
-
-		PbrMaterial* temp_material_ptr;
 	};
 
-	struct PbrMesh
+	struct Mesh
 	{
 		VertexBuffer vertex_buffer;
 		IndexBuffer index_buffer;
 		uint32_t index_count;
 
-		vector<PbrMeshPrimitive> primitives;
+		vector<MeshPrimitive> primitives;
 		BoundingBox bounding_box;
+
+		bool has_weights = false;
+	};
+
+	struct MeshUtils
+	{
+		void loadMeshFromFile(const string& file);
 	};
 }

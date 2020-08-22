@@ -12,14 +12,6 @@ namespace Genesis
 		WorldTransform(const TransformD& transform) :TransformD(transform) {};
 	};
 
-	class LocalTransform : public TransformD
-	{
-		//No changes, just a wrapper for TransformD
-	public:
-		LocalTransform() :TransformD() {};
-		LocalTransform(const TransformD& transform) :TransformD(transform) {};
-	};
-
 	class RootTransform : public TransformD
 	{
 		//No changes, just a wrapper for TransformD

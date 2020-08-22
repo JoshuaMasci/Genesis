@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 
+#include "Genesis/Component/MeshComponent.hpp"
 #include "Genesis/Component/TransformComponents.hpp"
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Rendering/Camera.hpp"
@@ -35,40 +36,11 @@ namespace Genesis
 				}
 			}
 
-			/*
-				If the entity has a local transform it means it is a child of another entity
-				this means even if it has a world transfom it can not be edited.
-			*/
-			if (world.has<LocalTransform>(selected_entity))
+			if (world.has<TransformD>(selected_entity))
 			{
-				if (ImGui::CollapsingHeader("Local Transform", ImGuiTreeNodeFlags_DefaultOpen))
+				if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					LocalTransform& transform_component = world.get<LocalTransform>(selected_entity);
-
-					vector3D position = transform_component.getPosition();
-					if (ImGui::InputScalarN("Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
-					{
-						transform_component.setPosition(position);
-					};
-
-					vector3D rotation = glm::degrees(glm::eulerAngles(transform_component.getOrientation()));
-					if (ImGui::InputScalarN("Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
-					{
-						transform_component.setOrientation(quaternionD(glm::radians(rotation)));
-					}
-
-					vector3D scale = transform_component.getScale();
-					if (ImGui::InputScalarN("Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
-					{
-						transform_component.setScale(scale);
-					}
-				}
-			}
-			else if (world.has<WorldTransform>(selected_entity))
-			{
-				if (ImGui::CollapsingHeader("World Transform", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					WorldTransform& transform_component = world.get<WorldTransform>(selected_entity);
+					TransformD& transform_component = world.get<TransformD>(selected_entity);
 
 					vector3D position = transform_component.getPosition();
 					if (ImGui::InputScalarN("Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
@@ -116,9 +88,21 @@ namespace Genesis
 				}
 			}
 
+			if (world.has<MeshComponent>(selected_entity))
+			{
+				if (ImGui::CollapsingHeader("Mesh Component", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					MeshComponent& mesh_component = world.get<MeshComponent>(selected_entity);
+					
+					static int i = 0;
+					const char* mesh_names[] = {"Not", "Real", "Meshes"};
+					ImGui::Combo("Mesh", &i, mesh_names, IM_ARRAYSIZE(mesh_names));				
+				}
+			}
+
 			if (world.has<PbrMaterial>(selected_entity))
 			{
-				if (ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_DefaultOpen))
+				if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					PbrMaterial& material_component = world.get<PbrMaterial>(selected_entity);
 
@@ -127,14 +111,46 @@ namespace Genesis
 					ImGui::SliderFloat("Roughness Factor", &material_component.metallic_roughness_factor.y, 0.0f, 1.0f);
 					ImGui::ColorEdit4("Emissive Color", &material_component.emissive_factor.x, 0);
 
-					//ImGui::SliderFloat("Intensity", &light_component.intensity, 0.0f, 1.0f);
-					//ImGui::ColorEdit3("Color", &light_component.color.x, 0);
-					//ImGui::Checkbox("Enabled", &light_component.enabled);
-
 					ImGui::Checkbox("Cull Backface", &material_component.cull_backface);
 				}
 			}
 
+			ImGui::Separator();
+
+			if (ImGui::Button("Add Component"))
+			{
+				ImGui::OpenPopup("add_component");
+			}
+
+			if (ImGui::BeginPopup("add_component"))
+			{
+				if (!world.has<NameComponent>(selected_entity))
+				{
+					if (ImGui::MenuItem("Name Component")) { world.assign<NameComponent>(selected_entity, "Entity Name"); }
+				}
+
+				if (!world.has<TransformD>(selected_entity))
+				{
+					if (ImGui::MenuItem("Transform")) { world.assign<TransformD>(selected_entity); }
+				}
+
+				if (!world.has<Camera>(selected_entity))
+				{
+					if (ImGui::MenuItem("Camera")) { world.assign<Camera>(selected_entity); }
+				}
+
+				if (!world.has<WorldTransform>(selected_entity))
+				{
+					if (ImGui::MenuItem("World Transform")) { world.assign<WorldTransform>(selected_entity); }
+				}
+
+				if (!world.has<MeshComponent>(selected_entity))
+				{
+					if (ImGui::MenuItem("Mesh")) { world.assign<MeshComponent>(selected_entity); }
+				}
+
+				ImGui::EndPopup();
+			}
 		}
 
 		ImGui::End();

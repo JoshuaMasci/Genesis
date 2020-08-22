@@ -34,4 +34,35 @@ namespace Genesis
 		}
 		return false;
 	}
+
+#ifdef GENESIS_PLATFORM_WIN
+#include <windows.h>
+#include <commdlg.h> 
+	string FileSystem::getFileDialog(const string& initial_directory)
+	{
+		OPENFILENAME ofn;
+		char fileName[MAX_PATH] = "";
+		ZeroMemory(&ofn, sizeof(ofn));
+
+		ofn.lStructSize = sizeof(OPENFILENAME);
+		ofn.hwndOwner = NULL;
+		ofn.lpstrFilter = NULL;
+		ofn.lpstrFile = fileName;
+		ofn.nMaxFile = MAX_PATH;
+		ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+		ofn.lpstrDefExt = "";
+
+		string fileNameStr;
+
+		if (GetOpenFileName(&ofn))
+			fileNameStr = fileName;
+
+		return fileNameStr;
+	}
+#else
+	string FileSystem::getFileDialog(const string& initial_directory)
+	{
+		return string();
+	}
+#endif // GENESIS_PLATFORM_WIN
 }

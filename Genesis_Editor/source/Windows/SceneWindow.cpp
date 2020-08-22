@@ -11,6 +11,8 @@ namespace Genesis
 		this->legacy_backend = legacy_backend;
 		this->world_renderer = new LegacyWorldRenderer(this->legacy_backend);
 
+		this->scene_camera_transform.setPosition(vector3D(0.0, 1.0, -5.0));
+
 	}
 
 	SceneWindow::~SceneWindow()
@@ -68,10 +70,10 @@ namespace Genesis
 	{
 		ImGui::Begin("Scene View");
 
-		ImVec2 vMin = ImGui::GetWindowContentRegionMin();
-		ImVec2 vMax = ImGui::GetWindowContentRegionMax();
-		ImVec2 im_window_size = ImVec2(vMax.x - vMin.x, vMax.y - vMin.y);
-		vector2U window_size = vector2U(vMax.x - vMin.x, vMax.y - vMin.y);
+		ImGui::Button("Play");
+
+		ImVec2 im_remaining_space = ImGui::GetContentRegionAvail();
+		vector2U window_size = vector2U(im_remaining_space.x, im_remaining_space.y);
 
 		if (window_size != this->framebuffer_size)
 		{
@@ -96,7 +98,7 @@ namespace Genesis
 
 		this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, world, this->scene_camera, this->scene_camera_transform);
 
-		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->framebuffer, 0), im_window_size, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->framebuffer, 0), im_remaining_space, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
 		this->is_window_active = ImGui::IsWindowFocused();
 

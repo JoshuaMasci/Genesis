@@ -2,7 +2,7 @@
 
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#define GENESIS_CONSOLE_LOG 1
+//#define GENESIS_CONSOLE_LOG 1
 
 namespace Genesis
 {
