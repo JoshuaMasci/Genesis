@@ -41,7 +41,6 @@ namespace Genesis
 		IndexBuffer index_buffer;
 		uint32_t index_count;
 
-		vector<MeshPrimitive> primitives;
 		BoundingBox bounding_box;
 
 		bool has_weights = false;

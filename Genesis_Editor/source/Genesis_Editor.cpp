@@ -46,99 +46,12 @@ int main(int argc, char** argv)
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lights.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
+#include "Genesis/Physics/ReactPhyscis.hpp"
 
 #include "Genesis/Resource/ObjLoader.hpp"
 
 namespace Genesis
 {
-	EntityHandle loadNode(entt::registry& world, GltfNode* node)
-	{
-		if (node == nullptr)
-		{
-			return null_entity;
-		}
-
-		EntityHandle entity = world.create();
-
-		world.assign<TransformD>(entity, TransformUtils::toTransformD(node->local_transform));
-
-		if (!node->name.empty())
-		{
-			world.assign<NameComponent>(entity, node->name.c_str());
-		}
-
-		if (node->mesh != nullptr)
-		{
-			world.assign<WorldTransform>(entity);
-			world.assign<PbrMesh>(entity, *node->mesh);
-			world.assign<PbrMaterial>(entity, *node->mesh->primitives[0].temp_material_ptr);
-		}
-
-		for (auto child_node : node->child_nodes)
-		{
-			EntityHandle child = loadNode(world, child_node);
-			Hierarchy::addChild(world, entity, child);
-		}
-
-		return entity;
-	}
-
-	EntityHandle loadRootNode(entt::registry& world, GltfNode* node)
-	{
-		if (node == nullptr)
-		{
-			return null_entity;
-		}
-
-		EntityHandle entity = world.create();
-
-		world.assign<TransformD>(entity, TransformUtils::toTransformD(node->local_transform));
-
-		if (!node->name.empty())
-		{
-			world.assign<NameComponent>(entity, node->name.c_str());
-		}
-
-		if (node->mesh != nullptr)
-		{
-			world.assign<WorldTransform>(entity);
-			world.assign<PbrMesh>(entity, *node->mesh);
-			world.assign<PbrMaterial>(entity, *node->mesh->primitives[0].temp_material_ptr);
-		}
-
-		for (auto child_node : node->child_nodes)
-		{
-			EntityHandle child = loadNode(world, child_node);
-			Hierarchy::addChild(world, entity, child);
-		}
-
-		return entity;
-	}
-
-	void loadScene(entt::registry& world, GltfModel* scene)
-	{
-		for (auto root_node : scene->root_nodes)
-		{
-			loadRootNode(world, root_node);
-		}
-	}
-
-	EntityHandle createHierarchy(EntityRegistry& registry, size_t count, char* name_temp)
-	{
-		EntityHandle entity = registry.create();
-
-		string name = name_temp + std::to_string(count);
-		registry.assign<NameComponent>(entity, name.c_str());
-
-		if (count > 1)
-		{
-			EntityHandle child = createHierarchy(registry, count - 1, name_temp);
-			Hierarchy::addChild(registry, entity, child);
-		}
-
-		return entity;
-	}
-
 	EditorApplication::EditorApplication()
 	{
 		this->platform = new SDL2_Platform(this);
@@ -150,102 +63,48 @@ namespace Genesis
 		this->console_window = new ConsoleWindow();
 		Logging::console_sink->setConsoleWindow(this->console_window);
 
-		this->entity_list_window = new EntityListWindow();
+		this->entity_hierarchy_window = new EntityHierarchyWindow();
 		this->entity_properties_window = new EntityPropertiesWindow();
 		this->scene_window = new SceneWindow(this->input_manager, this->legacy_backend);
 
+		this->mesh_pool = new MeshPool(this->legacy_backend);
+
+		this->temp_material.albedo_factor = vector4F(1.0f, 0.0f, 1.0, 1.0f);
+
+		EntityRegistry* editor_registry = this->editor_world.getRegistry();
+
 		{
-			EntityHandle entity = this->editor_registry.create();
-			this->editor_registry.assign<NameComponent>(entity, "Test_Entity");
-			this->editor_registry.assign<TransformD>(entity).setOrientation(glm::angleAxis(glm::radians(80.0), vector3D(1.0f, 0.0, 0.1)));
-			this->editor_registry.assign<WorldTransform>(entity);
-			this->editor_registry.assign<Camera>(entity);
-			this->editor_registry.assign<DirectionalLight>(entity, vector3F(1.0f), 0.4f, true);
+			EntityHandle entity = editor_registry->create();
+			editor_registry->assign<NameComponent>(entity, "Test_Entity");
+			editor_registry->assign<TransformD>(entity).setOrientation(glm::angleAxis(glm::radians(80.0), vector3D(1.0f, 0.0, 0.1)));
+			editor_registry->assign<WorldTransform>(entity) = editor_registry->get<TransformD>(entity);
+			editor_registry->assign<Camera>(entity);
+			editor_registry->assign<DirectionalLight>(entity, vector3F(1.0f), 0.4f, true);
 		}
 
 		{
-			const string file_name = "res/Cube_Test.glb";
-
-			tinygltf::Model gltfModel;
-			tinygltf::TinyGLTF loader;
-			string error;
-			string warning;
-			bool return_value;
-
-			if (file_name.substr(file_name.find_last_of(".") + 1) == "gltf")
-			{
-				return_value = loader.LoadASCIIFromFile(&gltfModel, &error, &warning, file_name);
-			}
-			else if (file_name.substr(file_name.find_last_of(".") + 1) == "glb")
-			{
-				return_value = loader.LoadBinaryFromFile(&gltfModel, &error, &warning, file_name);
-			}
-			else
-			{
-				GENESIS_ENGINE_ERROR("Unknown File extension");
-			}
-
-			if (!error.empty())
-			{
-				GENESIS_ENGINE_ERROR("Error: {}", error);
-			}
-
-			if (!warning.empty())
-			{
-				GENESIS_ENGINE_WARNING("Warning: {}", warning);
-			}
-
-			if (!return_value)
-			{
-				GENESIS_ENGINE_CRITICAL("Failed to parse glTF");
-			}
-
-			this->scene_model = new GltfModel(this->legacy_backend, gltfModel);
-			loadScene(this->editor_registry, this->scene_model);
+			EntityHandle entity = editor_registry->create();
+			editor_registry->assign<NameComponent>(entity, "Physics Cube");
+			editor_registry->assign<TransformD>(entity);
+			editor_registry->assign<WorldTransform>(entity) = editor_registry->get<TransformD>(entity);
+			editor_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource("res/cube.obj"), &this->temp_material);
+			TransformD transform = editor_registry->get<TransformD>(entity);
+			editor_registry->assign<RigidBody>(entity);
 		}
 	}
 
 	EditorApplication::~EditorApplication()
 	{
-		delete this->scene_model;
+		delete this->mesh_pool;
 
 		delete this->console_window;
-		delete this->entity_list_window;
+		delete this->entity_hierarchy_window;
 		delete this->entity_properties_window;
 		delete this->scene_window;
 
 		delete this->legacy_backend;
 
 		Logging::console_sink->setConsoleWindow(nullptr);
-	}
-
-	TransformD calcWorldTransform(EntityRegistry& registry, EntityHandle entity)
-	{
-		if (!registry.has<ChildNode>(entity))
-		{
-			//Root Node
-			if (registry.has<TransformD>(entity))
-			{
-				return registry.get<TransformD>(entity);
-			}
-
-			return TransformD();
-		}
-		ChildNode& child_node = registry.get<ChildNode>(entity);
-
-		if (child_node.parent == null_entity || !registry.valid(child_node.parent))
-		{
-			return TransformD();
-		}
-
-		TransformD local_transform = TransformD();
-
-		if (registry.has<TransformD>(entity))
-		{
-			local_transform = registry.get<TransformD>(entity);
-		}
-
-		return TransformUtils::transformBy(calcWorldTransform(registry, child_node.parent), local_transform);
 	}
 
 	void EditorApplication::update(TimeStep time_step)
@@ -255,14 +114,12 @@ namespace Genesis
 
 		this->scene_window->udpate(time_step);
 
-		// Hierarchy/Transform resolve system
-		// This system will resolve the world transform for all entites with a world transform
-		auto& view = this->editor_registry.view<WorldTransform>();
-		for (EntityHandle entity : view)
+		if (this->scene_window->isSceneRunning())
 		{
-			WorldTransform& transform = view.get<WorldTransform>(entity);
-			transform = (WorldTransform)calcWorldTransform(editor_registry, entity);
+			this->editor_world.runSimulation(time_step);
 		}
+
+		this->editor_world.resolveTransforms();
 	}
 
 	void EditorApplication::render(TimeStep time_step)
@@ -284,22 +141,16 @@ namespace Genesis
 			{
 				if (ImGui::MenuItem("Load Scene", ""))
 				{
-					string filename = FileSystem::getFileDialog("");
-					Mesh mesh = ObjLoader::loadMesh(this->legacy_backend, filename);
-					
-					EntityHandle entity = this->editor_registry.create();
+					string filename = FileSystem::getFileDialog("res/");
 
-					this->editor_registry.assign<NameComponent>(entity, "Mesh Test");
+					GENESIS_ENGINE_INFO("Opening {}", filename);
 
-					this->editor_registry.assign<TransformD>(entity);
-					this->editor_registry.assign<WorldTransform>(entity);
-					PbrMesh& pbr_mesh = this->editor_registry.assign<PbrMesh>(entity);
-					pbr_mesh.vertex_buffer = mesh.vertex_buffer;
-					pbr_mesh.index_buffer = mesh.index_buffer;
-					pbr_mesh.index_count = mesh.index_count;
-
-					PbrMaterial& material = this->editor_registry.assign<PbrMaterial>(entity);
-					material.albedo_factor = vector4F(1.0f, 0.0f, 1.0, 1.0f);
+					EntityRegistry* editor_registry = this->editor_world.getRegistry();
+					EntityHandle entity = editor_registry->create();
+					editor_registry->assign<NameComponent>(entity, "Mesh Test");
+					editor_registry->assign<TransformD>(entity).setOrientation(glm::angleAxis(glm::radians(25.0), vector3D(0.0, 0.0, 1.0)));
+					editor_registry->assign<WorldTransform>(entity) = editor_registry->get<TransformD>(entity);
+					editor_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource(filename), &this->temp_material);
 				}
 
 				if (ImGui::MenuItem("Exit", "")) { this->close(); };
@@ -321,9 +172,9 @@ namespace Genesis
 		}
 
 		this->console_window->drawWindow();
-		this->entity_list_window->drawWindow(this->editor_registry);
-		this->entity_properties_window->drawWindow(this->editor_registry, this->entity_list_window->getSelected());
-		this->scene_window->drawWindow(this->editor_registry);
+		this->entity_hierarchy_window->drawWindow(*this->editor_world.getRegistry());
+		this->entity_properties_window->drawWindow(*this->editor_world.getRegistry(), this->entity_hierarchy_window->getSelected());
+		this->scene_window->drawWindow(this->editor_world);
 
 		this->ui_renderer->endFrame();
 

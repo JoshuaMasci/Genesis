@@ -1,12 +1,11 @@
 #include "Genesis/LegacyRendering/LegacyWorldRenderer.hpp"
 
 #include "Genesis/Platform/FileSystem.hpp"
+
 #include "Genesis/Component/TransformComponents.hpp"
+#include "Genesis/Component/MeshComponent.hpp"
+
 #include "Genesis/Rendering/Camera.hpp"
-
-#include "Genesis/Resource/PbrMesh.hpp"
-#include "Genesis/Resource/PbrMaterial.hpp"
-
 #include "Genesis/Rendering/Lights.hpp"
 
 namespace Genesis
@@ -20,42 +19,42 @@ namespace Genesis
 			backend->setUniformMat4f("environment.view_projection_matrix", view_projection_matrix);
 		}
 
-		static void writeMaterialUniform(LegacyBackend* backend, const PbrMaterial& material)
+		static void writeMaterialUniform(LegacyBackend* backend, const Material& material)
 		{
 			backend->setUniform4f("material.albedo", material.albedo_factor);
-			backend->setUniform2f("material.metallic_roughness", material.metallic_roughness_factor);
-			backend->setUniform4f("material.emissive", material.emissive_factor);
-
-			backend->setUniform1i("material.albedo_uv", material.albedo_uv);
-			backend->setUniform1i("material.metallic_roughness_uv", material.metallic_roughness_uv);
-			backend->setUniform1i("material.normal_uv", material.normal_uv);
-			backend->setUniform1i("material.occlusion_uv", material.occlusion_uv);
-			backend->setUniform1i("material.emissive_uv", material.emissive_uv);
-
-			if (material.albedo_texture != nullptr)
-			{
-				backend->setUniformTexture("material.albedo_texture", 0, material.albedo_texture);
-			}
-
-			if (material.metallic_roughness_texture != nullptr)
-			{
-				backend->setUniformTexture("material.metallic_roughness_texture", 1, material.metallic_roughness_texture);
-			}
-
-			if (material.normal_texture != nullptr)
-			{
-				backend->setUniformTexture("material.normal_texture", 2, material.normal_texture);
-			}
-
-			if (material.occlusion_texture != nullptr)
-			{
-				backend->setUniformTexture("material.occlusion_texture", 3, material.occlusion_texture);
-			}
-
-			if (material.emissive_texture != nullptr)
-			{
-				backend->setUniformTexture("material.emissive_texture", 4, material.emissive_texture);
-			}
+			//backend->setUniform2f("material.metallic_roughness", material.metallic_roughness_factor);
+			//backend->setUniform4f("material.emissive", material.emissive_factor);
+			//
+			//backend->setUniform1i("material.albedo_uv", material.albedo_uv);
+			//backend->setUniform1i("material.metallic_roughness_uv", material.metallic_roughness_uv);
+			//backend->setUniform1i("material.normal_uv", material.normal_uv);
+			//backend->setUniform1i("material.occlusion_uv", material.occlusion_uv);
+			//backend->setUniform1i("material.emissive_uv", material.emissive_uv);
+			//
+			//if (material.albedo_texture != nullptr)
+			//{
+			//	backend->setUniformTexture("material.albedo_texture", 0, material.albedo_texture);
+			//}
+			//
+			//if (material.metallic_roughness_texture != nullptr)
+			//{
+			//	backend->setUniformTexture("material.metallic_roughness_texture", 1, material.metallic_roughness_texture);
+			//}
+			//
+			//if (material.normal_texture != nullptr)
+			//{
+			//	backend->setUniformTexture("material.normal_texture", 2, material.normal_texture);
+			//}
+			//
+			//if (material.occlusion_texture != nullptr)
+			//{
+			//	backend->setUniformTexture("material.occlusion_texture", 3, material.occlusion_texture);
+			//}
+			//
+			//if (material.emissive_texture != nullptr)
+			//{
+			//	backend->setUniformTexture("material.emissive_texture", 4, material.emissive_texture);
+			//}
 		}
 
 		static void writeTransformUniform(LegacyBackend* backend, TransformD& transform)
@@ -114,18 +113,23 @@ namespace Genesis
 
 		struct MeshStruct
 		{
-			PbrMesh mesh;
-			PbrMaterial material;
+			Mesh* mesh;
+			Material* material;
 			TransformD transform;
 		};
 		static vector<MeshStruct> meshes;
 		meshes.clear();
 		{
-			auto mesh_group = world.view<PbrMesh, PbrMaterial, WorldTransform>();
+			auto mesh_group = world.view<MeshComponent, WorldTransform>();
 			for (EntityHandle entity : mesh_group)
 			{
-				auto&[mesh, material, transform] = mesh_group.get<PbrMesh, PbrMaterial, WorldTransform>(entity);
-				meshes.push_back({ mesh , material, (TransformD)transform });
+				MeshComponent& mesh_component = mesh_group.get<MeshComponent>(entity);
+				WorldTransform& transform = mesh_group.get<WorldTransform>(entity);
+
+				if (mesh_component.mesh != nullptr && mesh_component.material != nullptr)
+				{
+					meshes.push_back({ mesh_component.mesh , mesh_component.material, (TransformD)transform });
+				}
 			}
 		}
 
@@ -154,12 +158,12 @@ namespace Genesis
 			for (MeshStruct& mesh : meshes)
 			{
 				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
-				LegacyShaderUniform::writeMaterialUniform(this->backend, mesh.material);
+				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
 
-				this->backend->bindVertexBuffer(mesh.mesh.vertex_buffer);
-				this->backend->bindIndexBuffer(mesh.mesh.index_buffer);
+				this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);
+				this->backend->bindIndexBuffer(mesh.mesh->index_buffer);
 
-				this->backend->drawIndex(mesh.mesh.index_count, 0);
+				this->backend->drawIndex(mesh.mesh->index_count, 0);
 			}
 		}
 
@@ -174,17 +178,17 @@ namespace Genesis
 			for (MeshStruct& mesh : meshes)
 			{
 				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
-				LegacyShaderUniform::writeMaterialUniform(this->backend, mesh.material);
+				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
 
-				this->backend->bindVertexBuffer(mesh.mesh.vertex_buffer);
-				this->backend->bindIndexBuffer(mesh.mesh.index_buffer);
+				this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);
+				this->backend->bindIndexBuffer(mesh.mesh->index_buffer);
 
 				for (DirectionalLightStruct& light : directional_lights)
 				{
 					if (light.light.enabled)
 					{
 						LegacyShaderUniform::writeDirectionalLight(this->backend, light.light, (vector3F)light.transform.getForward());
-						this->backend->drawIndex(mesh.mesh.index_count, 0);
+						this->backend->drawIndex(mesh.mesh->index_count, 0);
 					}
 				}
 			}

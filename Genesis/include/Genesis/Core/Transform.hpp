@@ -66,6 +66,8 @@ namespace Genesis
 		matrix4F getModelMatrix(const vector3D& position_offset = vector3D(0.0));
 		matrix3F getNormalMatrix();
 		matrix4F getViewMatirx(const vector3D& position_offset = vector3D(0.0));
+
+		void setTransform(const TransformD& new_transform);
 	};
 
 	class TransformUtils

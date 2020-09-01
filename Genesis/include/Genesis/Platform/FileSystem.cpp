@@ -49,13 +49,16 @@ namespace Genesis
 		ofn.lpstrFilter = NULL;
 		ofn.lpstrFile = fileName;
 		ofn.nMaxFile = MAX_PATH;
-		ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+		ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
 		ofn.lpstrDefExt = "";
+		ofn.lpstrInitialDir = initial_directory.c_str();
 
 		string fileNameStr;
 
 		if (GetOpenFileName(&ofn))
+		{
 			fileNameStr = fileName;
+		}
 
 		return fileNameStr;
 	}
@@ -64,5 +67,5 @@ namespace Genesis
 	{
 		return string();
 	}
-#endif // GENESIS_PLATFORM_WIN
+#endif
 }

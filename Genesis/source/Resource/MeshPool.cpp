@@ -11,7 +11,7 @@ namespace Genesis
 
 	void MeshPool::loadResource(const string& key)
 	{
-		Mesh mesh = ObjLoader::loadMesh(this->backend, key);
+		Mesh* mesh = new Mesh(ObjLoader::loadMesh(this->backend, key));
 		this->resources[key].resource = mesh;
 		this->resources[key].using_count = 0;
 	}
@@ -19,7 +19,8 @@ namespace Genesis
 	void MeshPool::unloadResource(const string& key)
 	{
 		ResourceInternal resource = this->resources[key];
-		this->backend->destoryVertexBuffer(resource.resource.vertex_buffer);
-		this->backend->destoryIndexBuffer(resource.resource.index_buffer);
+		this->backend->destoryVertexBuffer(resource.resource->vertex_buffer);
+		this->backend->destoryIndexBuffer(resource.resource->index_buffer);
+		delete resource.resource;
 	}
 }

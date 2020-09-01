@@ -1,16 +1,49 @@
 #pragma once
 
-#include "Genesis/Physics/ReactPhyscis.hpp"
+namespace reactphysics3d
+{
+	class RigidBody;
+}
 
 namespace Genesis
 {
-	struct RigidBody
+	class RigidBody
 	{
-		vector3D linear_velocity;
-		vector3D angular_velocity;
+	protected:
+		double mass = 1.0f;
+		bool gravity_enabled = true;
+		bool awake = true;
+		vector3D linear_velocity = vector3D(0.0);
+		vector3D angular_velocity = vector3D(0.0);
 
-		double mass;
+		reactphysics3d::RigidBody* rigidbody = nullptr;
 
-		reactphysics3d::RigidBody* rigid_body;
+	public:
+		void attachRigidBody(reactphysics3d::RigidBody* rigidbody);
+		reactphysics3d::RigidBody* removeRigidBody();
+		bool hasRigidBody();
+		//reactphysics3d::RigidBody* getRigidBody();
+
+		void setTransform(const TransformD& transform);
+		TransformD getTransform();
+
+		void setMass(double mass);
+		double getMass();
+
+		void setGravityEnabled(bool enabled);
+		bool getGravityEnabled();
+
+		void setAwake(bool awake);
+		bool getAwake();
+
+		void setLinearVelocity(const vector3D& velocity);
+		vector3D getLinearVelocity();
+
+		void setAngularVelocity(const vector3D& velocity);
+		vector3D getAngularVelocity();
+
+		void applyCenteredForce(const vector3D& force);
+		void applyForce(const vector3D& world_position, const vector3D& force);
+		void applyTorque(const vector3D& torque);
 	};
 }

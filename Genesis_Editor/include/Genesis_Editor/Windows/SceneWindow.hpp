@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Ecs/Ecs.hpp"
+#include "Genesis/Ecs/EntityWorld.hpp"
 
 #include <Genesis/Input/InputManager.hpp>
 #include <Genesis/LegacyBackend/LegacyBackend.hpp>
@@ -16,10 +16,14 @@ namespace Genesis
 
 		void udpate(TimeStep time_step);
 
-		void drawWindow(EntityRegistry& world);
+		void drawWindow(EntityWorld& world);
+
+		bool isSceneRunning() { return this->is_scene_running; };
 
 	private:
 		bool is_window_active = false;
+
+		bool is_scene_running = false;
 
 		InputManager* input_manager = nullptr;
 

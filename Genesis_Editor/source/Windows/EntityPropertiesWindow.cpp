@@ -7,9 +7,7 @@
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lights.hpp"
-
-#include "Genesis/Resource/PbrMesh.hpp"
-#include "Genesis/Resource/PbrMaterial.hpp"
+#include "Genesis/Physics/RigidBody.hpp"
 
 namespace Genesis
 {
@@ -92,26 +90,45 @@ namespace Genesis
 			{
 				if (ImGui::CollapsingHeader("Mesh Component", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					MeshComponent& mesh_component = world.get<MeshComponent>(selected_entity);
-					
-					static int i = 0;
-					const char* mesh_names[] = {"Not", "Real", "Meshes"};
-					ImGui::Combo("Mesh", &i, mesh_names, IM_ARRAYSIZE(mesh_names));				
+
 				}
 			}
 
-			if (world.has<PbrMaterial>(selected_entity))
+			if (world.has<RigidBody>(selected_entity))
 			{
-				if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen))
+				if (ImGui::CollapsingHeader("Rigidbody", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					PbrMaterial& material_component = world.get<PbrMaterial>(selected_entity);
+					RigidBody& rigidbody = world.get<RigidBody>(selected_entity);
 
-					ImGui::ColorEdit4("Albedo Color", &material_component.albedo_factor.x, 0);
-					ImGui::SliderFloat("Metallic Factor", &material_component.metallic_roughness_factor.x, 0.0f, 1.0f);
-					ImGui::SliderFloat("Roughness Factor", &material_component.metallic_roughness_factor.y, 0.0f, 1.0f);
-					ImGui::ColorEdit4("Emissive Color", &material_component.emissive_factor.x, 0);
+					double mass = rigidbody.getMass();
+					if (ImGui::InputDouble("Mass", &mass))
+					{
+						rigidbody.setMass(mass);
+					}
 
-					ImGui::Checkbox("Cull Backface", &material_component.cull_backface);
+					bool gravity = rigidbody.getGravityEnabled();
+					if (ImGui::Checkbox("Gravity Enabled", &gravity))
+					{
+						rigidbody.setGravityEnabled(gravity);
+					}
+
+					bool awake = rigidbody.getAwake();
+					if (ImGui::Checkbox("Awake", &awake))
+					{
+						rigidbody.setAwake(awake);
+					}
+
+					vector3D linear_velocity = rigidbody.getLinearVelocity();
+					if (ImGui::InputScalarN("Linear Velocity", ImGuiDataType_::ImGuiDataType_Double, &linear_velocity, 3))
+					{
+						rigidbody.setLinearVelocity(linear_velocity);
+					}
+
+					vector3D angular_velocity = rigidbody.getAngularVelocity();
+					if (ImGui::InputScalarN("Angular Velocity", ImGuiDataType_::ImGuiDataType_Double, &angular_velocity, 3))
+					{
+						rigidbody.setAngularVelocity(angular_velocity);
+					}
 				}
 			}
 
@@ -136,17 +153,22 @@ namespace Genesis
 
 				if (!world.has<Camera>(selected_entity))
 				{
-					if (ImGui::MenuItem("Camera")) { world.assign<Camera>(selected_entity); }
-				}
+					if (!world.has<WorldTransform>(selected_entity))
+					{
+						world.assign<WorldTransform>(selected_entity);
+					}
 
-				if (!world.has<WorldTransform>(selected_entity))
-				{
-					if (ImGui::MenuItem("World Transform")) { world.assign<WorldTransform>(selected_entity); }
+					if (ImGui::MenuItem("Camera")) { world.assign<Camera>(selected_entity); }
 				}
 
 				if (!world.has<MeshComponent>(selected_entity))
 				{
-					if (ImGui::MenuItem("Mesh")) { world.assign<MeshComponent>(selected_entity); }
+					if (!world.has<WorldTransform>(selected_entity))
+					{
+						world.assign<WorldTransform>(selected_entity);
+					}
+
+					if (ImGui::MenuItem("Mesh")) { world.assign<MeshComponent>(selected_entity, nullptr, nullptr); }
 				}
 
 				ImGui::EndPopup();
@@ -155,208 +177,4 @@ namespace Genesis
 
 		ImGui::End();
 	}
-
-	/*void Genesis::EntityPropertiesWindow::drawWindow()
-	{
-		ImGui::Begin("Entity Properties");
-
-		if (selected_entity != nullptr)
-		{
-			ImGui::Separator();
-			if (ImGui::CollapsingHeader("Entity Properties", ImGuiTreeNodeFlags_DefaultOpen))
-			{
-				const size_t entity_name_size = 128;
-				char entity_name[entity_name_size];
-				strcpy_s(entity_name, entity_name_size, selected_entity->getName().c_str());
-				if (ImGui::InputText("Entity Name", entity_name, entity_name_size))
-				{
-					selected_entity->setName(string(entity_name));
-				}
-
-				{
-					bool has_changed_transform = false;
-					TransformD local_transform = selected_entity->getWorldTransform();
-
-					vector3D position = local_transform.getPosition();
-					if (ImGui::InputScalarN("World Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
-					{
-						local_transform.setPosition(position);
-						has_changed_transform = true;
-					};
-
-					vector3D rotation = glm::degrees(glm::eulerAngles(local_transform.getOrientation()));
-					if (ImGui::InputScalarN("World Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
-					{
-						local_transform.setOrientation(quaternionD(glm::radians(rotation)));
-						has_changed_transform = true;
-					}
-
-					vector3D scale = local_transform.getScale();
-					if (ImGui::InputScalarN("World Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
-					{
-						local_transform.setScale(scale);
-						has_changed_transform = true;
-					}
-
-					if (has_changed_transform)
-					{
-						selected_entity->setWorldTransform(local_transform);
-					}
-				}
-			}
-
-			if (selected_entity->getRigidbody() != nullptr)
-			{
-				ImGui::Separator();
-				if (ImGui::CollapsingHeader("Rigidbody", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					RigidBody* rigidbody = selected_entity->getRigidbody();
-
-					bool awake = rigidbody->getAwake();
-					if (ImGui::Checkbox("Awake", &awake))
-					{
-						rigidbody->setAwake(awake);
-					}
-
-					bool gravity = rigidbody->getGravityEnabled();
-					if (ImGui::Checkbox("Gravity Enabled", &gravity))
-					{
-						rigidbody->setGravityEnabled(gravity);
-					}
-
-					vector3D linear_velocity = rigidbody->getLinearVelocity();
-					if (ImGui::InputScalarN("Linear Velocity", ImGuiDataType_::ImGuiDataType_Double, &linear_velocity, 3))
-					{
-						rigidbody->setLinearVelocity(linear_velocity);
-					};
-
-					vector3D angular_velocity = rigidbody->getAngularVelocity();
-					if (ImGui::InputScalarN("Angular Velocity", ImGuiDataType_::ImGuiDataType_Double, &angular_velocity, 3))
-					{
-						rigidbody->setLinearVelocity(angular_velocity);
-					};
-				}
-			}
-
-			ImGui::Separator();
-		}
-
-		ImGui::End();
-	}*/
 }
-/*void EntityPropertiesWindow::drawWindow(World* world, Entity* selected_entity)
-{
-	ImGui::ShowDemoWindow();
-
-	ImGui::Begin("Entity Properties");
-
-	if (selected_entity != nullptr)
-	{
-		ImGui::Separator();
-		if(ImGui::CollapsingHeader("Entity Properties", ImGuiTreeNodeFlags_DefaultOpen))
-		{
-			const size_t entity_name_size = 128;
-			char entity_name[entity_name_size];
-			strcpy_s(entity_name, entity_name_size, selected_entity->getName().c_str());
-			if (ImGui::InputText("Entity Name", entity_name, entity_name_size))
-			{
-				selected_entity->setName(string(entity_name));
-			}
-
-			{
-				bool has_changed_transform = false;
-				TransformD local_transform = selected_entity->getLocalTransform();
-
-				vector3D position = local_transform.getPosition();
-				if (ImGui::InputScalarN("Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
-				{
-					local_transform.setPosition(position);
-					has_changed_transform = true;
-				};
-
-				vector3D rotation = glm::degrees(glm::eulerAngles(local_transform.getOrientation()));
-				if (ImGui::InputScalarN("Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
-				{
-					local_transform.setOrientation(quaternionD(glm::radians(rotation)));
-					has_changed_transform = true;
-				}
-
-				vector3D scale = local_transform.getScale();
-				if (ImGui::InputScalarN("Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
-				{
-					local_transform.setScale(scale);
-					has_changed_transform = true;
-				};
-
-				if (has_changed_transform)
-				{
-					selected_entity->setLocalTransform(local_transform);
-				}
-			}
-		}
-
-		if (selected_entity->getRigidbody() != nullptr)
-		{
-			ImGui::Separator();
-			if (ImGui::CollapsingHeader("Rigidbody", ImGuiTreeNodeFlags_DefaultOpen))
-			{
-				RigidBody* rigidbody = selected_entity->getRigidbody();
-
-				bool awake = rigidbody->getAwake();
-				if (ImGui::Checkbox("Awake", &awake))
-				{
-					rigidbody->setAwake(awake);
-				}
-
-				bool gravity = rigidbody->getGravityEnabled();
-				if (ImGui::Checkbox("Gravity Enabled", &gravity))
-				{
-					rigidbody->setGravityEnabled(gravity);
-				}
-
-				vector3D linear_velocity = rigidbody->getLinearVelocity();
-				if (ImGui::InputScalarN("Linear Velocity", ImGuiDataType_::ImGuiDataType_Double, &linear_velocity, 3))
-				{
-					rigidbody->setLinearVelocity(linear_velocity);
-				};
-
-				vector3D angular_velocity = rigidbody->getAngularVelocity();
-				if (ImGui::InputScalarN("Angular Velocity", ImGuiDataType_::ImGuiDataType_Double, &angular_velocity, 3))
-				{
-					rigidbody->setLinearVelocity(angular_velocity);
-				};
-			}
-		}
-
-		ImGui::Separator();
-
-		/*auto size = ImGui::GetContentRegionAvail();
-		size.y = 19;
-		if (ImGui::Button("Add component", size))
-		{
-			ImGui::OpenPopup("add_component");
-		}
-
-		if (ImGui::BeginPopup("add_component"))
-		{
-			if (ImGui::Selectable("Rigidbody"))
-			{
-				//selected_entity->addRigidbody();
-			}
-
-			if (ImGui::Selectable("Box Collider"))
-			{
-				//selected_entity->addCollisionShape((CollisionShape*)new BoxCollisionShape(vector3D(0.5)));
-			}
-
-			ImGui::EndPopup();
-		}
-	}
-	else
-	{
-		ImGui::TextUnformatted("Error: Invalid Entity");
-	}
-
-	ImGui::End();
-}
-*/

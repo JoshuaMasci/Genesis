@@ -22,8 +22,9 @@ namespace Genesis
 		{
 			size_t index_offset = 0;
 
-			vector3F min_position = vector3F(INFINITY);
-			vector3F max_position = vector3F(-INFINITE);
+			//TODO
+			vector3F min_position = vector3F(10000.0f);
+			vector3F max_position = vector3F(-10000.0f);
 
 			for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++)
 			{
@@ -50,14 +51,15 @@ namespace Genesis
 					max_position = glm::max(max_position, position);
 				}
 
-				MeshPrimitive primitive;
-				primitive.first_index = index_offset;
-				primitive.index_count = fv;
-				primitive.bounding_box = {min_position, max_position};
-				return_mesh.primitives.push_back(primitive);
 
 				index_offset += fv;
 			}
+
+			//MeshPrimitive primitive;
+			//primitive.first_index = index_offset;
+			//primitive.index_count = shape.mesh.indices.size();
+			//primitive.bounding_box = { min_position, max_position };
+			//return_mesh.primitives.push_back(primitive);
 		}
 
 		//Calculate Tangent and Bitangent

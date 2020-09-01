@@ -1,4 +1,4 @@
-#include "Genesis_Editor/Windows/EntityListWindow.hpp"
+#include "Genesis_Editor/Windows/EntityHierarchyWindow.hpp"
 
 #include "imgui.h"
 
@@ -8,17 +8,17 @@
 
 namespace Genesis
 {
-	EntityListWindow::EntityListWindow()
+	EntityHierarchyWindow::EntityHierarchyWindow()
 	{
 	}
 
-	EntityListWindow::~EntityListWindow()
+	EntityHierarchyWindow::~EntityHierarchyWindow()
 	{
 	}
 
-	void EntityListWindow::drawWindow(EntityRegistry& registry)
+	void EntityHierarchyWindow::drawWindow(EntityRegistry& registry)
 	{
-		ImGui::Begin("Entity List");
+		ImGui::Begin("Entity Hierarchy");
 
 		ImGui::OpenPopupOnItemClick("Create_Entity_Popup", 1);
 
@@ -91,9 +91,9 @@ namespace Genesis
 		ImGui::End();
 	}
 
-	void EntityListWindow::drawEntityTree(EntityRegistry& registry, EntityHandle entity)
+	void EntityHierarchyWindow::drawEntityTree(EntityRegistry& registry, EntityHandle entity)
 	{
-		const ImGuiTreeNodeFlags base_flags = 0;
+		const ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
 		ImGuiTreeNodeFlags node_flags = base_flags;
 
 		if (this->selected_entity == entity)

@@ -61,16 +61,31 @@ namespace Genesis
 			quaternionD orientation = this->scene_camera_transform.getOrientation();
 			orientation = glm::angleAxis((double)this->input_manager->getButtonAxis(debug_pitch_axis, debug_pitch_up, debug_pitch_down) * this->angular_speed * (PI_D * 2.0) * time_step, this->scene_camera_transform.getLeft()) * orientation;
 			orientation = glm::angleAxis((double)this->input_manager->getButtonAxis(debug_yaw_axis, debug_yaw_left, debug_yaw_right) * this->angular_speed * (PI_D * 2.0) * time_step, this->scene_camera_transform.getUp()) * orientation;
-			orientation = glm::angleAxis((double)this->input_manager->getButtonAxis(debug_roll_axis, debug_roll_left, debug_roll_right) * this->angular_speed * (PI_D) * time_step, this->scene_camera_transform.getForward()) * orientation;
+			orientation = glm::angleAxis((double)this->input_manager->getButtonAxis(debug_roll_axis, debug_roll_left, debug_roll_right) * this->angular_speed * (PI_D) * time_step, -this->scene_camera_transform.getForward()) * orientation;
 			this->scene_camera_transform.setOrientation(orientation);
 		}
 	}
 
-	void SceneWindow::drawWindow(EntityRegistry& world)
+	void SceneWindow::drawWindow(EntityWorld& world)
 	{
 		ImGui::Begin("Scene View");
 
-		ImGui::Button("Play");
+		if (!this->is_scene_running)
+		{
+			if (ImGui::Button("Play"))
+			{
+				this->is_scene_running = true;
+				world.onCreate();
+			}
+		}
+		else
+		{
+			if (ImGui::Button("Pause"))
+			{
+				this->is_scene_running = false;
+				world.onDestroy();
+			}
+		}
 
 		ImVec2 im_remaining_space = ImGui::GetContentRegionAvail();
 		vector2U window_size = vector2U(im_remaining_space.x, im_remaining_space.y);
@@ -78,7 +93,6 @@ namespace Genesis
 		if (window_size != this->framebuffer_size)
 		{
 			//Rebuild Framebuffer
-		
 			if (this->framebuffer != nullptr)
 			{
 				this->legacy_backend->destoryFramebuffer(this->framebuffer);
@@ -96,7 +110,7 @@ namespace Genesis
 			this->framebuffer = this->legacy_backend->createFramebuffer(create_info);
 		}
 
-		this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, world, this->scene_camera, this->scene_camera_transform);
+		this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, *world.getRegistry(), this->scene_camera, this->scene_camera_transform);
 
 		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->framebuffer, 0), im_remaining_space, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 

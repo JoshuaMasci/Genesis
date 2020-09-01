@@ -28,7 +28,7 @@ protected:
 
 		};
 
-		resource_type* getResource(key_type key)
+		resource_type getResource(const key_type& key)
 		{
 			if (!this->hasResource(key))
 			{
@@ -36,10 +36,10 @@ protected:
 			}
 
 			this->resources[key].using_count++;
-			return &this->resources[key].resource;
+			return this->resources[key].resource;
 		};
 
-		void freeResource(key_type key)
+		void freeResource(const key_type& key)
 		{
 			if (this->hasResource(key))
 			{

@@ -4,11 +4,11 @@
 
 namespace Genesis
 {
-	class EntityListWindow
+	class EntityHierarchyWindow
 	{
 	public:
-		EntityListWindow();
-		~EntityListWindow();
+		EntityHierarchyWindow();
+		~EntityHierarchyWindow();
 
 		void drawWindow(EntityRegistry& registry);
 

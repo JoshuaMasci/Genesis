@@ -1,14 +1,13 @@
 #pragma once
 
 #include "Genesis/Resource/Mesh.hpp"
+#include "Genesis/Resource/Material.hpp"
 
 namespace Genesis
 {
-	struct Material2 {};
-
 	struct MeshComponent
 	{
-		Mesh* mesh;
-		Material2 material;
+		Mesh* mesh = nullptr;
+		Material* material = nullptr;
 	};
 }

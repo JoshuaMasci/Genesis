@@ -6,7 +6,7 @@
 
 namespace Genesis
 {
-	class MeshPool : ResourcePool<string, Mesh>
+	class MeshPool : public ResourcePool<string, Mesh*>
 	{
 	public:
 		MeshPool(LegacyBackend* backend);

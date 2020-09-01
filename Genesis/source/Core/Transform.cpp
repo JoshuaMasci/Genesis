@@ -70,7 +70,8 @@ namespace Genesis
 		{
 			this->updateModelMatrix();
 		}
-		return matrix3F(glm::transpose(glm::inverse(this->untranslated_model_matrix)));
+		;
+		return glm::transpose(glm::inverse(matrix3F(this->untranslated_model_matrix)));
 	}
 
 	matrix4F TransformD::getViewMatirx(const vector3D& position_offset)
@@ -79,6 +80,16 @@ namespace Genesis
 		vector3F center = eye_pos + (vector3F)this->getForward();
 		vector3F up = (vector3F)this->getUp();
 		return glm::lookAt(eye_pos, center, up);
+	}
+
+	void TransformD::setTransform(const TransformD& new_transform)
+	{
+		this->position = new_transform.position;
+		this->orientation = new_transform.orientation;
+		this->scale = new_transform.scale;
+
+		this->untranslated_model_matrix = new_transform.untranslated_model_matrix;
+		this->dirty = new_transform.dirty;
 	}
 
 	void TransformD::updateModelMatrix()
