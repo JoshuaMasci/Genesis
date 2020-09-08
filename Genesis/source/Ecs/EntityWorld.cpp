@@ -1,8 +1,8 @@
 #include "Genesis/Ecs/EntityWorld.hpp"
  
 #include "Genesis/Component/Hierarchy.hpp"
-#include "Genesis/Component/TransformComponents.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
+#include "Genesis/Component/NameComponent.hpp"
 
 namespace Genesis
 {
@@ -13,48 +13,6 @@ namespace Genesis
 	EntityWorld::~EntityWorld()
 	{
 		this->onDestroy();
-	}
-
-	TransformD calcWorldTransform(EntityRegistry& registry, EntityHandle entity)
-	{
-		if (!registry.has<ChildNode>(entity))
-		{
-			//Root Node
-			if (registry.has<TransformD>(entity))
-			{
-				TransformD& transform = registry.get<TransformD>(entity);
-				return transform;
-			}
-
-			return TransformD();
-		}
-		ChildNode& child_node = registry.get<ChildNode>(entity);
-
-		if (child_node.parent == null_entity || !registry.valid(child_node.parent))
-		{
-			return TransformD();
-		}
-
-		TransformD local_transform = TransformD();
-
-		if (registry.has<TransformD>(entity))
-		{
-			local_transform = registry.get<TransformD>(entity);
-		}
-
-		return TransformUtils::transformBy(calcWorldTransform(registry, child_node.parent), local_transform);
-	}
-
-	void EntityWorld::resolveTransforms()
-	{
-		// Hierarchy/Transform resolve system
-		// This system will resolve the world transform for all entites with a world transform
-		auto& view = this->registry.view<WorldTransform>();
-		for (EntityHandle entity : view)
-		{
-			TransformD new_transform = calcWorldTransform(registry, entity);
-			view.get<WorldTransform>(entity) = (WorldTransform)new_transform;
-		}
 	}
 
 	void EntityWorld::runSimulation(TimeStep time_step)
@@ -79,6 +37,13 @@ namespace Genesis
 				view.get<TransformD>(entity) = view.get<RigidBody>(entity).getTransform();
 			}
 		}
+	}
+
+	Entity EntityWorld::createEntity(const string& name)
+	{
+		EntityHandle handle = this->registry.create();
+		this->registry.assign<NameComponent>(handle, name.c_str());
+		return Entity(handle, &this->registry);
 	}
 
 	void EntityWorld::onCreate()

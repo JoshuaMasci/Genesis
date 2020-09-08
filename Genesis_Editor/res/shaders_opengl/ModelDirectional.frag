@@ -4,81 +4,58 @@ layout(location = 0) in vec3 frag_world_pos;
 layout(location = 1) in vec2 frag_uv;
 layout(location = 2) in mat3 frag_tangent_space;
 
-struct Environment
-{
-	vec3 ambient_light;
-	vec3 camera_position;
-	mat4 view_projection_matrix;
-};
+#include "Environment.slib"
 uniform Environment environment;
 
-struct Material
-{
-	vec4 albedo;
-	vec2 metallic_roughness;
-	vec4 emissive;
-	
-	int albedo_uv;
-	int normal_uv;
-	int metallic_roughness_uv;
-	int occlusion_uv;
-	int emissive_uv;
-	
-	sampler2D albedo_texture;
-	sampler2D normal_texture;
-	sampler2D metallic_roughness_texture;
-	sampler2D occlusion_texture;
-	sampler2D emissive_texture;
-};
-
-vec4 getAlbedo(Material material)
-{
-	vec4 albedo = material.albedo;
-	//if (material.albedo_uv > -1) 
-	//{
-	//	albedo *= texture(material.albedo_texture, material.albedo_uv == 0 ? frag_uv0 : frag_uv1);
-	//}
-	return albedo;
-};
+#include "Material.slib"
 uniform Material material;
 
-struct BaseLight
-{
-    vec3 color;
-    float intensity;
-};
-
-struct DirectionalLight
-{
-	BaseLight base;
-	vec3 direction;
-};
-
-vec4 CalcLight(BaseLight base, vec3 direction, vec3 normal, vec3 worldPos)
-{
-    float diffuseFactor = dot(normal, -direction);
-    
-    vec4 diffuseColor = vec4(0.0, 0.0, 0.0, 0.0);
-    
-    if(diffuseFactor > 0.0)
-    {
-        diffuseColor = vec4(base.color, 1.0) * base.intensity * diffuseFactor;
-    }
-    
-    return diffuseColor;
-}
-
-vec4 CalcDirectionalLight(DirectionalLight directional, vec3 normal, vec3 worldPos)
-{
-    return CalcLight(directional.base, directional.direction, normal, worldPos);
-}
-
+#include "Lighting.slib"
 uniform DirectionalLight directional_light;
+
+#include "Pbr.slib"
 
 layout(location = 0) out vec4 out_color;
 void main()
 {
-	vec4 color = getAlbedo(material);
-	color.xyz = (color * CalcDirectionalLight(directional_light, frag_tangent_space[2], frag_world_pos)).xyz;
-	out_color = color;
+	vec3 normal = getNormal(material);
+	vec3 view = normalize(environment.camera_position - frag_world_pos);
+	
+	vec4 full_albedo = getAlbedo(material);
+	vec3 albedo = full_albedo.xyz;
+	vec2 metallic_roughness = getMetallicRoughness(material);
+	float metallic = metallic_roughness.x;
+	float roughness = metallic_roughness.y;
+	
+	//PBR
+	vec3 F0 = vec3(0.04); 
+	F0 = mix(F0, albedo.xyz, metallic);
+	
+	// reflectance equation
+	vec3 Lo = vec3(0.0);
+	{
+		vec3 L = normalize(-directional_light.direction);
+		vec3 H = normalize(view + L);
+		vec3 radiance = directional_light.base.color * directional_light.base.intensity;
+		
+		// cook-torrance brdf
+        float NDF = DistributionGGX(normal, H, roughness);        
+        float G   = GeometrySmith(normal, view, L, roughness);      
+        vec3 F    = fresnelSchlick(max(dot(H, view), 0.0), F0);
+		
+		vec3 kS = F;
+        vec3 kD = vec3(1.0) - kS;
+        kD *= 1.0 - metallic;	  
+        
+        vec3 numerator    = NDF * G * F;
+        float denominator = 4.0 * max(dot(normal, view), 0.0) * max(dot(normal, L), 0.0);
+        vec3 specular     = numerator / max(denominator, 0.001);  
+            
+        // add to outgoing radiance Lo
+        float NdotL = max(dot(normal, L), 0.0);                
+        Lo = (kD * albedo / PI + specular) * radiance * NdotL; 
+	}
+	
+	out_color.xyz = Lo;
+	out_color.w = 0.0;
 }

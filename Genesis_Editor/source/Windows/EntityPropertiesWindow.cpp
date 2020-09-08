@@ -3,11 +3,11 @@
 #include "imgui.h"
 
 #include "Genesis/Component/MeshComponent.hpp"
-#include "Genesis/Component/TransformComponents.hpp"
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lights.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
+#include "Genesis/Physics/CollisionShape.hpp"
 
 namespace Genesis
 {
@@ -86,6 +86,33 @@ namespace Genesis
 				}
 			}
 
+			if (world.has<PointLight>(selected_entity))
+			{
+				if (ImGui::CollapsingHeader("Point Light", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					PointLight& light_component = world.get<PointLight>(selected_entity);
+
+					if (ImGui::DragFloat("Range", &light_component.range, 0.25f, 0.25f, 1000.0f))
+					{
+						std::clamp(light_component.range, 0.01f, 1000.0f);
+					}
+					
+					if (ImGui::DragFloat2("Attenuation", &light_component.attenuation.x, 0.01f, 0.0f, 1.0f))
+					{
+						std::clamp(light_component.attenuation.x, 0.0f, 1.0f);
+						std::clamp(light_component.attenuation.y, 0.0f, 1.0f);
+					}
+
+					if (ImGui::DragFloat("Intensity", &light_component.intensity, 0.01f, 0.0f, 1.0f))
+					{
+						std::clamp(light_component.intensity, 0.0f, 1.0f);
+					}
+
+					ImGui::ColorEdit3("Color", &light_component.color.x, 0);
+					ImGui::Checkbox("Enabled", &light_component.enabled);
+				}
+			}
+
 			if (world.has<MeshComponent>(selected_entity))
 			{
 				if (ImGui::CollapsingHeader("Mesh Component", ImGuiTreeNodeFlags_DefaultOpen))
@@ -132,6 +159,31 @@ namespace Genesis
 				}
 			}
 
+			if (world.has<CollisionShape>(selected_entity))
+			{
+				if (ImGui::CollapsingHeader("Collision Shape", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					CollisionShape& shape = world.get<CollisionShape>(selected_entity);
+
+					const char* shape_names[] = { "None", "Box", "Sphere", "Capsule" };
+					ImGui::Combo("Type", (int*)&shape.type, shape_names, IM_ARRAYSIZE(shape_names));
+
+					if (shape.type == CollisionShapeType::Box)
+					{
+						ImGui::InputScalarN("Half Extents", ImGuiDataType_::ImGuiDataType_Double, &shape.type_data.box_size, 3);
+					}
+					else if (shape.type == CollisionShapeType::Sphere)
+					{
+						ImGui::InputDouble("Radius", &shape.type_data.sphere_radius);
+					}
+					else if (shape.type == CollisionShapeType::Capsule)
+					{
+						ImGui::InputDouble("Radius", &shape.type_data.capsule_size.x);
+						ImGui::InputDouble("Height", &shape.type_data.capsule_size.y);
+					}
+				}
+			}
+
 			ImGui::Separator();
 
 			if (ImGui::Button("Add Component"))
@@ -153,21 +205,11 @@ namespace Genesis
 
 				if (!world.has<Camera>(selected_entity))
 				{
-					if (!world.has<WorldTransform>(selected_entity))
-					{
-						world.assign<WorldTransform>(selected_entity);
-					}
-
 					if (ImGui::MenuItem("Camera")) { world.assign<Camera>(selected_entity); }
 				}
 
 				if (!world.has<MeshComponent>(selected_entity))
 				{
-					if (!world.has<WorldTransform>(selected_entity))
-					{
-						world.assign<WorldTransform>(selected_entity);
-					}
-
 					if (ImGui::MenuItem("Mesh")) { world.assign<MeshComponent>(selected_entity, nullptr, nullptr); }
 				}
 

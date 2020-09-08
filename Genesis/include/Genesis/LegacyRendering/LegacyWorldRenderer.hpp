@@ -21,7 +21,7 @@ namespace Genesis
 
 		ShaderProgram ambient_program;
 		ShaderProgram directional_program;
-		//ShaderProgram point_program;
+		ShaderProgram point_program;
 		//ShaderProgram spot_program;
 
 		ShaderProgram gamma_correction_program;

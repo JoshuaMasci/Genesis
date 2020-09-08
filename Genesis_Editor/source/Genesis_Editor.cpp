@@ -38,7 +38,6 @@ int main(int argc, char** argv)
 
 //Components
 #include "Genesis/Component/MeshComponent.hpp"
-#include "Genesis/Component/TransformComponents.hpp"
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Component/Hierarchy.hpp"
 #include "Genesis/Resource/PbrMesh.hpp"
@@ -46,12 +45,26 @@ int main(int argc, char** argv)
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lights.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
+#include "Genesis/Physics/CollisionShape.hpp"
 #include "Genesis/Physics/ReactPhyscis.hpp"
 
 #include "Genesis/Resource/ObjLoader.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 namespace Genesis
 {
+	uint8_t* loadTexture(const string& texture_file_path, vector2I& size, int32_t& channels)
+	{
+		return stbi_load(texture_file_path.c_str(), (int*)(&size.x), (int*)(&size.y), (int*)(&channels), STBI_default);
+	}
+
+	void unloadTexture(uint8_t* data)
+	{
+		stbi_image_free(data);
+	}
+
 	EditorApplication::EditorApplication()
 	{
 		this->platform = new SDL2_Platform(this);
@@ -69,27 +82,84 @@ namespace Genesis
 
 		this->mesh_pool = new MeshPool(this->legacy_backend);
 
-		this->temp_material.albedo_factor = vector4F(1.0f, 0.0f, 1.0, 1.0f);
+		{
+			//Load image
+			vector2I size;
+			int32_t channels;
+			uint8_t* data = loadTexture("res/Ground Alien 02_normal.png", size, channels);
 
-		EntityRegistry* editor_registry = this->editor_world.getRegistry();
+			TextureCreateInfo create_info = {};
+			create_info.size = size;
+
+			switch (channels)
+			{
+			case 1:
+				create_info.format = ImageFormat::R_8;
+				break;
+			case 2:
+				create_info.format = ImageFormat::RG_8;
+				break;
+			case 3:
+				create_info.format = ImageFormat::RGB_8;
+				break;
+			case 4:
+				create_info.format = ImageFormat::RGBA_8;
+				break;
+			}
+
+			this->temp_material.normal_texture.texture = this->legacy_backend->createTexture(create_info, data);
+			this->temp_material.normal_texture.uv = 0;
+
+			unloadTexture(data);
+		}
+
 
 		{
-			EntityHandle entity = editor_registry->create();
-			editor_registry->assign<NameComponent>(entity, "Test_Entity");
-			editor_registry->assign<TransformD>(entity).setOrientation(glm::angleAxis(glm::radians(80.0), vector3D(1.0f, 0.0, 0.1)));
-			editor_registry->assign<WorldTransform>(entity) = editor_registry->get<TransformD>(entity);
-			editor_registry->assign<Camera>(entity);
-			editor_registry->assign<DirectionalLight>(entity, vector3F(1.0f), 0.4f, true);
+			//Load image
+			vector2I size;
+			int32_t channels;
+			uint8_t* data = loadTexture("res/1k_grid.png", size, channels);
+
+			TextureCreateInfo create_info = {};
+			create_info.size = size;
+
+			switch (channels)
+			{
+			case 1:
+				create_info.format = ImageFormat::R_8;
+				break;
+			case 2:
+				create_info.format = ImageFormat::RG_8;
+				break;
+			case 3:
+				create_info.format = ImageFormat::RGB_8;
+				break;
+			case 4:
+				create_info.format = ImageFormat::RGBA_8;
+				break;
+			}
+
+			this->temp_material.albedo_texture.texture = this->legacy_backend->createTexture(create_info, data);
+			this->temp_material.albedo_texture.uv = 0;
+
+			unloadTexture(data);
 		}
 
 		{
-			EntityHandle entity = editor_registry->create();
-			editor_registry->assign<NameComponent>(entity, "Physics Cube");
-			editor_registry->assign<TransformD>(entity);
-			editor_registry->assign<WorldTransform>(entity) = editor_registry->get<TransformD>(entity);
-			editor_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource("res/cube.obj"), &this->temp_material);
-			TransformD transform = editor_registry->get<TransformD>(entity);
-			editor_registry->assign<RigidBody>(entity);
+			Entity entity = this->editor_world.createEntity("Test_Entity");
+			//entity.addComponent<TransformD>().setOrientation(glm::angleAxis(glm::radians(80.0), vector3D(1.0f, 0.0, 0.1)));
+			entity.addComponent<TransformD>().setPosition(vector3D(0.0, 0.0, -3.0));
+			entity.addComponent<Camera>();
+			//entity.addComponent<DirectionalLight>(vector3F(1.0f), 0.4f, true);
+			entity.addComponent<PointLight>(20.0f, vector2F(1.0f), vector3F(1.0f), 0.4f, true);
+		}
+
+		{
+			Entity entity = this->editor_world.createEntity("Physics Cube");
+			entity.addComponent<TransformD>();
+			entity.addComponent<MeshComponent>(this->mesh_pool->getResource("res/sphere.obj"), &this->temp_material);
+			entity.addComponent<RigidBody>();
+			entity.addComponent<CollisionShape>();
 		}
 	}
 
@@ -118,8 +188,6 @@ namespace Genesis
 		{
 			this->editor_world.runSimulation(time_step);
 		}
-
-		this->editor_world.resolveTransforms();
 	}
 
 	void EditorApplication::render(TimeStep time_step)
@@ -149,7 +217,6 @@ namespace Genesis
 					EntityHandle entity = editor_registry->create();
 					editor_registry->assign<NameComponent>(entity, "Mesh Test");
 					editor_registry->assign<TransformD>(entity).setOrientation(glm::angleAxis(glm::radians(25.0), vector3D(0.0, 0.0, 1.0)));
-					editor_registry->assign<WorldTransform>(entity) = editor_registry->get<TransformD>(entity);
 					editor_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource(filename), &this->temp_material);
 				}
 
@@ -168,6 +235,13 @@ namespace Genesis
 			ImGui::LabelText(std::to_string(time_step * 1000.0).c_str(), "Frame Time (ms)");
 			ImGui::LabelText(std::to_string(stats.draw_calls).c_str(), "Draw Calls");
 			ImGui::LabelText(std::to_string(stats.triangles_count).c_str(), "Tris count");
+			ImGui::End();
+		}
+
+		{
+			ImGui::Begin("Material");
+			ImGui::ColorEdit4("albedo", &this->temp_material.albedo_factor.x);
+			ImGui::SliderFloat2("metallic roughness", &this->temp_material.metallic_roughness_factor.x, 0.0f, 1.0f);
 			ImGui::End();
 		}
 

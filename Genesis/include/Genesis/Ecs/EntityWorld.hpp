@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Genesis/Ecs/Ecs.hpp"
+#include "Genesis/Ecs/Entity.hpp"
 #include "Genesis/Physics/ReactPhyscis.hpp"
 
 namespace Genesis
@@ -17,8 +18,10 @@ namespace Genesis
 		EntityWorld();
 		~EntityWorld();
 
-		void resolveTransforms();
 		void runSimulation(TimeStep time_step);
+
+		Entity createEntity(const string& name);
+
 
 		void onCreate();
 		void onDestroy();

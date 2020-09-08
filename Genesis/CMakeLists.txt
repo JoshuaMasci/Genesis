@@ -6,6 +6,9 @@ file(GLOB_RECURSE GENESIS_HEADERS "include/*.*")
 
 add_library(Genesis_Engine STATIC ${GENESIS_SOURCES} ${GENESIS_HEADERS})
 
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GENESIS_SOURCES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GENESIS_HEADERS})
+
 target_include_directories(Genesis_Engine PUBLIC include/)
 
 target_precompile_headers(Genesis_Engine PUBLIC "include/Genesis/pch.hpp")

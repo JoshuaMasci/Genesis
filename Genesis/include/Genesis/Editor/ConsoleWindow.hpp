@@ -34,7 +34,7 @@ namespace Genesis
 	protected:
 		string name;
 
-		bool auto_scroll;
+		bool auto_scroll = false;
 		vector<ConsoleMessage> messages;
 
 		vector4F getColor(ConsoleLevel level);

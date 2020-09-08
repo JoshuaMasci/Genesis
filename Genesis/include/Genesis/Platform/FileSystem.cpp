@@ -68,4 +68,45 @@ namespace Genesis
 		return string();
 	}
 #endif
+
+#include <string>
+
+	bool FileSystem::loadShaderString(const string& filepath, string& destination)
+	{
+		size_t found = filepath.find_last_of("/\\");
+		string path = filepath.substr(0, found);
+
+		std::ifstream ShaderStream(filepath, std::ios::in);
+
+		if (ShaderStream.is_open())
+		{
+			std::string Line = "";
+			while (getline(ShaderStream, Line))
+			{
+				const string INCLUDE_DIRECTIVE = "#include \"";
+				//If the line doesnt have an include statement
+				//Add it to the Shader Code
+				if (Line.find(INCLUDE_DIRECTIVE) == std::string::npos)
+				{
+					destination += "\n" + Line;
+				}
+				//If it has a include statement
+				else
+				{
+					size_t includeLength = INCLUDE_DIRECTIVE.length();
+					//SubString from the first " to the end "\n
+					string include_file = path + "/" + Line.substr(includeLength, Line.length() - includeLength - 1) ;
+					string include_file_data;
+					
+					GENESIS_ENGINE_ASSERT(loadShaderString(include_file, include_file_data), "Cannot Open Include");
+					destination += include_file_data;
+				}
+			}
+			ShaderStream.close();
+
+			return true;
+		}
+
+		return false;
+	}
 }

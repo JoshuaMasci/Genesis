@@ -31,11 +31,6 @@ namespace Genesis
 		return this->rigidbody != nullptr;
 	}
 
-	/*reactphysics3d::RigidBody* RigidBody::getRigidBody()
-	{
-		return this->rigidbody;
-	}*/
-
 	void RigidBody::setTransform(const TransformD& transform)
 	{
 		this->rigidbody->setTransform(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())));

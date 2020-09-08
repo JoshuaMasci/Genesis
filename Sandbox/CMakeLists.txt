@@ -6,6 +6,9 @@ file(GLOB_RECURSE SANDBOX_HEADERS "include/*.*")
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})
 
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SANDBOX_SOURCES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SANDBOX_HEADERS})
+
 target_include_directories(Sandbox PUBLIC include/)
 
 target_compile_features(Sandbox INTERFACE cxx_std_17)

@@ -6,6 +6,9 @@ file(GLOB_RECURSE GENESIS_EDITOR_HEADERS "include/*.*")
 
 add_executable(Genesis_Editor ${GENESIS_EDITOR_SOURCES} ${GENESIS_EDITOR_HEADERS})
 
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GENESIS_EDITOR_SOURCES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GENESIS_EDITOR_SOURCES})
+
 target_include_directories(Genesis_Editor PUBLIC include/)
 
 target_compile_features(Genesis_Editor INTERFACE cxx_std_17)

@@ -6,17 +6,28 @@ namespace Genesis
 {
 	struct Material
 	{
+		struct MaterialTexture
+		{
+			Texture2D texture = nullptr;
+
+			//Texture UVs
+			// -1 means no texture
+			//  0 uses mesh uv
+			//  1 uses mesh uv1 (Not Used Yet)
+			int8_t uv = -1;
+		};
+
 		//values
 		vector4F albedo_factor = vector4F(1.0f);
 		vector2F metallic_roughness_factor = vector2F(1.0f);
 		vector4F emissive_factor = vector4F(1.0f);
 
 		//textures
-		Texture2D albedo_texture = nullptr;
-		Texture2D normal_texture = nullptr;
-		Texture2D metallic_roughness_texture = nullptr;
-		Texture2D occlusion_texture = nullptr;
-		Texture2D emissive_texture = nullptr;
+		MaterialTexture albedo_texture;
+		MaterialTexture normal_texture;
+		MaterialTexture metallic_roughness_texture;
+		MaterialTexture occlusion_texture;
+		MaterialTexture emissive_texture;
 
 		//settings
 		bool cull_backface = true;

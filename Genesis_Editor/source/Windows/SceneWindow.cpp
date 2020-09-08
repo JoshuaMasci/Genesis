@@ -11,7 +11,7 @@ namespace Genesis
 		this->legacy_backend = legacy_backend;
 		this->world_renderer = new LegacyWorldRenderer(this->legacy_backend);
 
-		this->scene_camera_transform.setPosition(vector3D(0.0, 1.0, -5.0));
+		this->scene_camera_transform.setPosition(vector3D(0.0, 0.0, -5.0));
 
 	}
 
