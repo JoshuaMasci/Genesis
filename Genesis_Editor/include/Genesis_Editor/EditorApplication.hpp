@@ -9,6 +9,7 @@
 #include "Genesis_Editor/Windows/EntityHierarchyWindow.hpp"
 #include "Genesis_Editor/Windows/EntityPropertiesWindow.hpp"
 #include "Genesis_Editor/Windows/SceneWindow.hpp"
+#include "Genesis_Editor/Windows/AssetBrowserWindow.hpp"
 
 #include "Genesis/Ecs/Ecs.hpp"
 #include "Genesis/Ecs/EntityWorld.hpp"
@@ -39,6 +40,7 @@ namespace Genesis
 		EntityHierarchyWindow* entity_hierarchy_window;
 		EntityPropertiesWindow* entity_properties_window;
 		SceneWindow* scene_window;
+		AssetBrowserWindow* asset_browser_window;
 
 		Material temp_material;
 

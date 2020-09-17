@@ -10,7 +10,7 @@ namespace Genesis
 		EntityHierarchyWindow();
 		~EntityHierarchyWindow();
 
-		void drawWindow(EntityRegistry& registry);
+		void draw(EntityRegistry& registry);
 
 		EntityHandle getSelected() { return this->selected_entity; };
 	private:

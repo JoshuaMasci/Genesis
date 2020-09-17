@@ -29,7 +29,7 @@ namespace Genesis
 
 		void addMessage(ConsoleMessage& message);
 
-		void drawWindow();
+		void draw();
 
 	protected:
 		string name;

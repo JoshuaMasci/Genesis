@@ -16,7 +16,7 @@ namespace Genesis
 	{
 	}
 
-	void EntityHierarchyWindow::drawWindow(EntityRegistry& registry)
+	void EntityHierarchyWindow::draw(EntityRegistry& registry)
 	{
 		ImGui::Begin("Entity Hierarchy");
 

@@ -19,7 +19,7 @@ namespace Genesis
 	{
 	}
 
-	void EntityPropertiesWindow::drawWindow(EntityRegistry& world, EntityHandle selected_entity)
+	void EntityPropertiesWindow::draw(EntityRegistry& world, EntityHandle selected_entity)
 	{
 		ImGui::Begin("Entity Properties");
 

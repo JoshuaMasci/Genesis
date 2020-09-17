@@ -14,9 +14,9 @@ namespace Genesis
 		SceneWindow(InputManager* input_manager, LegacyBackend* legacy_backend);
 		~SceneWindow();
 
-		void udpate(TimeStep time_step);
+		void update(TimeStep time_step);
 
-		void drawWindow(EntityWorld& world);
+		void draw(EntityWorld& world);
 
 		bool isSceneRunning() { return this->is_scene_running; };
 

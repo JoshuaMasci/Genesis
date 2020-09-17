@@ -18,7 +18,7 @@ namespace Genesis
 		this->messages.push_back(message);
 	}
 
-	void ConsoleWindow::drawWindow()
+	void ConsoleWindow::draw()
 	{
 		ImGui::Begin(this->name.c_str());
 

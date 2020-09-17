@@ -1,6 +1,8 @@
 #include "Genesis/Platform/FileSystem.hpp"
 
 #include <fstream>
+#include <string>
+#include <filesystem>
 
 namespace Genesis 
 {
@@ -35,6 +37,7 @@ namespace Genesis
 		return false;
 	}
 
+//TODO replace with IMGUI version
 #ifdef GENESIS_PLATFORM_WIN
 #include <windows.h>
 #include <commdlg.h> 
@@ -68,8 +71,6 @@ namespace Genesis
 		return string();
 	}
 #endif
-
-#include <string>
 
 	bool FileSystem::loadShaderString(const string& filepath, string& destination)
 	{
@@ -108,5 +109,38 @@ namespace Genesis
 		}
 
 		return false;
+	}
+
+	struct path_leaf_string
+	{
+		std::string operator()(const std::filesystem::directory_entry& entry) const
+		{
+			return entry.path().filename().string();
+		}
+	};
+
+	void FileSystem::readDirectory(const string& filepath, vector<string>& files)
+	{
+		std::filesystem::path path(filepath);
+		std::filesystem::directory_iterator start(path);
+		std::filesystem::directory_iterator end;
+		std::transform(start, end, std::back_inserter(files), path_leaf_string());
+	}
+
+	struct path_info
+	{
+		FileInfo operator()(const std::filesystem::directory_entry& entry) const
+		{
+			std::filesystem::path path = entry.path();
+			return { path.relative_path().string(), path.filename().string(), path.extension().string(), entry.is_directory() };
+		}
+	};
+
+	void FileSystem::readDirectory(const string& directory_path, vector<FileInfo>& files)
+	{
+		std::filesystem::path path(directory_path);
+		std::filesystem::directory_iterator start(path);
+		std::filesystem::directory_iterator end;
+		std::transform(start, end, std::back_inserter(files), path_info());
 	}
 }

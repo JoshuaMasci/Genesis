@@ -48,7 +48,7 @@ namespace Genesis
 	constexpr fnv_hash32 debug_roll_left = StringHash32("Debug_RollLeft");
 	constexpr fnv_hash32 debug_roll_right = StringHash32("Debug_RollRight");
 
-	void SceneWindow::udpate(TimeStep time_step)
+	void SceneWindow::update(TimeStep time_step)
 	{		
 		if (this->is_window_active)
 		{
@@ -66,7 +66,7 @@ namespace Genesis
 		}
 	}
 
-	void SceneWindow::drawWindow(EntityWorld& world)
+	void SceneWindow::draw(EntityWorld& world)
 	{
 		ImGui::Begin("Scene View");
 

@@ -10,6 +10,6 @@ namespace Genesis
 		EntityPropertiesWindow();
 		~EntityPropertiesWindow();
 
-		void drawWindow(EntityRegistry& world, EntityHandle selected_entity);
+		void draw(EntityRegistry& world, EntityHandle selected_entity);
 	};
 }

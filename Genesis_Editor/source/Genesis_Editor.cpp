@@ -79,6 +79,7 @@ namespace Genesis
 		this->entity_hierarchy_window = new EntityHierarchyWindow();
 		this->entity_properties_window = new EntityPropertiesWindow();
 		this->scene_window = new SceneWindow(this->input_manager, this->legacy_backend);
+		this->asset_browser_window = new AssetBrowserWindow(this->legacy_backend);
 
 		this->mesh_pool = new MeshPool(this->legacy_backend);
 
@@ -112,7 +113,6 @@ namespace Genesis
 
 			unloadTexture(data);
 		}
-
 
 		{
 			//Load image
@@ -171,6 +171,7 @@ namespace Genesis
 		delete this->entity_hierarchy_window;
 		delete this->entity_properties_window;
 		delete this->scene_window;
+		delete this->asset_browser_window;
 
 		delete this->legacy_backend;
 
@@ -182,7 +183,7 @@ namespace Genesis
 		GENESIS_PROFILE_FUNCTION("EditorApplication::update");
 		Application::update(time_step);
 
-		this->scene_window->udpate(time_step);
+		this->scene_window->update(time_step);
 
 		if (this->scene_window->isSceneRunning())
 		{
@@ -245,10 +246,11 @@ namespace Genesis
 			ImGui::End();
 		}
 
-		this->console_window->drawWindow();
-		this->entity_hierarchy_window->drawWindow(*this->editor_world.getRegistry());
-		this->entity_properties_window->drawWindow(*this->editor_world.getRegistry(), this->entity_hierarchy_window->getSelected());
-		this->scene_window->drawWindow(this->editor_world);
+		this->console_window->draw();
+		this->entity_hierarchy_window->draw(*this->editor_world.getRegistry());
+		this->entity_properties_window->draw(*this->editor_world.getRegistry(), this->entity_hierarchy_window->getSelected());
+		this->scene_window->draw(this->editor_world);
+		this->asset_browser_window->draw("res/");
 
 		this->ui_renderer->endFrame();
 
