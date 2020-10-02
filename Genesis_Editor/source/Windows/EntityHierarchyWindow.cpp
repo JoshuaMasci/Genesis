@@ -45,6 +45,7 @@ namespace Genesis
 					}
 				}
 			}
+			ImGui::EndDragDropTarget();
 		}
 
 		auto view = registry.view<ParentNode>(entt::exclude_t<ChildNode>());
@@ -86,6 +87,7 @@ namespace Genesis
 					}
 				}
 			}
+			ImGui::EndDragDropTarget();
 		}
 
 		ImGui::End();

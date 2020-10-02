@@ -1,14 +1,16 @@
 #pragma once
 
-#include "Genesis/RenderingBackend/RenderingTypes.hpp"
+#include "Genesis/Resource/Resource.hpp"
+#include "Genesis/Resource/TextureResource.hpp"
 
 namespace Genesis
 {
-	struct Material
+	class Material : public Resource
 	{
+	public:
 		struct MaterialTexture
 		{
-			Texture2D texture = nullptr;
+			shared_ptr<TextureResource> texture;
 
 			//Texture UVs
 			// -1 means no texture
@@ -16,6 +18,12 @@ namespace Genesis
 			//  1 uses mesh uv1 (Not Used Yet)
 			int8_t uv = -1;
 		};
+
+		Material(const string file_path)
+		 : Resource(file_path) {};
+
+		//No deconstructor needed right now as the textures will free themselves
+		//Might be needed if factors get stored in a buffer
 
 		//values
 		vector4F albedo_factor = vector4F(1.0f);
@@ -31,5 +39,6 @@ namespace Genesis
 
 		//settings
 		bool cull_backface = true;
+		bool transparent = false;
 	};
 }

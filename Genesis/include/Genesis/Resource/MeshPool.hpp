@@ -4,17 +4,17 @@
 #include "Genesis/Resource/Mesh.hpp"
 #include "Genesis/LegacyBackend/LegacyBackend.hpp"
 
+#include "Genesis/Resource/MeshResource.hpp"
+
 namespace Genesis
 {
-	class MeshPool : public ResourcePool<string, Mesh*>
+	class MeshPool : public ResourcePoolNew<string, MeshResource>
 	{
 	public:
 		MeshPool(LegacyBackend* backend);
 
 	protected:
 		LegacyBackend* backend = nullptr;
-
-		virtual void loadResource(const string& key) override;
-		virtual void unloadResource(const string& key) override;
+		virtual shared_ptr<MeshResource> loadResource(const string& key) override;
 	};
 }

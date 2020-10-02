@@ -37,11 +37,9 @@ int main(int argc, char** argv)
 #include "imgui.h"
 
 //Components
-#include "Genesis/Component/MeshComponent.hpp"
+#include "Genesis/Component/ModelComponent.hpp"
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Component/Hierarchy.hpp"
-#include "Genesis/Resource/PbrMesh.hpp"
-#include "Genesis/Resource/PbrMaterial.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lights.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
@@ -50,114 +48,57 @@ int main(int argc, char** argv)
 
 #include "Genesis/Resource/ObjLoader.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
 namespace Genesis
 {
-	uint8_t* loadTexture(const string& texture_file_path, vector2I& size, int32_t& channels)
-	{
-		return stbi_load(texture_file_path.c_str(), (int*)(&size.x), (int*)(&size.y), (int*)(&channels), STBI_default);
-	}
-
-	void unloadTexture(uint8_t* data)
-	{
-		stbi_image_free(data);
-	}
-
 	EditorApplication::EditorApplication()
 	{
+		this->console_window = new ConsoleWindow();
+		Logging::console_sink->setConsoleWindow(this->console_window);
+
 		this->platform = new SDL2_Platform(this);
 		this->window = new SDL2_Window(vector2U(1600, 900), "Genesis Editor");
 
 		this->legacy_backend = new Opengl::OpenglBackend((SDL2_Window*) window);
 		this->ui_renderer = new LegacyImGui(this->legacy_backend, this->input_manager, this->window);
 
-		this->console_window = new ConsoleWindow();
-		Logging::console_sink->setConsoleWindow(this->console_window);
+		this->mesh_pool = new MeshPool(this->legacy_backend);
+		this->texture_pool = new TexturePool(this->legacy_backend);
+		this->material_pool = new MaterialPool(this->texture_pool);
+
+		this->temp_material = this->material_pool->getResource("res/test.mat");
 
 		this->entity_hierarchy_window = new EntityHierarchyWindow();
-		this->entity_properties_window = new EntityPropertiesWindow();
+		this->entity_properties_window = new EntityPropertiesWindow(this->mesh_pool, this->material_pool);
 		this->scene_window = new SceneWindow(this->input_manager, this->legacy_backend);
 		this->asset_browser_window = new AssetBrowserWindow(this->legacy_backend);
+		this->material_editor_window = new MaterialEditorWindow(this->material_pool, this->texture_pool);
+		this->material_editor_window->setActiveMaterial(this->temp_material);
 
-		this->mesh_pool = new MeshPool(this->legacy_backend);
+		this->editor_world = new EntityWorld();
 
 		{
-			//Load image
-			vector2I size;
-			int32_t channels;
-			uint8_t* data = loadTexture("res/Ground Alien 02_normal.png", size, channels);
-
-			TextureCreateInfo create_info = {};
-			create_info.size = size;
-
-			switch (channels)
-			{
-			case 1:
-				create_info.format = ImageFormat::R_8;
-				break;
-			case 2:
-				create_info.format = ImageFormat::RG_8;
-				break;
-			case 3:
-				create_info.format = ImageFormat::RGB_8;
-				break;
-			case 4:
-				create_info.format = ImageFormat::RGBA_8;
-				break;
-			}
-
-			this->temp_material.normal_texture.texture = this->legacy_backend->createTexture(create_info, data);
-			this->temp_material.normal_texture.uv = 0;
-
-			unloadTexture(data);
+			this->temp_material->normal_texture.texture = this->texture_pool->getResource("res/Ground Alien 02_normal.png");
+			this->temp_material->normal_texture.uv = 0;
 		}
 
 		{
-			//Load image
-			vector2I size;
-			int32_t channels;
-			uint8_t* data = loadTexture("res/1k_grid.png", size, channels);
-
-			TextureCreateInfo create_info = {};
-			create_info.size = size;
-
-			switch (channels)
-			{
-			case 1:
-				create_info.format = ImageFormat::R_8;
-				break;
-			case 2:
-				create_info.format = ImageFormat::RG_8;
-				break;
-			case 3:
-				create_info.format = ImageFormat::RGB_8;
-				break;
-			case 4:
-				create_info.format = ImageFormat::RGBA_8;
-				break;
-			}
-
-			this->temp_material.albedo_texture.texture = this->legacy_backend->createTexture(create_info, data);
-			this->temp_material.albedo_texture.uv = 0;
-
-			unloadTexture(data);
+			this->temp_material->albedo_texture.texture = this->texture_pool->getResource("res/1k_grid.png");
+			this->temp_material->albedo_texture.uv = 0;
 		}
 
 		{
-			Entity entity = this->editor_world.createEntity("Test_Entity");
+			Entity entity = this->editor_world->createEntity("Test_Entity");
 			//entity.addComponent<TransformD>().setOrientation(glm::angleAxis(glm::radians(80.0), vector3D(1.0f, 0.0, 0.1)));
 			entity.addComponent<TransformD>().setPosition(vector3D(0.0, 0.0, -3.0));
 			entity.addComponent<Camera>();
-			//entity.addComponent<DirectionalLight>(vector3F(1.0f), 0.4f, true);
+			entity.addComponent<DirectionalLight>(vector3F(1.0f), 0.4f, true);
 			entity.addComponent<PointLight>(20.0f, vector2F(1.0f), vector3F(1.0f), 0.4f, true);
 		}
 
 		{
-			Entity entity = this->editor_world.createEntity("Physics Cube");
+			Entity entity = this->editor_world->createEntity("Physics Object");
 			entity.addComponent<TransformD>();
-			entity.addComponent<MeshComponent>(this->mesh_pool->getResource("res/sphere.obj"), &this->temp_material);
+			entity.addComponent<ModelComponent>(this->mesh_pool->getResource("res/sphere.obj"), this->temp_material);
 			entity.addComponent<RigidBody>();
 			entity.addComponent<CollisionShape>();
 		}
@@ -165,13 +106,20 @@ namespace Genesis
 
 	EditorApplication::~EditorApplication()
 	{
+		this->temp_material.reset();
+
+		delete this->editor_world;
+
 		delete this->mesh_pool;
+		delete this->texture_pool;
+		delete this->material_pool;
 
 		delete this->console_window;
 		delete this->entity_hierarchy_window;
 		delete this->entity_properties_window;
 		delete this->scene_window;
 		delete this->asset_browser_window;
+		delete this->material_editor_window;
 
 		delete this->legacy_backend;
 
@@ -187,7 +135,7 @@ namespace Genesis
 
 		if (this->scene_window->isSceneRunning())
 		{
-			this->editor_world.runSimulation(time_step);
+			this->editor_world->runSimulation(time_step);
 		}
 	}
 
@@ -214,11 +162,10 @@ namespace Genesis
 
 					GENESIS_ENGINE_INFO("Opening {}", filename);
 
-					EntityRegistry* editor_registry = this->editor_world.getRegistry();
-					EntityHandle entity = editor_registry->create();
-					editor_registry->assign<NameComponent>(entity, "Mesh Test");
-					editor_registry->assign<TransformD>(entity).setOrientation(glm::angleAxis(glm::radians(25.0), vector3D(0.0, 0.0, 1.0)));
-					editor_registry->assign<MeshComponent>(entity, this->mesh_pool->getResource(filename), &this->temp_material);
+					Entity entity = this->editor_world->createEntity("Mesh Test");
+					entity.addComponent<TransformD>().setOrientation(glm::angleAxis(glm::radians(25.0), vector3D(0.0, 0.0, 1.0)));
+					//entity.addComponent<ModelComponent>(this->mesh_pool->getResource(filename), &this->temp_material);
+
 				}
 
 				if (ImGui::MenuItem("Exit", "")) { this->close(); };
@@ -239,18 +186,12 @@ namespace Genesis
 			ImGui::End();
 		}
 
-		{
-			ImGui::Begin("Material");
-			ImGui::ColorEdit4("albedo", &this->temp_material.albedo_factor.x);
-			ImGui::SliderFloat2("metallic roughness", &this->temp_material.metallic_roughness_factor.x, 0.0f, 1.0f);
-			ImGui::End();
-		}
-
 		this->console_window->draw();
-		this->entity_hierarchy_window->draw(*this->editor_world.getRegistry());
-		this->entity_properties_window->draw(*this->editor_world.getRegistry(), this->entity_hierarchy_window->getSelected());
-		this->scene_window->draw(this->editor_world);
+		this->entity_hierarchy_window->draw(*this->editor_world->getRegistry());
+		this->entity_properties_window->draw(*this->editor_world->getRegistry(), this->entity_hierarchy_window->getSelected());
+		this->scene_window->draw(*this->editor_world);
 		this->asset_browser_window->draw("res/");
+		this->material_editor_window->draw();
 
 		this->ui_renderer->endFrame();
 

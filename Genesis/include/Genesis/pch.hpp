@@ -1,7 +1,6 @@
 #pragma once
 
 #include <iostream>
-//#include <cstdint>
 #include <stdint.h>
 
 #include "Genesis/Core/Types.hpp"

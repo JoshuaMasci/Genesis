@@ -3,6 +3,7 @@
 #include "Genesis/Component/Hierarchy.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
 #include "Genesis/Component/NameComponent.hpp"
+#include "Genesis/Component/ModelComponent.hpp"
 
 namespace Genesis
 {
@@ -13,6 +14,14 @@ namespace Genesis
 	EntityWorld::~EntityWorld()
 	{
 		this->onDestroy();
+
+		auto& view = this->registry.view<ModelComponent>();
+		for (EntityHandle entity : view)
+		{
+			ModelComponent& model = view.get<ModelComponent>(entity);
+			size_t count = model.mesh.use_count();
+			model.mesh.reset();
+		}
 	}
 
 	void EntityWorld::runSimulation(TimeStep time_step)

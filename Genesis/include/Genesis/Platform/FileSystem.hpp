@@ -22,5 +22,9 @@ namespace Genesis
 
 		static void readDirectory(const string& filepath, vector<string>& files);
 		static void readDirectory(const string& directory_path, vector<FileInfo>& files);
+
+		static string getPath(const string& filepath);
+		static string getFilename(const string& filepath);
+		static string getExtention(const string& filepath);
 	};
 }

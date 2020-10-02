@@ -143,4 +143,35 @@ namespace Genesis
 		std::filesystem::directory_iterator end;
 		std::transform(start, end, std::back_inserter(files), path_info());
 	}
+	
+	string FileSystem::getPath(const string& filepath)
+	{
+		auto index = filepath.find_last_of("/\\");
+		if (index == std::string::npos)
+		{
+			return filepath;
+		}
+		return filepath.substr(0, index + 1);
+	}
+
+	string FileSystem::getFilename(const string& filepath)
+	{
+		auto index = filepath.find_last_of("/\\");
+		if (index == std::string::npos)
+		{
+			return filepath;
+		}
+		return filepath.substr(index + 1);
+	}
+
+	string FileSystem::getExtention(const string& filepath)
+	{
+		auto index = filepath.find_last_of('.');
+		if (index == std::string::npos)
+		{
+			return "";
+		}
+
+		return filepath.substr(index);
+	}
 }

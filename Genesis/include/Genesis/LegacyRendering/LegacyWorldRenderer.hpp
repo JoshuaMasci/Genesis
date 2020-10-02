@@ -5,9 +5,13 @@
 #include "Genesis/LegacyBackend/LegacyBackend.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 
+#include "Genesis/Component/ModelComponent.hpp"
+
+#include "Genesis/Rendering/Camera.hpp"
+#include "Genesis/Rendering/Lights.hpp"
+
 namespace Genesis
 {
-
 	class LegacyWorldRenderer
 	{
 	public:
@@ -25,5 +29,27 @@ namespace Genesis
 		//ShaderProgram spot_program;
 
 		ShaderProgram gamma_correction_program;
+
+		struct ModelStruct
+		{
+			shared_ptr<MeshResource> mesh;
+			shared_ptr<Material> material;
+			TransformD transform;
+		};
+		vector<ModelStruct> models;
+
+		struct DirectionalLightStruct
+		{
+			DirectionalLight light;
+			TransformD transform;
+		};
+		vector<DirectionalLightStruct> directional_lights;
+
+		struct PointLightStruct
+		{
+			PointLight light;
+			TransformD transform;
+		};
+		vector<PointLightStruct> point_lights;
 	};
 }

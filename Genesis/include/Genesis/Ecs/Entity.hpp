@@ -17,6 +17,11 @@ namespace Genesis
 			this->registry = registry;
 		}
 
+		bool valid()
+		{
+			return this->registry->valid(this->entity_handle);
+		}
+
 		EntityHandle getHandle()
 		{
 			return this->entity_handle;

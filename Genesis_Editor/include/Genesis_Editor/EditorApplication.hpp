@@ -10,12 +10,15 @@
 #include "Genesis_Editor/Windows/EntityPropertiesWindow.hpp"
 #include "Genesis_Editor/Windows/SceneWindow.hpp"
 #include "Genesis_Editor/Windows/AssetBrowserWindow.hpp"
+#include "Genesis_Editor/Windows/MaterialEditorWindow.hpp"
 
 #include "Genesis/Ecs/Ecs.hpp"
 #include "Genesis/Ecs/EntityWorld.hpp"
 
 #include "Genesis/Resource/Material.hpp"
 #include "Genesis/Resource/MeshPool.hpp"
+#include "Genesis/Resource/TexturePool.hpp"
+#include "Genesis/Resource/MaterialPool.hpp"
 
 #include "reactphysics3d.h"
 
@@ -30,26 +33,26 @@ namespace Genesis
 		virtual void update(TimeStep time_step) override;
 		virtual void render(TimeStep interpolation_value) override;
 	protected:
+		EntityWorld* editor_world;
+		
 		LegacyBackend* legacy_backend;
 
 		BaseImGui* ui_renderer;
 
 		vector2U offscreen_size;
 
-		ConsoleWindow* console_window;
-		EntityHierarchyWindow* entity_hierarchy_window;
-		EntityPropertiesWindow* entity_properties_window;
-		SceneWindow* scene_window;
-		AssetBrowserWindow* asset_browser_window;
+		ConsoleWindow* console_window = nullptr;
+		EntityHierarchyWindow* entity_hierarchy_window = nullptr;
+		EntityPropertiesWindow* entity_properties_window = nullptr;
+		SceneWindow* scene_window = nullptr;
+		AssetBrowserWindow* asset_browser_window = nullptr;
+		MaterialEditorWindow* material_editor_window = nullptr;
 
-		Material temp_material;
-
-		//EntityRegistry editor_registry;
-		//reactphysics3d::DynamicsWorld* editor_physics = nullptr;
-
-		EntityWorld editor_world;
+		shared_ptr<Material> temp_material;
 
 		MeshPool* mesh_pool = nullptr;
+		TexturePool* texture_pool = nullptr;
+		MaterialPool* material_pool = nullptr;
 	};
 }
 

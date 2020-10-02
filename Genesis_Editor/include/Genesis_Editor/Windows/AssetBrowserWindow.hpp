@@ -13,8 +13,9 @@ namespace Genesis
 
 		string active_directory;
 		std::unordered_map<string, vector<FileInfo>> directory_map;
-		Texture2D test_texture = nullptr;
 		
+		Texture2D file_icon = nullptr;
+		Texture2D directory_icon = nullptr;
 
 		void refresh(const string& project_directory);
 		void readDirectory(const string& directory_path);

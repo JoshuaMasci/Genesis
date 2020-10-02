@@ -2,11 +2,6 @@
 
 #include "Genesis/Platform/FileSystem.hpp"
 
-#include "Genesis/Component/MeshComponent.hpp"
-
-#include "Genesis/Rendering/Camera.hpp"
-#include "Genesis/Rendering/Lights.hpp"
-
 namespace Genesis
 {
 	struct LegacyShaderUniform
@@ -25,33 +20,33 @@ namespace Genesis
 			backend->setUniform4f("material.emissive", material.emissive_factor);
 			
 			backend->setUniform1i("material.albedo_uv", material.albedo_texture.uv);
-			if (material.albedo_texture.uv != -1)
+			if (material.albedo_texture.uv != -1 && material.albedo_texture.texture)
 			{
-				backend->setUniformTexture("material.albedo_texture", 0, material.albedo_texture.texture);
+				backend->setUniformTexture("material.albedo_texture", 0, material.albedo_texture.texture->texture);
 			}
 
 			backend->setUniform1i("material.metallic_roughness_uv", material.metallic_roughness_texture.uv);
-			if (material.metallic_roughness_texture.uv != -1)
+			if (material.metallic_roughness_texture.uv != -1 && material.metallic_roughness_texture.texture)
 			{
-				backend->setUniformTexture("material.metallic_roughness_texture", 1, material.metallic_roughness_texture.texture);
+				backend->setUniformTexture("material.metallic_roughness_texture", 1, material.metallic_roughness_texture.texture->texture);
 			}
 
 			backend->setUniform1i("material.normal_uv", material.normal_texture.uv);
-			if (material.normal_texture.uv != -1)
+			if (material.normal_texture.uv != -1 && material.normal_texture.texture)
 			{
-				backend->setUniformTexture("material.normal_texture", 2, material.normal_texture.texture);
+				backend->setUniformTexture("material.normal_texture", 2, material.normal_texture.texture->texture);
 			}
 
 			backend->setUniform1i("material.occlusion_uv", material.occlusion_texture.uv);
-			if (material.occlusion_texture.uv != -1)
+			if (material.occlusion_texture.uv != -1 && material.occlusion_texture.texture)
 			{
-				backend->setUniformTexture("material.occlusion_texture", 3, material.occlusion_texture.texture);
+				backend->setUniformTexture("material.occlusion_texture", 3, material.occlusion_texture.texture->texture);
 			}
 
 			backend->setUniform1i("material.emissive_uv", material.emissive_texture.uv);
-			if (material.emissive_texture.uv != -1)
+			if (material.emissive_texture.uv != -1 && material.emissive_texture.texture)
 			{
-				backend->setUniformTexture("material.emissive_texture", 4, material.emissive_texture.texture);
+				backend->setUniformTexture("material.emissive_texture", 4, material.emissive_texture.texture->texture);
 			}
 		}
 
@@ -120,57 +115,38 @@ namespace Genesis
 		const PipelineSettings ambient_settings = { CullMode::Back, DepthTest::Test_And_Write, DepthOp::Less, BlendOp::None, BlendFactor::One, BlendFactor::Zero };
 		this->backend->setPipelineState(ambient_settings);
 
-		struct MeshStruct
 		{
-			Mesh* mesh;
-			Material* material;
-			TransformD transform;
-		};
-		static vector<MeshStruct> meshes;
-		meshes.clear();
-		{
-			auto mesh_group = world.view<MeshComponent, TransformD>();
-			for (EntityHandle entity : mesh_group)
+			this->models.clear();
+			auto model_group = world.view<ModelComponent, TransformD>();
+			for (EntityHandle entity : model_group)
 			{
-				MeshComponent& mesh_component = mesh_group.get<MeshComponent>(entity);
-				TransformD& transform = mesh_group.get<TransformD>(entity);
+				ModelComponent& mesh_component = model_group.get<ModelComponent>(entity);
+				TransformD& transform = model_group.get<TransformD>(entity);
 
 				if (mesh_component.mesh != nullptr && mesh_component.material != nullptr)
 				{
-					meshes.push_back({ mesh_component.mesh , mesh_component.material, transform });
+					this->models.push_back({ mesh_component.mesh , mesh_component.material, transform });
 				}
 			}
 		}
 
-		struct DirectionalLightStruct
 		{
-			DirectionalLight light;
-			TransformD transform;
-		};
-		static vector<DirectionalLightStruct> directional_lights;
-		directional_lights.clear();
-		{
+			this->directional_lights.clear();
 			auto directional_light_group = world.view<DirectionalLight, TransformD>();
 			for (EntityHandle entity : directional_light_group)
 			{
 				auto&[light, transform] = directional_light_group.get<DirectionalLight, TransformD>(entity);
-				directional_lights.push_back({light, transform});
+				this->directional_lights.push_back({light, transform});
 			}
 		}
 
-		struct PointLightStruct
 		{
-			PointLight light;
-			TransformD transform;
-		};
-		static vector<PointLightStruct> point_lights;
-		point_lights.clear();
-		{
+			this->point_lights.clear();
 			auto point_light_group = world.view<PointLight, TransformD>();
 			for (EntityHandle entity : point_light_group)
 			{
 				auto&[light, transform] = point_light_group.get<PointLight, TransformD>(entity);
-				point_lights.push_back({ light, transform });
+				this->point_lights.push_back({ light, transform });
 			}
 		}
 
@@ -180,7 +156,7 @@ namespace Genesis
 
 			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
 
-			for (MeshStruct& mesh : meshes)
+			for (ModelStruct& mesh : this->models)
 			{
 				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
 				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
@@ -200,7 +176,7 @@ namespace Genesis
 			this->backend->bindShaderProgram(this->directional_program);
 			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
 
-			for (MeshStruct& mesh : meshes)
+			for (ModelStruct& mesh : this->models)
 			{
 				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
 				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
@@ -208,7 +184,7 @@ namespace Genesis
 				this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);
 				this->backend->bindIndexBuffer(mesh.mesh->index_buffer);
 
-				for (DirectionalLightStruct& light : directional_lights)
+				for (DirectionalLightStruct& light : this->directional_lights)
 				{
 					if (light.light.enabled)
 					{
@@ -224,7 +200,7 @@ namespace Genesis
 			this->backend->bindShaderProgram(this->point_program);
 			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
 
-			for (MeshStruct& mesh : meshes)
+			for (ModelStruct& mesh : this->models)
 			{
 				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
 				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
@@ -232,7 +208,7 @@ namespace Genesis
 				this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);
 				this->backend->bindIndexBuffer(mesh.mesh->index_buffer);
 
-				for (PointLightStruct& light : point_lights)
+				for (PointLightStruct& light : this->point_lights)
 				{
 					if (light.light.enabled)
 					{

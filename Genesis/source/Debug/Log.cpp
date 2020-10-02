@@ -12,27 +12,16 @@ namespace Genesis
 
 	void Logging::inti_engine_logging()
 	{
-		console_sink = std::make_shared<ConsoleWindowSinkMt>();
-		console_sink->set_pattern("%^[%T] %n: %v%$");
-		console_sink->set_level(spdlog::level::level_enum::trace);
-
-#ifdef GENESIS_CONSOLE_LOG
 		Engine = spdlog::stdout_color_mt("Genesis");
 		Engine->set_level(spdlog::level::level_enum::trace);
 		Engine->set_pattern("%^[%T] %n: %v%$");
-#else
-		Engine = std::make_shared<spdlog::logger>("Genesis", console_sink);
-#endif
 	}
 
 	void Logging::inti_client_logging(std::string client_name)
 	{
-#ifdef GENESIS_CONSOLE_LOG
-		Application = spdlog::stdout_color_mt(client_name);
-		Application->set_level(spdlog::level::level_enum::trace);
-		Application->set_pattern("%^[%T] %n: %v%$");
-#else
+		console_sink = std::make_shared<ConsoleWindowSinkMt>();
 		Application = std::make_shared<spdlog::logger>(client_name, console_sink);
-#endif
+		Application->set_pattern("%^[%T] %n: %v%$");
+		Application->set_level(spdlog::level::level_enum::trace);
 	}
 }

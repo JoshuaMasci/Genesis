@@ -68,23 +68,38 @@ namespace Genesis
 
 	void SceneWindow::draw(EntityWorld& world)
 	{
-		ImGui::Begin("Scene View");
+		ImGui::Begin("Scene View", nullptr, ImGuiWindowFlags_MenuBar);
 
-		if (!this->is_scene_running)
+		if (ImGui::BeginMenuBar())
 		{
-			if (ImGui::Button("Play"))
+			if (!this->is_scene_running)
 			{
-				this->is_scene_running = true;
-				world.onCreate();
+				if (ImGui::MenuItem("Play"))
+				{
+					this->is_scene_running = true;
+					world.onCreate();
+				}
 			}
-		}
-		else
-		{
-			if (ImGui::Button("Pause"))
+			else
 			{
-				this->is_scene_running = false;
-				world.onDestroy();
+				if (ImGui::MenuItem("Pause"))
+				{
+					this->is_scene_running = false;
+					world.onDestroy();
+				}
 			}
+
+			if (ImGui::BeginMenu("Graphics"))
+			{
+				static bool lighting = true;
+				if (ImGui::MenuItem("Lighting", nullptr, lighting))
+				{
+					lighting = !lighting;
+				}
+
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenuBar();
 		}
 
 		ImVec2 im_remaining_space = ImGui::GetContentRegionAvail();

@@ -7,6 +7,7 @@
 #include <vector>
 #include <bitset>
 #include <functional>
+#include <memory>
 
 #define has_value(list, value) (list.find(value) != list.end())
 
@@ -24,5 +25,14 @@ namespace Genesis
 	using std::bitset;
 	using std::function;
 	using std::hash;
+
+
+	using std::shared_ptr;
+	using std::weak_ptr;
+	template<typename T, typename ... Args>
+	constexpr shared_ptr<T> make_shared(Args&& ... args)
+	{
+		return std::make_shared<T>(std::forward<Args>(args)...);
+	};
 };
 

@@ -66,20 +66,30 @@ namespace Genesis
 		{
 			vector<FileInfo>& directory = this->directory_map[directory_path];
 
-			const float item_size = 64.0f;
+			const float item_size = 96.0f;
 
 			float contentWidth = ImGui::GetContentRegionAvailWidth();
 
-			int columns = contentWidth / item_size;
+			int columns = (int)(contentWidth / item_size);
 			columns = std::max(columns, 1);
 			ImGui::Columns(columns, nullptr, false);
 
-			for (size_t i = 0; i < directory.size(); i++)
+			//TODO add a back arrow directory button
+
+			for (int i = 0; i < directory.size(); i++)
 			{
 				ImGui::PushID(i);
 				ImGui::BeginGroup();
 
-				ImGui::Image(this->test_texture, { item_size - 5, item_size - 5 });
+				Texture2D texture = this->file_icon;
+
+				//TODO more file icons
+				if (directory[i].is_directory)
+				{
+					texture = this->directory_icon;
+				}
+
+				ImGui::Image(texture, { item_size - 5, item_size - 5 });
 
 				if (directory[i].is_directory)
 				{
@@ -93,6 +103,19 @@ namespace Genesis
 
 				ImGui::EndGroup();
 				ImGui::PopID();
+
+				if (!directory[i].is_directory)
+				{
+					if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+					{
+						const char* file_path = directory[i].path.c_str();
+						size_t file_path_size = sizeof(char) * (directory[i].path.size() + 1); 
+						ImGui::SetDragDropPayload("ASSET_FILE_PATH", file_path, file_path_size);
+						ImGui::Text(directory[i].filename.c_str());
+						ImGui::EndDragDropSource();
+					}
+				}
+
 				ImGui::NextColumn();
 			}
 		}
@@ -106,18 +129,28 @@ namespace Genesis
 		const string starting_directory = "res/";
 		this->refresh(starting_directory);
 
-		uint8_t data[] = { 255, 5, 10 };
+		//Using 1x1 textures for now
+		//TODO replace with icons
 
 		TextureCreateInfo create_info = {};
 		create_info.size = vector2U(1, 1);
 		create_info.format = ImageFormat::RGB_8;
 
-		this->test_texture = this->backend->createTexture(create_info, data);
+		{
+			uint8_t data[] = { 255, 5, 10 };
+			this->file_icon = this->backend->createTexture(create_info, data);
+		}
+
+		{
+			uint8_t data[] = { 5, 10, 255 };
+			this->directory_icon = this->backend->createTexture(create_info, data);
+		}
 	}
 
 	AssetBrowserWindow::~AssetBrowserWindow()
 	{
-		this->backend->destoryTexture(this->test_texture);
+		this->backend->destoryTexture(this->file_icon);
+		this->backend->destoryTexture(this->directory_icon);
 	}
 
 	void AssetBrowserWindow::draw(const string& project_directory)
