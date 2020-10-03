@@ -17,50 +17,23 @@ uniform PointLight point_light;
 
 layout(location = 0) out vec4 out_color;
 void main()
-{
+{	
 	vec4 full_albedo = getAlbedo(material);
+	vec3 normal = getNormal(material);	
+	
+	vec3 frag_to_cam_dir = normalize(environment.camera_position - frag_world_pos);
+	vec3 frag_to_light_dir = normalize(point_light.position - frag_world_pos);
+	
 	vec3 albedo = full_albedo.xyz;
 	vec2 metallic_roughness = getMetallicRoughness(material);
-	float metallic = metallic_roughness.x;
-	float roughness = metallic_roughness.y;
-
-	vec3 normal = getNormal(material);
 	
-	vec3 light_direction = normalize(point_light.position - frag_world_pos);
-	vec3 camera_direction = normalize(environment.camera_position - frag_world_pos);
-	
-	//PBR
-	vec3 F0 = vec3(0.04); 
-	F0 = mix(F0, albedo.xyz, metallic);
-
-	// reflectance equation
 	float distance = length(point_light.position - frag_world_pos) / point_light.range;
+	distance = min(distance, 1.0);
 	float attenuation = (point_light.attenuation.x /  distance) + (point_light.attenuation.y / (distance * distance));
-	vec3 radiance = (point_light.base.color * point_light.base.intensity) * attenuation;      
-	
-	vec3 half_vector = normalize(camera_direction + light_direction);
+	attenuation = max(attenuation, 0.0001);
+	vec3 radiance = (point_light.base.color * point_light.base.intensity) * attenuation; 
 
-	vec3 Lo = vec3(0.0);
-	{
-		// cook-torrance brdf
-        float NDF = DistributionGGX(normal, half_vector, roughness);        
-        float G   = GeometrySmith(normal, camera_direction, light_direction, roughness);      
-        vec3 F    = fresnelSchlick(max(dot(half_vector, camera_direction), 0.0), F0);
-		
-		vec3 kS = F;
-        vec3 kD = vec3(1.0) - kS;
-        kD *= 1.0 - metallic;	  
-        
-        vec3 numerator    = NDF * G * F;
-        float denominator = 4.0 * max(dot(normal, camera_direction), 0.0) * max(dot(normal, light_direction), 0.0);
-        vec3 specular     = numerator / max(denominator, 0.001);  
-            
-        // add to outgoing radiance Lo
-        float NdotL = max(dot(normal, light_direction), 0.0);                
-        Lo = (kD * albedo / PI + specular) * radiance * NdotL; 
-	}
-	
-
-	
-	out_color = vec4(Lo, 0.0);
+	PbrMaterial material = PbrMaterial(albedo, metallic_roughness.x, metallic_roughness.y, metallic_roughness.y * metallic_roughness.y);
+	out_color.xyz = calcDirectLight(material, normal, frag_to_cam_dir, frag_to_light_dir, radiance);
+	out_color.w = full_albedo.w;
 }

@@ -28,7 +28,7 @@ namespace Genesis
 		const char* name = " ";
 		if (texture_slot.texture)
 		{
-			name = texture_slot.texture->getPath().c_str();
+			name = texture_slot.texture->getName().c_str();
 			ImGui::Image(texture_slot.texture->texture, IMAGE_SIZE);
 			ImGui::OpenPopupOnItemClick("CLEAR_TEXTURE_POPUP", 1);
 		}
@@ -93,7 +93,7 @@ namespace Genesis
 
 		if (this->active_material)
 		{
-			material_name = this->active_material->getPath().c_str();
+			material_name = this->active_material->getName().c_str();
 		}
 
 		ImGui::LabelText("Material", material_name);

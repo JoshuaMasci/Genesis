@@ -12,12 +12,6 @@ namespace Genesis
 		this->texture_pool = texture_pool;
 	}
 
-	/*MaterialTexture albedo_texture;
-		MaterialTexture normal_texture;
-		MaterialTexture metallic_roughness_texture;
-		MaterialTexture occlusion_texture;
-		MaterialTexture emissive_texture;*/
-
 	shared_ptr<Material> MaterialPool::loadResource(const string& key)
 	{
 		std::ifstream in_stream(key);
@@ -51,31 +45,31 @@ namespace Genesis
 
 		if (material_file.contains("albedo_texture"))
 		{
-			material->albedo_texture.texture = this->texture_pool->getResource(material_file.get("albedo_texture").as_string());
+			material->albedo_texture.texture = this->texture_pool->getResource(material_file["albedo_texture"].as_string());
 			material->albedo_texture.uv = 1;
 		}
 
 		if (material_file.contains("normal_texture"))
 		{
-			material->normal_texture.texture = this->texture_pool->getResource(material_file.get("normal_texture").as_string());
+			material->normal_texture.texture = this->texture_pool->getResource(material_file["normal_texture"].as_string());
 			material->normal_texture.uv = 1;
 		}
 
 		if (material_file.contains("metallic_roughness_texture"))
 		{
-			material->metallic_roughness_texture.texture = this->texture_pool->getResource(material_file.get("metallic_roughness_texture").as_string());
+			material->metallic_roughness_texture.texture = this->texture_pool->getResource(material_file["metallic_roughness_texture"].as_string());
 			material->metallic_roughness_texture.uv = 1;
 		}
 
 		if (material_file.contains("occlusion_texture"))
 		{
-			material->occlusion_texture.texture = this->texture_pool->getResource(material_file.get("occlusion_texture").as_string());
+			material->occlusion_texture.texture = this->texture_pool->getResource(material_file["occlusion_texture"].as_string());
 			material->occlusion_texture.uv = 1;
 		}
 
 		if (material_file.contains("emissive_texture"))
 		{
-			material->emissive_texture.texture = this->texture_pool->getResource(material_file.get("emissive_texture").as_string());
+			material->emissive_texture.texture = this->texture_pool->getResource(material_file["emissive_texture"].as_string());
 			material->emissive_texture.uv = 1;
 		}
 

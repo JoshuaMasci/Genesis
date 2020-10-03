@@ -5,13 +5,12 @@ namespace Genesis
 	class Resource
 	{
 	protected:
-		const string file_path;
+		const string name;
 
 	public:
+		Resource(const string& name = "")
+			:name(name) {};
 
-		Resource(const string& file_path = "")
-			:file_path(file_path) {};
-
-		const string& getPath() { return this->file_path; };
+		const string& getName() { return this->name; };
 	};
 }

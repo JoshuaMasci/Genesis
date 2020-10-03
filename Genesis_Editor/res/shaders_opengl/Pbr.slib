@@ -1,41 +1,61 @@
 const float PI = 3.14159265359;
 
-float DistributionGGX(vec3 N, vec3 H, float roughness)
+float DistributionGGX(float norm_dot_half, float alpha_roughness)
 {
-    float a      = roughness*roughness;
-    float a2     = a*a;
-    float NdotH  = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH*NdotH;
-	
-    float num   = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-	
-    return num / denom;
+	float alpha_roughness_sq = alpha_roughness * alpha_roughness;
+	float f = (norm_dot_half * alpha_roughness_sq - norm_dot_half) * norm_dot_half + 1.0;
+	return alpha_roughness_sq / (PI * f * f);	
+};
+
+float GeometrySchlickGGX2(float dot, float r)
+{
+	return 2.0 * dot / (dot + sqrt(r * r + (1.0 - r * r) * (dot * dot)));
 }
 
-float GeometrySchlickGGX(float NdotV, float roughness)
+float GeometrySmith(float norm_dot_cam, float norm_dot_light, float alpha_roughness)
 {
-    float r = (roughness + 1.0);
-    float k = (r*r) / 8.0;
-
-    float num   = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
-	
-    return num / denom;
-}
-
-float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
-{
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    float ggx2  = GeometrySchlickGGX(NdotV, roughness);
-    float ggx1  = GeometrySchlickGGX(NdotL, roughness);
-	
+    float ggx2  = GeometrySchlickGGX2(norm_dot_cam, alpha_roughness);
+    float ggx1  = GeometrySchlickGGX2(norm_dot_light, alpha_roughness);
     return ggx1 * ggx2;
+};
+
+vec3 specularReflection(vec3 specular_environment_r0, vec3 specular_environment_r90, float view_dot_half)
+{
+	return specular_environment_r0 + (specular_environment_r90 - specular_environment_r0) * pow(clamp(1.0 - view_dot_half, 0.0, 1.0), 5.0);
 }
 
-vec3 fresnelSchlick(float cosTheta, vec3 F0)
+struct PbrMaterial
 {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
+	vec3 albedo;
+	float metallic;
+	float roughness;
+	float alpha_roughness;
+};
+
+vec3 calcDirectLight(PbrMaterial material, vec3 frag_normal, vec3 frag_to_cam_dir, vec3 frag_to_light_dir, vec3 radiance)
+{
+	vec3 specular_color  = mix(vec3(0.04), material.albedo, material.metallic);
+	float reflectance = max(max(specular_color.r, specular_color.g), specular_color.b);
+	float reflectance90 = clamp(reflectance * 25.0, 0.0, 1.0);
+	vec3 specular_environment_r0 = specular_color.rgb;
+	vec3 specular_environment_r90 = vec3(1.0, 1.0, 1.0) * reflectance90;
+
+	vec3 half_vector = normalize(frag_to_cam_dir + frag_to_light_dir);
+	
+	//All dot products
+	float norm_dot_light = clamp(dot(frag_normal, frag_to_light_dir), 0.001, 1.0);
+    float norm_dot_cam   = clamp(abs(dot(frag_normal, frag_to_cam_dir)), 0.001, 1.0);
+	float norm_dot_half  = clamp(dot(frag_normal, half_vector), 0.0, 1.0);
+	//float light_dot_half = clamp(dot(frag_to_light_dir, half_vector), 0.0, 1.0);
+	float cam_dot_half   = clamp(dot(frag_to_cam_dir, half_vector), 0.0, 1.0);
+		
+	// cook-torrance brdf
+	vec3 F = specularReflection(specular_environment_r0, specular_environment_r90, cam_dot_half);
+	float D = DistributionGGX(norm_dot_half, material.alpha_roughness); // Microfacet Distribution        
+	float G = GeometrySmith(norm_dot_cam, norm_dot_light, material.alpha_roughness); //Geometric Occlusion
+
+	vec3 diffuse = ((vec3(1.0) - specular_color) * (1.0 - material.metallic) * material.albedo) / PI;
+	vec3 specular = (F * D * G) / (4.0 * norm_dot_cam * norm_dot_light);
+	
+	return norm_dot_light * radiance * (diffuse + specular);
+};

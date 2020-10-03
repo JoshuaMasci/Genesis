@@ -31,7 +31,6 @@ vec3 getNormal(Material material)
 {
 	if (material.normal_uv > -1) 
 	{
-		// Perturb normal, see http://www.thetenthplanet.de/archives/1180
 		vec3 tangentNormal = texture(material.normal_texture, frag_uv).xyz * 2.0 - 1.0;
 		return normalize(frag_tangent_space * tangentNormal);
 	}

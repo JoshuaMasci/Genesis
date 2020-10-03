@@ -148,7 +148,7 @@ namespace Genesis
 
 					if (model.mesh)
 					{
-						mesh_name = model.mesh->getPath().c_str();
+						mesh_name = model.mesh->getName().c_str();
 					}
 					
 					ImGui::LabelText("Mesh", mesh_name);
@@ -171,7 +171,7 @@ namespace Genesis
 
 					if (model.material)
 					{
-						material_name = model.material->getPath().c_str();
+						material_name = model.material->getName().c_str();
 					}
 
 					ImGui::LabelText("Material", material_name);

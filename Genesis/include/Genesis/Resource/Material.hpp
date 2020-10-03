@@ -28,7 +28,7 @@ namespace Genesis
 		//values
 		vector4F albedo_factor = vector4F(1.0f);
 		vector2F metallic_roughness_factor = vector2F(1.0f);
-		vector4F emissive_factor = vector4F(1.0f);
+		vector4F emissive_factor = vector4F(0.0f);
 
 		//textures
 		MaterialTexture albedo_texture;

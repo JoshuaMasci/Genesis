@@ -88,18 +88,16 @@ namespace Genesis
 
 		{
 			Entity entity = this->editor_world->createEntity("Test_Entity");
-			//entity.addComponent<TransformD>().setOrientation(glm::angleAxis(glm::radians(80.0), vector3D(1.0f, 0.0, 0.1)));
 			entity.addComponent<TransformD>().setPosition(vector3D(0.0, 0.0, -3.0));
 			entity.addComponent<Camera>();
-			entity.addComponent<DirectionalLight>(vector3F(1.0f), 0.4f, true);
-			entity.addComponent<PointLight>(20.0f, vector2F(1.0f), vector3F(1.0f), 0.4f, true);
+			entity.addComponent<DirectionalLight>(vector3F(1.0f), 1.0f, true);
+			//entity.addComponent<PointLight>(20.0f, vector2F(1.0f), vector3F(1.0f), 0.4f, true);
 		}
 
 		{
 			Entity entity = this->editor_world->createEntity("Physics Object");
 			entity.addComponent<TransformD>();
-			entity.addComponent<ModelComponent>(this->mesh_pool->getResource("res/sphere.obj"), this->temp_material);
-			entity.addComponent<RigidBody>();
+			entity.addComponent<ModelComponent>(this->mesh_pool->getResource("res/sphere.obj"), this->material_pool->getResource("res/red.mat"));
 			entity.addComponent<CollisionShape>();
 		}
 	}
