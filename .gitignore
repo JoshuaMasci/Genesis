@@ -5,3 +5,4 @@ Sandbox/imgui.ini
 *spv
 Sandbox/Genesis_profile.prof
 Sandbox/res/shaders_opengl/build/**/*
+Genesis_Editor/imgui.ini

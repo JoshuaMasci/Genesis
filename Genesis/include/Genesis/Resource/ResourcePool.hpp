@@ -91,6 +91,12 @@ protected:
 			if (resource_it == this->resources.end() || resource_it->second.expired())
 			{
 				resource = this->loadResource(key);
+
+				if (!resource)
+				{
+					return nullptr;
+				}
+
 				this->resources[key] = resource;
 			}
 			else
