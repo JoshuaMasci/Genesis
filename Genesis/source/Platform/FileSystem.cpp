@@ -132,7 +132,9 @@ namespace Genesis
 		FileInfo operator()(const std::filesystem::directory_entry& entry) const
 		{
 			std::filesystem::path path = entry.path();
-			return { path.relative_path().string(), path.filename().string(), path.extension().string(), entry.is_directory() };
+			string relative_path = path.relative_path().string();
+			std::replace(relative_path.begin(), relative_path.end(), '\\', '/');
+			return { relative_path, path.filename().string(), path.extension().string(), entry.is_directory() };
 		}
 	};
 
@@ -146,7 +148,7 @@ namespace Genesis
 	
 	string FileSystem::getPath(const string& filepath)
 	{
-		auto index = filepath.find_last_of("/\\");
+		auto index = filepath.find_last_of("/");
 		if (index == std::string::npos)
 		{
 			return filepath;
@@ -156,7 +158,7 @@ namespace Genesis
 
 	string FileSystem::getFilename(const string& filepath)
 	{
-		auto index = filepath.find_last_of("/\\");
+		auto index = filepath.find_last_of("/");
 		if (index == std::string::npos)
 		{
 			return filepath;

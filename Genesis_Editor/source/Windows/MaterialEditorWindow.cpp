@@ -9,7 +9,7 @@ namespace Genesis
 	{
 		this->material_pool = material_pool;
 		this->texture_pool = texture_pool;
-		this->grid_texture = this->texture_pool->getResource("res/grid16.png");
+		this->grid_texture = this->texture_pool->getResource("res/textures/grid16.png");
 	}
 
 	MaterialEditorWindow::~MaterialEditorWindow()

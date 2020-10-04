@@ -65,7 +65,7 @@ namespace Genesis
 		this->texture_pool = new TexturePool(this->legacy_backend);
 		this->material_pool = new MaterialPool(this->texture_pool);
 
-		this->temp_material = this->material_pool->getResource("res/test.mat");
+		this->temp_material = this->material_pool->getResource("res/materials/grid.mat");
 
 		this->entity_hierarchy_window = new EntityHierarchyWindow();
 		this->entity_properties_window = new EntityPropertiesWindow(this->mesh_pool, this->material_pool);
@@ -76,15 +76,6 @@ namespace Genesis
 
 		this->editor_world = new EntityWorld();
 
-		{
-			this->temp_material->normal_texture.texture = this->texture_pool->getResource("res/Ground Alien 02_normal.png");
-			this->temp_material->normal_texture.uv = 0;
-		}
-
-		{
-			this->temp_material->albedo_texture.texture = this->texture_pool->getResource("res/1k_grid.png");
-			this->temp_material->albedo_texture.uv = 0;
-		}
 
 		{
 			Entity entity = this->editor_world->createEntity("Test_Entity");
@@ -97,7 +88,7 @@ namespace Genesis
 		{
 			Entity entity = this->editor_world->createEntity("Physics Object");
 			entity.addComponent<TransformD>();
-			entity.addComponent<ModelComponent>(this->mesh_pool->getResource("res/sphere.obj"), this->material_pool->getResource("res/red.mat"));
+			entity.addComponent<ModelComponent>(this->mesh_pool->getResource("res/meshes/sphere.obj"), this->material_pool->getResource("res/materials/red.mat"));
 			entity.addComponent<CollisionShape>();
 		}
 	}
