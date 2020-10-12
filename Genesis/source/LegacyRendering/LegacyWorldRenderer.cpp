@@ -117,15 +117,14 @@ namespace Genesis
 
 		{
 			this->models.clear();
-			auto model_group = world.view<ModelComponent, TransformD>();
+			auto model_group = world.view<ModelComponent>();
 			for (EntityHandle entity : model_group)
 			{
 				ModelComponent& mesh_component = model_group.get<ModelComponent>(entity);
-				TransformD& transform = model_group.get<TransformD>(entity);
 
 				if (mesh_component.mesh != nullptr && mesh_component.material != nullptr)
 				{
-					this->models.push_back({ mesh_component.mesh , mesh_component.material, transform });
+					this->models.push_back(mesh_component);
 				}
 			}
 		}
@@ -156,9 +155,9 @@ namespace Genesis
 
 			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
 
-			for (ModelStruct& mesh : this->models)
+			for (ModelComponent& mesh : this->models)
 			{
-				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
+				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.world_transform);
 				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
 
 				this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);
@@ -176,9 +175,9 @@ namespace Genesis
 			this->backend->bindShaderProgram(this->directional_program);
 			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
 
-			for (ModelStruct& mesh : this->models)
+			for (ModelComponent& mesh : this->models)
 			{
-				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
+				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.world_transform);
 				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
 
 				this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);
@@ -200,9 +199,9 @@ namespace Genesis
 			this->backend->bindShaderProgram(this->point_program);
 			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
 
-			for (ModelStruct& mesh : this->models)
+			for (ModelComponent& mesh : this->models)
 			{
-				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
+				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.world_transform);
 				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
 
 				this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);

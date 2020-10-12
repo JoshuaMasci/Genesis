@@ -12,14 +12,10 @@ namespace Genesis
 		Capsule
 	};
 
-	class CollisionShape
+	struct CollisionShape
 	{
-	protected:
 		reactphysics3d::CollisionShape* shape = nullptr;
 		reactphysics3d::ProxyShape* proxy = nullptr;
-		reactphysics3d::RigidBody* rigid_body = nullptr;
-
-	public:
 
 		CollisionShapeType type = CollisionShapeType::None;
 		union
@@ -29,7 +25,6 @@ namespace Genesis
 			vector2D capsule_size;
 		} type_data;
 
-		void onAttach();
-		void onDetach();
+		static reactphysics3d::CollisionShape* createCollisionShape(const CollisionShape& shape);
 	};
 }

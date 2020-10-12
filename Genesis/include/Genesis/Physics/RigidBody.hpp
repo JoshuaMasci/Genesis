@@ -3,6 +3,8 @@
 namespace reactphysics3d
 {
 	class RigidBody;
+	class ProxyShape;
+	class CollisionShape;
 }
 
 namespace Genesis
@@ -23,6 +25,8 @@ namespace Genesis
 		reactphysics3d::RigidBody* removeRigidBody();
 		bool hasRigidBody();
 		//reactphysics3d::RigidBody* getRigidBody();
+
+		reactphysics3d::ProxyShape* addShape(reactphysics3d::CollisionShape* shape, const TransformD& transform);
 
 		void setTransform(const TransformD& transform);
 		TransformD getTransform();

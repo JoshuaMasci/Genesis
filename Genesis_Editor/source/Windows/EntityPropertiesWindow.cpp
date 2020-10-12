@@ -51,6 +51,8 @@ namespace Genesis
 		}
 	};
 
+
+
 	//Crappy workaround for not being able to pass arguments or use lamda captures
 	//The data variable will just be a pointer to args data
 	template<class Component>
@@ -82,6 +84,15 @@ namespace Genesis
 		MeshPool* mesh_pool;
 		MaterialPool* material_pool;
 	};
+
+#define DRAW_COMPONENT(entity, component, component_name, ...)\
+	if (entity.hasComponent<component>()) { bool header_open = ImGui::CollapsingHeader(component_name, ImGuiTreeNodeFlags_DefaultOpen);\
+		if (ImGui::BeginPopupContextItem(component_name, ImGuiMouseButton_Right)) {\
+			if (ImGui::MenuItem("Delete Component")) { entity.removeComponent<component>(); header_open = false; }\
+			ImGui::EndPopup(); }\
+			if (header_open) { __VA_ARGS__ ; }}\
+
+#define ADD_COMPONENT(entity, component, component_name, ...) if (!entity.hasComponent<component>() && ImGui::MenuItem(component_name)) { entity.addComponent<component>(__VA_ARGS__); }
 
 	void EntityPropertiesWindow::draw(EntityRegistry& registry, EntityHandle selected_entity)
 	{
@@ -138,9 +149,9 @@ namespace Genesis
 			drawComponent<DirectionalLight>(entity, "Directional Light", [](DirectionalLight& light_component)
 			{
 				ImGui::PushID("Directional Light");
-				if (ImGui::DragFloat("Intensity", &light_component.intensity, 0.01f, 0.0f, 1.0f))
+				if (ImGui::DragFloat("Intensity", &light_component.intensity, 0.01f, 0.0f, 5.0f))
 				{
-					light_component.intensity = std::clamp(light_component.intensity, 0.0f, 1.0f);
+					light_component.intensity = std::clamp(light_component.intensity, 0.0f, 5.0f);
 				}
 
 				ImGui::ColorEdit3("Color", &light_component.color.x, 0);
@@ -151,9 +162,9 @@ namespace Genesis
 			drawComponent<PointLight>(entity, "Point Light", [](PointLight& light_component)
 			{
 				ImGui::PushID("Point Light");
-				if (ImGui::DragFloat("Intensity", &light_component.intensity, 0.01f, 0.0f, 1.0f))
+				if (ImGui::DragFloat("Intensity", &light_component.intensity, 0.01f, 0.0f, 5.0f))
 				{
-					light_component.intensity = std::clamp(light_component.intensity, 0.0f, 1.0f);
+					light_component.intensity = std::clamp(light_component.intensity, 0.0f, 5.0f);
 				}
 
 				ImGui::ColorEdit3("Color", &light_component.color.x, 0);
@@ -259,7 +270,7 @@ namespace Genesis
 				}
 			});
 
-			drawComponent<CollisionShape>(entity, "Rigidbody", [](CollisionShape& shape_component)
+			drawComponent<CollisionShape>(entity, "Collision Shape", [](CollisionShape& shape_component)
 			{
 				const char* shape_names[] = { "None", "Box", "Sphere", "Capsule" };
 				ImGui::Combo("Type", (int*)&shape_component.type, shape_names, IM_ARRAYSIZE(shape_names));
@@ -288,26 +299,11 @@ namespace Genesis
 
 			if (ImGui::BeginPopup("add_component"))
 			{
-				if (!entity.hasComponent<NameComponent>())
-				{
-					if (ImGui::MenuItem("Name Component")) { entity.addComponent<NameComponent>("Entity Name"); }
-				}
-
-				if (!entity.hasComponent<TransformD>())
-				{
-					if (ImGui::MenuItem("Transform")) { entity.addComponent<TransformD>(); }
-				}
-
-				if (!entity.hasComponent<Camera>())
-				{
-					if (ImGui::MenuItem("Camera")) { entity.addComponent<Camera>(); }
-				}
-
-				if (!entity.hasComponent<ModelComponent>())
-				{
-					if (ImGui::MenuItem("Model Component")) { entity.addComponent<ModelComponent>(nullptr, nullptr); }
-				}
-
+				ADD_COMPONENT(entity, NameComponent, "Name Component", "Entity Name");
+				ADD_COMPONENT(entity, TransformD, "Name Transform");
+				ADD_COMPONENT(entity, Camera, "Camera");
+				ADD_COMPONENT(entity, ModelComponent, "Model Component");
+				ADD_COMPONENT(entity, RigidBody, "RigidBody");
 				ImGui::EndPopup();
 			}
 		}

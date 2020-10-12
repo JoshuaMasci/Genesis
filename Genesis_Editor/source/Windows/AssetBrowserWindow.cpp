@@ -43,6 +43,31 @@ namespace Genesis
 						node_flags |= ImGuiTreeNodeFlags_Selected;
 					}
 
+					if (has_value(this->directory_map, info.path))
+					{
+						auto& directory_contents = this->directory_map[info.path];
+
+						bool has_sub_directory = false;
+
+						for (auto& file : directory_contents)
+						{
+							if (file.is_directory)
+							{
+								has_sub_directory = true;
+								break;
+							}
+						}
+
+						if (!has_sub_directory)
+						{
+							node_flags |= ImGuiTreeNodeFlags_Leaf;
+						}
+					}
+					else
+					{
+						node_flags |= ImGuiTreeNodeFlags_Leaf;
+					}
+
 					bool node_open = ImGui::TreeNodeEx(info.filename.c_str(), node_flags, info.filename.c_str());
 
 					if (ImGui::IsItemClicked() && (ImGui::GetMousePos().x - ImGui::GetItemRectMin().x) > ImGui::GetTreeNodeToLabelSpacing())

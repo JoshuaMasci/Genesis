@@ -6,6 +6,11 @@ namespace Genesis
 	{
 		NameComponent(const char* name)
 		{
+			this->set(name);
+		}
+
+		void set(const char* name)
+		{
 			strcpy_s(this->data, name);
 		}
 

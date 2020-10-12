@@ -48,8 +48,17 @@ int main(int argc, char** argv)
 
 #include "Genesis/Resource/ObjLoader.hpp"
 
+#include "Genesis/PhysicsTest/PhysicsTestSystems.hpp"
+#include "Genesis/PhysicsTest/CollisionShape.hpp"
+
+#include <jsoncons/json.hpp>
+#include <fstream>
+using namespace jsoncons;
+
 namespace Genesis
 {
+	void loadSceneTemp(EntityWorld& world, const string& json_file, MeshPool* mesh_pool, MaterialPool* material_pool);
+
 	EditorApplication::EditorApplication()
 	{
 		this->console_window = new ConsoleWindow();
@@ -86,11 +95,13 @@ namespace Genesis
 		}
 
 		{
-			Entity entity = this->editor_world->createEntity("Physics Object");
-			entity.addComponent<TransformD>();
-			entity.addComponent<ModelComponent>(this->mesh_pool->getResource("res/meshes/sphere.obj"), this->material_pool->getResource("res/materials/red.mat"));
-			entity.addComponent<CollisionShape>();
+			Entity sphere = this->editor_world->createEntity("Sphere");
+			sphere.addComponent<TransformD>();
+			sphere.addComponent<ModelComponent>(this->mesh_pool->getResource("res/meshes/sphere.obj"), this->material_pool->getResource("res/materials/red.mat"));
+			sphere.addComponent<Experimental::CollisionShape>(1.0, TransformD(vector3D(0.0)));
 		}
+
+		loadSceneTemp(*this->editor_world, "res/ground.entity", this->mesh_pool, this->material_pool);
 	}
 
 	EditorApplication::~EditorApplication()
@@ -126,6 +137,8 @@ namespace Genesis
 		{
 			this->editor_world->runSimulation(time_step);
 		}
+
+		this->editor_world->updateTransforms();
 	}
 
 	void EditorApplication::render(TimeStep time_step)
@@ -172,11 +185,25 @@ namespace Genesis
 			ImGui::LabelText(std::to_string(time_step * 1000.0).c_str(), "Frame Time (ms)");
 			ImGui::LabelText(std::to_string(stats.draw_calls).c_str(), "Draw Calls");
 			ImGui::LabelText(std::to_string(stats.triangles_count).c_str(), "Tris count");
+
+			ImGui::Separator();
+
+			Experimental::UpdateCollisionShapeSystem::run(this->editor_world->getRegistry());
+			TransformD scene_camera = this->scene_window->getSceneCameraTransform();
+			vector3D ray_start = scene_camera.getPosition();
+			vector3D ray_direction = scene_camera.getForward();
+			double ray_distance = 10.0;
+
+			if (Experimental::RaycastSystem::runRaycast(this->editor_world->getRegistry(), ray_start, ray_direction, ray_distance))
+			{
+				ImGui::Text("Hit on Sphere");
+			}
+
 			ImGui::End();
 		}
 
 		this->console_window->draw();
-		this->entity_hierarchy_window->draw(*this->editor_world->getRegistry());
+		this->entity_hierarchy_window->draw(this->editor_world, this->mesh_pool, this->material_pool);
 		this->entity_properties_window->draw(*this->editor_world->getRegistry(), this->entity_hierarchy_window->getSelected());
 		this->scene_window->draw(*this->editor_world);
 		this->asset_browser_window->draw("res/");
@@ -185,5 +212,54 @@ namespace Genesis
 		this->ui_renderer->endFrame();
 
 		this->legacy_backend->endFrame();
+	}
+
+	void loadEntity(json& json_entity, Entity entity, MeshPool* mesh_pool, MaterialPool* material_pool)
+	{
+		if (json_entity.contains("Name"))
+		{
+			entity.addComponent<NameComponent>(json_entity["Name"].as_string().c_str());
+		}
+
+		if (json_entity.contains("Transform"))
+		{
+			json& json_transform = json_entity["Transform"];
+			TransformD& transform = entity.addComponent<TransformD>();
+			
+			vector<double> position = json_transform["position"].as<vector<double>>();
+			transform.setPosition(vector3D(position[0], position[1], position[2]));
+
+			vector<double> orientation = json_transform["orientation"].as<vector<double>>();
+			transform.setOrientation(quaternionD(orientation[0], orientation[1], orientation[2], orientation[3]));
+
+			vector<double> scale = json_transform["scale"].as<vector<double>>();
+			transform.setScale(vector3D(scale[0], scale[1], scale[2]));
+		}
+
+		if (json_entity.contains("Model"))
+		{
+			json& json_model = json_entity["Model"];
+			ModelComponent& model = entity.addComponent<ModelComponent>();
+			model.mesh = mesh_pool->getResource(json_model["mesh"].as_string());
+			model.material = material_pool->getResource(json_model["material"].as_string());
+		}
+	}
+
+	void loadSceneTemp(EntityWorld& world, const string& json_file, MeshPool* mesh_pool, MaterialPool* material_pool)
+	{
+		std::ifstream in_stream(json_file);
+
+		if (!in_stream.is_open())
+		{
+			GENESIS_ENGINE_ASSERT("Failed to open scene file {}", json_file);
+			return;
+		}
+
+		jsoncons::json scene_file = json::parse(in_stream);
+
+		for (std::size_t i = 0; i < scene_file.size(); ++i)
+		{
+			loadEntity(scene_file[i], world.createEntity(), mesh_pool, material_pool);
+		}
 	}
 }

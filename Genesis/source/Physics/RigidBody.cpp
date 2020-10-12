@@ -31,6 +31,11 @@ namespace Genesis
 		return this->rigidbody != nullptr;
 	}
 
+	reactphysics3d::ProxyShape* RigidBody::addShape(reactphysics3d::CollisionShape* shape, const TransformD& transform)
+	{
+		return this->rigidbody->addCollisionShape(shape, reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())), 0.0);
+	}
+
 	void RigidBody::setTransform(const TransformD& transform)
 	{
 		this->rigidbody->setTransform(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())));

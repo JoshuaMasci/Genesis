@@ -20,6 +20,8 @@ namespace Genesis
 
 		bool isSceneRunning() { return this->is_scene_running; };
 
+		TransformD getSceneCameraTransform() { return this->scene_camera_transform; };
+
 	private:
 		bool is_window_active = false;
 

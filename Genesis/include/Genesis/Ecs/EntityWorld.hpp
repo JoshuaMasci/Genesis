@@ -8,10 +8,6 @@ namespace Genesis
 {
 	class EntityWorld
 	{
-	protected:
-		EntityRegistry registry;
-		reactphysics3d::DynamicsWorld* physics = nullptr;
-
 	public:
 		EntityRegistry* getRegistry() { return &this->registry; };
 
@@ -20,12 +16,21 @@ namespace Genesis
 
 		void runSimulation(TimeStep time_step);
 
+		void updateTransforms();
+
+		Entity createEntity();
 		Entity createEntity(const string& name);
 
+		void destroyEntity(Entity entity);
 
 		void onCreate();
 		void onDestroy();
 
-		void clone();
+	protected:
+		EntityRegistry registry;
+		reactphysics3d::DynamicsWorld* physics = nullptr;
+
+		void updateEntityTreeRoot(EntityHandle entity);
+		void updateEntityTree(EntityHandle entity, const TransformD& parent_world_transform, const TransformD& parent_relative_transform);
 	};
 }

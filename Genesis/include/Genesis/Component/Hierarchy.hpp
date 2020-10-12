@@ -6,8 +6,8 @@ namespace Genesis
 {
 	struct Hierarchy
 	{
-		static void addChild(EntityRegistry& registry, EntityHandle parent, EntityHandle child);
-		static void removeChild(EntityRegistry& registry, EntityHandle parent, EntityHandle child);
+		static void addChild(EntityRegistry* registry, EntityHandle parent, EntityHandle child);
+		static void removeChild(EntityRegistry* registry, EntityHandle parent, EntityHandle child);
 	};
 
 	struct ParentNode
