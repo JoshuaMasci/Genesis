@@ -74,6 +74,7 @@ namespace Genesis
 	{
 	public:
 		static void transformByInplace(TransformF& destination, const TransformF& origin, const TransformF& local);
+		static void transformByInplace(TransformD& destination, const TransformD& origin, const TransformF& local);
 		static void transformByInplace(TransformD& destination, const TransformD& origin, const TransformD& local);
 		static TransformD transformBy(const TransformD& origin, const TransformF& local);
 		static TransformD transformBy(const TransformD& origin, const TransformD& local);

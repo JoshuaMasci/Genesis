@@ -1,10 +1,10 @@
 #include "Genesis/Ecs/EntityWorld.hpp"
  
-#include "Genesis/Component/Hierarchy.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
 #include "Genesis/Physics/CollisionShape.hpp"
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Component/ModelComponent.hpp"
+#include "Genesis/Component/NodeComponent.hpp"
 
 namespace Genesis
 {
@@ -32,25 +32,25 @@ namespace Genesis
 		this->physics->update(time_step);
 
 		//Physics Post-step
-		/*{
+		{
 			auto& view = this->registry.view<RigidBody, TransformD>();
 			for (EntityHandle entity : view)
 			{
 				view.get<TransformD>(entity) = view.get<RigidBody>(entity).getTransform();
 			}
-		}*/
+		}
 	}
 
-	void EntityWorld::updateTransforms()
+	void EntityWorld::resolveTransforms()
 	{
-		//Tree Update
-		this->registry.each([&](auto entity)
+		//Node Transform Update
 		{
-			if (!registry.has<ChildNode>(entity))
+			auto& view = this->registry.view<NodeComponent>();
+			for (EntityHandle entity : view)
 			{
-				this->updateEntityTreeRoot(entity);
+				NodeSystem::updateTransform(this->registry.get<NodeComponent>(entity));
 			}
-		});
+		}
 	}
 
 	Entity EntityWorld::createEntity()
@@ -71,28 +71,16 @@ namespace Genesis
 		//TODO Implement
 	}
 
-
 	void EntityWorld::onCreate()
 	{
 		this->physics = new reactphysics3d::DynamicsWorld(reactphysics3d::Vector3(0.0, -9.8, 0.0));
 
-		auto& rigidbody_view = this->registry.view<RigidBody, TransformD>(entt::exclude_t<ChildNode>());
+		auto& rigidbody_view = this->registry.view<RigidBody, TransformD>();
 		for (EntityHandle entity : rigidbody_view)
 		{
 			TransformD& transform = rigidbody_view.get<TransformD>(entity);
 			RigidBody& rigidbody = rigidbody_view.get<RigidBody>(entity);
 			rigidbody.attachRigidBody(this->physics->createRigidBody(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation()))));
-
-			if (this->registry.has<CollisionShape>(entity))
-			{
-				CollisionShape& shape = this->registry.get<CollisionShape>(entity);
-				shape.shape = CollisionShape::createCollisionShape(shape);
-
-				if (shape.shape != nullptr)
-				{
-					shape.proxy = rigidbody.addShape(shape.shape, TransformD());
-				}
-			}
 		}
 	}
 
@@ -110,105 +98,5 @@ namespace Genesis
 
 		delete this->physics;
 		this->physics = nullptr;
-	}
-
-	void EntityWorld::updateEntityTreeRoot(EntityHandle entity)
-	{
-		if (!registry.has<TransformD>(entity))
-		{
-			//For rignt now all entities need a transform
-			//TODO Remove maybe
-			return;
-		}
-
-		TransformD& world_transform = registry.get<TransformD>(entity);
-
-		{
-			RigidBody* rigidbody = this->registry.try_get<RigidBody>(entity);
-			if (rigidbody != nullptr)
-			{
-				world_transform = rigidbody->getTransform();
-			}
-		}
-
-		//Component Updates
-		{
-			ModelComponent* model_component = this->registry.try_get<ModelComponent>(entity);
-			if (model_component != nullptr)
-			{
-				model_component->world_transform = world_transform;
-			}
-		}
-
-		//Hierarchy update
-		{
-			ParentNode* parent_node = this->registry.try_get<ParentNode>(entity);
-			if (parent_node != nullptr)
-			{
-				EntityHandle child = parent_node->first;
-				while (this->registry.valid(child))
-				{
-					this->updateEntityTree(child, world_transform, TransformD()); //Root has no relative_transform to it's self
-
-					ChildNode* child_node = this->registry.try_get<ChildNode>(child);
-					if (child_node != nullptr)
-					{
-						child = child_node->next;
-					}
-					else
-					{
-						child = null_entity;
-					}
-				}
-			}
-		}
-	}
-
-	void EntityWorld::updateEntityTree(EntityHandle entity, const TransformD& parent_world_transform, const TransformD& parent_relative_transform)
-	{
-		if (!registry.has<TransformD>(entity))
-		{
-			//For rignt now all entities need a transform
-			//TODO Remove maybe
-			return;
-		}
-
-		TransformD& local_transform = this->registry.get<TransformD>(entity);
-		TransformD world_transform;
-		TransformD relative_transform;
-		TransformUtils::transformByInplace(world_transform, parent_world_transform, local_transform);
-		TransformUtils::transformByInplace(relative_transform, parent_relative_transform, local_transform);
-
-		//Component Updates
-		{
-			ModelComponent* model_component = this->registry.try_get<ModelComponent>(entity);
-			if (model_component != nullptr)
-			{
-				model_component->world_transform = world_transform;
-			}
-		}
-
-		//Hierarchy update
-		{
-			ParentNode* parent_node = this->registry.try_get<ParentNode>(entity);
-			if (parent_node != nullptr)
-			{
-				EntityHandle child = parent_node->first;
-				while (this->registry.valid(child))
-				{
-					this->updateEntityTree(child, world_transform, relative_transform); //Root has no relative_transform to it's self
-
-					ChildNode* child_node = this->registry.try_get<ChildNode>(child);
-					if (child_node != nullptr)
-					{
-						child = child_node->next;
-					}
-					else
-					{
-						child = null_entity;
-					}
-				}
-			}
-		}
 	}
 }

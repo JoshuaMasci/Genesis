@@ -2,6 +2,9 @@
 
 #include "Genesis/Platform/FileSystem.hpp"
 
+#include "Genesis/Component/ModelNodeComponent.hpp"
+#include "Genesis/Component/NodeComponent.hpp"
+
 namespace Genesis
 {
 	struct LegacyShaderUniform
@@ -117,14 +120,36 @@ namespace Genesis
 
 		{
 			this->models.clear();
-			auto model_group = world.view<ModelComponent>();
+
+			//Single Component
+			auto model_group = world.view<ModelComponent, TransformD>();
 			for (EntityHandle entity : model_group)
 			{
-				ModelComponent& mesh_component = model_group.get<ModelComponent>(entity);
+				ModelComponent& model_component = model_group.get<ModelComponent>(entity);
+				TransformD& transform = model_group.get<TransformD>(entity);
 
-				if (mesh_component.mesh != nullptr && mesh_component.material != nullptr)
+				if (model_component.mesh != nullptr && model_component.material != nullptr)
 				{
-					this->models.push_back(mesh_component);
+					this->models.push_back({ model_component.mesh , model_component.material, transform });
+				}
+			}
+
+			//Node Components
+			auto model_node_group = world.view<NodeComponent, ModelNodeComponent, TransformD>();
+			for (EntityHandle entity : model_node_group)
+			{
+				NodeComponent& node_component = model_node_group.get<NodeComponent>(entity);
+				ModelNodeComponent& model_component = model_node_group.get<ModelNodeComponent>(entity);
+				TransformD& transform = model_node_group.get<TransformD>(entity);
+
+				for (auto node_model : model_component.models)
+				{
+					if (node_model.model.mesh != nullptr && node_model.model.material != nullptr)
+					{
+						ModelStruct model = { node_model.model.mesh , node_model.model.material };
+						TransformUtils::transformByInplace(model.transform, transform, NodeSystem::getNodeTransform(node_component, node_model.node_index));
+						this->models.push_back(model);
+					}
 				}
 			}
 		}
@@ -155,9 +180,9 @@ namespace Genesis
 
 			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
 
-			for (ModelComponent& mesh : this->models)
+			for (ModelStruct& mesh : this->models)
 			{
-				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.world_transform);
+				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
 				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
 
 				this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);
@@ -175,9 +200,9 @@ namespace Genesis
 			this->backend->bindShaderProgram(this->directional_program);
 			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
 
-			for (ModelComponent& mesh : this->models)
+			for (ModelStruct& mesh : this->models)
 			{
-				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.world_transform);
+				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
 				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
 
 				this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);
@@ -199,9 +224,9 @@ namespace Genesis
 			this->backend->bindShaderProgram(this->point_program);
 			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
 
-			for (ModelComponent& mesh : this->models)
+			for (ModelStruct& mesh : this->models)
 			{
-				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.world_transform);
+				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
 				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
 
 				this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);

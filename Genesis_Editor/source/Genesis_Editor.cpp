@@ -39,7 +39,6 @@ int main(int argc, char** argv)
 //Components
 #include "Genesis/Component/ModelComponent.hpp"
 #include "Genesis/Component/NameComponent.hpp"
-#include "Genesis/Component/Hierarchy.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lights.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
@@ -50,6 +49,8 @@ int main(int argc, char** argv)
 
 #include "Genesis/PhysicsTest/PhysicsTestSystems.hpp"
 #include "Genesis/PhysicsTest/CollisionShape.hpp"
+
+#include "Genesis/Component/ModelNodeComponent.hpp"
 
 #include <jsoncons/json.hpp>
 #include <fstream>
@@ -85,7 +86,6 @@ namespace Genesis
 
 		this->editor_world = new EntityWorld();
 
-
 		{
 			Entity entity = this->editor_world->createEntity("Test_Entity");
 			entity.addComponent<TransformD>().setPosition(vector3D(0.0, 0.0, -3.0));
@@ -99,6 +99,39 @@ namespace Genesis
 			sphere.addComponent<TransformD>();
 			sphere.addComponent<ModelComponent>(this->mesh_pool->getResource("res/meshes/sphere.obj"), this->material_pool->getResource("res/materials/red.mat"));
 			sphere.addComponent<Experimental::CollisionShape>(1.0, TransformD(vector3D(0.0)));
+		}
+
+		{
+			Entity node_entity = this->editor_world->createEntity("Node");
+			node_entity.addComponent<TransformD>(vector3D(0.0, 1.0, 0.0));
+			
+			NodeComponent& node_component = node_entity.addComponent<NodeComponent>();
+			ModelNodeComponent& model_component = node_entity.addComponent<ModelNodeComponent>();
+
+			node_component.node_storage.resize(3);
+			node_component.root_children.push_back(0);
+
+			{
+				Node& node = node_component.node_storage[0];
+				node.local_transform = TransformF(vector3F(0.0f, 1.0f, 0.0f));
+				model_component.models.push_back({ 0, {this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/blue.mat")} });
+				node.children.push_back(1);
+			}
+			
+			{
+				Node& node = node_component.node_storage[1];
+				node.local_transform = TransformF(vector3F(0.0f, 1.5f, 0.0f));
+				node.parent = 0;
+				model_component.models.push_back({ 1, {this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/red.mat")} });
+				node.children.push_back(2);
+			}
+
+			{
+				Node& node = node_component.node_storage[2];
+				node.local_transform = TransformF(vector3F(0.0f, 1.5f, 0.0f));
+				node.parent = 1;
+				model_component.models.push_back({ 2, {this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/green.mat")} });
+			}
 		}
 
 		loadSceneTemp(*this->editor_world, "res/ground.entity", this->mesh_pool, this->material_pool);
@@ -138,7 +171,7 @@ namespace Genesis
 			this->editor_world->runSimulation(time_step);
 		}
 
-		this->editor_world->updateTransforms();
+		this->editor_world->resolveTransforms();
 	}
 
 	void EditorApplication::render(TimeStep time_step)

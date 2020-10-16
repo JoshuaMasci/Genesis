@@ -15,8 +15,7 @@ namespace Genesis
 		~EntityWorld();
 
 		void runSimulation(TimeStep time_step);
-
-		void updateTransforms();
+		void resolveTransforms();
 
 		Entity createEntity();
 		Entity createEntity(const string& name);
@@ -29,8 +28,5 @@ namespace Genesis
 	protected:
 		EntityRegistry registry;
 		reactphysics3d::DynamicsWorld* physics = nullptr;
-
-		void updateEntityTreeRoot(EntityHandle entity);
-		void updateEntityTree(EntityHandle entity, const TransformD& parent_world_transform, const TransformD& parent_relative_transform);
 	};
 }

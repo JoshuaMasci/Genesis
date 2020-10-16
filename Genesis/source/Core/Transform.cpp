@@ -107,6 +107,13 @@ namespace Genesis
 		destination.setScale(origin.getScale() * local.getScale());
 	}
 
+	void TransformUtils::transformByInplace(TransformD& destination, const TransformD& origin, const TransformF& local)
+	{
+		destination.setPosition(origin.getPosition() + (origin.getOrientation() * ((vector3D)local.getPosition() * origin.getScale())));
+		destination.setOrientation(origin.getOrientation() * (quaternionD)local.getOrientation());
+		destination.setScale(origin.getScale() * (vector3D)local.getScale());
+	}
+
 	void TransformUtils::transformByInplace(TransformD& destination, const TransformD& origin, const TransformD& local)
 	{
 		destination.setPosition(origin.getPosition() + (origin.getOrientation() * (local.getPosition() * origin.getScale())));

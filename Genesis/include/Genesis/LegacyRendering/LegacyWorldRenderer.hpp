@@ -30,7 +30,13 @@ namespace Genesis
 
 		ShaderProgram gamma_correction_program;
 
-		vector<ModelComponent> models;
+		struct ModelStruct
+		{
+			shared_ptr<MeshResource> mesh;
+			shared_ptr<Material> material;
+			TransformD transform;
+		};
+		vector<ModelStruct> models;
 
 		struct DirectionalLightStruct
 		{

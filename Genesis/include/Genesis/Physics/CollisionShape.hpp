@@ -26,5 +26,7 @@ namespace Genesis
 		} type_data;
 
 		static reactphysics3d::CollisionShape* createCollisionShape(const CollisionShape& shape);
+
+		TransformD relative_transform;
 	};
 }
