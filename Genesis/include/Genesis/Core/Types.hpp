@@ -9,8 +9,6 @@
 #include <functional>
 #include <memory>
 
-#define has_value(list, value) (list.find(value) != list.end())
-
 namespace Genesis
 {
 	typedef double TimeStep;

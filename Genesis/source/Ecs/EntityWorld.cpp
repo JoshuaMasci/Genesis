@@ -10,11 +10,13 @@ namespace Genesis
 {
 	EntityWorld::EntityWorld()
 	{
+		this->physics = new reactphysics3d::DynamicsWorld(reactphysics3d::Vector3(0.0, -9.8, 0.0));
 	}
 
 	EntityWorld::~EntityWorld()
 	{
 		this->onDestroy();
+		delete this->physics;
 	}
 
 	void EntityWorld::runSimulation(TimeStep time_step)
@@ -36,7 +38,7 @@ namespace Genesis
 			auto& view = this->registry.view<RigidBody, TransformD>();
 			for (EntityHandle entity : view)
 			{
-				view.get<TransformD>(entity) = view.get<RigidBody>(entity).getTransform();
+				view.get<RigidBody>(entity).getTransform(view.get<TransformD>(entity));
 			}
 		}
 	}
@@ -68,35 +70,31 @@ namespace Genesis
 
 	void EntityWorld::destroyEntity(Entity entity)
 	{
-		//TODO Implement
+		this->registry.destroy(entity.getHandle());
+	}
+
+	Entity EntityWorld::getEntity(EntityHandle entity_handle)
+	{
+		if (this->registry.valid(entity_handle))
+		{
+			return Entity(entity_handle, &this->registry);
+		}
+
+		return Entity(null_entity, &this->registry);
 	}
 
 	void EntityWorld::onCreate()
 	{
-		this->physics = new reactphysics3d::DynamicsWorld(reactphysics3d::Vector3(0.0, -9.8, 0.0));
-
-		auto& rigidbody_view = this->registry.view<RigidBody, TransformD>();
-		for (EntityHandle entity : rigidbody_view)
+		auto& view = this->registry.view<RigidBody>();
+		for (EntityHandle entity : view)
 		{
-			TransformD& transform = rigidbody_view.get<TransformD>(entity);
-			RigidBody& rigidbody = rigidbody_view.get<RigidBody>(entity);
-			rigidbody.attachRigidBody(this->physics->createRigidBody(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation()))));
+			//Build Rigid Body
+
 		}
 	}
 
 	void EntityWorld::onDestroy()
 	{
-		auto& view = this->registry.view<RigidBody>();
-		for (EntityHandle entity : view)
-		{
-			RigidBody& rigid_body = view.get<RigidBody>(entity);
-			if (rigid_body.hasRigidBody())
-			{
-				this->physics->destroyRigidBody(rigid_body.removeRigidBody());
-			}
-		}
 
-		delete this->physics;
-		this->physics = nullptr;
 	}
 }

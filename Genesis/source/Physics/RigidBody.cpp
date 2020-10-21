@@ -4,31 +4,14 @@
 
 namespace Genesis
 {
-	void RigidBody::attachRigidBody(reactphysics3d::RigidBody* rigidbody)
+	void RigidBody::setType(RigidBodyType type)
 	{
-		this->rigidbody = rigidbody;
-		this->rigidbody->setMass(this->mass);
-		this->rigidbody->setLinearVelocity(toVec3R(this->linear_velocity));
-		this->rigidbody->setAngularVelocity(toVec3R(this->angular_velocity));
-		this->rigidbody->enableGravity(this->gravity_enabled);
-		this->rigidbody->setIsActive(this->awake);
-	}
-	
-	reactphysics3d::RigidBody* RigidBody::removeRigidBody()
-	{
-		this->mass = this->rigidbody->getMass();
-		this->linear_velocity = toVec3D(this->rigidbody->getLinearVelocity());
-		this->angular_velocity = toVec3D(this->rigidbody->getAngularVelocity());
-		this->gravity_enabled = this->rigidbody->isGravityEnabled();
-		this->awake = this->rigidbody->isActive();
-		reactphysics3d::RigidBody* temp = this->rigidbody;
-		this->rigidbody = nullptr;
-		return temp;
+		this->rigidbody->setType((reactphysics3d::BodyType) type);
 	}
 
-	bool RigidBody::hasRigidBody()
+	RigidBodyType RigidBody::getType()
 	{
-		return this->rigidbody != nullptr;
+		return (RigidBodyType) this->rigidbody->getType();
 	}
 
 	reactphysics3d::ProxyShape* RigidBody::addShape(reactphysics3d::CollisionShape* shape, const TransformD& transform)
@@ -41,110 +24,61 @@ namespace Genesis
 		this->rigidbody->setTransform(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())));
 	}
 
-	TransformD RigidBody::getTransform()
+	void RigidBody::getTransform(TransformD& transform)
 	{
 		const reactphysics3d::Transform& transform_r = this->rigidbody->getTransform();
-		return TransformD(toVec3D(transform_r.getPosition()), toQuatD(transform_r.getOrientation()));
+		transform.setPosition(toVec3D(transform_r.getPosition()));
+		transform.setOrientation(toQuatD(transform_r.getOrientation()));
 	}
 
 	void RigidBody::setMass(double mass)
 	{
-		this->mass = mass;
-
-		if (this->rigidbody != nullptr)
-		{
-			this->rigidbody->setMass(this->mass);
-		}
+		this->rigidbody->setMass(mass);
 	}
 
 	double RigidBody::getMass()
 	{
-		if (this->rigidbody != nullptr)
-		{
-			this->mass = this->rigidbody->getMass();
-		}
-
-		return this->mass;
+		return this->rigidbody->getMass();
 	}
 
 	void RigidBody::setGravityEnabled(bool enabled)
 	{
-		this->gravity_enabled = enabled;
-
-		if (this->rigidbody != nullptr)
-		{
-			this->rigidbody->enableGravity(this->gravity_enabled);
-		}
+		this->rigidbody->enableGravity(enabled);
 	}
 
 	bool RigidBody::getGravityEnabled()
 	{
-		if (this->rigidbody != nullptr)
-		{
-			this->gravity_enabled = this->rigidbody->isGravityEnabled();
-		}
-
-		return this->gravity_enabled;
+		return this->rigidbody->isGravityEnabled();
 	}
 
-	void RigidBody::setAwake(bool awake)
+	void RigidBody::setIsAllowedToSleep(bool awake)
 	{
-		this->awake = awake;
-
-		if (this->rigidbody != nullptr)
-		{
-			this->rigidbody->setIsActive(this->awake);
-		}
+		this->rigidbody->setIsAllowedToSleep(awake);
 	}
 
-	bool RigidBody::getAwake()
+	bool RigidBody::getIsAllowedToSleep()
 	{
-		if (this->rigidbody != nullptr)
-		{
-			this->awake = this->rigidbody->isActive();
-		}
-
-		return this->awake;
+		return this->rigidbody->isAllowedToSleep();
 	}
 
 	void RigidBody::setLinearVelocity(const vector3D& velocity)
 	{
-		this->linear_velocity = velocity;
-
-		if (this->rigidbody != nullptr)
-		{
-			this->rigidbody->setLinearVelocity(toVec3R(this->linear_velocity));
-		}
+		this->rigidbody->setLinearVelocity(toVec3R(velocity));
 	}
 
 	vector3D RigidBody::getLinearVelocity()
 	{
-		if (this->rigidbody != nullptr)
-		{
-			this->linear_velocity = toVec3D(this->rigidbody->getLinearVelocity());
-		}
-
-		return this->linear_velocity;
+		return toVec3D(this->rigidbody->getLinearVelocity());
 	}
 
 	void RigidBody::setAngularVelocity(const vector3D& velocity)
 	{
-		this->angular_velocity = velocity;
-
-		if (this->rigidbody != nullptr)
-		{
-			this->rigidbody->setAngularVelocity(toVec3R(this->angular_velocity));
-		}
+		this->rigidbody->setAngularVelocity(toVec3R(velocity));
 	}
 
 	vector3D RigidBody::getAngularVelocity()
 	{
-		if (this->rigidbody != nullptr)
-		{
-			this->angular_velocity = toVec3D(this->rigidbody->getAngularVelocity());
-		}
-
-		return this->angular_velocity;
+		return toVec3D(this->rigidbody->getAngularVelocity());
 	}
 
 	void RigidBody::applyCenteredForce(const vector3D& force)

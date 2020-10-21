@@ -1,6 +1,7 @@
 #include "Genesis_Editor/Windows/SceneWindow.hpp"
 
 #include "imgui.h"
+#include "Genesis/Component/NameComponent.hpp"
 
 namespace Genesis
 {
@@ -50,7 +51,7 @@ namespace Genesis
 
 	void SceneWindow::update(TimeStep time_step)
 	{		
-		if (this->is_window_active)
+		if (this->is_window_active && this->override_camera == null_entity)
 		{
 			vector3D position = this->scene_camera_transform.getPosition();
 			position += (this->scene_camera_transform.getForward() * (double)this->input_manager->getButtonAxis(debug_forward_axis, debug_forward, debug_backward)) * this->linear_speed * time_step;
@@ -99,6 +100,34 @@ namespace Genesis
 
 				ImGui::EndMenu();
 			}
+
+			if (ImGui::BeginMenu("Camera"))
+			{
+				if (ImGui::MenuItem("Default", nullptr, this->override_camera == null_entity))
+				{
+					this->override_camera = null_entity;
+				}
+
+				auto* registry = world.getRegistry();
+				auto camera_view = registry->view<Camera>();
+				for (auto entity : camera_view)
+				{
+					char* name = "Unnamed";
+					NameComponent* name_component = registry->try_get<NameComponent>(entity);
+					if (name_component != nullptr)
+					{
+						name = name_component->data;
+					}
+
+					if (ImGui::MenuItem(name, nullptr, this->override_camera == entity))
+					{
+						this->override_camera = entity;
+					}
+				}
+
+				ImGui::EndMenu();
+			}
+
 			ImGui::EndMenuBar();
 		}
 
@@ -125,7 +154,22 @@ namespace Genesis
 			this->framebuffer = this->legacy_backend->createFramebuffer(create_info);
 		}
 
-		this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, *world.getRegistry(), this->scene_camera, this->scene_camera_transform);
+		EntityRegistry* registry = world.getRegistry();
+		if (!registry->valid(this->override_camera))
+		{
+			this->override_camera = null_entity;
+		}
+
+		if (this->override_camera != null_entity)
+		{
+			Camera& camera = registry->get<Camera>(this->override_camera);
+			TransformD& camera_transform = registry->get<TransformD>(this->override_camera);
+			this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, *registry, camera, camera_transform);
+		}
+		else
+		{
+			this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, *registry, this->scene_camera, this->scene_camera_transform);
+		}
 
 		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->framebuffer, 0), im_remaining_space, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 

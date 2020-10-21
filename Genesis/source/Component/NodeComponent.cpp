@@ -2,28 +2,27 @@
 
 namespace Genesis
 {
-	void updateNodeTransform(vector<Node>& node_storage, NodeId node_id, const TransformF& parent_transform)
+	void updateNodeTransform(NodeComponent& node_component, NodeHandle node_handle, const TransformF& parent_transform)
 	{
-		GENESIS_ENGINE_ASSERT(node_id < node_storage.size(), "NodeId out of range");
-		Node& node = node_storage[node_id];
+		Node& node = node_component.registry.get<Node>(node_handle);
 		TransformUtils::transformByInplace(node.entity_space_transform, parent_transform, node.local_transform);
 
-		for (NodeId child : node.children)
+		for (NodeHandle child : node.children)
 		{
-			updateNodeTransform(node_storage, child, node.entity_space_transform);
+			updateNodeTransform(node_component, child, node.entity_space_transform);
 		}
 	}
 
 	void NodeSystem::updateTransform(NodeComponent& node_component)
 	{
-		for (NodeId child : node_component.root_children)
+		for (NodeHandle child : node_component.root_children)
 		{
-			updateNodeTransform(node_component.node_storage, child, TransformF());
+			updateNodeTransform(node_component, child, TransformF());
 		}
 	}
 
-	TransformF NodeSystem::getNodeTransform(NodeComponent& node_component, NodeId node_index)
+	TransformF NodeSystem::getNodeTransform(NodeComponent& node_component, NodeHandle node_handle)
 	{
-		return node_component.node_storage[node_index].entity_space_transform;
+		return node_component.registry.get<Node>(node_handle).entity_space_transform;
 	}
 }

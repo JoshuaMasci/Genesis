@@ -30,6 +30,7 @@ namespace Genesis
 	template<class Component>
 	void drawComponent(Entity& entity, const char* component_name, void(*draw_func)(Component&))
 	{
+		ImGui::PushID(component_name);
 		if (entity.hasComponent<Component>())
 		{
 			bool header_open = ImGui::CollapsingHeader(component_name, ImGuiTreeNodeFlags_DefaultOpen);
@@ -49,15 +50,15 @@ namespace Genesis
 				draw_func(entity.getComponent<Component>());
 			}
 		}
+		ImGui::PopID();
 	};
-
-
 
 	//Crappy workaround for not being able to pass arguments or use lamda captures
 	//The data variable will just be a pointer to args data
 	template<class Component>
 	void drawComponentArgs(Entity& entity, const char* component_name, void* data, void(*draw_func)(Component&, void*))
 	{
+		ImGui::PushID(component_name);
 		if (entity.hasComponent<Component>())
 		{
 			bool header_open = ImGui::CollapsingHeader(component_name, ImGuiTreeNodeFlags_DefaultOpen);
@@ -77,6 +78,7 @@ namespace Genesis
 				draw_func(entity.getComponent<Component>(), data);
 			}
 		}
+		ImGui::PopID();
 	};
 
 	struct Pools
@@ -94,17 +96,27 @@ namespace Genesis
 
 #define ADD_COMPONENT(entity, component, component_name, ...) if (!entity.hasComponent<component>() && ImGui::MenuItem(component_name)) { entity.addComponent<component>(__VA_ARGS__); }
 
-	void EntityPropertiesWindow::draw(EntityRegistry& registry, EntityHandle selected_entity)
+	void EntityPropertiesWindow::draw(EntityWorld* entity_world, EntityNodeHandle selected_entity)
 	{
-		void(*func)(int, int) = [](int x, int y)
-		{
-			GENESIS_ENGINE_INFO("Sum: {}", x + y);
-		};
-
-		Entity entity(selected_entity, &registry);
-
 		ImGui::Begin("Entity Properties");
 
+		//if root entity
+		if (selected_entity.node == null_node)
+		{
+			this->drawEntity(entity_world, selected_entity.entity);
+		}
+		else
+		{
+			this->drawNode(entity_world, selected_entity);
+		}
+
+	
+		ImGui::End();
+	}
+
+	void EntityPropertiesWindow::drawEntity(EntityWorld* entity_world, EntityHandle entity_handle)
+	{
+		Entity entity = entity_world->getEntity(entity_handle);
 		if (entity.valid())
 		{
 			drawComponent<NameComponent>(entity, "Name Component", [](NameComponent& name_component)
@@ -237,8 +249,16 @@ namespace Genesis
 				}
 			});
 
-			drawComponent<RigidBody>(entity, "Rigidbody", [](RigidBody& rigidbody_component)
+			drawComponent<RigidBody>(entity, "Rigid Body", [](RigidBody& rigidbody_component)
 			{
+				const char* RigidBodyTypeName[] = { "Static", "Kinematic", "Dynamic" };
+				RigidBodyType type = rigidbody_component.getType();
+				if (ImGui::Combo("Type", (int*)&type, RigidBodyTypeName, IM_ARRAYSIZE(RigidBodyTypeName)))
+				{
+					GENESIS_INFO("Type changed");
+					rigidbody_component.setType(type);
+				}
+
 				double mass = rigidbody_component.getMass();
 				if (ImGui::InputDouble("Mass", &mass))
 				{
@@ -251,10 +271,10 @@ namespace Genesis
 					rigidbody_component.setGravityEnabled(gravity);
 				}
 
-				bool awake = rigidbody_component.getAwake();
-				if (ImGui::Checkbox("Awake", &awake))
+				bool awake = rigidbody_component.getIsAllowedToSleep();
+				if (ImGui::Checkbox("Is Allowed To Sleep", &awake))
 				{
-					rigidbody_component.setAwake(awake);
+					rigidbody_component.setIsAllowedToSleep(awake);
 				}
 
 				vector3D linear_velocity = rigidbody_component.getLinearVelocity();
@@ -273,7 +293,21 @@ namespace Genesis
 			drawComponent<CollisionShape>(entity, "Collision Shape", [](CollisionShape& shape_component)
 			{
 				const char* shape_names[] = { "None", "Box", "Sphere", "Capsule" };
-				ImGui::Combo("Type", (int*)&shape_component.type, shape_names, IM_ARRAYSIZE(shape_names));
+				if (ImGui::Combo("Type", (int*)&shape_component.type, shape_names, IM_ARRAYSIZE(shape_names)))
+				{
+					switch (shape_component.type)
+					{
+					case CollisionShapeType::Box:
+						shape_component.type_data.box_size = vector3D(0.5);
+						break;
+					case CollisionShapeType::Sphere:
+						shape_component.type_data.sphere_radius = 1.0;
+						break;
+					case CollisionShapeType::Capsule:
+						shape_component.type_data.capsule_size = vector2D(0.5, 1.8);
+						break;
+					}
+				}
 
 				if (shape_component.type == CollisionShapeType::Box)
 				{
@@ -300,14 +334,44 @@ namespace Genesis
 			if (ImGui::BeginPopup("add_component"))
 			{
 				ADD_COMPONENT(entity, NameComponent, "Name Component", "Entity Name");
-				ADD_COMPONENT(entity, TransformD, "Name Transform");
+				ADD_COMPONENT(entity, TransformD, "Transform");
 				ADD_COMPONENT(entity, Camera, "Camera");
 				ADD_COMPONENT(entity, ModelComponent, "Model Component");
 				ADD_COMPONENT(entity, RigidBody, "RigidBody");
+				ADD_COMPONENT(entity, CollisionShape, "Collision Shape");
 				ImGui::EndPopup();
 			}
 		}
+	}
 
-		ImGui::End();
+	void EntityPropertiesWindow::drawNode(EntityWorld* entity_world, EntityNodeHandle entity_node)
+	{
+		NodeComponent& node_component = entity_world->getEntity(entity_node.entity).getComponent<NodeComponent>();
+
+		if(ImGui::CollapsingHeader("Node", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			Node& node = node_component.registry.get<Node>(entity_node.node);
+			ImGui::InputText("Entity Name", node.name.data, node.name.SIZE);
+
+			{
+				vector3F position = node.local_transform.getPosition();
+				if (ImGui::InputFloat3("Position", &position.x, 2))
+				{
+					node.local_transform.setPosition(position);
+				};
+
+				vector3F rotation = glm::degrees(glm::eulerAngles(node.local_transform.getOrientation()));
+				if (ImGui::InputFloat3("Rotation", &rotation.x, 2))
+				{
+					node.local_transform.setOrientation(quaternionD(glm::radians(rotation)));
+				}
+
+				vector3F scale = node.local_transform.getScale();
+				if (ImGui::InputFloat3("Scale", &scale.x, 1))
+				{
+					node.local_transform.setScale(scale);
+				}
+			}
+		}
 	}
 }

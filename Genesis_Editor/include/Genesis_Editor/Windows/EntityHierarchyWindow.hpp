@@ -4,6 +4,8 @@
 #include "Genesis/Ecs/Entity.hpp"
 #include "Genesis/Ecs/EntityWorld.hpp"
 
+#include "Genesis/Component/NodeComponent.hpp"
+
 namespace Genesis
 {
 	class MeshPool;
@@ -17,11 +19,12 @@ namespace Genesis
 
 		void draw(EntityWorld* world, MeshPool* mesh_pool, MaterialPool* material_pool);
 
-		EntityHandle getSelected() { return this->selected_entity; };
+		EntityNodeHandle getSelected() { return this->selected_node; };
 
 	private:
-		void drawEntityTree(Entity entity);
+		void drawEntity(EntityWorld* world, Entity entity);
+		void drawEntityNode(NodeComponent& node_component, EntityNodeHandle entity_node);
 
-		EntityHandle selected_entity = null_entity;
+		EntityNodeHandle selected_node = {};
 	};
 }

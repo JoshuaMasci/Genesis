@@ -207,9 +207,10 @@ namespace Genesis
 
 	bool InputManager::getButtonDown(fnv_hash32 string_hash)
 	{
-		if (has_value(this->button_values, string_hash))
+		auto it = this->button_values.find(string_hash);
+		if (it != this->button_values.end())
 		{
-			return this->button_values[string_hash].current_state;
+			return it->second.current_state;
 		}
 
 		return false;
@@ -217,9 +218,10 @@ namespace Genesis
 
 	bool InputManager::getButtonPressed(fnv_hash32 string_hash)
 	{
-		if (has_value(this->button_values, string_hash))
+		auto it = this->button_values.find(string_hash);
+		if (it != this->button_values.end())
 		{
-			return this->button_values[string_hash].current_state && !this->button_values[string_hash].previous_state;
+			return it->second.current_state && !it->second.previous_state;
 		}
 
 		return false;
@@ -227,9 +229,10 @@ namespace Genesis
 
 	float InputManager::getAxis(fnv_hash32 string_hash)
 	{
-		if (has_value(this->axis_values, string_hash))
+		auto it = this->axis_values.find(string_hash);
+		if (it != this->axis_values.end())
 		{
-			return this->axis_values[string_hash].value;
+			return it->second.value;
 		}
 
 		return 0.0f;

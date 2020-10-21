@@ -4,6 +4,12 @@ namespace Genesis
 {
 	struct NameComponent
 	{
+		NameComponent()
+		{
+			//No name
+			data[0] = '\0';
+		}
+
 		NameComponent(const char* name)
 		{
 			this->set(name);

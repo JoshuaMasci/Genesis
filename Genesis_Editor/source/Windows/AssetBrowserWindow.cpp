@@ -27,9 +27,10 @@ namespace Genesis
 
 	void AssetBrowserWindow::drawDirectoryTree(const string& directory_path)
 	{
-		if (has_value(this->directory_map, directory_path))
+		auto it = this->directory_map.find(directory_path);
+		if (it != this->directory_map.end())
 		{
-			vector<FileInfo>& map = this->directory_map[directory_path];
+			vector<FileInfo>& map = it->second;
 
 			for (FileInfo info : map)
 			{
@@ -43,7 +44,7 @@ namespace Genesis
 						node_flags |= ImGuiTreeNodeFlags_Selected;
 					}
 
-					if (has_value(this->directory_map, info.path))
+					if (this->directory_map.find(info.path) != this->directory_map.end())
 					{
 						auto& directory_contents = this->directory_map[info.path];
 
@@ -87,9 +88,10 @@ namespace Genesis
 
 	void AssetBrowserWindow::drawDirectoryPanel(const string& directory_path)
 	{
-		if (has_value(this->directory_map, directory_path))
+		auto it = this->directory_map.find(directory_path);
+		if (it != this->directory_map.end())
 		{
-			vector<FileInfo>& directory = this->directory_map[directory_path];
+			vector<FileInfo>& directory = it->second;
 
 			const float item_size = 96.0f;
 

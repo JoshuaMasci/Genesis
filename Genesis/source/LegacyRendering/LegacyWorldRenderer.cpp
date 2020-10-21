@@ -1,8 +1,6 @@
 #include "Genesis/LegacyRendering/LegacyWorldRenderer.hpp"
 
 #include "Genesis/Platform/FileSystem.hpp"
-
-#include "Genesis/Component/ModelNodeComponent.hpp"
 #include "Genesis/Component/NodeComponent.hpp"
 
 namespace Genesis
@@ -135,19 +133,22 @@ namespace Genesis
 			}
 
 			//Node Components
-			auto model_node_group = world.view<NodeComponent, ModelNodeComponent, TransformD>();
+			auto model_node_group = world.view<NodeComponent, TransformD>();
 			for (EntityHandle entity : model_node_group)
 			{
 				NodeComponent& node_component = model_node_group.get<NodeComponent>(entity);
-				ModelNodeComponent& model_component = model_node_group.get<ModelNodeComponent>(entity);
 				TransformD& transform = model_node_group.get<TransformD>(entity);
 
-				for (auto node_model : model_component.models)
+				auto model_view = node_component.registry.view<ModelComponent, Node>();
+				for (auto entity : model_view)
 				{
-					if (node_model.model.mesh != nullptr && node_model.model.material != nullptr)
+					auto& node_model = model_view.get<ModelComponent>(entity);
+					auto& node = model_view.get<Node>(entity);
+
+					if (node_model.mesh != nullptr && node_model.material != nullptr)
 					{
-						ModelStruct model = { node_model.model.mesh , node_model.model.material };
-						TransformUtils::transformByInplace(model.transform, transform, NodeSystem::getNodeTransform(node_component, node_model.node_index));
+						ModelStruct model = { node_model.mesh , node_model.material };
+						TransformUtils::transformByInplace(model.transform, transform, node.entity_space_transform);
 						this->models.push_back(model);
 					}
 				}

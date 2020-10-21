@@ -9,8 +9,6 @@ namespace Genesis
 	class EntityWorld
 	{
 	public:
-		EntityRegistry* getRegistry() { return &this->registry; };
-
 		EntityWorld();
 		~EntityWorld();
 
@@ -22,8 +20,13 @@ namespace Genesis
 
 		void destroyEntity(Entity entity);
 
+		Entity getEntity(EntityHandle entity_handle);
+
 		void onCreate();
 		void onDestroy();
+
+		EntityRegistry* getRegistry() { return &this->registry; };
+		reactphysics3d::DynamicsWorld* getPhysicsWorld() { return this->physics; };
 
 	protected:
 		EntityRegistry registry;

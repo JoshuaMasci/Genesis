@@ -1,5 +1,7 @@
 #include "Genesis_Editor/EditorApplication.hpp"
 
+#include "Genesis/Ecs/EcsTest.hpp"
+
 int main(int argc, char** argv)
 {
 	GENESIS_PROFILE_START(); 
@@ -50,8 +52,6 @@ int main(int argc, char** argv)
 #include "Genesis/PhysicsTest/PhysicsTestSystems.hpp"
 #include "Genesis/PhysicsTest/CollisionShape.hpp"
 
-#include "Genesis/Component/ModelNodeComponent.hpp"
-
 #include <jsoncons/json.hpp>
 #include <fstream>
 using namespace jsoncons;
@@ -98,39 +98,26 @@ namespace Genesis
 			Entity sphere = this->editor_world->createEntity("Sphere");
 			sphere.addComponent<TransformD>();
 			sphere.addComponent<ModelComponent>(this->mesh_pool->getResource("res/meshes/sphere.obj"), this->material_pool->getResource("res/materials/red.mat"));
-			sphere.addComponent<Experimental::CollisionShape>(1.0, TransformD(vector3D(0.0)));
 		}
 
 		{
-			Entity node_entity = this->editor_world->createEntity("Node");
+			Entity node_entity = this->editor_world->createEntity("Node Entity");
 			node_entity.addComponent<TransformD>(vector3D(0.0, 1.0, 0.0));
 			
 			NodeComponent& node_component = node_entity.addComponent<NodeComponent>();
-			ModelNodeComponent& model_component = node_entity.addComponent<ModelNodeComponent>();
-
-			node_component.node_storage.resize(3);
-			node_component.root_children.push_back(0);
 
 			{
-				Node& node = node_component.node_storage[0];
-				node.local_transform = TransformF(vector3F(0.0f, 1.0f, 0.0f));
-				model_component.models.push_back({ 0, {this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/blue.mat")} });
-				node.children.push_back(1);
-			}
-			
-			{
-				Node& node = node_component.node_storage[1];
-				node.local_transform = TransformF(vector3F(0.0f, 1.5f, 0.0f));
-				node.parent = 0;
-				model_component.models.push_back({ 1, {this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/red.mat")} });
-				node.children.push_back(2);
-			}
+				NodeHandle node1_id = node_component.createNode("Node 1");
+				node_component.registry.get<Node>(node1_id).local_transform = TransformF(vector3F(0.0f, 1.0f, 0.0f));
+				node_component.registry.assign<ModelComponent>(node1_id, this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/blue.mat"));
 
-			{
-				Node& node = node_component.node_storage[2];
-				node.local_transform = TransformF(vector3F(0.0f, 1.5f, 0.0f));
-				node.parent = 1;
-				model_component.models.push_back({ 2, {this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/green.mat")} });
+				NodeHandle node2_id = node_component.createNode("Node 2", node1_id);
+				node_component.registry.get<Node>(node2_id).local_transform = TransformF(vector3F(0.0f, 1.0f, 0.0f));
+				node_component.registry.assign<ModelComponent>(node2_id, this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/red.mat"));
+
+				NodeHandle node3_id = node_component.createNode("Node 3", node2_id);
+				node_component.registry.get<Node>(node3_id).local_transform = TransformF(vector3F(0.0f, 1.0f, 0.0f));
+				node_component.registry.assign<ModelComponent>(node3_id, this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/green.mat"));
 			}
 		}
 
@@ -193,13 +180,6 @@ namespace Genesis
 			{
 				if (ImGui::MenuItem("Load Scene", ""))
 				{
-					string filename = FileSystem::getFileDialog("res/");
-
-					GENESIS_ENGINE_INFO("Opening {}", filename);
-
-					Entity entity = this->editor_world->createEntity("Mesh Test");
-					entity.addComponent<TransformD>().setOrientation(glm::angleAxis(glm::radians(25.0), vector3D(0.0, 0.0, 1.0)));
-					//entity.addComponent<ModelComponent>(this->mesh_pool->getResource(filename), &this->temp_material);
 
 				}
 
@@ -215,29 +195,15 @@ namespace Genesis
 		{
 			FrameStats stats = this->legacy_backend->getLastFrameStats();
 			ImGui::Begin("Stats");
-			ImGui::LabelText(std::to_string(time_step * 1000.0).c_str(), "Frame Time (ms)");
-			ImGui::LabelText(std::to_string(stats.draw_calls).c_str(), "Draw Calls");
-			ImGui::LabelText(std::to_string(stats.triangles_count).c_str(), "Tris count");
-
-			ImGui::Separator();
-
-			Experimental::UpdateCollisionShapeSystem::run(this->editor_world->getRegistry());
-			TransformD scene_camera = this->scene_window->getSceneCameraTransform();
-			vector3D ray_start = scene_camera.getPosition();
-			vector3D ray_direction = scene_camera.getForward();
-			double ray_distance = 10.0;
-
-			if (Experimental::RaycastSystem::runRaycast(this->editor_world->getRegistry(), ray_start, ray_direction, ray_distance))
-			{
-				ImGui::Text("Hit on Sphere");
-			}
-
+			ImGui::Text("Frame Time (ms): %.2f", time_step * 1000.0);
+			ImGui::Text("Draw Calls     : %u", stats.draw_calls);
+			ImGui::Text("Tris count     : %u", stats.triangles_count);
 			ImGui::End();
 		}
 
 		this->console_window->draw();
 		this->entity_hierarchy_window->draw(this->editor_world, this->mesh_pool, this->material_pool);
-		this->entity_properties_window->draw(*this->editor_world->getRegistry(), this->entity_hierarchy_window->getSelected());
+		this->entity_properties_window->draw(this->editor_world, this->entity_hierarchy_window->getSelected());
 		this->scene_window->draw(*this->editor_world);
 		this->asset_browser_window->draw("res/");
 		this->material_editor_window->draw();
