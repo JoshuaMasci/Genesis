@@ -2,12 +2,12 @@
 
 namespace Genesis
 {
-	void updateNodeTransform(NodeComponent& node_component, NodeHandle node_handle, const TransformF& parent_transform)
+	void updateNodeTransform(NodeComponent& node_component, EntityHandle node_handle, const TransformF& parent_transform)
 	{
 		Node& node = node_component.registry.get<Node>(node_handle);
 		TransformUtils::transformByInplace(node.entity_space_transform, parent_transform, node.local_transform);
 
-		for (NodeHandle child : node.children)
+		for (EntityHandle child : node.children)
 		{
 			updateNodeTransform(node_component, child, node.entity_space_transform);
 		}
@@ -15,13 +15,13 @@ namespace Genesis
 
 	void NodeSystem::updateTransform(NodeComponent& node_component)
 	{
-		for (NodeHandle child : node_component.root_children)
+		for (EntityHandle child : node_component.root_children)
 		{
 			updateNodeTransform(node_component, child, TransformF());
 		}
 	}
 
-	TransformF NodeSystem::getNodeTransform(NodeComponent& node_component, NodeHandle node_handle)
+	TransformF NodeSystem::getNodeTransform(NodeComponent& node_component, EntityHandle node_handle)
 	{
 		return node_component.registry.get<Node>(node_handle).entity_space_transform;
 	}

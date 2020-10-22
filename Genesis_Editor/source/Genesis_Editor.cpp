@@ -1,7 +1,5 @@
 #include "Genesis_Editor/EditorApplication.hpp"
 
-#include "Genesis/Ecs/EcsTest.hpp"
-
 int main(int argc, char** argv)
 {
 	GENESIS_PROFILE_START(); 
@@ -87,11 +85,10 @@ namespace Genesis
 		this->editor_world = new EntityWorld();
 
 		{
-			Entity entity = this->editor_world->createEntity("Test_Entity");
+			Entity entity = this->editor_world->createEntity("Camera_Entity");
 			entity.addComponent<TransformD>().setPosition(vector3D(0.0, 0.0, -3.0));
 			entity.addComponent<Camera>();
 			entity.addComponent<DirectionalLight>(vector3F(1.0f), 1.0f, true);
-			//entity.addComponent<PointLight>(20.0f, vector2F(1.0f), vector3F(1.0f), 0.4f, true);
 		}
 
 		{
@@ -107,15 +104,15 @@ namespace Genesis
 			NodeComponent& node_component = node_entity.addComponent<NodeComponent>();
 
 			{
-				NodeHandle node1_id = node_component.createNode("Node 1");
+				EntityHandle node1_id = node_component.createNode("Node 1");
 				node_component.registry.get<Node>(node1_id).local_transform = TransformF(vector3F(0.0f, 1.0f, 0.0f));
 				node_component.registry.assign<ModelComponent>(node1_id, this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/blue.mat"));
 
-				NodeHandle node2_id = node_component.createNode("Node 2", node1_id);
+				EntityHandle node2_id = node_component.createNode("Node 2", node1_id);
 				node_component.registry.get<Node>(node2_id).local_transform = TransformF(vector3F(0.0f, 1.0f, 0.0f));
 				node_component.registry.assign<ModelComponent>(node2_id, this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/red.mat"));
 
-				NodeHandle node3_id = node_component.createNode("Node 3", node2_id);
+				EntityHandle node3_id = node_component.createNode("Node 3", node2_id);
 				node_component.registry.get<Node>(node3_id).local_transform = TransformF(vector3F(0.0f, 1.0f, 0.0f));
 				node_component.registry.assign<ModelComponent>(node3_id, this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/green.mat"));
 			}
@@ -203,7 +200,7 @@ namespace Genesis
 
 		this->console_window->draw();
 		this->entity_hierarchy_window->draw(this->editor_world, this->mesh_pool, this->material_pool);
-		this->entity_properties_window->draw(this->editor_world, this->entity_hierarchy_window->getSelected());
+		this->entity_properties_window->draw(this->entity_hierarchy_window->getSelected());
 		this->scene_window->draw(*this->editor_world);
 		this->asset_browser_window->draw("res/");
 		this->material_editor_window->draw();

@@ -18,13 +18,13 @@ namespace Genesis
 		MeshPool* mesh_pool = nullptr;
 		MaterialPool* material_pool = nullptr;
 
-		void drawEntity(EntityWorld* entity_world, EntityHandle entity_handle);
-		void drawNode(EntityWorld* entity_world, EntityNodeHandle entity_node_handle);
+		void drawEntity(Entity entity);
+		void drawNode(Entity entity);
 
 	public:
 		EntityPropertiesWindow(MeshPool* mesh_pool, MaterialPool* material_pool);
 		~EntityPropertiesWindow();
 
-		void draw(EntityWorld* entity_world, EntityNodeHandle selected_entity_node);
+		void draw(Entity entity);
 	};
 }

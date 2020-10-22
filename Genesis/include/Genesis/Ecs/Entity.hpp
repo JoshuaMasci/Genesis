@@ -7,15 +7,15 @@ namespace Genesis
 	class Entity
 	{
 	public:
-		Entity(EntityHandle entity, EntityRegistry* registry)
+		Entity(EntityRegistry* registry = nullptr, EntityHandle entity = null_entity)
 		{
-			this->entity_handle = entity;
 			this->registry = registry;
+			this->entity_handle = entity;
 		}
 
 		bool valid()
 		{
-			return this->registry->valid(this->entity_handle);
+			return this->registry != nullptr && this->registry->valid(this->entity_handle);
 		}
 
 		EntityHandle getHandle()
@@ -31,6 +31,7 @@ namespace Genesis
 		template<typename T, typename... Args>
 		T& addComponent(Args&&... args)
 		{
+			GENESIS_ENGINE_ASSERT(this->registry != nullptr, "Registry is nullptr");
 			GENESIS_ENGINE_ASSERT(!this->hasComponent<T>(), "Entity already has component!");
 			return this->registry->assign<T>(entity_handle, std::forward<Args>(args)...);
 		}
@@ -38,6 +39,7 @@ namespace Genesis
 		template<typename T>
 		T& getComponent()
 		{
+			GENESIS_ENGINE_ASSERT(this->registry != nullptr, "Registry is nullptr");
 			GENESIS_ENGINE_ASSERT(this->hasComponent<T>(), "Entity does not have component!");
 			return this->registry->get<T>(entity_handle);
 		}
@@ -45,15 +47,27 @@ namespace Genesis
 		template<typename T>
 		bool hasComponent()
 		{
+			GENESIS_ENGINE_ASSERT(this->registry != nullptr, "Registry is nullptr");
 			return this->registry->has<T>(entity_handle);
 		}
 
 		template<typename T>
 		void removeComponent()
 		{
+			GENESIS_ENGINE_ASSERT(this->registry != nullptr, "Registry is nullptr");
 			GENESIS_ENGINE_ASSERT(this->hasComponent<T>(), "Entity does not have component!");
 			this->registry->remove<T>(entity_handle);
 		}
+
+		bool operator==(const Entity& other)
+		{
+			return this->entity_handle == other.entity_handle && this->registry == other.registry;
+		};
+
+		bool operator!=(const Entity& other)
+		{
+			return !this->operator==(other);
+		};
 
 	protected:
 		EntityHandle entity_handle = null_entity;

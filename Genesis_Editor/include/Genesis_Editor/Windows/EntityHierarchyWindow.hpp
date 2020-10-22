@@ -19,12 +19,12 @@ namespace Genesis
 
 		void draw(EntityWorld* world, MeshPool* mesh_pool, MaterialPool* material_pool);
 
-		EntityNodeHandle getSelected() { return this->selected_node; };
+		Entity getSelected() { return this->selected_entity; };
 
 	private:
-		void drawEntity(EntityWorld* world, Entity entity);
-		void drawEntityNode(NodeComponent& node_component, EntityNodeHandle entity_node);
+		void drawEntity(Entity entity);
+		void drawEntityNode(Entity entity_node);
 
-		EntityNodeHandle selected_node = {};
+		Entity selected_entity;
 	};
 }

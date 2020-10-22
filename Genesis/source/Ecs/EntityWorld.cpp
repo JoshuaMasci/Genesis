@@ -58,7 +58,7 @@ namespace Genesis
 	Entity EntityWorld::createEntity()
 	{
 		EntityHandle handle = this->registry.create();
-		return Entity(handle, &this->registry);
+		return Entity(&this->registry, handle);
 	}
 
 	Entity EntityWorld::createEntity(const string& name)
@@ -77,10 +77,10 @@ namespace Genesis
 	{
 		if (this->registry.valid(entity_handle))
 		{
-			return Entity(entity_handle, &this->registry);
+			return Entity(&this->registry, entity_handle);
 		}
 
-		return Entity(null_entity, &this->registry);
+		return Entity(&this->registry, null_entity);
 	}
 
 	void EntityWorld::onCreate()
@@ -89,7 +89,6 @@ namespace Genesis
 		for (EntityHandle entity : view)
 		{
 			//Build Rigid Body
-
 		}
 	}
 

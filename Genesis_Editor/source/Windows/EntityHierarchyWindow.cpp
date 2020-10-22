@@ -28,7 +28,7 @@ namespace Genesis
 
 		registry->each([&](auto entity)
 		{
-			this->drawEntity(world, Entity(entity, registry));
+			this->drawEntity(Entity(registry, entity));
 		});
 
 		ImVec2 im_remaining_space = ImGui::GetContentRegionAvail();
@@ -58,12 +58,17 @@ namespace Genesis
 		ImGui::End();
 	}
 
-	void EntityHierarchyWindow::drawEntity(EntityWorld* world, Entity entity)
+	void EntityHierarchyWindow::drawEntity(Entity entity)
 	{
+		if (!entity.valid())
+		{
+			return;
+		}
+
 		const ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
 		ImGuiTreeNodeFlags node_flags = base_flags;
 
-		if (this->selected_node == EntityNodeHandle(entity.getHandle(), null_node))
+		if (this->selected_entity == entity)
 		{
 			node_flags |= ImGuiTreeNodeFlags_Selected;
 		}
@@ -86,13 +91,13 @@ namespace Genesis
 		//On clicked event
 		if (ImGui::IsItemClicked())
 		{
-			if (this->selected_node == EntityNodeHandle(entity.getHandle(), null_node))
+			if (this->selected_entity == entity)
 			{
-				this->selected_node = EntityNodeHandle();
+				this->selected_entity = Entity();
 			}
 			else
 			{
-				this->selected_node = EntityNodeHandle(entity.getHandle(), null_node);
+				this->selected_entity = entity;
 			}
 		}
 
@@ -100,7 +105,7 @@ namespace Genesis
 		{
 			if (ImGui::MenuItem("Delete Entity"))
 			{
-				world->destroyEntity(entity);
+				//world->destroyEntity(entity);
 			}
 			ImGui::EndPopup();
 		}
@@ -110,9 +115,9 @@ namespace Genesis
 			if (entity.hasComponent<NodeComponent>())
 			{
 				NodeComponent& node_component = entity.getComponent<NodeComponent>();
-				for (NodeHandle child : node_component.root_children)
+				for (EntityHandle child : node_component.root_children)
 				{
-					this->drawEntityNode(node_component, EntityNodeHandle(entity.getHandle(), child));
+					this->drawEntityNode(Entity(&node_component.registry, child));
 				}
 			}
 
@@ -120,49 +125,74 @@ namespace Genesis
 		}
 	}
 
-	void EntityHierarchyWindow::drawEntityNode(NodeComponent& node_component, EntityNodeHandle entity_node)
+	void EntityHierarchyWindow::drawEntityNode(Entity entity)
 	{
-		const ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
-
-		if (entity_node.node != null_node)
+		if (!entity.valid())
 		{
-			Node& node = node_component.registry.get<Node>(entity_node.node);
-			ImGuiTreeNodeFlags node_flags = base_flags;
+			return;
+		}
 
-			if (this->selected_node == entity_node)
+		const ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
+		ImGuiTreeNodeFlags node_flags = base_flags;
+
+		if (!entity.hasComponent<Node>())
+		{
+			return;
+		}
+
+		Node& node = entity.getComponent<Node>();
+
+		if (this->selected_entity == entity)
+		{
+			node_flags |= ImGuiTreeNodeFlags_Selected;
+		}
+
+
+		if (node.children.empty())
+		{
+			node_flags |= ImGuiTreeNodeFlags_Leaf;
+		}
+
+		char* entity_name = "Unnamed Node";
+
+		if (entity.hasComponent<NameComponent>())
+		{
+			NameComponent& name_component = entity.getComponent<NameComponent>();
+			entity_name = name_component.data;
+		}
+
+		bool node_opened = ImGui::TreeNodeEx((void*)(intptr_t)entt::to_integral(entity.getHandle()), node_flags, entity_name);
+
+		//On clicked event
+		if (ImGui::IsItemClicked())
+		{
+			if (this->selected_entity == entity)
 			{
-				node_flags |= ImGuiTreeNodeFlags_Selected;
+				this->selected_entity = Entity();
+			}
+			else
+			{
+				this->selected_entity = entity;
+			}
+		}
+
+		if (ImGui::BeginPopupContextItem(entity_name, ImGuiMouseButton_Right))
+		{
+			if (ImGui::MenuItem("Delete Node"))
+			{
+				//world->destroyEntity(entity);
+			}
+			ImGui::EndPopup();
+		}
+
+		if (node_opened)
+		{
+			for (EntityHandle child : node.children)
+			{
+				drawEntityNode(Entity(entity.getRegistry(), child));
 			}
 
-			if (node.children.empty())
-			{
-				node_flags |= ImGuiTreeNodeFlags_Leaf;
-			}
-
-			bool node_opened = ImGui::TreeNodeEx((void*)(intptr_t)entity_node.node, node_flags, node.name.data);
-
-			//On clicked event
-			if (ImGui::IsItemClicked())
-			{
-				if (this->selected_node == entity_node)
-				{
-					this->selected_node = EntityNodeHandle();
-				}
-				else
-				{
-					this->selected_node = entity_node;
-				}
-			}
-
-			if (node_opened)
-			{
-				for (NodeHandle child : node.children)
-				{
-					drawEntityNode(node_component, EntityNodeHandle(entity_node.entity, child));
-				}
-
-				ImGui::TreePop();
-			}
+			ImGui::TreePop();
 		}
 	}
 }

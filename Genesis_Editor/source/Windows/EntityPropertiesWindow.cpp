@@ -96,27 +96,27 @@ namespace Genesis
 
 #define ADD_COMPONENT(entity, component, component_name, ...) if (!entity.hasComponent<component>() && ImGui::MenuItem(component_name)) { entity.addComponent<component>(__VA_ARGS__); }
 
-	void EntityPropertiesWindow::draw(EntityWorld* entity_world, EntityNodeHandle selected_entity)
+	void EntityPropertiesWindow::draw(Entity entity)
 	{
 		ImGui::Begin("Entity Properties");
 
-		//if root entity
-		if (selected_entity.node == null_node)
+		if (entity.valid())
 		{
-			this->drawEntity(entity_world, selected_entity.entity);
-		}
-		else
-		{
-			this->drawNode(entity_world, selected_entity);
+			if (!entity.hasComponent<Node>())
+			{
+				this->drawEntity(entity);
+			}
+			else
+			{
+				this->drawNode(entity);
+			}
 		}
 
-	
 		ImGui::End();
 	}
 
-	void EntityPropertiesWindow::drawEntity(EntityWorld* entity_world, EntityHandle entity_handle)
+	void EntityPropertiesWindow::drawEntity(Entity entity)
 	{
-		Entity entity = entity_world->getEntity(entity_handle);
 		if (entity.valid())
 		{
 			drawComponent<NameComponent>(entity, "Name Component", [](NameComponent& name_component)
@@ -344,16 +344,15 @@ namespace Genesis
 		}
 	}
 
-	void EntityPropertiesWindow::drawNode(EntityWorld* entity_world, EntityNodeHandle entity_node)
+	void EntityPropertiesWindow::drawNode(Entity entity)
 	{
-		NodeComponent& node_component = entity_world->getEntity(entity_node.entity).getComponent<NodeComponent>();
-
-		if(ImGui::CollapsingHeader("Node", ImGuiTreeNodeFlags_DefaultOpen))
+		if (entity.valid())
 		{
-			Node& node = node_component.registry.get<Node>(entity_node.node);
-			ImGui::InputText("Entity Name", node.name.data, node.name.SIZE);
 
+			if (ImGui::CollapsingHeader("Node", ImGuiTreeNodeFlags_DefaultOpen))
 			{
+				Node& node = entity.getComponent<Node>();
+
 				vector3F position = node.local_transform.getPosition();
 				if (ImGui::InputFloat3("Position", &position.x, 2))
 				{
@@ -371,6 +370,165 @@ namespace Genesis
 				{
 					node.local_transform.setScale(scale);
 				}
+			}
+
+			drawComponent<NameComponent>(entity, "Name Component", [](NameComponent& name_component)
+			{
+				ImGui::InputText("Node Name", name_component.data, name_component.SIZE);
+			});
+
+			drawComponent<Camera>(entity, "Camera", [](Camera& camera_component)
+			{
+				if (ImGui::DragFloat("Fov X", &camera_component.frame_of_view, 0.5f, 1.0f, 140.0f))
+				{
+					camera_component.frame_of_view = std::clamp(camera_component.frame_of_view, 1.0f, 140.0f);
+				}
+
+				ImGui::InputFloat("Z Near", &camera_component.z_near);
+				camera_component.z_near = std::max(camera_component.z_near, 0.001f);
+				ImGui::InputFloat("Z Far", &camera_component.z_far);
+				camera_component.z_far = std::max(camera_component.z_near + 1.0f, camera_component.z_far);
+			});
+
+			drawComponent<DirectionalLight>(entity, "Directional Light", [](DirectionalLight& light_component)
+			{
+				ImGui::PushID("Directional Light");
+				if (ImGui::DragFloat("Intensity", &light_component.intensity, 0.01f, 0.0f, 5.0f))
+				{
+					light_component.intensity = std::clamp(light_component.intensity, 0.0f, 5.0f);
+				}
+
+				ImGui::ColorEdit3("Color", &light_component.color.x, 0);
+				ImGui::Checkbox("Enabled", &light_component.enabled);
+				ImGui::PopID();
+			});
+
+			drawComponent<PointLight>(entity, "Point Light", [](PointLight& light_component)
+			{
+				ImGui::PushID("Point Light");
+				if (ImGui::DragFloat("Intensity", &light_component.intensity, 0.01f, 0.0f, 5.0f))
+				{
+					light_component.intensity = std::clamp(light_component.intensity, 0.0f, 5.0f);
+				}
+
+				ImGui::ColorEdit3("Color", &light_component.color.x, 0);
+
+				if (ImGui::DragFloat("Range", &light_component.range, 0.25f, 0.25f, 1000.0f))
+				{
+					light_component.range = std::clamp(light_component.range, 0.01f, 1000.0f);
+				}
+
+				if (ImGui::DragFloat2("Attenuation", &light_component.attenuation.x, 0.01f, 0.0f, 1.0f))
+				{
+					light_component.attenuation.x = std::clamp(light_component.attenuation.x, 0.0f, 1.0f);
+					light_component.attenuation.y = std::clamp(light_component.attenuation.y, 0.0f, 1.0f);
+				}
+
+				ImGui::Checkbox("Enabled", &light_component.enabled);
+				ImGui::PopID();
+			});
+
+			//The arguments to be passed to the draw lamda
+			Pools pools = { this->mesh_pool, this->material_pool };
+			drawComponentArgs<ModelComponent>(entity, "Model Component", (void*)&pools, [](ModelComponent& model_component, void* data)
+			{
+				Pools* pools = (Pools*)data;
+
+				MeshPool* mesh_pool = (MeshPool*)data;
+
+				const char* mesh_name = " ";
+				if (model_component.mesh)
+				{
+					mesh_name = model_component.mesh->getName().c_str();
+				}
+
+				ImGui::LabelText("Mesh", mesh_name);
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_FILE_PATH"))
+					{
+						GENESIS_ENGINE_ASSERT(payload->DataSize > 0, "Payload Data Size wrong size");
+						string file_path = string((char*)payload->Data);
+						string extention = FileSystem::getExtention(file_path);
+
+						if (extention == ".obj")
+						{
+							model_component.mesh = pools->mesh_pool->getResource(file_path);
+						}
+					}
+				}
+
+				const char* material_name = " ";
+				if (model_component.material)
+				{
+					material_name = model_component.material->getName().c_str();
+				}
+
+				ImGui::LabelText("Material", material_name);
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_FILE_PATH"))
+					{
+						GENESIS_ENGINE_ASSERT(payload->DataSize > 0, "Payload Data Size wrong size");
+						string file_path = string((char*)payload->Data);
+						string extention = FileSystem::getExtention(file_path);
+
+						if (extention == ".mat")
+						{
+							model_component.material = pools->material_pool->getResource(file_path);
+						}
+					}
+				}
+			});
+
+			drawComponent<CollisionShape>(entity, "Collision Shape", [](CollisionShape& shape_component)
+			{
+				const char* shape_names[] = { "None", "Box", "Sphere", "Capsule" };
+				if (ImGui::Combo("Type", (int*)&shape_component.type, shape_names, IM_ARRAYSIZE(shape_names)))
+				{
+					switch (shape_component.type)
+					{
+					case CollisionShapeType::Box:
+						shape_component.type_data.box_size = vector3D(0.5);
+						break;
+					case CollisionShapeType::Sphere:
+						shape_component.type_data.sphere_radius = 1.0;
+						break;
+					case CollisionShapeType::Capsule:
+						shape_component.type_data.capsule_size = vector2D(0.5, 1.8);
+						break;
+					}
+				}
+
+				if (shape_component.type == CollisionShapeType::Box)
+				{
+					ImGui::InputScalarN("Half Extents", ImGuiDataType_::ImGuiDataType_Double, &shape_component.type_data.box_size, 3);
+				}
+				else if (shape_component.type == CollisionShapeType::Sphere)
+				{
+					ImGui::InputDouble("Radius", &shape_component.type_data.sphere_radius);
+				}
+				else if (shape_component.type == CollisionShapeType::Capsule)
+				{
+					ImGui::InputDouble("Radius", &shape_component.type_data.capsule_size.x);
+					ImGui::InputDouble("Height", &shape_component.type_data.capsule_size.y);
+				}
+			});
+
+			ImGui::Separator();
+
+			if (ImGui::Button("Add Component"))
+			{
+				ImGui::OpenPopup("add_component");
+			}
+
+			if (ImGui::BeginPopup("add_component"))
+			{
+				ADD_COMPONENT(entity, NameComponent, "Name Component", "Node Name");
+				ADD_COMPONENT(entity, Camera, "Camera");
+				ADD_COMPONENT(entity, ModelComponent, "Model Component");
+				ADD_COMPONENT(entity, CollisionShape, "Collision Shape");
+				ImGui::EndPopup();
 			}
 		}
 	}

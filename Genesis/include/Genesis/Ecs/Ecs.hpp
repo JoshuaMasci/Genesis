@@ -8,16 +8,12 @@ namespace Genesis
 	typedef entt::basic_registry<EntityHandle> EntityRegistry;
 	constexpr EntityHandle null_entity = entt::null;
 
-	typedef entt::entity NodeHandle;
-	typedef entt::basic_registry<EntityHandle> NodeRegistry;
-	constexpr NodeHandle null_node = entt::null;
-
 	struct EntityNodeHandle
 	{
-		EntityNodeHandle(EntityHandle entity = null_entity, NodeHandle node = null_node) : entity(entity), node(node) {};
+		EntityNodeHandle(EntityHandle entity = null_entity, EntityHandle node = null_entity) : entity(entity), node(node) {};
 
 		EntityHandle entity = null_entity;
-		NodeHandle node = null_node;
+		EntityHandle node = null_entity;
 
 		bool operator== (const EntityNodeHandle &other)
 		{
