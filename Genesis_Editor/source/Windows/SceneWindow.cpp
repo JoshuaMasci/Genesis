@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 #include "Genesis/Component/NameComponent.hpp"
+#include "Genesis/Component/NodeComponent.hpp"
 
 namespace Genesis
 {
@@ -109,19 +110,57 @@ namespace Genesis
 				}
 
 				auto* registry = world.getRegistry();
-				auto camera_view = registry->view<Camera>();
-				for (auto entity : camera_view)
-				{
-					char* name = "Unnamed";
-					NameComponent* name_component = registry->try_get<NameComponent>(entity);
-					if (name_component != nullptr)
-					{
-						name = name_component->data;
-					}
 
-					if (ImGui::MenuItem(name, nullptr, this->override_camera == entity))
+				//Entity Cameras
+				{
+					auto camera_view = registry->view<Camera>();
+					for (auto entity : camera_view)
 					{
-						this->override_camera = entity;
+						char* name = "Unnamed Entity";
+						NameComponent* name_component = registry->try_get<NameComponent>(entity);
+						if (name_component != nullptr)
+						{
+							name = name_component->data;
+						}
+
+						if (ImGui::MenuItem(name, nullptr, this->override_camera == entity && this->override_camera_node == null_entity))
+						{
+							this->override_camera = entity;
+							this->override_camera_node = null_entity;
+						}
+					}
+				}
+				
+				//Node Cameras
+				{
+					bool display_seperator = true;
+					auto node_component_view = registry->view<NodeComponent>();
+					for (auto entity : node_component_view)
+					{
+						NodeComponent& node_component = node_component_view.get<NodeComponent>(entity);
+		
+						auto camera_view = node_component.registry.view<Camera>();
+						for (auto node : camera_view)
+						{
+							char* name = "Unnamed Node";
+							NameComponent* name_component = node_component.registry.try_get<NameComponent>(node);
+							if (name_component != nullptr)
+							{
+								name = name_component->data;
+							}
+
+							if (display_seperator)
+							{
+								ImGui::Separator();
+								display_seperator = false;
+							}
+
+							if (ImGui::MenuItem(name, nullptr, this->override_camera == entity && this->override_camera_node == node))
+							{
+								this->override_camera = entity;
+								this->override_camera_node = node;
+							}
+						}
 					}
 				}
 
@@ -155,15 +194,23 @@ namespace Genesis
 		}
 
 		EntityRegistry* registry = world.getRegistry();
-		if (!registry->valid(this->override_camera))
-		{
-			this->override_camera = null_entity;
-		}
 
-		if (this->override_camera != null_entity)
+		if (this->override_camera != null_entity && this->override_camera_node == null_entity)
 		{
 			Camera& camera = registry->get<Camera>(this->override_camera);
 			TransformD& camera_transform = registry->get<TransformD>(this->override_camera);
+			this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, *registry, camera, camera_transform);
+		}
+		else if (this->override_camera != null_entity && this->override_camera_node != null_entity)
+		{
+			TransformD& entity_transform = registry->get<TransformD>(this->override_camera);
+			NodeComponent& node_component = registry->get<NodeComponent>(this->override_camera);
+
+			Node& node = node_component.registry.get<Node>(this->override_camera_node);
+			Camera& camera = node_component.registry.get<Camera>(this->override_camera_node);
+
+			TransformD camera_transform;
+			TransformUtils::transformByInplace(camera_transform, entity_transform, node.entity_space_transform);
 			this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, *registry, camera, camera_transform);
 		}
 		else

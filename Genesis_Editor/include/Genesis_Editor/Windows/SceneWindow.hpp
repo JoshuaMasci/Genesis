@@ -39,6 +39,7 @@ namespace Genesis
 		TransformD scene_camera_transform;
 
 		EntityHandle override_camera = null_entity;
+		EntityHandle override_camera_node = null_entity;
 
 		//meters per second
 		double linear_speed = 2.0;
