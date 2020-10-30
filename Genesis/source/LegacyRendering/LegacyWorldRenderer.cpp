@@ -131,28 +131,6 @@ namespace Genesis
 					this->models.push_back({ model_component.mesh , model_component.material, transform });
 				}
 			}
-
-			//Node Components
-			auto model_node_group = world.view<NodeComponent, TransformD>();
-			for (EntityHandle entity : model_node_group)
-			{
-				NodeComponent& node_component = model_node_group.get<NodeComponent>(entity);
-				TransformD& transform = model_node_group.get<TransformD>(entity);
-
-				auto model_view = node_component.registry.view<ModelComponent, Node>();
-				for (auto entity : model_view)
-				{
-					auto& node_model = model_view.get<ModelComponent>(entity);
-					auto& node = model_view.get<Node>(entity);
-
-					if (node_model.mesh != nullptr && node_model.material != nullptr)
-					{
-						ModelStruct model = { node_model.mesh , node_model.material };
-						TransformUtils::transformByInplace(model.transform, transform, node.entity_space_transform);
-						this->models.push_back(model);
-					}
-				}
-			}
 		}
 
 		{
@@ -174,6 +152,60 @@ namespace Genesis
 				this->point_lights.push_back({ light, transform });
 			}
 		}
+
+		//Node
+		{
+			//Node Components
+			auto model_node_group = world.view<NodeComponent, TransformD>();
+			for (EntityHandle entity : model_node_group)
+			{
+				NodeComponent& node_component = model_node_group.get<NodeComponent>(entity);
+				TransformD& transform = model_node_group.get<TransformD>(entity);
+
+				auto model_view = node_component.registry.view<ModelComponent, Node>();
+				for (auto entity : model_view)
+				{
+					auto& node_model = model_view.get<ModelComponent>(entity);
+					auto& node = model_view.get<Node>(entity);
+
+					if (node_model.mesh != nullptr && node_model.material != nullptr)
+					{
+						ModelStruct model = { node_model.mesh , node_model.material };
+						TransformUtils::transformByInplace(model.transform, transform, node.entity_space_transform);
+						this->models.push_back(model);
+					}
+				}
+
+				auto directional_light_view = node_component.registry.view<DirectionalLight, Node>();
+				for (auto entity : directional_light_view)
+				{
+					auto& directional_light = directional_light_view.get<DirectionalLight>(entity);
+					auto& node = directional_light_view.get<Node>(entity);
+
+					if (directional_light.enabled && directional_light.intensity > 0.0f)
+					{
+						TransformD node_transform;
+						TransformUtils::transformByInplace(node_transform, transform, node.entity_space_transform);
+						this->directional_lights.push_back({directional_light, node_transform });
+					}
+				}
+
+				auto point_light_view = node_component.registry.view<PointLight, Node>();
+				for (auto entity : point_light_view)
+				{
+					auto& point_light = point_light_view.get<PointLight>(entity);
+					auto& node = point_light_view.get<Node>(entity);
+
+					if (point_light.enabled && point_light.intensity > 0.0f)
+					{
+						TransformD node_transform;
+						TransformUtils::transformByInplace(node_transform, transform, node.entity_space_transform);
+						this->point_lights.push_back({ point_light, node_transform });
+					}
+				}
+			}
+		}
+
 
 		//Draw ambient pass
 		{

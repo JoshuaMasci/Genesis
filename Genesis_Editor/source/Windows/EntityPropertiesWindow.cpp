@@ -336,6 +336,8 @@ namespace Genesis
 				ADD_COMPONENT(entity, NameComponent, "Name Component", "Entity Name");
 				ADD_COMPONENT(entity, TransformD, "Transform");
 				ADD_COMPONENT(entity, Camera, "Camera");
+				ADD_COMPONENT(entity, DirectionalLight, "Directional Light");
+				ADD_COMPONENT(entity, PointLight, "Point Light");
 				ADD_COMPONENT(entity, ModelComponent, "Model Component");
 				ADD_COMPONENT(entity, RigidBody, "RigidBody");
 				ADD_COMPONENT(entity, CollisionShape, "Collision Shape");
@@ -526,6 +528,8 @@ namespace Genesis
 			{
 				ADD_COMPONENT(entity, NameComponent, "Name Component", "Node Name");
 				ADD_COMPONENT(entity, Camera, "Camera");
+				ADD_COMPONENT(entity, DirectionalLight, "Directional Light");
+				ADD_COMPONENT(entity, PointLight, "Point Light");
 				ADD_COMPONENT(entity, ModelComponent, "Model Component");
 				ADD_COMPONENT(entity, CollisionShape, "Collision Shape");
 				ImGui::EndPopup();
