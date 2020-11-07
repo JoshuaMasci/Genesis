@@ -3,7 +3,7 @@
 #include "Genesis/Rendering/BaseImGui.hpp"
 
 #include <Genesis/LegacyBackend/LegacyBackend.hpp>
-#include <Genesis/LegacyRendering/LegacyWorldRenderer.hpp>
+#include <Genesis/LegacyRendering/LegacySceneRenderer.hpp>
 #include <Genesis/Editor/ConsoleWindow.hpp>
 
 #include "Genesis_Editor/Windows/EntityHierarchyWindow.hpp"
@@ -14,6 +14,10 @@
 
 #include "Genesis/Ecs/Ecs.hpp"
 #include "Genesis/Ecs/EntityWorld.hpp"
+
+#include "Genesis/World/Entity.hpp"
+#include "Genesis/World/World.hpp"
+#include "Genesis/World/WorldSimulator.hpp"
 
 #include "Genesis/Resource/Material.hpp"
 #include "Genesis/Resource/MeshPool.hpp"
@@ -35,6 +39,9 @@ namespace Genesis
 	protected:
 		EntityWorld* editor_world;
 		
+		Experimental::World test_editor_world;
+		Experimental::WorldSimulator test_world_simulator;
+
 		LegacyBackend* legacy_backend;
 
 		BaseImGui* ui_renderer;

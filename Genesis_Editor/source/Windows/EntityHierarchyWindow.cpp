@@ -3,8 +3,11 @@
 #include "imgui.h"
 
 #include "Genesis/Component/NameComponent.hpp"
-#include "Genesis/Component/ModelComponent.hpp"
 
+
+#include "Genesis/Component/ModelComponent.hpp"
+#include "Genesis/Physics/RigidBody.hpp"
+#include "Genesis/Physics/CollisionShape.hpp"
 #include "Genesis/Resource/MeshPool.hpp"
 #include "Genesis/Resource/MaterialPool.hpp"
 
@@ -51,6 +54,10 @@ namespace Genesis
 				Entity cube = world->createEntity("Cube");
 				cube.addComponent<TransformD>();
 				cube.addComponent<ModelComponent>(mesh_pool->getResource("res/meshes/cube.obj"), make_shared<Material>("No Material"));
+				cube.addComponent<RigidBody>();
+				CollisionShape& shape = cube.addComponent<CollisionShape>();
+				shape.type = CollisionShapeType::Box;
+				shape.type_data.box_size = vector3D(0.5);
 			};
 			ImGui::EndPopup();
 		}

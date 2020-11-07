@@ -4,7 +4,7 @@
 
 #include <Genesis/Input/InputManager.hpp>
 #include <Genesis/LegacyBackend/LegacyBackend.hpp>
-#include <Genesis/LegacyRendering/LegacyWorldRenderer.hpp>
+#include <Genesis/LegacyRendering/LegacySceneRenderer.hpp>
 
 namespace Genesis
 {
@@ -30,7 +30,7 @@ namespace Genesis
 		InputManager* input_manager = nullptr;
 
 		LegacyBackend* legacy_backend = nullptr;
-		LegacyWorldRenderer* world_renderer = nullptr;
+		LegacySceneRenderer* world_renderer = nullptr;
 
 		Framebuffer framebuffer = nullptr;
 		vector2U framebuffer_size = vector2U(0);
@@ -45,5 +45,7 @@ namespace Genesis
 		double linear_speed = 2.0;
 		//rads per second
 		double angular_speed = PI_D / 8.0;
+
+		SceneInfo scene_info;
 	};
 }

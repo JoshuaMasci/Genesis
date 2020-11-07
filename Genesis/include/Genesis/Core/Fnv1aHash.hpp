@@ -1,5 +1,7 @@
 #pragma once
 
+//Disable the warning for integral constat overflow
+#pragma warning( disable : 4307)
 namespace Genesis
 {
 	typedef uint32_t fnv_hash32;
@@ -27,5 +29,10 @@ namespace Genesis
 	constexpr fnv_hash32 StringHash32(const char* string)
 	{
 		return fnv1a_32(string, str_length(string));
+	}
+
+	constexpr fnv_hash64 StringHash64(const char* string)
+	{
+		return fnv1a_64(string, str_length(string));
 	}
 }

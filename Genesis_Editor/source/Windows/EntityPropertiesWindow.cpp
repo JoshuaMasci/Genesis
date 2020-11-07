@@ -108,7 +108,7 @@ namespace Genesis
 			}
 			else
 			{
-				this->drawNode(entity);
+				//this->drawNode(entity);
 			}
 		}
 
@@ -292,6 +292,8 @@ namespace Genesis
 
 			drawComponent<CollisionShape>(entity, "Collision Shape", [](CollisionShape& shape_component)
 			{
+				ImGui::InputDouble("Mass", &shape_component.shape_mass);
+
 				const char* shape_names[] = { "None", "Box", "Sphere", "Capsule" };
 				if (ImGui::Combo("Type", (int*)&shape_component.type, shape_names, IM_ARRAYSIZE(shape_names)))
 				{

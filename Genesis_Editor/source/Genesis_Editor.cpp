@@ -50,6 +50,8 @@ int main(int argc, char** argv)
 #include "Genesis/PhysicsTest/PhysicsTestSystems.hpp"
 #include "Genesis/PhysicsTest/CollisionShape.hpp"
 
+#include "Genesis/World/Entity.hpp"
+
 #include <jsoncons/json.hpp>
 #include <fstream>
 using namespace jsoncons;
@@ -92,30 +94,16 @@ namespace Genesis
 		}
 
 		{
-			Entity sphere = this->editor_world->createEntity("Sphere");
-			sphere.addComponent<TransformD>();
-			sphere.addComponent<ModelComponent>(this->mesh_pool->getResource("res/meshes/sphere.obj"), this->material_pool->getResource("res/materials/red.mat"));
+			Experimental::Entity* entity = new Experimental::Entity(0, "Camera_Entity");
+			entity->addComponent<Camera>();
+			entity->addComponent<DirectionalLight>(vector3F(1.0f), 1.0f, true);
+			this->test_editor_world.addEntity(entity);
 		}
 
 		{
-			Entity node_entity = this->editor_world->createEntity("Node Entity");
-			node_entity.addComponent<TransformD>(vector3D(0.0, 1.0, 0.0));
-			
-			NodeComponent& node_component = node_entity.addComponent<NodeComponent>();
-
-			{
-				EntityHandle node1_id = node_component.createNode("Node 1");
-				node_component.registry.get<Node>(node1_id).local_transform = TransformF(vector3F(0.0f, 1.0f, 0.0f));
-				node_component.registry.assign<ModelComponent>(node1_id, this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/blue.mat"));
-
-				EntityHandle node2_id = node_component.createNode("Node 2", node1_id);
-				node_component.registry.get<Node>(node2_id).local_transform = TransformF(vector3F(0.0f, 1.0f, 0.0f));
-				node_component.registry.assign<ModelComponent>(node2_id, this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/red.mat"));
-
-				EntityHandle node3_id = node_component.createNode("Node 3", node2_id);
-				node_component.registry.get<Node>(node3_id).local_transform = TransformF(vector3F(0.0f, 1.0f, 0.0f));
-				node_component.registry.assign<ModelComponent>(node3_id, this->mesh_pool->getResource("res/meshes/cube.obj"), this->material_pool->getResource("res/materials/green.mat"));
-			}
+			Entity sphere = this->editor_world->createEntity("Sphere");
+			sphere.addComponent<TransformD>();
+			sphere.addComponent<ModelComponent>(this->mesh_pool->getResource("res/meshes/sphere.obj"), this->material_pool->getResource("res/materials/red.mat"));
 		}
 
 		loadSceneTemp(*this->editor_world, "res/ground.entity", this->mesh_pool, this->material_pool);
@@ -156,6 +144,8 @@ namespace Genesis
 		}
 
 		this->editor_world->resolveTransforms();
+
+		this->test_world_simulator.simulateWorld(time_step, &this->test_editor_world);
 	}
 
 	void EditorApplication::render(TimeStep time_step)
@@ -239,6 +229,23 @@ namespace Genesis
 			model.mesh = mesh_pool->getResource(json_model["mesh"].as_string());
 			model.material = material_pool->getResource(json_model["material"].as_string());
 		}
+
+		if (json_entity.contains("RigidBody"))
+		{
+			json& json_rigid_body = json_entity["RigidBody"];
+			RigidBody& rigid_body = entity.addComponent<RigidBody>();
+			rigid_body.setType((RigidBodyType)json_rigid_body["type"].as<int>());
+			rigid_body.setMass(json_rigid_body["mass"].as_double());
+			rigid_body.setGravityEnabled(json_rigid_body["gravity_enabled"].as_bool());
+			rigid_body.setIsAllowedToSleep(json_rigid_body["is_allowed_to_sleep"].as_bool());
+
+			vector<double> linear_velocity = json_rigid_body["linear_velocity"].as<vector<double>>();
+			rigid_body.setLinearVelocity(vector3D(linear_velocity[0], linear_velocity[1], linear_velocity[2]));
+
+			vector<double> angular_velocity = json_rigid_body["angular_velocity"].as<vector<double>>();
+			rigid_body.setAngularVelocity(vector3D(angular_velocity[0], angular_velocity[1], angular_velocity[2]));
+		}
+
 	}
 
 	void loadSceneTemp(EntityWorld& world, const string& json_file, MeshPool* mesh_pool, MaterialPool* material_pool)

@@ -11,18 +11,22 @@ namespace Genesis
 {
 	enum class RigidBodyType
 	{
-		Static,
-		Kinematic,
-		Dynamic
+		Static = 0,
+		Kinematic = 1,
+		Dynamic = 2,
 	};
 
 	class RigidBody
 	{
 	public:
+		void attachRigidBody(reactphysics3d::RigidBody* rigidbody);
+		reactphysics3d::RigidBody* removeRigidBody();
+		bool hasRigidBody();
+
 		void setType(RigidBodyType type);
 		RigidBodyType getType();
 
-		reactphysics3d::ProxyShape* addShape(reactphysics3d::CollisionShape* shape, const TransformD& transform);
+		reactphysics3d::ProxyShape* addShape(reactphysics3d::CollisionShape* shape, const TransformD& transform, double mass);
 
 		void setTransform(const TransformD& transform);
 		void getTransform(TransformD& transform);
@@ -49,6 +53,7 @@ namespace Genesis
 	protected:
 		reactphysics3d::RigidBody* rigidbody = nullptr;
 
+		RigidBodyType type = RigidBodyType::Dynamic;
 		double body_mass = 1.0f;
 		bool gravity_enabled = true;
 		bool is_allowed_to_sleep = true;

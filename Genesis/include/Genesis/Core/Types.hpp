@@ -2,6 +2,7 @@
 
 #include <parallel_hashmap/phmap.h>
 #include <concurrentqueue.h>
+#include "Genesis/Core/VectorSet.hpp"
 
 #include <string>
 #include <vector>

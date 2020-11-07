@@ -6,15 +6,100 @@
 
 namespace Genesis
 {
+	void buildScene(EntityRegistry& registry, SceneInfo& scene)
+	{
+		scene.clearBuffers();
+		
+		auto model_group = registry.view<ModelComponent, TransformD>();
+		for (EntityHandle entity : model_group)
+		{
+			ModelComponent& model_component = model_group.get<ModelComponent>(entity);
+			TransformD& transform = model_group.get<TransformD>(entity);
+
+			if (model_component.mesh != nullptr && model_component.material != nullptr)
+			{
+				scene.models.push_back({ model_component.mesh , model_component.material, transform });
+			}
+		}
+
+		auto directional_light_group = registry.view<DirectionalLight, TransformD>();
+		for (EntityHandle entity : directional_light_group)
+		{
+			auto&[light, transform] = directional_light_group.get<DirectionalLight, TransformD>(entity);
+			scene.directional_lights.push_back({ light, transform });
+		}
+
+		auto point_light_group = registry.view<PointLight, TransformD>();
+		for (EntityHandle entity : point_light_group)
+		{
+			auto&[light, transform] = point_light_group.get<PointLight, TransformD>(entity);
+			scene.point_lights.push_back({ light, transform });
+		}
+
+		//Node
+		{
+			//Node Components
+			auto model_node_group = registry.view<NodeComponent, TransformD>();
+			for (EntityHandle entity : model_node_group)
+			{
+				NodeComponent& node_component = model_node_group.get<NodeComponent>(entity);
+				TransformD& transform = model_node_group.get<TransformD>(entity);
+
+				auto model_view = node_component.registry.view<ModelComponent, Node>();
+				for (auto entity : model_view)
+				{
+					auto& node_model = model_view.get<ModelComponent>(entity);
+					auto& node = model_view.get<Node>(entity);
+
+					if (node_model.mesh != nullptr && node_model.material != nullptr)
+					{
+						ModelStruct model = { node_model.mesh , node_model.material };
+						TransformUtils::transformByInplace(model.transform, transform, node.entity_space_transform);
+						scene.models.push_back(model);
+					}
+				}
+
+				auto directional_light_view = node_component.registry.view<DirectionalLight, Node>();
+				for (auto entity : directional_light_view)
+				{
+					auto& directional_light = directional_light_view.get<DirectionalLight>(entity);
+					auto& node = directional_light_view.get<Node>(entity);
+
+					if (directional_light.enabled && directional_light.intensity > 0.0f)
+					{
+						TransformD node_transform;
+						TransformUtils::transformByInplace(node_transform, transform, node.entity_space_transform);
+						scene.directional_lights.push_back({ directional_light, node_transform });
+					}
+				}
+
+				auto point_light_view = node_component.registry.view<PointLight, Node>();
+				for (auto entity : point_light_view)
+				{
+					auto& point_light = point_light_view.get<PointLight>(entity);
+					auto& node = point_light_view.get<Node>(entity);
+
+					if (point_light.enabled && point_light.intensity > 0.0f)
+					{
+						TransformD node_transform;
+						TransformUtils::transformByInplace(node_transform, transform, node.entity_space_transform);
+						scene.point_lights.push_back({ point_light, node_transform });
+					}
+				}
+			}
+		}
+	}
+
 	SceneWindow::SceneWindow(InputManager* input_manager, LegacyBackend* legacy_backend)
 	{
 		this->input_manager = input_manager;
 
 		this->legacy_backend = legacy_backend;
-		this->world_renderer = new LegacyWorldRenderer(this->legacy_backend);
+		this->world_renderer = new LegacySceneRenderer(this->legacy_backend);
 
 		this->scene_camera_transform.setPosition(vector3D(0.0, 0.0, -5.0));
 
+		this->scene_info.ambient_light = vector3F(0.1f);
 	}
 
 	SceneWindow::~SceneWindow()
@@ -93,11 +178,20 @@ namespace Genesis
 
 			if (ImGui::BeginMenu("Graphics"))
 			{
-				static bool lighting = true;
-				if (ImGui::MenuItem("Lighting", nullptr, lighting))
+
+				bool lighting_enabled = this->scene_info.settings.lighting;
+				if (ImGui::MenuItem("Lighting Enabled", nullptr, &lighting_enabled))
 				{
-					lighting = !lighting;
+					this->scene_info.settings.lighting = !this->scene_info.settings.lighting;
 				}
+
+				bool frustrum_culling_enabled = this->scene_info.settings.frustrum_culling;
+				if (ImGui::MenuItem("Frustrum Culling", nullptr, &frustrum_culling_enabled))
+				{
+					this->scene_info.settings.frustrum_culling = !this->scene_info.settings.frustrum_culling;
+				}
+
+				ImGui::ColorEdit3("Ambient Light", &this->scene_info.ambient_light.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB);
 
 				ImGui::EndMenu();
 			}
@@ -195,11 +289,15 @@ namespace Genesis
 
 		EntityRegistry* registry = world.getRegistry();
 
+		buildScene(*registry, this->scene_info);
+
+		//Set active camera
 		if (this->override_camera != null_entity && this->override_camera_node == null_entity)
 		{
 			Camera& camera = registry->get<Camera>(this->override_camera);
 			TransformD& camera_transform = registry->get<TransformD>(this->override_camera);
-			this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, *registry, camera, camera_transform);
+			this->scene_info.camera = camera;
+			this->scene_info.camera_transform = camera_transform;
 		}
 		else if (this->override_camera != null_entity && this->override_camera_node != null_entity)
 		{
@@ -211,12 +309,16 @@ namespace Genesis
 
 			TransformD camera_transform;
 			TransformUtils::transformByInplace(camera_transform, entity_transform, node.entity_space_transform);
-			this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, *registry, camera, camera_transform);
+			this->scene_info.camera = camera;
+			this->scene_info.camera_transform = camera_transform;
 		}
 		else
 		{
-			this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, *registry, this->scene_camera, this->scene_camera_transform);
+			this->scene_info.camera = this->scene_camera;
+			this->scene_info.camera_transform = this->scene_camera_transform;
 		}
+
+		this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, this->scene_info);
 
 		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->framebuffer, 0), im_remaining_space, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 

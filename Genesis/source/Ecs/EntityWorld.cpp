@@ -10,13 +10,11 @@ namespace Genesis
 {
 	EntityWorld::EntityWorld()
 	{
-		this->physics = new reactphysics3d::DynamicsWorld(reactphysics3d::Vector3(0.0, -9.8, 0.0));
 	}
 
 	EntityWorld::~EntityWorld()
 	{
 		this->onDestroy();
-		delete this->physics;
 	}
 
 	void EntityWorld::runSimulation(TimeStep time_step)
@@ -85,15 +83,41 @@ namespace Genesis
 
 	void EntityWorld::onCreate()
 	{
-		auto& view = this->registry.view<RigidBody>();
-		for (EntityHandle entity : view)
+		this->physics = new reactphysics3d::DynamicsWorld(reactphysics3d::Vector3(0.0, -9.8, 0.0));
+
+		auto& rigidbody_view = this->registry.view<RigidBody, TransformD>();
+		for (EntityHandle entity : rigidbody_view)
 		{
-			//Build Rigid Body
+			TransformD& transform = rigidbody_view.get<TransformD>(entity);
+			RigidBody& rigidbody = rigidbody_view.get<RigidBody>(entity);
+			rigidbody.attachRigidBody(this->physics->createRigidBody(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation()))));
+
+			if (this->registry.has<CollisionShape>(entity))
+			{
+				CollisionShape& shape = this->registry.get<CollisionShape>(entity);
+				shape.shape = CollisionShape::createCollisionShape(shape);
+
+				if (shape.shape != nullptr)
+				{
+					shape.proxy = rigidbody.addShape(shape.shape, TransformD(), shape.shape_mass);
+				}
+			}
 		}
 	}
 
 	void EntityWorld::onDestroy()
 	{
+		auto& view = this->registry.view<RigidBody>();
+		for (EntityHandle entity : view)
+		{
+			RigidBody& rigid_body = view.get<RigidBody>(entity);
+			if (rigid_body.hasRigidBody())
+			{
+				this->physics->destroyRigidBody(rigid_body.removeRigidBody());
+			}
+		}
 
+		delete this->physics;
+		this->physics = nullptr;
 	}
 }

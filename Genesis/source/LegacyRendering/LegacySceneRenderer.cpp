@@ -1,4 +1,4 @@
-#include "Genesis/LegacyRendering/LegacyWorldRenderer.hpp"
+#include "Genesis/LegacyRendering/LegacySceneRenderer.hpp"
 
 #include "Genesis/Platform/FileSystem.hpp"
 #include "Genesis/Component/NodeComponent.hpp"
@@ -74,7 +74,7 @@ namespace Genesis
 		}
 	};
 
-	LegacyWorldRenderer::LegacyWorldRenderer(LegacyBackend* backend)
+	LegacySceneRenderer::LegacySceneRenderer(LegacyBackend* backend)
 	{
 		this->backend = backend;
 
@@ -98,7 +98,7 @@ namespace Genesis
 		this->gamma_correction_program = this->backend->createComputeShader(comp_data.data(), (uint32_t)comp_data.size());
 	}
 
-	LegacyWorldRenderer::~LegacyWorldRenderer()
+	LegacySceneRenderer::~LegacySceneRenderer()
 	{
 		this->backend->destoryShaderProgram(this->ambient_program);
 		this->backend->destoryShaderProgram(this->directional_program);
@@ -106,114 +106,23 @@ namespace Genesis
 		this->backend->destoryShaderProgram(this->gamma_correction_program);
 	}
 
-	void LegacyWorldRenderer::drawScene(vector2U target_size, Framebuffer target_framebuffer, EntityRegistry& world, Camera& camera, TransformD& camera_transform)
+	void LegacySceneRenderer::drawScene(vector2U target_size, Framebuffer target_framebuffer, SceneInfo& scene)
 	{
 		this->backend->bindFramebuffer(target_framebuffer);
 		this->backend->clearFramebuffer(true, true);
 
-		matrix4F view_projection_matrix = camera.getProjectionMatrix(target_size) * camera_transform.getViewMatirx();
+		matrix4F view_projection_matrix = scene.camera.getProjectionMatrix(target_size) * scene.camera_transform.getViewMatirx();
 
 		const PipelineSettings ambient_settings = { CullMode::Back, DepthTest::Test_And_Write, DepthOp::Less, BlendOp::None, BlendFactor::One, BlendFactor::Zero };
 		this->backend->setPipelineState(ambient_settings);
-
-		{
-			this->models.clear();
-
-			//Single Component
-			auto model_group = world.view<ModelComponent, TransformD>();
-			for (EntityHandle entity : model_group)
-			{
-				ModelComponent& model_component = model_group.get<ModelComponent>(entity);
-				TransformD& transform = model_group.get<TransformD>(entity);
-
-				if (model_component.mesh != nullptr && model_component.material != nullptr)
-				{
-					this->models.push_back({ model_component.mesh , model_component.material, transform });
-				}
-			}
-		}
-
-		{
-			this->directional_lights.clear();
-			auto directional_light_group = world.view<DirectionalLight, TransformD>();
-			for (EntityHandle entity : directional_light_group)
-			{
-				auto&[light, transform] = directional_light_group.get<DirectionalLight, TransformD>(entity);
-				this->directional_lights.push_back({light, transform});
-			}
-		}
-
-		{
-			this->point_lights.clear();
-			auto point_light_group = world.view<PointLight, TransformD>();
-			for (EntityHandle entity : point_light_group)
-			{
-				auto&[light, transform] = point_light_group.get<PointLight, TransformD>(entity);
-				this->point_lights.push_back({ light, transform });
-			}
-		}
-
-		//Node
-		{
-			//Node Components
-			auto model_node_group = world.view<NodeComponent, TransformD>();
-			for (EntityHandle entity : model_node_group)
-			{
-				NodeComponent& node_component = model_node_group.get<NodeComponent>(entity);
-				TransformD& transform = model_node_group.get<TransformD>(entity);
-
-				auto model_view = node_component.registry.view<ModelComponent, Node>();
-				for (auto entity : model_view)
-				{
-					auto& node_model = model_view.get<ModelComponent>(entity);
-					auto& node = model_view.get<Node>(entity);
-
-					if (node_model.mesh != nullptr && node_model.material != nullptr)
-					{
-						ModelStruct model = { node_model.mesh , node_model.material };
-						TransformUtils::transformByInplace(model.transform, transform, node.entity_space_transform);
-						this->models.push_back(model);
-					}
-				}
-
-				auto directional_light_view = node_component.registry.view<DirectionalLight, Node>();
-				for (auto entity : directional_light_view)
-				{
-					auto& directional_light = directional_light_view.get<DirectionalLight>(entity);
-					auto& node = directional_light_view.get<Node>(entity);
-
-					if (directional_light.enabled && directional_light.intensity > 0.0f)
-					{
-						TransformD node_transform;
-						TransformUtils::transformByInplace(node_transform, transform, node.entity_space_transform);
-						this->directional_lights.push_back({directional_light, node_transform });
-					}
-				}
-
-				auto point_light_view = node_component.registry.view<PointLight, Node>();
-				for (auto entity : point_light_view)
-				{
-					auto& point_light = point_light_view.get<PointLight>(entity);
-					auto& node = point_light_view.get<Node>(entity);
-
-					if (point_light.enabled && point_light.intensity > 0.0f)
-					{
-						TransformD node_transform;
-						TransformUtils::transformByInplace(node_transform, transform, node.entity_space_transform);
-						this->point_lights.push_back({ point_light, node_transform });
-					}
-				}
-			}
-		}
-
 
 		//Draw ambient pass
 		{
 			this->backend->bindShaderProgram(this->ambient_program);
 
-			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
+			LegacyShaderUniform::writeEnvironment(this->backend, scene.ambient_light, (vector3F)scene.camera_transform.getPosition(), view_projection_matrix);
 
-			for (ModelStruct& mesh : this->models)
+			for (ModelStruct& mesh : scene.models)
 			{
 				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
 				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
@@ -228,49 +137,52 @@ namespace Genesis
 		const PipelineSettings light_settings = { CullMode::Back, DepthTest::Test_Only, DepthOp::Equal, BlendOp::Add, BlendFactor::One, BlendFactor::One };
 		this->backend->setPipelineState(light_settings);
 
-		//Draw directional light pass
+		if (scene.settings.lighting)
 		{
-			this->backend->bindShaderProgram(this->directional_program);
-			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
-
-			for (ModelStruct& mesh : this->models)
+			//Draw directional light pass
 			{
-				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
-				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
+				this->backend->bindShaderProgram(this->directional_program);
+				LegacyShaderUniform::writeEnvironment(this->backend, scene.ambient_light, (vector3F)scene.camera_transform.getPosition(), view_projection_matrix);
 
-				this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);
-				this->backend->bindIndexBuffer(mesh.mesh->index_buffer);
-
-				for (DirectionalLightStruct& light : this->directional_lights)
+				for (ModelStruct& mesh : scene.models)
 				{
-					if (light.light.enabled)
+					LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
+					LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
+
+					this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);
+					this->backend->bindIndexBuffer(mesh.mesh->index_buffer);
+
+					for (DirectionalLightStruct& light : scene.directional_lights)
 					{
-						LegacyShaderUniform::writeDirectionalLight(this->backend, light.light, (vector3F)light.transform.getForward());
-						this->backend->drawIndex(mesh.mesh->index_count, 0);
+						if (light.light.enabled)
+						{
+							LegacyShaderUniform::writeDirectionalLight(this->backend, light.light, (vector3F)light.transform.getForward());
+							this->backend->drawIndex(mesh.mesh->index_count, 0);
+						}
 					}
 				}
 			}
-		}
 
-		//Draw point light pass
-		{
-			this->backend->bindShaderProgram(this->point_program);
-			LegacyShaderUniform::writeEnvironment(this->backend, vector3F(0.1f), (vector3F)camera_transform.getPosition(), view_projection_matrix);
-
-			for (ModelStruct& mesh : this->models)
+			//Draw point light pass
 			{
-				LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
-				LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
+				this->backend->bindShaderProgram(this->point_program);
+				LegacyShaderUniform::writeEnvironment(this->backend, scene.ambient_light, (vector3F)scene.camera_transform.getPosition(), view_projection_matrix);
 
-				this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);
-				this->backend->bindIndexBuffer(mesh.mesh->index_buffer);
-
-				for (PointLightStruct& light : this->point_lights)
+				for (ModelStruct& mesh : scene.models)
 				{
-					if (light.light.enabled)
+					LegacyShaderUniform::writeTransformUniform(this->backend, mesh.transform);
+					LegacyShaderUniform::writeMaterialUniform(this->backend, *mesh.material);
+
+					this->backend->bindVertexBuffer(mesh.mesh->vertex_buffer);
+					this->backend->bindIndexBuffer(mesh.mesh->index_buffer);
+
+					for (PointLightStruct& light : scene.point_lights)
 					{
-						LegacyShaderUniform::writePointLight(this->backend, light.light, (vector3F)light.transform.getPosition());
-						this->backend->drawIndex(mesh.mesh->index_count, 0);
+						if (light.light.enabled)
+						{
+							LegacyShaderUniform::writePointLight(this->backend, light.light, (vector3F)light.transform.getPosition());
+							this->backend->drawIndex(mesh.mesh->index_count, 0);
+						}
 					}
 				}
 			}
