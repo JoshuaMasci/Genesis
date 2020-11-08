@@ -51,6 +51,8 @@ int main(int argc, char** argv)
 #include "Genesis/PhysicsTest/CollisionShape.hpp"
 
 #include "Genesis/World/Entity.hpp"
+#include "Genesis/World/SceneSystem.hpp"
+#include "Genesis/World/PhysicsSystem.hpp"
 
 #include <jsoncons/json.hpp>
 #include <fstream>
@@ -75,8 +77,6 @@ namespace Genesis
 		this->texture_pool = new TexturePool(this->legacy_backend);
 		this->material_pool = new MaterialPool(this->texture_pool);
 
-		this->temp_material = this->material_pool->getResource("res/materials/grid.mat");
-
 		this->entity_hierarchy_window = new EntityHierarchyWindow();
 		this->entity_properties_window = new EntityPropertiesWindow(this->mesh_pool, this->material_pool);
 		this->scene_window = new SceneWindow(this->input_manager, this->legacy_backend);
@@ -91,22 +91,30 @@ namespace Genesis
 			entity.addComponent<TransformD>().setPosition(vector3D(0.0, 0.0, -3.0));
 			entity.addComponent<Camera>();
 			entity.addComponent<DirectionalLight>(vector3F(1.0f), 1.0f, true);
-		}
 
-		{
-			Experimental::Entity* entity = new Experimental::Entity(0, "Camera_Entity");
-			entity->addComponent<Camera>();
-			entity->addComponent<DirectionalLight>(vector3F(1.0f), 1.0f, true);
-			this->test_editor_world.addEntity(entity);
-		}
-
-		{
 			Entity sphere = this->editor_world->createEntity("Sphere");
 			sphere.addComponent<TransformD>();
 			sphere.addComponent<ModelComponent>(this->mesh_pool->getResource("res/meshes/sphere.obj"), this->material_pool->getResource("res/materials/red.mat"));
+
+			loadSceneTemp(*this->editor_world, "res/ground.entity", this->mesh_pool, this->material_pool);
 		}
 
-		loadSceneTemp(*this->editor_world, "res/ground.entity", this->mesh_pool, this->material_pool);
+
+		{
+			this->test_world_simulator.addWorldSystem(Experimental::SceneSystem());
+			this->test_world_simulator.addWorldSystem(Experimental::PhysicsSystem());
+
+			//this->test_editor_world.components.add<SceneInfo>();
+
+			Experimental::Entity* entity = new Experimental::Entity(0, "Camera_Entity");
+			entity->local_transform.setPosition(vector3D(0.0, 0.0, -3.0));
+			entity->components.add<Camera>();
+			entity->components.add<DirectionalLight>(vector3F(1.0f), 1.0f, true);
+			Experimental::World::addEntity(&this->test_editor_world, entity);
+
+			Experimental::Entity* sphere = new Experimental::Entity(0, "Sphere");
+			sphere->components.add<ModelComponent>(this->mesh_pool->getResource("res/meshes/sphere.obj"), this->material_pool->getResource("res/materials/red.mat"));
+		}
 	}
 
 	EditorApplication::~EditorApplication()

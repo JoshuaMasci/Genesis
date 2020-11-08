@@ -3,18 +3,10 @@
 #include "Genesis/World/Entity.hpp"
 #include "Genesis/World/World.hpp"
 
-//World Components
-#include "Genesis/Physics/PhysicsWorld.hpp"
-#include "Genesis/Rendering/SceneInfo.hpp"
-
-//Entity Components
-#include "Genesis/Physics/RigidBody.hpp"
-
 namespace Genesis
 {
 	namespace Experimental
 	{
-
 		void WorldSimulator::addWorldSystem(const WorldSystem& system)
 		{
 			if (system.pre_update != nullptr)
@@ -40,18 +32,12 @@ namespace Genesis
 
 		void WorldSimulator::simulateWorld(const TimeStep time_step, World* world)
 		{
-			/*SceneInfo* scene_info = world->getComponent<SceneInfo>();
-			if (scene_info != nullptr)
-			{
-				scene_info->clearBuffers();
-			}*/
-
 			for (WorldUpdateFunction pre_update : this->preWorldUpdateFunctions)
 			{
 				pre_update(time_step, world);
 			}
 
-			for (Entity* entity : world->getEntities())
+			for (Entity* entity : world->hierarchy.children)
 			{
 				updateRootEntity(time_step, world, entity);
 			}
@@ -60,12 +46,6 @@ namespace Genesis
 			{
 				post_update(time_step, world);
 			}
-
-			/*PhysicsWorld* physics_world = world->getComponent<PhysicsWorld>();
-			if (physics_world != nullptr)
-			{
-				physics_world->simulate(time_step);
-			}*/
 		}
 
 		void WorldSimulator::updateRootEntity(const TimeStep time_step, World* world, Entity* root)
@@ -75,30 +55,30 @@ namespace Genesis
 				root_update(time_step, world, root);
 			}
 
-			TransformF root_transform;
+			TransformD root_transform;
 
 			for (EntityUpdateFunction entity_update : this->entityUpdateFunctions)
 			{
 				entity_update(time_step, world, root, root_transform, root);
 			}
 
-			for (Entity* child : root->getChildren())
+			for (Entity* child : root->herarchy.children)
 			{
 				updateEntity(time_step, world, root, root_transform, child);
 			}
 		}
 
-		void WorldSimulator::updateEntity(const TimeStep time_step, World* world, Entity* root, const TransformF& parent_transform, Entity* entity)
+		void WorldSimulator::updateEntity(const TimeStep time_step, World* world, Entity* root, const TransformD& parent_transform, Entity* entity)
 		{
-			TransformF root_transform;
-			TransformUtils::transformByInplace(root_transform, parent_transform, entity->getLocalTransform());
+			TransformD root_transform;
+			TransformUtils::transformByInplace(root_transform, parent_transform, entity->local_transform);
 
 			for (EntityUpdateFunction entity_update : this->entityUpdateFunctions)
 			{
 				entity_update(time_step, world, root, root_transform, root);
 			}
 
-			for (Entity* child : entity->getChildren())
+			for (Entity* child : entity->herarchy.children)
 			{
 				updateEntity(time_step, world, root, root_transform, child);
 			}

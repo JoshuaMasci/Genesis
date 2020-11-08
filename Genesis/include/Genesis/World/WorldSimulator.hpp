@@ -9,14 +9,14 @@ namespace Genesis
 
 		typedef void(*WorldUpdateFunction)(const TimeStep, World*);
 		typedef void(*RootEntityUpdateFunction)(const TimeStep, World*, Entity*);
-		typedef void(*EntityUpdateFunction)(const TimeStep, World*, Entity*, const TransformF&, Entity*);
+		typedef void(*EntityUpdateFunction)(const TimeStep, World*, Entity*, const TransformD&, Entity*);
 
 		struct WorldSystem
 		{
-			WorldUpdateFunction pre_update;
-			RootEntityUpdateFunction root_update;
-			EntityUpdateFunction entity_update;
-			WorldUpdateFunction post_update;
+			WorldUpdateFunction pre_update = nullptr;
+			RootEntityUpdateFunction root_update = nullptr;
+			EntityUpdateFunction entity_update = nullptr;
+			WorldUpdateFunction post_update = nullptr;
 		};
 
 		class WorldSimulator
@@ -28,7 +28,7 @@ namespace Genesis
 
 		protected:
 			void updateRootEntity(const TimeStep time_step, World* world, Entity* root);
-			void updateEntity(const TimeStep time_step, World* world, Entity* root, const TransformF& parent_transform, Entity* entity);
+			void updateEntity(const TimeStep time_step, World* world, Entity* root, const TransformD& parent_transform, Entity* entity);
 
 			vector<WorldUpdateFunction> preWorldUpdateFunctions;
 			vector<WorldUpdateFunction> postWorldUpdateFunctions;

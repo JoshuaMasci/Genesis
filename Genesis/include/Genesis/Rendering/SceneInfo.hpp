@@ -6,6 +6,12 @@
 
 namespace Genesis
 {
+	struct CameraStruct
+	{
+		Camera camera;
+		TransformD transform;
+	};
+
 	struct ModelStruct
 	{
 		shared_ptr<MeshResource> mesh;
@@ -37,6 +43,8 @@ namespace Genesis
 
 		Camera camera;
 		TransformD camera_transform;
+
+		vector<CameraStruct> cameras;
 
 		vector<ModelStruct> models;
 

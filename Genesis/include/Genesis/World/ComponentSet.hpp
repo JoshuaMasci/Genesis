@@ -18,16 +18,16 @@ namespace Genesis
 		}
 
 		template<typename T, typename... Args>
-		T* addComponent(Args&&... args)
+		T* add(Args&&... args)
 		{
-			GENESIS_ENGINE_ASSERT(!this->hasComponent<T>(), "ComponentSet already has component");
+			GENESIS_ENGINE_ASSERT(!this->has<T>(), "ComponentSet already has component");
 			constexpr size_t hash_value = TypeInfo<T>::getHash();
-			this->components[hash_value] = (void*) new T(std::forward<Args>(args)...);
+			this->components[hash_value] = (void*) new T{ std::forward<Args>(args)... };
 			return (T*)this->components[hash_value];
 		}
 
 		template<typename T>
-		T* getComponent()
+		T* get()
 		{
 			constexpr size_t hash_value = TypeInfo<T>::getHash();
 			auto it = this->components.find(hash_value);
@@ -42,16 +42,16 @@ namespace Genesis
 		}
 
 		template<typename T>
-		bool hasComponent()
+		bool has()
 		{
 			constexpr size_t hash_value = TypeInfo<T>::getHash();
 			return this->components.find(hash_value) != this->components.end();
 		}
 
 		template<typename T>
-		void removeComponent()
+		void remove()
 		{
-			GENESIS_ENGINE_ASSERT(this->hasComponent<T>(), "ComponentSet doesn't have component");
+			GENESIS_ENGINE_ASSERT(this->has<T>(), "ComponentSet doesn't have component");
 			constexpr size_t hash_value = TypeInfo<T>::getHash();
 			this->components[hash_value];
 			this->components.erase(hash_value);
