@@ -1,10 +1,7 @@
 #pragma once
 
-#include "Genesis/Ecs/Ecs.hpp"
-#include "Genesis/Ecs/Entity.hpp"
-#include "Genesis/Ecs/EntityWorld.hpp"
-
-#include "Genesis/Component/NodeComponent.hpp"
+#include "Genesis/World/World.hpp"
+#include "Genesis/World/Entity.hpp"
 
 namespace Genesis
 {
@@ -17,14 +14,12 @@ namespace Genesis
 		EntityHierarchyWindow();
 		~EntityHierarchyWindow();
 
-		void draw(EntityWorld* world, MeshPool* mesh_pool, MaterialPool* material_pool);
-
-		Entity getSelected() { return this->selected_entity; };
+		void draw(World* world, MeshPool* mesh_pool, MaterialPool* material_pool);
+		Entity* getSelected();
 
 	private:
-		void drawEntity(Entity entity);
-		void drawEntityNode(Entity entity_node);
+		void drawEntity(World* world, Entity* entity);
 
-		Entity selected_entity;
+		Entity* selected_entity = nullptr;
 	};
 }

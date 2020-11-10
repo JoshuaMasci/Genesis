@@ -9,45 +9,42 @@
 
 namespace Genesis
 {
-	namespace Experimental
+	struct PhysicsSystem : public WorldSystem
 	{
-		struct PhysicsSystem : public WorldSystem
+		PhysicsSystem()
 		{
-			PhysicsSystem()
-			{
-				this->pre_update = preUpdate;
-				this->post_update = PostUpdate;
-			};
-
-			static void preUpdate(const TimeStep time_step, World* world)
-			{
-				for (Entity* root : world->hierarchy.children)
-				{
-					RigidBody* rigid_body = root->components.get<RigidBody>();
-					if (rigid_body)
-					{
-						rigid_body->setTransform(root->local_transform);
-					}
-				}
-
-				PhysicsWorld* physics_world = world->components.get<PhysicsWorld>();
-				if (physics_world)
-				{
-					physics_world->simulate(time_step);
-				}
-			};
-
-			static void PostUpdate(const TimeStep time_step, World* world)
-			{
-				for (Entity* root : world->hierarchy.children)
-				{
-					RigidBody* rigid_body = root->components.get<RigidBody>();
-					if (rigid_body)
-					{
-						rigid_body->getTransform(root->local_transform);
-					}
-				}
-			};
+			this->pre_update = preUpdate;
+			this->post_update = PostUpdate;
 		};
-	}
+
+		static void preUpdate(const TimeStep time_step, World* world)
+		{
+			for (Entity* root : world->hierarchy.children)
+			{
+				RigidBody* rigid_body = root->components.get<RigidBody>();
+				if (rigid_body)
+				{
+					rigid_body->setTransform(root->local_transform);
+				}
+			}
+
+			PhysicsWorld* physics_world = world->components.get<PhysicsWorld>();
+			if (physics_world)
+			{
+				physics_world->simulate(time_step);
+			}
+		};
+
+		static void PostUpdate(const TimeStep time_step, World* world)
+		{
+			for (Entity* root : world->hierarchy.children)
+			{
+				RigidBody* rigid_body = root->components.get<RigidBody>();
+				if (rigid_body)
+				{
+					rigid_body->getTransform(root->local_transform);
+				}
+			}
+		};
+	};
 }

@@ -112,14 +112,14 @@ namespace Genesis
 
 		GLint OpenglShaderProgram::getUniformLocation(const string& name)
 		{
-			if (this->uniform_locations.find(name) != this->uniform_locations.end())
+			if (this->uniform_locations.find(name) == this->uniform_locations.end())
 			{
 				GLint location = glGetUniformLocation(this->program_id, name.c_str());
 				if (location == -1)
 				{
 					GENESIS_ENGINE_WARNING("Uniform Location doesn't exist: {}", name);
 				}
-				this->uniform_locations[name] = location;
+				this->uniform_locations.insert({ name, location });
 			}
 
 			return this->uniform_locations[name];

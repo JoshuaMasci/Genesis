@@ -1,95 +1,9 @@
 #include "Genesis_Editor/Windows/SceneWindow.hpp"
 
 #include "imgui.h"
-#include "Genesis/Component/NameComponent.hpp"
-#include "Genesis/Component/NodeComponent.hpp"
 
 namespace Genesis
 {
-	void buildScene(EntityRegistry& registry, SceneInfo& scene)
-	{
-		scene.clearBuffers();
-		
-		auto model_group = registry.view<ModelComponent, TransformD>();
-		for (EntityHandle entity : model_group)
-		{
-			ModelComponent& model_component = model_group.get<ModelComponent>(entity);
-			TransformD& transform = model_group.get<TransformD>(entity);
-
-			if (model_component.mesh != nullptr && model_component.material != nullptr)
-			{
-				scene.models.push_back({ model_component.mesh , model_component.material, transform });
-			}
-		}
-
-		auto directional_light_group = registry.view<DirectionalLight, TransformD>();
-		for (EntityHandle entity : directional_light_group)
-		{
-			auto&[light, transform] = directional_light_group.get<DirectionalLight, TransformD>(entity);
-			scene.directional_lights.push_back({ light, transform });
-		}
-
-		auto point_light_group = registry.view<PointLight, TransformD>();
-		for (EntityHandle entity : point_light_group)
-		{
-			auto&[light, transform] = point_light_group.get<PointLight, TransformD>(entity);
-			scene.point_lights.push_back({ light, transform });
-		}
-
-		//Node
-		{
-			//Node Components
-			auto model_node_group = registry.view<NodeComponent, TransformD>();
-			for (EntityHandle entity : model_node_group)
-			{
-				NodeComponent& node_component = model_node_group.get<NodeComponent>(entity);
-				TransformD& transform = model_node_group.get<TransformD>(entity);
-
-				auto model_view = node_component.registry.view<ModelComponent, Node>();
-				for (auto entity : model_view)
-				{
-					auto& node_model = model_view.get<ModelComponent>(entity);
-					auto& node = model_view.get<Node>(entity);
-
-					if (node_model.mesh != nullptr && node_model.material != nullptr)
-					{
-						ModelStruct model = { node_model.mesh , node_model.material };
-						TransformUtils::transformByInplace(model.transform, transform, node.entity_space_transform);
-						scene.models.push_back(model);
-					}
-				}
-
-				auto directional_light_view = node_component.registry.view<DirectionalLight, Node>();
-				for (auto entity : directional_light_view)
-				{
-					auto& directional_light = directional_light_view.get<DirectionalLight>(entity);
-					auto& node = directional_light_view.get<Node>(entity);
-
-					if (directional_light.enabled && directional_light.intensity > 0.0f)
-					{
-						TransformD node_transform;
-						TransformUtils::transformByInplace(node_transform, transform, node.entity_space_transform);
-						scene.directional_lights.push_back({ directional_light, node_transform });
-					}
-				}
-
-				auto point_light_view = node_component.registry.view<PointLight, Node>();
-				for (auto entity : point_light_view)
-				{
-					auto& point_light = point_light_view.get<PointLight>(entity);
-					auto& node = point_light_view.get<Node>(entity);
-
-					if (point_light.enabled && point_light.intensity > 0.0f)
-					{
-						TransformD node_transform;
-						TransformUtils::transformByInplace(node_transform, transform, node.entity_space_transform);
-						scene.point_lights.push_back({ point_light, node_transform });
-					}
-				}
-			}
-		}
-	}
-
 	SceneWindow::SceneWindow(InputManager* input_manager, LegacyBackend* legacy_backend)
 	{
 		this->input_manager = input_manager;
@@ -137,7 +51,7 @@ namespace Genesis
 
 	void SceneWindow::update(TimeStep time_step)
 	{		
-		if (this->is_window_active && this->override_camera == null_entity)
+		if (this->is_window_active)
 		{
 			vector3D position = this->scene_camera_transform.getPosition();
 			position += (this->scene_camera_transform.getForward() * (double)this->input_manager->getButtonAxis(debug_forward_axis, debug_forward, debug_backward)) * this->linear_speed * time_step;
@@ -153,7 +67,7 @@ namespace Genesis
 		}
 	}
 
-	void SceneWindow::draw(EntityWorld& world)
+	void SceneWindow::draw(SceneInfo* scene)
 	{
 		ImGui::Begin("Scene View", nullptr, ImGuiWindowFlags_MenuBar);
 
@@ -164,7 +78,6 @@ namespace Genesis
 				if (ImGui::MenuItem("Play"))
 				{
 					this->is_scene_running = true;
-					world.onCreate();
 				}
 			}
 			else
@@ -172,90 +85,88 @@ namespace Genesis
 				if (ImGui::MenuItem("Pause"))
 				{
 					this->is_scene_running = false;
-					world.onDestroy();
 				}
 			}
 
 			if (ImGui::BeginMenu("Graphics"))
 			{
 
-				bool lighting_enabled = this->scene_info.settings.lighting;
+				bool lighting_enabled = scene->settings.lighting;
 				if (ImGui::MenuItem("Lighting Enabled", nullptr, &lighting_enabled))
 				{
-					this->scene_info.settings.lighting = !this->scene_info.settings.lighting;
+					scene->settings.lighting = !scene->settings.lighting;
 				}
 
-				bool frustrum_culling_enabled = this->scene_info.settings.frustrum_culling;
+				bool frustrum_culling_enabled = scene->settings.frustrum_culling;
 				if (ImGui::MenuItem("Frustrum Culling", nullptr, &frustrum_culling_enabled))
 				{
-					this->scene_info.settings.frustrum_culling = !this->scene_info.settings.frustrum_culling;
+					scene->settings.frustrum_culling = !scene->settings.frustrum_culling;
 				}
 
-				ImGui::ColorEdit3("Ambient Light", &this->scene_info.ambient_light.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB);
+				ImGui::ColorEdit3("Ambient Light", &scene->ambient_light.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB);
 
 				ImGui::EndMenu();
 			}
 
 			if (ImGui::BeginMenu("Camera"))
 			{
-				if (ImGui::MenuItem("Default", nullptr, this->override_camera == null_entity))
+				if (ImGui::MenuItem("Default", nullptr, true))
 				{
-					this->override_camera = null_entity;
 				}
 
-				auto* registry = world.getRegistry();
-
-				//Entity Cameras
+				ImGui::Separator();
+				if (ImGui::BeginMenu("Default Camera"))
 				{
-					auto camera_view = registry->view<Camera>();
-					for (auto entity : camera_view)
+					ImGui::Text("Fov X:");
+					if (ImGui::DragFloat("##Fov_X", &this->scene_camera.frame_of_view, 0.5f, 1.0f, 140.0f))
 					{
-						char* name = "Unnamed Entity";
-						NameComponent* name_component = registry->try_get<NameComponent>(entity);
-						if (name_component != nullptr)
-						{
-							name = name_component->data;
-						}
-
-						if (ImGui::MenuItem(name, nullptr, this->override_camera == entity && this->override_camera_node == null_entity))
-						{
-							this->override_camera = entity;
-							this->override_camera_node = null_entity;
-						}
+						this->scene_camera.frame_of_view = std::clamp(this->scene_camera.frame_of_view, 1.0f, 140.0f);
 					}
-				}
-				
-				//Node Cameras
-				{
-					bool display_seperator = true;
-					auto node_component_view = registry->view<NodeComponent>();
-					for (auto entity : node_component_view)
+
+					ImGui::Text("Z Near:");
+					if (ImGui::InputFloat("##Z_Near", &this->scene_camera.z_near))
 					{
-						NodeComponent& node_component = node_component_view.get<NodeComponent>(entity);
-		
-						auto camera_view = node_component.registry.view<Camera>();
-						for (auto node : camera_view)
-						{
-							char* name = "Unnamed Node";
-							NameComponent* name_component = node_component.registry.try_get<NameComponent>(node);
-							if (name_component != nullptr)
-							{
-								name = name_component->data;
-							}
-
-							if (display_seperator)
-							{
-								ImGui::Separator();
-								display_seperator = false;
-							}
-
-							if (ImGui::MenuItem(name, nullptr, this->override_camera == entity && this->override_camera_node == node))
-							{
-								this->override_camera = entity;
-								this->override_camera_node = node;
-							}
-						}
+						this->scene_camera.z_near = std::max(this->scene_camera.z_near, 0.001f);
 					}
+
+					ImGui::Text("Z Far:");
+					if (ImGui::InputFloat("##Z_Far", &this->scene_camera.z_far))
+					{
+						this->scene_camera.z_far = std::max(this->scene_camera.z_near + 1.0f, this->scene_camera.z_far);
+					}
+					ImGui::Separator();
+
+					ImGui::Text("Position:");
+					vector3D position = this->scene_camera_transform.getPosition();
+					if (ImGui::InputScalarN("##Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
+					{
+						this->scene_camera_transform.setPosition(position);
+					};
+
+					ImGui::Text("Rotation:");
+					vector3D rotation = glm::degrees(glm::eulerAngles(this->scene_camera_transform.getOrientation()));
+					if (ImGui::InputScalarN("##Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
+					{
+						this->scene_camera_transform.setOrientation(quaternionD(glm::radians(rotation)));
+					}
+					ImGui::Separator();
+					const double MIN_MOVE_SPEED = 0.001;
+					const double MAX_MOVE_SPEED = 10000.0;
+					ImGui::Text("Linear Speed:");
+					if (ImGui::DragScalar("##Linear_Speed", ImGuiDataType_::ImGuiDataType_Double, &this->linear_speed, 0.1, &MIN_MOVE_SPEED, &MAX_MOVE_SPEED, nullptr, 2.0f))
+					{
+						this->linear_speed = std::clamp(this->linear_speed, MIN_MOVE_SPEED, MAX_MOVE_SPEED);
+					}
+
+					const double MIN_ROTATION_SPEED = PI_D / 16;
+					const double MAX_ROTATION_SPEED = PI_D / 4;
+					ImGui::Text("Rotational Speed:");
+					if (ImGui::DragScalar("##Rotation_Speed", ImGuiDataType_::ImGuiDataType_Double, &this->angular_speed, 0.01, &MIN_ROTATION_SPEED, &MAX_ROTATION_SPEED))
+					{
+						this->angular_speed = std::clamp(this->angular_speed, MIN_ROTATION_SPEED, MAX_ROTATION_SPEED);
+					}
+
+					ImGui::EndMenu();
 				}
 
 				ImGui::EndMenu();
@@ -287,38 +198,9 @@ namespace Genesis
 			this->framebuffer = this->legacy_backend->createFramebuffer(create_info);
 		}
 
-		EntityRegistry* registry = world.getRegistry();
-
-		buildScene(*registry, this->scene_info);
-
-		//Set active camera
-		if (this->override_camera != null_entity && this->override_camera_node == null_entity)
-		{
-			Camera& camera = registry->get<Camera>(this->override_camera);
-			TransformD& camera_transform = registry->get<TransformD>(this->override_camera);
-			this->scene_info.camera = camera;
-			this->scene_info.camera_transform = camera_transform;
-		}
-		else if (this->override_camera != null_entity && this->override_camera_node != null_entity)
-		{
-			TransformD& entity_transform = registry->get<TransformD>(this->override_camera);
-			NodeComponent& node_component = registry->get<NodeComponent>(this->override_camera);
-
-			Node& node = node_component.registry.get<Node>(this->override_camera_node);
-			Camera& camera = node_component.registry.get<Camera>(this->override_camera_node);
-
-			TransformD camera_transform;
-			TransformUtils::transformByInplace(camera_transform, entity_transform, node.entity_space_transform);
-			this->scene_info.camera = camera;
-			this->scene_info.camera_transform = camera_transform;
-		}
-		else
-		{
-			this->scene_info.camera = this->scene_camera;
-			this->scene_info.camera_transform = this->scene_camera_transform;
-		}
-
-		this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, this->scene_info);
+		scene->camera = this->scene_camera;
+		scene->camera_transform = this->scene_camera_transform;
+		this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, *scene);
 
 		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->framebuffer, 0), im_remaining_space, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 

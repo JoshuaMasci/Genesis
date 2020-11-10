@@ -44,8 +44,6 @@ namespace Genesis
 		Camera camera;
 		TransformD camera_transform;
 
-		vector<CameraStruct> cameras;
-
 		vector<ModelStruct> models;
 
 		vector3F ambient_light = vector3D(1.0);

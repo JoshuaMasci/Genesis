@@ -1,7 +1,6 @@
 #include "Genesis/LegacyRendering/LegacySceneRenderer.hpp"
 
 #include "Genesis/Platform/FileSystem.hpp"
-#include "Genesis/Component/NodeComponent.hpp"
 
 namespace Genesis
 {

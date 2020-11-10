@@ -2,17 +2,14 @@
 
 namespace Genesis
 {
-	namespace Experimental
+	class Entity;
+
+	class Hierarchy
 	{
-		class Entity;
+	public:
+		~Hierarchy();
 
-		class Hierarchy
-		{
-		public:
-			~Hierarchy();
-
-			Entity* parent = nullptr;
-			vector_set<Entity*> children;
-		};
-	}
+		Entity* parent = nullptr;
+		vector_set<Entity*> children;
+	};
 }

@@ -59,14 +59,20 @@ namespace Genesis
 
 	void RigidBody::setTransform(const TransformD& transform)
 	{
-		this->rigidbody->setTransform(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())));
+		if (this->rigidbody)
+		{
+			this->rigidbody->setTransform(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())));
+		}
 	}
 
 	void RigidBody::getTransform(TransformD& transform)
 	{
-		const reactphysics3d::Transform& transform_r = this->rigidbody->getTransform();
-		transform.setPosition(toVec3D(transform_r.getPosition()));
-		transform.setOrientation(toQuatD(transform_r.getOrientation()));
+		if (this->rigidbody)
+		{
+			const reactphysics3d::Transform& transform_r = this->rigidbody->getTransform();
+			transform.setPosition(toVec3D(transform_r.getPosition()));
+			transform.setOrientation(toQuatD(transform_r.getOrientation()));
+		}
 	}
 
 	void RigidBody::setMass(double mass)

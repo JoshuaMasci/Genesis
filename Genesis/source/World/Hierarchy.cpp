@@ -5,14 +5,11 @@
 
 namespace Genesis
 {
-	namespace Experimental
+	Hierarchy::~Hierarchy()
 	{
-		Hierarchy::~Hierarchy()
+		for (auto child : this->children)
 		{
-			for (auto child : this->children)
-			{
-				delete child;
-			}
+			delete child;
 		}
 	}
 }

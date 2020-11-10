@@ -1,10 +1,9 @@
-[
-  {
-    "Name": "Ground",
+{
+  "Ground": {
     "Transform": {
       "position": [
         0,
-        -1.5,
+        -1,
         0
       ],
       "orientation": [
@@ -23,21 +22,21 @@
       "mesh": "res/meshes/cube.obj",
       "material": "res/materials/grid.mat"
     },
-	"RigidBody": {
-		"type": 0,
-		"mass": 0.0,
-		"gravity_enabled": false,
-		"is_allowed_to_sleep": true,
-		"linear_velocity": [
-			0,
-			0,
-			0
-		],
-		"angular_velocity": [
-			0,
-			0,
-			0
-		]
-	}
+    "RigidBody": {
+      "type": 0,
+      "mass": 0,
+      "gravity_enabled": false,
+      "is_allowed_to_sleep": true,
+      "linear_velocity": [
+        0,
+        0,
+        0
+      ],
+      "angular_velocity": [
+        0,
+        0,
+        0
+      ]
+    }
   }
-]
+}

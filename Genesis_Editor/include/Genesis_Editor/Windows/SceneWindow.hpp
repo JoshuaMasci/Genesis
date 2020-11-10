@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Genesis/Ecs/EntityWorld.hpp"
-
 #include <Genesis/Input/InputManager.hpp>
 #include <Genesis/LegacyBackend/LegacyBackend.hpp>
 #include <Genesis/LegacyRendering/LegacySceneRenderer.hpp>
@@ -16,7 +14,7 @@ namespace Genesis
 
 		void update(TimeStep time_step);
 
-		void draw(EntityWorld& world);
+		void draw(SceneInfo* scene);
 
 		bool isSceneRunning() { return this->is_scene_running; };
 
@@ -37,9 +35,6 @@ namespace Genesis
 
 		Camera scene_camera;
 		TransformD scene_camera_transform;
-
-		EntityHandle override_camera = null_entity;
-		EntityHandle override_camera_node = null_entity;
 
 		//meters per second
 		double linear_speed = 2.0;

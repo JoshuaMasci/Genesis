@@ -6,25 +6,22 @@
 
 namespace Genesis
 {
-	namespace Experimental
+	class World
 	{
-		class World
+	public:
+		ComponentSet components;
+		Hierarchy hierarchy;
+
+		static void addEntity(World* world, Entity* entity)
 		{
-		public:
-			ComponentSet components;
-			Hierarchy hierarchy;
-
-			static void addEntity(World* world, Entity* entity)
-			{
-				world->hierarchy.children.insert(entity);
-				entity->herarchy.parent = nullptr;
-			};
-
-			static void removeEntity(World* world, Entity* entity)
-			{
-				world->hierarchy.children.erase(entity);
-				entity->herarchy.parent = nullptr;
-			};
+			world->hierarchy.children.insert(entity);
+			entity->herarchy.parent = nullptr;
 		};
-	}
+
+		static void removeEntity(World* world, Entity* entity)
+		{
+			world->hierarchy.children.erase(entity);
+			entity->herarchy.parent = nullptr;
+		};
+	};
 }

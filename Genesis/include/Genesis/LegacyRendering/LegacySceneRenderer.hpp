@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Genesis/Ecs/Ecs.hpp"
-
 #include "Genesis/LegacyBackend/LegacyBackend.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 

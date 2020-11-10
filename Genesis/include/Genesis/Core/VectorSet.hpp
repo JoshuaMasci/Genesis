@@ -39,9 +39,9 @@ namespace Genesis
 
 		bool has(const T& type)
 		{
-			for (size_t i = 0; i < this->vector.size(); i++)
+			for (T value : this->vector)
 			{
-				if (this->vector[i] == type)
+				if (value == type)
 				{
 					return true;
 				}
@@ -67,6 +67,16 @@ namespace Genesis
 		const_iterator cend()
 		{
 			return this->vector.crend();
+		}
+
+		bool empty()
+		{
+			return this->vector.empty();
+		}
+
+		std::vector<T> copyVector()
+		{
+			return this->vector;
 		}
 	};
 }

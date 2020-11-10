@@ -8,29 +8,26 @@
 
 namespace Genesis
 {
-	namespace Experimental
+	class Entity
 	{
-		class Entity
+	public:
+		Entity(size_t id, const char* name) :id(id), name(name) {};
+		const size_t id;
+		NameComponent name;
+		TransformD local_transform;
+		ComponentSet components;
+		Hierarchy herarchy;
+
+		static void addChild(Entity* parent, Entity* child)
 		{
-		public:
-			Entity(size_t id, const char* name) :id(id), name(name) {};
-			const size_t id;
-			NameComponent name;
-			TransformD local_transform;
-			ComponentSet components;
-			Hierarchy herarchy;
-
-			static void addChild(Entity* parent, Entity* child)
-			{
-				parent->herarchy.children.insert(child);
-				child->herarchy.parent = parent;
-			};
-
-			static void removeChild(Entity* parent, Entity* child)
-			{
-				parent->herarchy.children.erase(child);
-				child->herarchy.parent = nullptr;
-			};
+			parent->herarchy.children.insert(child);
+			child->herarchy.parent = parent;
 		};
-	}
+
+		static void removeChild(Entity* parent, Entity* child)
+		{
+			parent->herarchy.children.erase(child);
+			child->herarchy.parent = nullptr;
+		};
+	};
 }
