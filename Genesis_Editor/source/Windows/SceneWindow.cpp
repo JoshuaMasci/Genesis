@@ -51,7 +51,7 @@ namespace Genesis
 
 	void SceneWindow::update(TimeStep time_step)
 	{		
-		if (this->is_window_active)
+		if (this->window_active)
 		{
 			vector3D position = this->scene_camera_transform.getPosition();
 			position += (this->scene_camera_transform.getForward() * (double)this->input_manager->getButtonAxis(debug_forward_axis, debug_forward, debug_backward)) * this->linear_speed * time_step;
@@ -73,18 +73,18 @@ namespace Genesis
 
 		if (ImGui::BeginMenuBar())
 		{
-			if (!this->is_scene_running)
+			if (!this->scene_running)
 			{
 				if (ImGui::MenuItem("Play"))
 				{
-					this->is_scene_running = true;
+					this->scene_running = true;
 				}
 			}
 			else
 			{
 				if (ImGui::MenuItem("Pause"))
 				{
-					this->is_scene_running = false;
+					this->scene_running = false;
 				}
 			}
 
@@ -149,6 +149,7 @@ namespace Genesis
 					{
 						this->scene_camera_transform.setOrientation(quaternionD(glm::radians(rotation)));
 					}
+					
 					ImGui::Separator();
 					const double MIN_MOVE_SPEED = 0.001;
 					const double MAX_MOVE_SPEED = 10000.0;
@@ -204,7 +205,7 @@ namespace Genesis
 
 		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->framebuffer, 0), im_remaining_space, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
-		this->is_window_active = ImGui::IsWindowFocused();
+		this->window_active = ImGui::IsWindowFocused();
 
 		ImGui::End();
 	}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Genesis/Ecs/Ecs.hpp"
+#include "Genesis/Core/TypeInfo.hpp"
 namespace Genesis
 {
 	class ComponentSet
@@ -56,5 +58,18 @@ namespace Genesis
 			this->components[hash_value];
 			this->components.erase(hash_value);
 		}
+	};
+
+	class EntityWorld
+	{
+	public:
+		EntityRegistry registry;
+
+		// TODO: switch to Entity class
+		ComponentSet world_components;
+
+		// TODO
+		//EntityWorld* clone();
+
 	};
 }

@@ -18,11 +18,9 @@
 #include "Genesis/Physics/CollisionShape.hpp"
 #include "Genesis/Physics/ReactPhyscis.hpp"
 
-#include "Genesis/Resource/ObjLoader.hpp"
-
-#include "Genesis/World/Entity.hpp"
-#include "Genesis/World/SceneSystem.hpp"
-#include "Genesis/World/PhysicsSystem.hpp"
+#include "Genesis/Ecs/EntitySystemSet.hpp"
+#include "Genesis/Ecs/TransformResolveSystem.hpp"
+#include "Genesis/Ecs/SceneSystem.hpp"
 
 #include <jsoncons/json.hpp>
 #include <fstream>
@@ -30,8 +28,6 @@ using namespace jsoncons;
 
 namespace Genesis
 {
-	void loadSceneTemp(World* world, const string& json_file, MeshPool* mesh_pool, MaterialPool* material_pool);
-
 	EditorApplication::EditorApplication()
 	{
 		this->console_window = new ConsoleWindow();
@@ -48,33 +44,20 @@ namespace Genesis
 		this->material_pool = new MaterialPool(this->texture_pool);
 
 		this->entity_hierarchy_window = new EntityHierarchyWindow();
-		this->entity_properties_window = new EntityPropertiesWindow(this->mesh_pool, this->material_pool);
+		this->entity_properties_window = new EntityPropertiesWindow();
 		this->scene_window = new SceneWindow(this->input_manager, this->legacy_backend);
 		this->asset_browser_window = new AssetBrowserWindow(this->legacy_backend);
 		this->material_editor_window = new MaterialEditorWindow(this->material_pool, this->texture_pool);
 		this->material_editor_window->setActiveMaterial(this->material_pool->getResource("res/materials/grid.mat"));
 
-		{
-			this->world_simulator.addWorldSystem(SceneSystem());
-			this->world_simulator.addWorldSystem(PhysicsSystem());
-			this->editor_world.components.add<SceneInfo>()->ambient_light = vector3F(0.1f);
-
-			Entity* entity = new Entity(0, "Camera_Entity");
-			entity->local_transform.setPosition(vector3D(0.0, 0.0, -3.0));
-			entity->components.add<Camera>();
-			entity->components.add<DirectionalLight>(vector3F(1.0f), 1.0f, true);
-			World::addEntity(&this->editor_world, entity);
-
-			Entity* sphere = new Entity(0, "Sphere");
-			sphere->components.add<ModelComponent>(this->mesh_pool->getResource("res/meshes/sphere.obj"), this->material_pool->getResource("res/materials/red.mat"));
-			World::addEntity(&this->editor_world, sphere);
-
-			loadSceneTemp(&this->editor_world, "res/ground.entity", this->mesh_pool, this->material_pool);
-		}
+		this->editor_world = new EntityWorld();
+		this->editor_world->world_components.add<SceneInfo>();
 	}
 
 	EditorApplication::~EditorApplication()
 	{
+		delete this->editor_world;
+
 		delete this->mesh_pool;
 		delete this->texture_pool;
 		delete this->material_pool;
@@ -96,11 +79,18 @@ namespace Genesis
 		GENESIS_PROFILE_FUNCTION("EditorApplication::update");
 		Application::update(time_step);
 
+		TransformResolveSystem().run(this->editor_world, time_step);
+
+		if (this->scene_window->is_scene_running()) 
+		{
+
+		}
+		else
+		{
+
+		}
+
 		this->scene_window->update(time_step);
-
-		if (this->scene_window->isSceneRunning()) {}
-
-		this->world_simulator.simulateWorld(time_step, &this->editor_world);
 	}
 
 	void EditorApplication::render(TimeStep time_step)
@@ -149,9 +139,12 @@ namespace Genesis
 		}
 
 		this->console_window->draw();
-		this->entity_hierarchy_window->draw(&this->editor_world, this->mesh_pool, this->material_pool);
-		this->entity_properties_window->draw(this->entity_hierarchy_window->getSelected());
-		this->scene_window->draw(this->editor_world.components.get<SceneInfo>());
+		this->entity_hierarchy_window->draw(this->editor_world, this->mesh_pool, this->material_pool);
+		this->entity_properties_window->draw(this->entity_hierarchy_window->getSelected(), this->mesh_pool, this->material_pool);
+
+		SceneSystem::build_scene(this->editor_world);
+
+		this->scene_window->draw(this->editor_world->world_components.get<SceneInfo>());
 		this->asset_browser_window->draw("res/");
 		this->material_editor_window->draw();
 
@@ -165,7 +158,7 @@ namespace Genesis
 		this->legacy_backend->endFrame();
 	}
 
-	Entity* loadEntity(string name, json& json_entity, MeshPool* mesh_pool, MaterialPool* material_pool)
+	/*Entity* loadEntity(string name, json& json_entity, MeshPool* mesh_pool, MaterialPool* material_pool)
 	{
 		Entity* entity = new Entity(0, name.c_str());
 
@@ -228,5 +221,5 @@ namespace Genesis
 			Entity* entity = loadEntity(json_entity.key(), (jsoncons::json)json_entity.value(), mesh_pool, material_pool);
 			World::addEntity(world, entity);
 		}
-	}
+	}*/
 }

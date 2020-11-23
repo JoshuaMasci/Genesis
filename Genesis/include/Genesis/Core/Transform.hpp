@@ -37,15 +37,10 @@ namespace Genesis
 	class TransformD
 	{
 	protected:
-		void updateModelMatrix();
-
+		
 		vector3D position;
 		quaternionD orientation;
 		vector3D scale;
-
-		matrix4F untranslated_model_matrix;
-		bool dirty;
-
 	public:
 		TransformD(vector3D position = vector3D(0.0), quaternionD orientation = quaternionD(1.0, 0.0, 0.0, 0.0), vector3D scale = vector3D(1.0));
 
@@ -59,15 +54,18 @@ namespace Genesis
 		inline vector3D getForward() const { return this->orientation * vector3D(0.0, 0.0, 1.0); };
 
 		//Setters
-		inline void setPosition(const vector3D& vec) { this->position = vec; this->dirty = true; };
-		inline void setOrientation(const quaternionD& quat) { this->orientation = quat; this->dirty = true; };
-		inline void setScale(const vector3D& vec) { this->scale = vec; this->dirty = true; };
+		inline void setPosition(const vector3D& vec) { this->position = vec;};
+		inline void setOrientation(const quaternionD& quat) { this->orientation = quat;};
+		inline void setScale(const vector3D& vec) { this->scale = vec;};
 
 		matrix4F getModelMatrix(const vector3D& position_offset = vector3D(0.0));
 		matrix3F getNormalMatrix();
 		matrix4F getViewMatirx(const vector3D& position_offset = vector3D(0.0));
 
 		void setTransform(const TransformD& new_transform);
+
+		bool operator==(const TransformD& other);
+		bool operator!=(const TransformD& other);
 	};
 
 	class TransformUtils

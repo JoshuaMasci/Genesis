@@ -50,7 +50,7 @@ namespace Genesis
 		vector<DirectionalLightStruct> directional_lights;
 		vector<PointLightStruct> point_lights;
 
-		void clearBuffers()
+		void clear_buffers()
 		{
 			models.clear();
 			directional_lights.clear();

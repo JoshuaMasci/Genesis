@@ -16,14 +16,14 @@ namespace Genesis
 
 		void draw(SceneInfo* scene);
 
-		bool isSceneRunning() { return this->is_scene_running; };
+		bool is_scene_running() { return this->scene_running; };
 
-		TransformD getSceneCameraTransform() { return this->scene_camera_transform; };
+		TransformD get_scene_camera_transform() { return this->scene_camera_transform; };
 
 	private:
-		bool is_window_active = false;
+		bool window_active = false;
 
-		bool is_scene_running = false;
+		bool scene_running = false;
 
 		InputManager* input_manager = nullptr;
 

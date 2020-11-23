@@ -21,8 +21,8 @@ namespace Genesis
 			this->backend->destoryIndexBuffer(this->index_buffer);
 		}
 
-		const VertexBuffer vertex_buffer;
-		const IndexBuffer index_buffer;
+		const VertexBuffer vertex_buffer = nullptr;
+		const IndexBuffer index_buffer = nullptr;
 		const uint32_t index_count;
 		const BoundingBox bounding_box;
 	};

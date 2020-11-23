@@ -45,33 +45,22 @@ namespace Genesis
 		this->setPosition(position);
 		this->setOrientation(orientation);
 		this->setScale(scale);
-		this->updateModelMatrix();
+		//this->updateModelMatrix();
 	}
 
 	matrix4F TransformD::getModelMatrix(const vector3D& position_offset)
 	{
-		if (this->dirty == true)
-		{
-			this->updateModelMatrix();
-		}
-
-		matrix4F translated_matrix = glm::translate(matrix4F(1.0f), (vector3F)(this->position - position_offset));
-		/*matrix4F translated_matrix = this->untranslated_model_matrix;
-		vector3F translated_position = (vector3F)(this->position - pos_offset);
-		translated_matrix[0][3] = translated_position.x;
-		translated_matrix[1][3] = translated_position.y;
-		translated_matrix[2][3] = translated_position.z;*/
-		return translated_matrix * this->untranslated_model_matrix;
+		matrix4F translation = glm::translate(matrix4F(1.0f), (vector3F)(this->position - position_offset));
+		matrix4F orientation = glm::toMat4(this->orientation);
+		matrix4F scale = glm::scale(matrix4F(1.0f), (vector3F)this->scale);
+		return translation * orientation * scale;
 	}
 
 	matrix3F TransformD::getNormalMatrix()
 	{
-		if (this->dirty == true)
-		{
-			this->updateModelMatrix();
-		}
-		;
-		return glm::transpose(glm::inverse(matrix3F(this->untranslated_model_matrix)));
+		matrix4F orientation = glm::toMat4(this->orientation);
+		matrix4F scale = glm::scale(matrix4F(1.0f), (vector3F)this->scale);
+		return glm::transpose(glm::inverse(matrix3F(orientation * scale)));
 	}
 
 	matrix4F TransformD::getViewMatirx(const vector3D& position_offset)
@@ -87,17 +76,16 @@ namespace Genesis
 		this->position = new_transform.position;
 		this->orientation = new_transform.orientation;
 		this->scale = new_transform.scale;
-
-		this->untranslated_model_matrix = new_transform.untranslated_model_matrix;
-		this->dirty = new_transform.dirty;
 	}
 
-	void TransformD::updateModelMatrix()
+	bool TransformD::operator==(const TransformD& other)
 	{
-		matrix4F orientation = glm::toMat4(this->orientation);
-		matrix4F scale = glm::scale(matrix4F(1.0f), (vector3F)this->scale);
-		this->untranslated_model_matrix = orientation * scale;
-		this->dirty = false;
+		return (this->position == other.position) && (this->orientation == other.orientation) && (this->scale == other.scale);
+	}
+
+	bool TransformD::operator!=(const TransformD& other)
+	{
+		return (this->position != other.position) || (this->orientation != other.orientation) || (this->scale != other.scale);
 	}
 
 	void TransformUtils::transformByInplace(TransformF& destination, const TransformF& origin, const TransformF& local)

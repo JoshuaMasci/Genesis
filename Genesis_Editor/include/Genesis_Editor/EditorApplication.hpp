@@ -12,16 +12,16 @@
 #include "Genesis_Editor/Windows/AssetBrowserWindow.hpp"
 #include "Genesis_Editor/Windows/MaterialEditorWindow.hpp"
 
-#include "Genesis/World/Entity.hpp"
-#include "Genesis/World/World.hpp"
-#include "Genesis/World/WorldSimulator.hpp"
-
 #include "Genesis/Resource/Material.hpp"
 #include "Genesis/Resource/MeshPool.hpp"
 #include "Genesis/Resource/TexturePool.hpp"
 #include "Genesis/Resource/MaterialPool.hpp"
 
 #include "reactphysics3d.h"
+
+#include "Genesis/Ecs/Ecs.hpp"
+#include "Genesis/Ecs/EntityWorld.hpp"
+#include "Genesis/Rendering/SceneInfo.hpp"
 
 namespace Genesis
 {
@@ -33,9 +33,9 @@ namespace Genesis
 
 		virtual void update(TimeStep time_step) override;
 		virtual void render(TimeStep interpolation_value) override;
-	protected:		
-		World editor_world;
-		WorldSimulator world_simulator;
+	protected:
+
+		EntityWorld* editor_world = nullptr;
 
 		LegacyBackend* legacy_backend;
 		BaseImGui* ui_renderer;
