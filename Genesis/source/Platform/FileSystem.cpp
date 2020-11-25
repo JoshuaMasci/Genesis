@@ -41,7 +41,7 @@ namespace Genesis
 #ifdef GENESIS_PLATFORM_WIN
 #include <windows.h>
 #include <commdlg.h> 
-	string FileSystem::getFileDialog(const string& initial_directory)
+	string FileSystem::getFileDialog(const char* filter)
 	{
 		OPENFILENAME ofn;
 		char fileName[MAX_PATH] = "";
@@ -49,24 +49,25 @@ namespace Genesis
 
 		ofn.lStructSize = sizeof(OPENFILENAME);
 		ofn.hwndOwner = NULL;
-		ofn.lpstrFilter = NULL;
+		ofn.lpstrFilter = filter;
 		ofn.lpstrFile = fileName;
 		ofn.nMaxFile = MAX_PATH;
-		ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+		ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
 		ofn.lpstrDefExt = "";
-		ofn.lpstrInitialDir = initial_directory.c_str();
+		ofn.lpstrInitialDir = "";
 
 		string fileNameStr;
 
 		if (GetOpenFileName(&ofn))
 		{
 			fileNameStr = fileName;
+			std::replace(fileNameStr.begin(), fileNameStr.end(), '\\', '/');
 		}
 
 		return fileNameStr;
 	}
 #else
-	string FileSystem::getFileDialog(const string& initial_directory)
+	string FileSystem::getFileDialog(const char* filter)
 	{
 		return string();
 	}
@@ -119,9 +120,12 @@ namespace Genesis
 		}
 	};
 
-	void FileSystem::readDirectory(const string& filepath, vector<string>& files)
+	void FileSystem::readDirectory(const string& directory_path, vector<string>& files)
 	{
-		std::filesystem::path path(filepath);
+		string filepath_temp = directory_path;
+		std::replace(filepath_temp.begin(), filepath_temp.end(), '/', '\\');
+
+		std::filesystem::path path(filepath_temp);
 		std::filesystem::directory_iterator start(path);
 		std::filesystem::directory_iterator end;
 		std::transform(start, end, std::back_inserter(files), path_leaf_string());
@@ -140,7 +144,10 @@ namespace Genesis
 
 	void FileSystem::readDirectory(const string& directory_path, vector<FileInfo>& files)
 	{
-		std::filesystem::path path(directory_path);
+		string filepath_temp = directory_path;
+		std::replace(filepath_temp.begin(), filepath_temp.end(), '/', '\\');
+
+		std::filesystem::path path(filepath_temp);
 		std::filesystem::directory_iterator start(path);
 		std::filesystem::directory_iterator end;
 		std::transform(start, end, std::back_inserter(files), path_info());

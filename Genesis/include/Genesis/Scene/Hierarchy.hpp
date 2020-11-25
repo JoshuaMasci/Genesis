@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Ecs/Ecs.hpp"
+#include "Genesis/Scene/Ecs.hpp"
 
 namespace Genesis
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Genesis/Component/TransformComponent.hpp"
-#include "Genesis/Ecs/EntityWorld.hpp"
+#include "Genesis/Scene/Scene.hpp"
 #include "Genesis/Rendering/SceneInfo.hpp"
 
 namespace Genesis
@@ -9,10 +9,10 @@ namespace Genesis
 	class SceneSystem
 	{
 	public:
-		static void build_scene(EntityWorld* world)
+		static void build_scene(Scene* scene)
 		{
-			SceneInfo* scene_info = world->world_components.get<SceneInfo>();
-			EntityRegistry& registry = world->registry;
+			SceneInfo* scene_info = &scene->scene_components.get<SceneInfo>();
+			EntityRegistry& registry = scene->registry;
 
 			scene_info->clear_buffers();
 

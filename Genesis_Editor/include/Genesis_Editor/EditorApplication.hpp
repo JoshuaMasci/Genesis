@@ -19,8 +19,8 @@
 
 #include "reactphysics3d.h"
 
-#include "Genesis/Ecs/Ecs.hpp"
-#include "Genesis/Ecs/EntityWorld.hpp"
+#include "Genesis/Scene/Ecs.hpp"
+#include "Genesis/Scene/Scene.hpp"
 #include "Genesis/Rendering/SceneInfo.hpp"
 
 namespace Genesis
@@ -34,8 +34,7 @@ namespace Genesis
 		virtual void update(TimeStep time_step) override;
 		virtual void render(TimeStep interpolation_value) override;
 	protected:
-
-		EntityWorld* editor_world = nullptr;
+		Scene* editor_scene = nullptr;
 
 		LegacyBackend* legacy_backend;
 		BaseImGui* ui_renderer;

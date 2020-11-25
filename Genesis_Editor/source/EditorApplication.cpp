@@ -18,9 +18,9 @@
 #include "Genesis/Physics/CollisionShape.hpp"
 #include "Genesis/Physics/ReactPhyscis.hpp"
 
-#include "Genesis/Ecs/EntitySystemSet.hpp"
-#include "Genesis/Ecs/TransformResolveSystem.hpp"
-#include "Genesis/Ecs/SceneSystem.hpp"
+#include "Genesis/System/EntitySystemSet.hpp"
+#include "Genesis/System/TransformResolveSystem.hpp"
+#include "Genesis/System/SceneSystem.hpp"
 
 #include <jsoncons/json.hpp>
 #include <fstream>
@@ -46,17 +46,17 @@ namespace Genesis
 		this->entity_hierarchy_window = new EntityHierarchyWindow();
 		this->entity_properties_window = new EntityPropertiesWindow();
 		this->scene_window = new SceneWindow(this->input_manager, this->legacy_backend);
-		this->asset_browser_window = new AssetBrowserWindow(this->legacy_backend);
+		this->asset_browser_window = new AssetBrowserWindow(this->legacy_backend, "res/");
 		this->material_editor_window = new MaterialEditorWindow(this->material_pool, this->texture_pool);
 		this->material_editor_window->setActiveMaterial(this->material_pool->getResource("res/materials/grid.mat"));
 
-		this->editor_world = new EntityWorld();
-		this->editor_world->world_components.add<SceneInfo>();
+		this->editor_scene = new Scene();
+		this->editor_scene->scene_components.add<SceneInfo>();
 	}
 
 	EditorApplication::~EditorApplication()
 	{
-		delete this->editor_world;
+		delete this->editor_scene;
 
 		delete this->mesh_pool;
 		delete this->texture_pool;
@@ -79,7 +79,7 @@ namespace Genesis
 		GENESIS_PROFILE_FUNCTION("EditorApplication::update");
 		Application::update(time_step);
 
-		TransformResolveSystem().run(this->editor_world, time_step);
+		TransformResolveSystem().run(this->editor_scene, time_step);
 
 		if (this->scene_window->is_scene_running()) 
 		{
@@ -110,9 +110,12 @@ namespace Genesis
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("Load Scene", ""))
+				if (ImGui::MenuItem("Open Scene", ""))
 				{
-
+					/*string project_file = FileSystem::getFileDialog("Supported Files(*.proj)\0*.proj;\0All files(*.*)\0*.*\0");
+					string project_directory = FileSystem::getPath(project_file);
+					this->asset_browser_window->setProjectDirectory(project_directory);
+					GENESIS_ENGINE_INFO("Project_directory: {}", project_directory);*/
 				}
 
 				if (ImGui::MenuItem("Exit", "")) { this->close(); };
@@ -139,13 +142,13 @@ namespace Genesis
 		}
 
 		this->console_window->draw();
-		this->entity_hierarchy_window->draw(this->editor_world, this->mesh_pool, this->material_pool);
+		this->entity_hierarchy_window->draw(this->editor_scene, this->mesh_pool, this->material_pool);
 		this->entity_properties_window->draw(this->entity_hierarchy_window->getSelected(), this->mesh_pool, this->material_pool);
 
-		SceneSystem::build_scene(this->editor_world);
+		SceneSystem::build_scene(this->editor_scene);
 
-		this->scene_window->draw(this->editor_world->world_components.get<SceneInfo>());
-		this->asset_browser_window->draw("res/");
+		this->scene_window->draw(&this->editor_scene->scene_components.get<SceneInfo>());
+		this->asset_browser_window->draw();
 		this->material_editor_window->draw();
 
 		if (this->show_demo_window)

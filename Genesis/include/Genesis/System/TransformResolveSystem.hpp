@@ -1,18 +1,18 @@
 #pragma once
 
 #include "Genesis/Component/TransformComponent.hpp"
-#include "Genesis/Ecs/Ecs.hpp"
-#include "Genesis/Ecs/Hierarchy.hpp"
-#include "Genesis/Ecs/EntitySystem.hpp"
+#include "Genesis/Scene/Ecs.hpp"
+#include "Genesis/Scene/Hierarchy.hpp"
+#include "Genesis/System/EntitySystem.hpp"
 
 namespace Genesis
 {
 	class TransformResolveSystem: public EntitySystem
 	{
 	public:
-		virtual void run(EntityWorld* world, const TimeStep time_step)
+		virtual void run(Scene* scene, const TimeStep time_step)
 		{
-			EntityRegistry& registry = world->registry;
+			EntityRegistry& registry = scene->registry;
 			auto view = registry.view<Transform>(entt::exclude_t<ChildNode>());
 			for (auto entity : view)
 			{

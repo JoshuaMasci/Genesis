@@ -1,4 +1,4 @@
-#include "Genesis/Ecs/Hierarchy.hpp"
+#include "Genesis/Scene/Hierarchy.hpp"
 
 namespace Genesis
 {

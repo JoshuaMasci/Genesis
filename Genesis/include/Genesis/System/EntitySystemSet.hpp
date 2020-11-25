@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Genesis/Ecs/Ecs.hpp"
-#include "Genesis/Ecs/EntitySystem.hpp"
+#include "Genesis/Scene/Ecs.hpp"
+#include "Genesis/System/EntitySystem.hpp"
 
 namespace Genesis
 {
@@ -9,11 +9,11 @@ namespace Genesis
 	{
 	public:
 		void add_system(EntitySystem* system) { this->systems.push_back(system); };
-		void run_systems(EntityWorld* world, const TimeStep time_step)
+		void run_systems(Scene* scene, const TimeStep time_step)
 		{
 			for (auto system : this->systems)
 			{
-				system->run(world, time_step);
+				system->run(scene, time_step);
 			}
 		};
 

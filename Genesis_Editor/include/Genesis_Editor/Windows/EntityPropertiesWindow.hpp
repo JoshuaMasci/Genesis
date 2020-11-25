@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Genesis/Ecs/Ecs.hpp"
-#include "Genesis/Ecs/Entity.hpp"
+#include "Genesis/Scene/Ecs.hpp"
+#include "Genesis/Scene/Entity.hpp"
 
 namespace Genesis
 {

@@ -4,11 +4,11 @@
 
 namespace Genesis
 {
-	void AssetBrowserWindow::refresh(const string& project_directory)
+	void AssetBrowserWindow::refresh()
 	{
 		this->directory_map.clear();
-		this->readDirectory(project_directory);
-		this->active_directory = project_directory;
+		this->readDirectory(this->project_directory);
+		this->active_directory = this->project_directory;
 	}
 
 	void AssetBrowserWindow::readDirectory(const string& directory_path)
@@ -149,12 +149,11 @@ namespace Genesis
 
 	}
 
-	AssetBrowserWindow::AssetBrowserWindow(LegacyBackend* backend)
+	AssetBrowserWindow::AssetBrowserWindow(LegacyBackend* backend, const string& project_directory)
 	{
 		this->backend = backend;
 
-		const string starting_directory = "res/";
-		this->refresh(starting_directory);
+		this->setProjectDirectory(project_directory);
 
 		//Using 1x1 textures for now
 		//TODO replace with icons
@@ -180,7 +179,7 @@ namespace Genesis
 		this->backend->destoryTexture(this->directory_icon);
 	}
 
-	void AssetBrowserWindow::draw(const string& project_directory)
+	void AssetBrowserWindow::draw()
 	{
 		//ImGui::ShowDemoWindow();
 
@@ -192,8 +191,7 @@ namespace Genesis
 			{
 				if (ImGui::MenuItem("Refresh"))
 				{
-					const string starting_directory = "res/";
-					this->refresh(starting_directory);
+					this->refresh();
 				}
 
 				ImGui::EndMenu();
@@ -224,7 +222,7 @@ namespace Genesis
 
 			if (node_open)
 			{
-				this->drawDirectoryTree("res/");
+				this->drawDirectoryTree(this->project_directory);
 				ImGui::TreePop();
 			}
 
@@ -244,5 +242,11 @@ namespace Genesis
 		ImGui::PopStyleVar();
 
 		ImGui::End();
+	}
+
+	void AssetBrowserWindow::setProjectDirectory(const string& project_directory)
+	{
+		this->project_directory = project_directory;
+		this->refresh();
 	}
 }

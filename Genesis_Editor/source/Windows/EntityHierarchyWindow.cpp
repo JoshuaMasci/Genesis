@@ -9,7 +9,7 @@
 #include "Genesis/Component/TransformComponent.hpp"
 #include "Genesis/Component/ModelComponent.hpp"
 
-#include "Genesis/Ecs/Hierarchy.hpp"
+#include "Genesis/Scene/Hierarchy.hpp"
 
 namespace Genesis
 {
@@ -21,7 +21,7 @@ namespace Genesis
 	{
 	}
 
-	void worldDragDrop(EntityRegistry& registry)
+	void worldDragDrop(Scene* scene)
 	{
 		if (ImGui::BeginDragDropTarget())
 		{
@@ -35,28 +35,29 @@ namespace Genesis
 					ChildNode child_node = moved_entity.get<ChildNode>();
 					if (child_node.parent != null_entity)
 					{
-						HierarchyUtils::removeChild(registry, child_node.parent, moved_entity.handle());
+						Entity(scene, child_node.parent).removeChild(moved_entity);
 					}
 				}
 			}
 		}
 	}
 
-	void EntityHierarchyWindow::draw(EntityWorld* world, MeshPool* mesh_pool, MaterialPool* material_pool)
+	void EntityHierarchyWindow::draw(Scene* scene, MeshPool* mesh_pool, MaterialPool* material_pool)
 	{
-		EntityRegistry& registry = world->registry;
-
 		ImGui::Begin("Entity Hierarchy");
 
-		worldDragDrop(registry);
+		worldDragDrop(scene);
 
 		ImGui::OpenPopupOnItemClick("Create_Entity_Popup", 1);
 
-		registry.each([&](auto entity)
+		scene->registry.each([&](auto entity)
 		{
-			if (!registry.has<ChildNode>(entity))
+			if (entity != scene->scene_components.handle())
 			{
-				this->drawEntity(Entity(&registry, entity));
+				if (!scene->registry.has<ChildNode>(entity))
+				{
+					this->drawEntity(scene, Entity(scene, entity));
+				}
 			}
 		});
 
@@ -72,21 +73,20 @@ namespace Genesis
 
 		ImGui::OpenPopupOnItemClick("Create_Entity_Popup", 1);
 
-		worldDragDrop(registry);
+		worldDragDrop(scene);
 
 		if (ImGui::BeginPopup("Create_Entity_Popup"))
 		{
 			if (ImGui::MenuItem("Create Empty")) 
 			{ 
-				registry.assign<NameComponent>(registry.create(), "Empty Entity");
+				scene->createEntity("Empty Entity");
 			}
 			if (ImGui::MenuItem("Create Cube"))
 			{
-				EntityHandle cube = registry.create();
-				registry.assign<NameComponent>(cube, "cube");
-				registry.assign<Transform>(cube);
-				registry.assign<WorldTransform>(cube);
-				registry.assign<ModelComponent>(cube, mesh_pool->getResource("res/meshes/cube.obj"), make_shared<Material>("No Material"));
+				Entity cube = scene->createEntity("cube");
+				cube.add<Transform>();
+				cube.add<WorldTransform>();
+				cube.add<ModelComponent>(mesh_pool->getResource("res/meshes/cube.obj"), make_shared<Material>("No Material"));
 			};
 			ImGui::EndPopup();
 		}
@@ -94,7 +94,7 @@ namespace Genesis
 		ImGui::End();
 	}
 
-	void EntityHierarchyWindow::drawEntity(Entity entity)
+	void EntityHierarchyWindow::drawEntity(Scene* scene, Entity entity)
 	{
 		const ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
 		ImGuiTreeNodeFlags node_flags = base_flags;
@@ -151,7 +151,7 @@ namespace Genesis
 				GENESIS_ENGINE_ASSERT(payload->DataSize == sizeof(Entity), "Payload Data Size wrong size");
 				Entity moved_entity = *(Entity*)payload->Data;
 
-				if (moved_entity.registry() == entity.registry())
+				if (entity.inSameScene(moved_entity))
 				{
 					if (moved_entity.has<ChildNode>())
 					{
@@ -159,11 +159,11 @@ namespace Genesis
 
 						if (child_node.parent != null_entity)
 						{
-							Entity(moved_entity.registry(), child_node.parent).remove_child(moved_entity);
+							Entity(scene, child_node.parent).removeChild(moved_entity);
 						}
 					}
 
-					entity.add_child(moved_entity);
+					entity.addChild(moved_entity);
 				}
 			}
 		}
@@ -173,15 +173,19 @@ namespace Genesis
 			if (ImGui::MenuItem("Delete Entity"))
 			{
 				// TODO: add to delete queue
+				entity.destory();
 			}
 			ImGui::EndPopup();
 		}
 
 		if (node_opened)
 		{
-			for (EntityHandle child : entity.children())
+			if (entity.valid())
 			{
-				this->drawEntity(Entity(entity.registry(), child));
+				for (EntityHandle child : entity.children())
+				{
+					this->drawEntity(scene, Entity(scene, child));
+				}
 			}
 			ImGui::TreePop();
 		}

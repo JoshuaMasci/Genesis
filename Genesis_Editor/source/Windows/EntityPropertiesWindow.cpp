@@ -14,7 +14,7 @@
 #include "Genesis/Resource/MeshPool.hpp"
 #include "Genesis/Resource/MaterialPool.hpp"
 
-#include "Genesis/Ecs/Entity.hpp"
+#include "Genesis/Scene/Entity.hpp"
 
 namespace Genesis
 {
