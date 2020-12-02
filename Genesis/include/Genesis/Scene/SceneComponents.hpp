@@ -13,7 +13,7 @@ namespace Genesis
 			this->entity_handle = entity;
 		}
 
-		EntityHandle handle()
+		EntityHandle handle() const
 		{
 			return this->entity_handle;
 		}

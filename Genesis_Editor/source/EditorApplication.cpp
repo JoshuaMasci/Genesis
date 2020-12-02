@@ -22,9 +22,7 @@
 #include "Genesis/System/TransformResolveSystem.hpp"
 #include "Genesis/System/SceneSystem.hpp"
 
-#include <jsoncons/json.hpp>
-#include <fstream>
-using namespace jsoncons;
+#include "Genesis/Scene/SceneSerializer.hpp"
 
 namespace Genesis
 {
@@ -112,10 +110,23 @@ namespace Genesis
 			{
 				if (ImGui::MenuItem("Open Scene", ""))
 				{
-					/*string project_file = FileSystem::getFileDialog("Supported Files(*.proj)\0*.proj;\0All files(*.*)\0*.*\0");
-					string project_directory = FileSystem::getPath(project_file);
-					this->asset_browser_window->setProjectDirectory(project_directory);
-					GENESIS_ENGINE_INFO("Project_directory: {}", project_directory);*/
+					string save_file_path = FileSystem::openFileDialog("Supported Files(*.scene)\0*.scene;\0All files(*.*)\0*.*\0");
+
+					if (!save_file_path.empty())
+					{
+						delete this->editor_scene;
+						this->editor_scene = SceneSerializer().deserialize(save_file_path.c_str(), this->mesh_pool, this->material_pool);
+					}
+				}
+
+				if (ImGui::MenuItem("Save Scene", ""))
+				{
+					string save_file_path = FileSystem::saveFileDialog("Supported Files(*.scene)\0*.scene;\0All files(*.*)\0*.*\0");
+
+					if (!save_file_path.empty())
+					{
+						SceneSerializer().serialize(this->editor_scene, save_file_path.c_str());
+					}
 				}
 
 				if (ImGui::MenuItem("Exit", "")) { this->close(); };
@@ -160,69 +171,4 @@ namespace Genesis
 
 		this->legacy_backend->endFrame();
 	}
-
-	/*Entity* loadEntity(string name, json& json_entity, MeshPool* mesh_pool, MaterialPool* material_pool)
-	{
-		Entity* entity = new Entity(0, name.c_str());
-
-		if (json_entity.contains("Transform"))
-		{
-			json& json_transform = json_entity["Transform"];
-			TransformD& transform = entity->local_transform;
-
-			vector<double> position = json_transform["position"].as<vector<double>>();
-			transform.setPosition(vector3D(position[0], position[1], position[2]));
-
-			vector<double> orientation = json_transform["orientation"].as<vector<double>>();
-			transform.setOrientation(quaternionD(orientation[3], orientation[0], orientation[1], orientation[2]));
-
-			vector<double> scale = json_transform["scale"].as<vector<double>>();
-			transform.setScale(vector3D(scale[0], scale[1], scale[2]));
-		}
-
-		if (json_entity.contains("Model"))
-		{
-			json& json_model = json_entity["Model"];
-			ModelComponent* model = entity->components.add<ModelComponent>();
-			model->mesh = mesh_pool->getResource(json_model["mesh"].as_string());
-			model->material = material_pool->getResource(json_model["material"].as_string());
-		}
-
-		if (json_entity.contains("RigidBody"))
-		{
-			json& json_rigid_body = json_entity["RigidBody"];
-			RigidBody* rigid_body = entity->components.add<RigidBody>();
-			rigid_body->setType((RigidBodyType)json_rigid_body["type"].as<int>());
-			rigid_body->setMass(json_rigid_body["mass"].as_double());
-			rigid_body->setGravityEnabled(json_rigid_body["gravity_enabled"].as_bool());
-			rigid_body->setIsAllowedToSleep(json_rigid_body["is_allowed_to_sleep"].as_bool());
-
-			vector<double> linear_velocity = json_rigid_body["linear_velocity"].as<vector<double>>();
-			rigid_body->setLinearVelocity(vector3D(linear_velocity[0], linear_velocity[1], linear_velocity[2]));
-
-			vector<double> angular_velocity = json_rigid_body["angular_velocity"].as<vector<double>>();
-			rigid_body->setAngularVelocity(vector3D(angular_velocity[0], angular_velocity[1], angular_velocity[2]));
-		}
-
-		return entity;
-	}
-
-	void loadSceneTemp(World* world, const string& json_file, MeshPool* mesh_pool, MaterialPool* material_pool)
-	{
-		std::ifstream in_stream(json_file);
-
-		if (!in_stream.is_open())
-		{
-			GENESIS_ENGINE_ASSERT("Failed to open scene file {}", json_file);
-			return;
-		}
-
-		jsoncons::json scene_file = json::parse(in_stream);
-
-		for (const auto& json_entity : scene_file.object_range())
-		{
-			Entity* entity = loadEntity(json_entity.key(), (jsoncons::json)json_entity.value(), mesh_pool, material_pool);
-			World::addEntity(world, entity);
-		}
-	}*/
 }

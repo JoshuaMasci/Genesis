@@ -13,10 +13,13 @@ namespace Genesis
 	class FileSystem
 	{
 	public:
+		static string openFileDialog(const char* filter);
+		static string saveFileDialog(const char* filter);
+
+
 		static bool loadFileString(const string& filepath, string& destination);
 		static bool loadFileBinary(const string& filepath, vector<uint8_t>& destination);
 
-		static string getFileDialog(const char* filter);
 
 		static bool loadShaderString(const string& filepath, string& destination);
 

@@ -96,7 +96,7 @@ namespace Genesis
 
 	void EntityHierarchyWindow::drawEntity(Scene* scene, Entity entity)
 	{
-		const ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
+		const ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_DefaultOpen;
 		ImGuiTreeNodeFlags node_flags = base_flags;
 
 		if (this->selected_entity == entity)

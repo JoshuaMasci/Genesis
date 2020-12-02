@@ -25,6 +25,12 @@ namespace Genesis
 			return this->scene->registry.assign<T>(entity_handle, std::forward<Args>(args)...);
 		}
 
+		template<typename T, typename... Args>
+		T& add_or_replace(Args&&... args)
+		{
+			return this->scene->registry.assign_or_replace<T>(entity_handle, std::forward<Args>(args)...);
+		}
+
 		template<typename T>
 		T& get()
 		{
@@ -33,7 +39,7 @@ namespace Genesis
 		}
 
 		template<typename T>
-		bool has()
+		bool has() const
 		{
 			return this->scene->registry.has<T>(entity_handle);
 		}
@@ -45,12 +51,17 @@ namespace Genesis
 			this->scene->registry.remove<T>(entity_handle);
 		}
 
-		EntityHandle handle()
+		Scene* get_scene() const
+		{
+			return this->scene;
+		}
+
+		EntityHandle handle() const
 		{
 			return this->entity_handle;
 		}
 
-		bool valid()
+		bool valid() const
 		{
 			if (!this->scene)
 				return false;

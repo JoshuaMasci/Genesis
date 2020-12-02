@@ -6,6 +6,74 @@
 
 namespace Genesis 
 {
+#ifdef GENESIS_PLATFORM_WIN
+#include <windows.h>
+#include <commdlg.h> 
+	string FileSystem::openFileDialog(const char* filter)
+	{
+		OPENFILENAME open_file_name;
+		char file_path[MAX_PATH] = "";
+		ZeroMemory(&open_file_name, sizeof(open_file_name));
+
+		open_file_name.lStructSize = sizeof(OPENFILENAME);
+		open_file_name.hwndOwner = NULL;
+		open_file_name.lpstrFilter = filter;
+		open_file_name.lpstrFile = file_path;
+		open_file_name.nMaxFile = MAX_PATH;
+		open_file_name.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
+		open_file_name.lpstrDefExt = "";
+		open_file_name.lpstrInitialDir = "";
+
+		string file_name_str;
+
+		if (GetOpenFileName(&open_file_name))
+		{
+			file_name_str = file_path;
+			std::replace(file_name_str.begin(), file_name_str.end(), '\\', '/');
+		}
+
+		return file_name_str;
+	}
+
+	string FileSystem::saveFileDialog(const char* filter)
+	{
+		OPENFILENAME open_file_name;
+		char file_path[MAX_PATH] = "";
+		ZeroMemory(&open_file_name, sizeof(open_file_name));
+
+		open_file_name.lStructSize = sizeof(OPENFILENAME);
+		open_file_name.hwndOwner = NULL;
+		open_file_name.lpstrFilter = filter;
+		open_file_name.lpstrFile = file_path;
+		open_file_name.nMaxFile = MAX_PATH;
+		open_file_name.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
+		open_file_name.lpstrDefExt = "";
+		open_file_name.lpstrInitialDir = "";
+
+		string file_name_str;
+
+		if (GetSaveFileName(&open_file_name))
+		{
+			file_name_str = file_path;
+			std::replace(file_name_str.begin(), file_name_str.end(), '\\', '/');
+		}
+
+		return file_name_str;
+	}
+
+#else
+	string FileSystem::openFileDialog(const char* filter)
+	{
+		return string();
+	}
+
+	string FileSystem::saveFileDialog(const char* filter)
+	{
+		return string();
+	}
+#endif
+
+
 	bool FileSystem::loadFileString(const string& filepath, string& destination)
 	{
 		std::ifstream file_reader(filepath, std::ios::ate);
@@ -36,42 +104,6 @@ namespace Genesis
 		}
 		return false;
 	}
-
-//TODO replace with IMGUI version
-#ifdef GENESIS_PLATFORM_WIN
-#include <windows.h>
-#include <commdlg.h> 
-	string FileSystem::getFileDialog(const char* filter)
-	{
-		OPENFILENAME ofn;
-		char fileName[MAX_PATH] = "";
-		ZeroMemory(&ofn, sizeof(ofn));
-
-		ofn.lStructSize = sizeof(OPENFILENAME);
-		ofn.hwndOwner = NULL;
-		ofn.lpstrFilter = filter;
-		ofn.lpstrFile = fileName;
-		ofn.nMaxFile = MAX_PATH;
-		ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
-		ofn.lpstrDefExt = "";
-		ofn.lpstrInitialDir = "";
-
-		string fileNameStr;
-
-		if (GetOpenFileName(&ofn))
-		{
-			fileNameStr = fileName;
-			std::replace(fileNameStr.begin(), fileNameStr.end(), '\\', '/');
-		}
-
-		return fileNameStr;
-	}
-#else
-	string FileSystem::getFileDialog(const char* filter)
-	{
-		return string();
-	}
-#endif
 
 	bool FileSystem::loadShaderString(const string& filepath, string& destination)
 	{

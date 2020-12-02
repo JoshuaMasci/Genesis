@@ -25,12 +25,14 @@ target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/spdlog-
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/imgui-docking/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/tinyobj/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/stb/)
-target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/jsoncons-0.148.0/include/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/tinygltf-master/)
 
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/src/)
 target_link_libraries(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/build/lib/debug/reactphysics3d.lib)
 target_compile_definitions(Genesis_Engine PUBLIC IS_DOUBLE_PRECISION_ENABLED)
+
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/yaml-cpp-master/include/)
+target_link_libraries(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/yaml-cpp-master/build/debug/yaml-cppd.lib)
 
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/)
 
