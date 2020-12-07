@@ -14,7 +14,7 @@ namespace Genesis
 
 	struct ModelStruct
 	{
-		shared_ptr<MeshResource> mesh;
+		shared_ptr<Mesh> mesh;
 		shared_ptr<Material> material;
 		TransformD transform;
 	};
@@ -31,22 +31,11 @@ namespace Genesis
 		TransformD transform;
 	};
 
-	struct SceneSettings
-	{
-		bool lighting = true;
-		bool frustrum_culling = true;
-	};
-
 	struct SceneInfo
 	{
-		SceneSettings settings;
-
-		Camera camera;
-		TransformD camera_transform;
+		vector3F ambient_light = vector3D(1.0);
 
 		vector<ModelStruct> models;
-
-		vector3F ambient_light = vector3D(1.0);
 		vector<DirectionalLightStruct> directional_lights;
 		vector<PointLightStruct> point_lights;
 

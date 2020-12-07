@@ -5,14 +5,16 @@
 
 namespace Genesis
 {
-	//Asset Pools Forward Declaration
-	class MeshPool;
-	class MaterialPool;
+	class ResourceManager;
 
 	class EntityPropertiesWindow
 	{
 	protected:
+		ResourceManager* resource_manager = nullptr;
+
 	public:
-		void draw(Entity entity, MeshPool* mesh_pool, MaterialPool* material_pool);
+		EntityPropertiesWindow(ResourceManager* resource_manager);
+
+		void draw(Entity entity);
 	};
 }

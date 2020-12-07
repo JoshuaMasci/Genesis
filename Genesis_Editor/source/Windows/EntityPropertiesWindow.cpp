@@ -3,6 +3,8 @@
 #include "imgui.h"
 #include "Genesis/Platform/FileSystem.hpp"
 
+#include "Genesis/Resource/ResourceManager.hpp"
+
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Component/TransformComponent.hpp"
 #include "Genesis/Component/ModelComponent.hpp"
@@ -10,14 +12,17 @@
 #include "Genesis/Rendering/Lights.hpp"
 #include "Genesis/Physics/RigidBody.hpp"
 #include "Genesis/Physics/CollisionShape.hpp"
-
-#include "Genesis/Resource/MeshPool.hpp"
-#include "Genesis/Resource/MaterialPool.hpp"
+#include "Genesis/Physics/PhysicsWorld.hpp"
 
 #include "Genesis/Scene/Entity.hpp"
 
 namespace Genesis
 {
+	EntityPropertiesWindow::EntityPropertiesWindow(ResourceManager* resource_manager)
+	{
+		this->resource_manager = resource_manager;
+	}
+
 	template<class Component>
 	void drawComponent(Entity& entity, const char* component_name, function<void(Component&)> draw_function)
 	{
@@ -43,14 +48,29 @@ namespace Genesis
 	};
 
 	template<class Component>
-	void drawComponentLamda(Entity& entity, const char* component_name, void(*draw_function)(Component&))
+	bool drawComponent2(Entity& entity, const char* component_name)
 	{
-		drawComponent<Component>(entity, component_name, function<void(Component&)>(draw_function));
+		bool header_open = false;
+
+		if (entity.has<Component>())
+		{
+			if (ImGui::BeginPopupContextItem(component_name, ImGuiMouseButton_Right))
+			{
+				if (ImGui::MenuItem("Delete Component"))
+				{
+					entity.remove<Component>();
+					header_open = false;
+				}
+				ImGui::EndPopup();
+			}
+		}
+
+		return header_open;
 	}
 
-#define ADD_COMPONENT(entity, component, component_name, ...) if (!entity.has<component>() && ImGui::MenuItem(component_name)) { entity.addComponent<component>(__VA_ARGS__); }
+#define ADD_COMPONENT(entity, component, component_name, ...) if (!entity.has<component>() && ImGui::MenuItem(component_name)) { entity.add<component>(__VA_ARGS__); }
 
-	void EntityPropertiesWindow::draw(Entity entity, MeshPool* mesh_pool, MaterialPool* material_pool)
+	void EntityPropertiesWindow::draw(Entity entity)
 	{
 		ImGui::Begin("Entity Properties");
 
@@ -105,7 +125,7 @@ namespace Genesis
 
 					if (extention == ".obj")
 					{
-						model_component.mesh = mesh_pool->getResource(file_path);
+						model_component.mesh = this->resource_manager->mesh_pool.getResource(file_path);
 					}
 				}
 			}
@@ -127,12 +147,126 @@ namespace Genesis
 
 					if (extention == ".mat")
 					{
-						model_component.material = material_pool->getResource(file_path);
+						model_component.material = this->resource_manager->material_pool.getResource(file_path);
 					}
 				}
 			}
 		});
 
+		drawComponent<DirectionalLight>(entity, "Directional Light", [=](DirectionalLight& light_component)
+		{
+			ImGui::PushID("Directional Light");
+
+			if (ImGui::DragFloat("Intensity", &light_component.intensity, 0.01f, 0.0f, 1.0f))
+			{
+				light_component.intensity = std::clamp(light_component.intensity, 0.0f, 1.0f);
+			}
+
+			ImGui::ColorEdit3("Color", &light_component.color.x, 0);
+			ImGui::Checkbox("Enabled", &light_component.enabled);
+			ImGui::PopID();
+		});
+
+		drawComponent<PointLight>(entity, "Point Light", [=](PointLight& light_component)
+		{
+			ImGui::PushID("Point Light");
+
+			if (ImGui::DragFloat("Intensity", &light_component.intensity, 0.01f, 0.0f, 1.0f))
+			{
+				light_component.intensity = std::clamp(light_component.intensity, 0.0f, 1.0f);
+			}
+
+			ImGui::ColorEdit3("Color", &light_component.color.x, 0);
+
+			if (ImGui::DragFloat("Range", &light_component.range, 0.25f, 0.25f, 1000.0f))
+			{
+				light_component.range = std::clamp(light_component.range, 0.01f, 1000.0f);
+			}
+
+			if (ImGui::DragFloat2("Attenuation", &light_component.attenuation.x, 0.01f, 0.0f, 1.0f))
+			{
+				light_component.attenuation.x = std::clamp(light_component.attenuation.x, 0.0f, 1.0f);
+				light_component.attenuation.y = std::clamp(light_component.attenuation.y, 0.0f, 1.0f);
+			}
+
+			ImGui::Checkbox("Enabled", &light_component.enabled);
+
+			ImGui::PopID();
+		});
+
+		drawComponent<RigidBody>(entity, "Rigidbody", [](RigidBody& rigidbody_component)
+		{
+			RigidBodyType type = rigidbody_component.getType();
+			const char* type_names[] = { "Static", "Kinematic", "Dynamic" };
+			if (ImGui::Combo("Type", (int*)&type, type_names, IM_ARRAYSIZE(type_names)))
+			{
+				rigidbody_component.setType(type);
+			}
+
+			double mass = rigidbody_component.getMass();
+			if (ImGui::InputDouble("Mass", &mass))
+			{
+				rigidbody_component.setMass(mass);
+			}
+
+			bool gravity = rigidbody_component.getGravityEnabled();
+			if (ImGui::Checkbox("Gravity Enabled", &gravity))
+			{
+				rigidbody_component.setGravityEnabled(gravity);
+			}
+
+			bool is_allowed_to_sleep = rigidbody_component.getIsAllowedToSleep();
+			if (ImGui::Checkbox("Is allowed to sleep", &is_allowed_to_sleep))
+			{
+				rigidbody_component.setIsAllowedToSleep(is_allowed_to_sleep);
+			}
+
+			vector3D linear_velocity = rigidbody_component.getLinearVelocity();
+			if (ImGui::InputScalarN("Linear Velocity", ImGuiDataType_::ImGuiDataType_Double, &linear_velocity, 3))
+			{
+				rigidbody_component.setLinearVelocity(linear_velocity);
+			}
+
+			vector3D angular_velocity = rigidbody_component.getAngularVelocity();
+			if (ImGui::InputScalarN("Angular Velocity", ImGuiDataType_::ImGuiDataType_Double, &angular_velocity, 3))
+			{
+				rigidbody_component.setAngularVelocity(angular_velocity);
+			}
+		});
+
+		drawComponent<CollisionShape>(entity, "Collision Shape", [](CollisionShape& collision_shape) 
+		{
+			const char* shape_names[] = { "None", "Box", "Sphere", "Capsule" };
+			if (ImGui::Combo("Shape", (int*)&collision_shape.type, shape_names, IM_ARRAYSIZE(shape_names)))
+			{
+				switch (collision_shape.type)
+				{
+				case CollisionShapeType::Box:
+					collision_shape.type_data.box_size = vector3D(0.5);
+					break;
+				case CollisionShapeType::Sphere:
+					collision_shape.type_data.sphere_radius = 0.5;
+					break;
+				case CollisionShapeType::Capsule:
+					collision_shape.type_data.capsule_size = vector2D(0.5, 1.8);
+					break;
+				}
+			}
+
+			if (collision_shape.type == CollisionShapeType::Box)
+			{
+				ImGui::InputScalarN("Half Extents", ImGuiDataType_::ImGuiDataType_Double, &collision_shape.type_data.box_size, 3);
+			}
+			else if (collision_shape.type == CollisionShapeType::Sphere)
+			{
+				ImGui::InputDouble("Radius", &collision_shape.type_data.sphere_radius);
+			}
+			else if (collision_shape.type == CollisionShapeType::Capsule)
+			{
+				ImGui::InputDouble("Radius", &collision_shape.type_data.capsule_size.x);
+				ImGui::InputDouble("Height", &collision_shape.type_data.capsule_size.y);
+			}
+		});
 
 		ImGui::Separator();
 
@@ -143,6 +277,16 @@ namespace Genesis
 
 		if (ImGui::BeginPopup("add_component"))
 		{
+			Scene* scene = entity.get_scene();
+			ADD_COMPONENT(entity, NameComponent, "Name", "Unamed Entity");
+			ADD_COMPONENT(entity, Transform, "Transform");
+			ADD_COMPONENT(entity, ModelComponent, "Model");
+			ADD_COMPONENT(entity, DirectionalLight, "Directional Light");
+			ADD_COMPONENT(entity, PointLight, "Point Light");
+			ADD_COMPONENT(entity, RigidBody, "RigidBody");
+			ADD_COMPONENT(entity, CollisionShape, "Collision Shape");
+			ADD_COMPONENT(entity, WorldTransform, "WorldTransform");
+
 			ImGui::EndPopup();
 		}
 

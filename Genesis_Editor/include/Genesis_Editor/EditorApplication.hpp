@@ -13,9 +13,7 @@
 #include "Genesis_Editor/Windows/MaterialEditorWindow.hpp"
 
 #include "Genesis/Resource/Material.hpp"
-#include "Genesis/Resource/MeshPool.hpp"
-#include "Genesis/Resource/TexturePool.hpp"
-#include "Genesis/Resource/MaterialPool.hpp"
+#include "Genesis/Resource/ResourceManager.hpp"
 
 #include "reactphysics3d.h"
 
@@ -46,9 +44,7 @@ namespace Genesis
 		AssetBrowserWindow* asset_browser_window = nullptr;
 		MaterialEditorWindow* material_editor_window = nullptr;
 
-		MeshPool* mesh_pool = nullptr;
-		TexturePool* texture_pool = nullptr;
-		MaterialPool* material_pool = nullptr;
+		ResourceManager* resource_manager = nullptr;
 
 		bool show_demo_window = false;
 	};

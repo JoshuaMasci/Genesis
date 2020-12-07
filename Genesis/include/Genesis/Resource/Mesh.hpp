@@ -1,53 +1,37 @@
 #pragma once
 
-#include "Genesis/RenderingBackend/RenderingTypes.hpp"
+#include "Genesis/Resource/Resource.hpp"
+#include "Genesis/LegacyBackend/LegacyBackend.hpp"
 #include "Genesis/Rendering/BoundingBox.hpp"
 
 namespace Genesis
 {
-	struct MeshVertex
-	{
-		vector3F position;
-		vector3F normal;
-		vector3F tangent;
-		vector3F bitangent;
-		vector2F uv;
-	};
-
-	struct MeshVertexAnimated
-	{
-		vector3F position;
-		vector3F normal;
-		vector3F tangent;
-		vector3F bitangent;
-		vector2F uv;
-
-		vector4F joints;
-		vector4F weights;
-	};
-
-
-	struct MeshPrimitive
-	{
-		uint32_t first_index;
-		uint32_t index_count;
-		uint32_t vertex_count;
-		BoundingBox bounding_box;
-	};
-
-	struct Mesh
+	struct MeshStruct
 	{
 		VertexBuffer vertex_buffer;
 		IndexBuffer index_buffer;
 		uint32_t index_count;
-
 		BoundingBox bounding_box;
-
-		bool has_weights = false;
 	};
 
-	struct MeshUtils
+	class Mesh : public Resource
 	{
-		void loadMeshFromFile(const string& file);
+	protected:
+		LegacyBackend* backend;
+
+	public:
+		Mesh(const string& file_path, LegacyBackend* backend, const MeshStruct& mesh)
+			:Resource(file_path), backend(backend), vertex_buffer(mesh.vertex_buffer), index_buffer(mesh.index_buffer), index_count(mesh.index_count), bounding_box(mesh.bounding_box){};
+
+		~Mesh()
+		{
+			this->backend->destoryVertexBuffer(this->vertex_buffer);
+			this->backend->destoryIndexBuffer(this->index_buffer);
+		}
+
+		const VertexBuffer vertex_buffer = nullptr;
+		const IndexBuffer index_buffer = nullptr;
+		const uint32_t index_count;
+		const BoundingBox bounding_box;
 	};
 }

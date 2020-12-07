@@ -3,9 +3,11 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
+#include "Genesis/Resource/VertexStructs.hpp"
+
 namespace Genesis
 {
-	Mesh ObjLoader::loadMesh(LegacyBackend* backend, const string& filename)
+	MeshStruct ObjLoader::loadMesh(LegacyBackend* backend, const string& filename)
 	{
 		tinyobj::attrib_t attrib;
 		vector<tinyobj::shape_t> shapes;
@@ -14,7 +16,7 @@ namespace Genesis
 
 		GENESIS_ENGINE_ASSERT((tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str())), "Can't load Mesh");
 
-		Mesh return_mesh = {};
+		MeshStruct return_mesh = {};
 		vector<MeshVertex> vertices;
 		vector<uint32_t> indices;
 

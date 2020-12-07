@@ -7,6 +7,6 @@ namespace Genesis
 {
 	struct ObjLoader
 	{
-		static Mesh loadMesh(LegacyBackend* backend, const string& filename);
+		static MeshStruct loadMesh(LegacyBackend* backend, const string& filename);
 	};
 }

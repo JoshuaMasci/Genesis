@@ -17,7 +17,7 @@ namespace Genesis
 
 		virtual void setUniformDynamicBuffer(uint32_t set, uint32_t binding, DynamicBuffer buffer) = 0;
 		virtual void setUniformStaticBuffer(uint32_t set, uint32_t binding, StaticBuffer buffer) = 0;
-		virtual void setUniformTexture(uint32_t set, uint32_t binding, Texture texture, Sampler sampler) = 0;
+		virtual void setUniformTexture(uint32_t set, uint32_t binding, Texture2D texture, Sampler sampler) = 0;
 		virtual void setUniformFramebuffer(uint32_t set, uint32_t binding, Framebuffer framebuffer, uint8_t framebuffer_image_index, Sampler sampler) = 0;
 
 		virtual void setDescriptorSet(uint32_t index, DescriptorSet descriptor_set) = 0;

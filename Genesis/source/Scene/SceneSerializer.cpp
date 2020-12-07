@@ -1,77 +1,22 @@
 #include "Genesis/Scene/SceneSerializer.hpp"
 
 #include <fstream>
-
-#define YAML_CPP_DLL
-#include <yaml-cpp/yaml.h>
+#include "Genesis/Core/Yaml.hpp"
 
 #include "Genesis/Scene/Entity.hpp"
 
 #include "Genesis/Rendering/SceneInfo.hpp"
+#include "Genesis/Physics/PhysicsWorld.hpp"
 
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Component/TransformComponent.hpp"
 #include "Genesis/Component/ModelComponent.hpp"
+#include "Genesis/Rendering/Camera.hpp"
+#include "Genesis/Rendering/Lights.hpp"
+#include "Genesis/Physics/RigidBody.hpp"
+#include "Genesis/Physics/CollisionShape.hpp"
 
-#include "Genesis/Resource/MeshPool.hpp"
-#include "Genesis/Resource/MaterialPool.hpp"
-
-namespace YAML 
-{
-	template<>
-	struct convert<Genesis::vector3D> 
-	{
-		static Node encode(const Genesis::vector3D& rhs)
-		{
-			Node node;
-			node.push_back(rhs.x);
-			node.push_back(rhs.y);
-			node.push_back(rhs.z);
-			return node;
-		}
-
-		static bool decode(const Node& node, Genesis::vector3D& rhs)
-		{
-			if (!node.IsSequence() || node.size() != 3) 
-			{
-				return false;
-			}
-
-			rhs.x = node[0].as<double>();
-			rhs.y = node[1].as<double>();
-			rhs.z = node[2].as<double>();
-			return true;
-		}
-	};
-
-	template<>
-	struct convert<Genesis::quaternionD>
-	{
-		static Node encode(const Genesis::quaternionD& rhs)
-		{
-			Node node;
-			node.push_back(rhs.x);
-			node.push_back(rhs.y);
-			node.push_back(rhs.z);
-			node.push_back(rhs.w);
-			return node;
-		}
-
-		static bool decode(const Node& node, Genesis::quaternionD& rhs)
-		{
-			if (!node.IsSequence() || node.size() != 4)
-			{
-				return false;
-			}
-
-			rhs.x = node[0].as<double>();
-			rhs.y = node[1].as<double>();
-			rhs.z = node[2].as<double>();
-			rhs.w = node[3].as<double>();
-			return true;
-		}
-	};
-}
+#include "Genesis/Resource/ResourceManager.hpp"
 
 namespace Genesis
 {
@@ -104,6 +49,63 @@ namespace Genesis
 			entity_node["Model"] = model_node;
 		}
 
+		
+		if (entity.has<DirectionalLight>())
+		{
+			DirectionalLight& light = entity.get<DirectionalLight>();
+			YAML::Node light_node;
+			light_node["enabled"] = light.enabled;
+			light_node["color"] = light.color;
+			light_node["intensity"] = light.intensity;
+			entity_node["DirectionalLight"] = light_node;
+		}
+
+		if (entity.has<PointLight>())
+		{
+			PointLight& light = entity.get<PointLight>();
+			YAML::Node light_node;
+			light_node["enabled"] = light.enabled;
+			light_node["color"] = light.color;
+			light_node["intensity"] = light.intensity;
+			light_node["range"] = light.range;
+			light_node["attenuation"] = light.attenuation;
+			entity_node["PointLight"] = light_node;
+		}
+
+		if (entity.has<RigidBody>())
+		{
+			RigidBody& rigid_body = entity.get<RigidBody>();
+			YAML::Node body_node;
+			body_node["type"] = (int)rigid_body.getType();
+			body_node["mass"] = rigid_body.getMass();
+			body_node["gravity_enabled"] = rigid_body.getGravityEnabled();
+			body_node["is_allowed_to_sleep"] = rigid_body.getIsAllowedToSleep();
+			body_node["linear_velocity"] = rigid_body.getLinearVelocity();
+			body_node["angular_velocity"] = rigid_body.getAngularVelocity();
+			entity_node["RigidBody"] = body_node;
+		}
+
+		if (entity.has<CollisionShape>())
+		{
+			CollisionShape& collision_shape = entity.get<CollisionShape>();
+			YAML::Node shape_node;
+			shape_node["type"] = (int)collision_shape.type;
+			switch (collision_shape.type)
+			{
+			case CollisionShapeType::Box:
+				shape_node["data"] = collision_shape.type_data.box_size;
+				break;
+			case CollisionShapeType::Sphere:
+				shape_node["data"] = collision_shape.type_data.sphere_radius;
+				break;
+			case CollisionShapeType::Capsule:
+				shape_node["data"] = collision_shape.type_data.capsule_size;
+				break;
+			}
+
+			entity_node["CollisionShape"] = shape_node;
+		}
+
 		for (auto child_handle : entity.children())
 		{
 			entity_node["Children"].push_back(serializeEntity(Entity(entity.get_scene(), child_handle)));
@@ -112,7 +114,7 @@ namespace Genesis
 		return entity_node;
 	}
 
-	Entity deserializeEntity(YAML::Node& entity_node, Scene* scene, MeshPool* mesh_pool, MaterialPool* material_pool)
+	Entity deserializeEntity(YAML::Node& entity_node, Scene* scene, ResourceManager* resource_manager)
 	{
 		string entity_name = "Yaml Entity";
 
@@ -136,9 +138,63 @@ namespace Genesis
 		{
 			YAML::Node model_node = entity_node["Model"];
 			ModelComponent& model = entity.add<ModelComponent>();
-			model.mesh = mesh_pool->getResource(model_node["Mesh"].as<std::string>());
-			model.material = material_pool->getResource(model_node["Material"].as<std::string>());
+			model.mesh = resource_manager->mesh_pool.getResource(model_node["Mesh"].as<std::string>());
+			model.material = resource_manager->material_pool.getResource(model_node["Material"].as<std::string>());
 			entity.add_or_replace<WorldTransform>();
+		}
+
+		if (entity_node["DirectionalLight"])
+		{
+			YAML::Node light_node = entity_node["DirectionalLight"];
+			DirectionalLight& light = entity.add<DirectionalLight>();
+			light.enabled = light_node["enabled"].as<bool>();
+			light.color = light_node["color"].as<vector3F>();
+			light.intensity = light_node["intensity"].as<float>();
+			entity.add_or_replace<WorldTransform>();
+		}
+
+		if (entity_node["PointLight"])
+		{
+			YAML::Node light_node = entity_node["PointLight"];
+			PointLight& light = entity.add<PointLight>();
+			light.enabled = light_node["enabled"].as<bool>();
+			light.color = light_node["color"].as<vector3F>();
+			light.intensity = light_node["intensity"].as<float>();
+			light.range = light_node["range"].as<float>();
+			light.attenuation = light_node["attenuation"].as<vector2F>();
+			entity.add_or_replace<WorldTransform>();
+		}
+
+		if (entity_node["RigidBody"])
+		{
+			YAML::Node body_node = entity_node["RigidBody"];
+			RigidBody& rigid_body = entity.add<RigidBody>();
+			rigid_body.setType((RigidBodyType) body_node["type"].as<int>());
+			rigid_body.setMass(body_node["mass"].as<float>());
+			rigid_body.setGravityEnabled(body_node["gravity_enabled"].as<bool>());
+			rigid_body.setIsAllowedToSleep(body_node["is_allowed_to_sleep"].as<bool>());
+			rigid_body.setLinearVelocity(body_node["linear_velocity"].as<vector3D>());
+			rigid_body.setAngularVelocity(body_node["angular_velocity"].as<vector3D>());
+			entity.add_or_replace<WorldTransform>();
+		}
+
+		if (entity_node["CollisionShape"])
+		{
+			YAML::Node shape_node = entity_node["CollisionShape"];
+			CollisionShape& collision_shape = entity.add<CollisionShape>();
+			collision_shape.type = (CollisionShapeType)shape_node["type"].as<int>();
+			switch (collision_shape.type)
+			{
+			case CollisionShapeType::Box:
+				collision_shape.type_data.box_size = shape_node["data"].as<vector3D>();
+				break;
+			case CollisionShapeType::Sphere:
+				collision_shape.type_data.sphere_radius = shape_node["data"].as<double>();
+				break;
+			case CollisionShapeType::Capsule:
+				collision_shape.type_data.capsule_size = shape_node["data"].as<vector2D>();
+				break;
+			}
 		}
 
 		if (entity_node["Children"])
@@ -146,7 +202,7 @@ namespace Genesis
 			auto children = entity_node["Children"];
 			for (auto child : children)
 			{
-				entity.addChild(deserializeEntity(child, scene, mesh_pool, material_pool));
+				entity.addChild(deserializeEntity(child, scene, resource_manager));
 			}
 		}
 
@@ -157,7 +213,21 @@ namespace Genesis
 	{
 		YAML::Node scene_node;
 
-		//TODO: write scene_components
+		if (scene->scene_components.has<SceneInfo>())
+		{
+			SceneInfo& scene_info = scene->scene_components.get<SceneInfo>();
+			YAML::Node scene_info_node;
+			scene_info_node["ambient_light"] = scene_info.ambient_light;
+			scene_node["SceneInfo"] = scene_info_node;
+		}
+
+		if (scene->scene_components.has<PhysicsWorld>())
+		{
+			PhysicsWorld& physics = scene->scene_components.get<PhysicsWorld>();
+			YAML::Node physics_node;
+			physics_node["gravity"] = physics.getGravity();
+			scene_node["PhysicsWorld"] = physics_node;
+		}
 
 		scene->registry.each([&](auto entity)
 		{
@@ -174,21 +244,31 @@ namespace Genesis
 		file_out << scene_node;
 	}
 
-	Scene* SceneSerializer::deserialize(const char* file_path, MeshPool* mesh_pool, MaterialPool* material_pool)
+	Scene* SceneSerializer::deserialize(const char* file_path, ResourceManager* resource_manager)
 	{
 		YAML::Node scene_node = YAML::LoadFile(file_path);
 
 		Scene* scene = new Scene();
 
-		//TODO: write scene_components
-		scene->scene_components.add<SceneInfo>();
+		if (scene_node["SceneInfo"])
+		{
+			YAML::Node scene_info_node = scene_node["SceneInfo"];
+			SceneInfo& scene_info = scene->scene_components.add<SceneInfo>();
+			scene_info.ambient_light = scene_info_node["ambient_light"].as<vector3F>();
+		}
+
+		if (scene_node["PhysicsWorld"])
+		{
+			YAML::Node physics_node = scene_node["PhysicsWorld"];
+			PhysicsWorld& physics = scene->scene_components.add<PhysicsWorld>(physics_node["gravity"].as<vector3D>());
+		}
 
 		if (scene_node["Entities"])
 		{
 			auto entities = scene_node["Entities"];
 			for (auto entity : entities)
 			{
-				deserializeEntity(entity, scene, mesh_pool, material_pool);
+				deserializeEntity(entity, scene, resource_manager);
 			}
 		}
 

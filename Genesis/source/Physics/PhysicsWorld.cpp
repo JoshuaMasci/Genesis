@@ -53,4 +53,19 @@ namespace Genesis
 
 		return;
 	}
+
+	reactphysics3d::RigidBody* PhysicsWorld::createRigidBody(TransformD transform)
+	{
+		return this->dynamics_world->createRigidBody(reactphysics3d::Transform(toVec3R(transform.getPosition()), toQuatR(transform.getOrientation())));
+	}
+
+	void PhysicsWorld::deleteRigidBody(reactphysics3d::RigidBody* rigid_body)
+	{
+		this->dynamics_world->destroyRigidBody(rigid_body);
+	}
+
+	vector3D PhysicsWorld::getGravity()
+	{
+		return toVec3D(this->dynamics_world->getGravity());
+	}
 }

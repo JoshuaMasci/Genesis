@@ -48,8 +48,8 @@ namespace Genesis
 		virtual void destroyDynamicBuffer(DynamicBuffer buffer) = 0;
 		virtual void writeDynamicBuffer(DynamicBuffer buffer, void* data, uint64_t data_size) = 0;
 
-		virtual Texture createTexture(vector2U size, void* data, uint64_t data_size) = 0;
-		virtual void destroyTexture(Texture texture) = 0;
+		virtual Texture2D createTexture(vector2U size, void* data, uint64_t data_size) = 0;
+		virtual void destroyTexture(Texture2D texture) = 0;
 
 		//Test Functions
 		//virtual void submitFrameGraph(FrameGraph* render_graph) = 0;

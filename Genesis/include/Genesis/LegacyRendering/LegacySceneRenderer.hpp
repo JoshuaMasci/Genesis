@@ -9,6 +9,7 @@
 #include "Genesis/Rendering/Lights.hpp"
 
 #include "Genesis/Rendering/SceneInfo.hpp"
+#include "Genesis/Rendering/RenderSettings.hpp"
 
 namespace Genesis
 {
@@ -18,7 +19,7 @@ namespace Genesis
 		LegacySceneRenderer(LegacyBackend* backend);
 		~LegacySceneRenderer();
 
-		void drawScene(vector2U target_size, Framebuffer target_framebuffer, SceneInfo& scene);
+		void drawScene(vector2U target_size, Framebuffer target_framebuffer, SceneInfo& scene, RenderSettings& settings, CameraStruct& active_camera);
 
 	protected:
 		LegacyBackend* backend;

@@ -2,8 +2,7 @@
 
 #include "imgui.h"
 
-#include "Genesis/Resource/MeshPool.hpp"
-#include "Genesis/Resource/MaterialPool.hpp"
+#include "Genesis/Resource/ResourceManager.hpp"
 
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Component/TransformComponent.hpp"
@@ -13,12 +12,9 @@
 
 namespace Genesis
 {
-	EntityHierarchyWindow::EntityHierarchyWindow()
+	EntityHierarchyWindow::EntityHierarchyWindow(ResourceManager* resource_manager)
 	{
-	}
-
-	EntityHierarchyWindow::~EntityHierarchyWindow()
-	{
+		this->resource_manager = resource_manager;
 	}
 
 	void worldDragDrop(Scene* scene)
@@ -42,7 +38,7 @@ namespace Genesis
 		}
 	}
 
-	void EntityHierarchyWindow::draw(Scene* scene, MeshPool* mesh_pool, MaterialPool* material_pool)
+	void EntityHierarchyWindow::draw(Scene* scene)
 	{
 		ImGui::Begin("Entity Hierarchy");
 
@@ -86,7 +82,7 @@ namespace Genesis
 				Entity cube = scene->createEntity("cube");
 				cube.add<Transform>();
 				cube.add<WorldTransform>();
-				cube.add<ModelComponent>(mesh_pool->getResource("res/meshes/cube.obj"), make_shared<Material>("No Material"));
+				cube.add<ModelComponent>(this->resource_manager->mesh_pool.getResource("res/meshes/cube.obj"), make_shared<Material>("No Material"));
 			};
 			ImGui::EndPopup();
 		}

@@ -24,6 +24,10 @@ namespace Genesis
 		// TODO
 		//EntityWorld* clone();
 
+		//TODO figure out to do this better
+		void initialize_scene();
+		void deinitialize_scene();
+
 		friend class Entity;
 	};
 }

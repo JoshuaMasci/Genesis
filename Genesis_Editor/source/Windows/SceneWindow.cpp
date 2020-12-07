@@ -12,8 +12,6 @@ namespace Genesis
 		this->world_renderer = new LegacySceneRenderer(this->legacy_backend);
 
 		this->scene_camera_transform.setPosition(vector3D(0.0, 0.0, -5.0));
-
-		this->scene_info.ambient_light = vector3F(0.1f);
 	}
 
 	SceneWindow::~SceneWindow()
@@ -67,9 +65,11 @@ namespace Genesis
 		}
 	}
 
-	void SceneWindow::draw(SceneInfo* scene)
+	void SceneWindow::draw(Scene* scene)
 	{
 		ImGui::Begin("Scene View", nullptr, ImGuiWindowFlags_MenuBar);
+
+		SceneInfo& scene_info = scene->scene_components.get<SceneInfo>();
 
 		if (ImGui::BeginMenuBar())
 		{
@@ -78,6 +78,7 @@ namespace Genesis
 				if (ImGui::MenuItem("Play"))
 				{
 					this->scene_running = true;
+					scene->initialize_scene();
 				}
 			}
 			else
@@ -85,25 +86,21 @@ namespace Genesis
 				if (ImGui::MenuItem("Pause"))
 				{
 					this->scene_running = false;
+					scene->deinitialize_scene();
 				}
 			}
 
 			if (ImGui::BeginMenu("Graphics"))
 			{
 
-				bool lighting_enabled = scene->settings.lighting;
-				if (ImGui::MenuItem("Lighting Enabled", nullptr, &lighting_enabled))
-				{
-					scene->settings.lighting = !scene->settings.lighting;
-				}
+				ImGui::MenuItem("Lighting Enabled", nullptr, &this->settings.lighting);
+				ImGui::MenuItem("Frustrum Culling", nullptr, &this->settings.frustrum_culling);
+				ImGui::Text("Gamma Correction:");
+				ImGui::SliderFloat("##Gamma Correction:", &this->settings.gamma_correction, 1.0f, 5.0f, "%.2f");
 
-				bool frustrum_culling_enabled = scene->settings.frustrum_culling;
-				if (ImGui::MenuItem("Frustrum Culling", nullptr, &frustrum_culling_enabled))
-				{
-					scene->settings.frustrum_culling = !scene->settings.frustrum_culling;
-				}
+				ImGui::ColorEdit3("Ambient Light", &scene_info.ambient_light.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB);
 
-				ImGui::ColorEdit3("Ambient Light", &scene->ambient_light.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB);
+
 
 				ImGui::EndMenu();
 			}
@@ -199,9 +196,11 @@ namespace Genesis
 			this->framebuffer = this->legacy_backend->createFramebuffer(create_info);
 		}
 
-		scene->camera = this->scene_camera;
-		scene->camera_transform = this->scene_camera_transform;
-		this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, *scene);
+		CameraStruct active_camera = {};
+		active_camera.camera = this->scene_camera;
+		active_camera.transform = this->scene_camera_transform;
+
+		this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, scene_info, this->settings, active_camera);
 
 		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->framebuffer, 0), im_remaining_space, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 

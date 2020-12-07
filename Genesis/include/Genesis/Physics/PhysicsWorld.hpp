@@ -21,6 +21,11 @@ namespace Genesis
 
 		void castRay(vector3D start_position, vector3D end_pos);
 
+		reactphysics3d::RigidBody* createRigidBody(TransformD transform);
+		void deleteRigidBody(reactphysics3d::RigidBody* rigid_body);
+
+		vector3D getGravity();
+
 	private:
 		reactphysics3d::DynamicsWorld* dynamics_world = nullptr;
 	};

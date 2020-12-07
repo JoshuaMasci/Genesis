@@ -78,7 +78,6 @@ namespace Genesis
 	typedef void* StaticBuffer;
 	typedef void* DynamicBuffer;
 
-	typedef void* Texture;
 	typedef void* Shader;
 
 	typedef void* Framebuffer;

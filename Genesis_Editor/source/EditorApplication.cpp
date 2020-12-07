@@ -22,6 +22,8 @@
 #include "Genesis/System/TransformResolveSystem.hpp"
 #include "Genesis/System/SceneSystem.hpp"
 
+#include "Genesis/Physics/PhysicsWorld.hpp"
+
 #include "Genesis/Scene/SceneSerializer.hpp"
 
 namespace Genesis
@@ -37,16 +39,14 @@ namespace Genesis
 		this->legacy_backend = new Opengl::OpenglBackend((SDL2_Window*)window);
 		this->ui_renderer = new LegacyImGui(this->legacy_backend, this->input_manager, this->window);
 
-		this->mesh_pool = new MeshPool(this->legacy_backend);
-		this->texture_pool = new TexturePool(this->legacy_backend);
-		this->material_pool = new MaterialPool(this->texture_pool);
+		this->resource_manager = new ResourceManager(this->legacy_backend);
 
-		this->entity_hierarchy_window = new EntityHierarchyWindow();
-		this->entity_properties_window = new EntityPropertiesWindow();
+		this->entity_hierarchy_window = new EntityHierarchyWindow(this->resource_manager);
+		this->entity_properties_window = new EntityPropertiesWindow(this->resource_manager);
 		this->scene_window = new SceneWindow(this->input_manager, this->legacy_backend);
 		this->asset_browser_window = new AssetBrowserWindow(this->legacy_backend, "res/");
-		this->material_editor_window = new MaterialEditorWindow(this->material_pool, this->texture_pool);
-		this->material_editor_window->setActiveMaterial(this->material_pool->getResource("res/materials/grid.mat"));
+		this->material_editor_window = new MaterialEditorWindow(this->resource_manager);
+		this->material_editor_window->setActiveMaterial(this->resource_manager->material_pool.getResource("res/materials/grid.mat"));
 
 		this->editor_scene = new Scene();
 		this->editor_scene->scene_components.add<SceneInfo>();
@@ -56,9 +56,7 @@ namespace Genesis
 	{
 		delete this->editor_scene;
 
-		delete this->mesh_pool;
-		delete this->texture_pool;
-		delete this->material_pool;
+		delete this->resource_manager;
 
 		delete this->console_window;
 		delete this->entity_hierarchy_window;
@@ -81,7 +79,23 @@ namespace Genesis
 
 		if (this->scene_window->is_scene_running()) 
 		{
+			if (this->editor_scene->scene_components.has<PhysicsWorld>())
+			{
+				auto& pre_view = this->editor_scene->registry.view<RigidBody, Transform>();
+				for (EntityHandle entity : pre_view)
+				{
+					pre_view.get<RigidBody>(entity).setTransform(pre_view.get<Transform>(entity));
+				}
 
+				PhysicsWorld& physics = this->editor_scene->scene_components.get<PhysicsWorld>();
+				physics.simulate(time_step);
+
+				auto& post_view = this->editor_scene->registry.view<RigidBody, Transform>();
+				for (EntityHandle entity : post_view)
+				{
+					post_view.get<RigidBody>(entity).getTransform(post_view.get<Transform>(entity));
+				}
+			}
 		}
 		else
 		{
@@ -115,7 +129,17 @@ namespace Genesis
 					if (!save_file_path.empty())
 					{
 						delete this->editor_scene;
-						this->editor_scene = SceneSerializer().deserialize(save_file_path.c_str(), this->mesh_pool, this->material_pool);
+						this->editor_scene = SceneSerializer().deserialize(save_file_path.c_str(), this->resource_manager);
+
+						if (!this->editor_scene->scene_components.has<SceneInfo>())
+						{
+							this->editor_scene->scene_components.add<SceneInfo>();
+						}
+
+						if (!this->editor_scene->scene_components.has<PhysicsWorld>())
+						{
+							this->editor_scene->scene_components.add<PhysicsWorld>(vector3D(0.0, -9.8, 0.0));
+						}
 					}
 				}
 
@@ -153,12 +177,12 @@ namespace Genesis
 		}
 
 		this->console_window->draw();
-		this->entity_hierarchy_window->draw(this->editor_scene, this->mesh_pool, this->material_pool);
-		this->entity_properties_window->draw(this->entity_hierarchy_window->getSelected(), this->mesh_pool, this->material_pool);
+		this->entity_hierarchy_window->draw(this->editor_scene);
+		this->entity_properties_window->draw(this->entity_hierarchy_window->getSelected());
 
 		SceneSystem::build_scene(this->editor_scene);
 
-		this->scene_window->draw(&this->editor_scene->scene_components.get<SceneInfo>());
+		this->scene_window->draw(this->editor_scene);
 		this->asset_browser_window->draw();
 		this->material_editor_window->draw();
 

@@ -5,21 +5,20 @@
 
 namespace Genesis
 {
-	class MeshPool;
-	class MaterialPool;
+	class ResourceManager;
 
 	class EntityHierarchyWindow
 	{
 	public:
-		EntityHierarchyWindow();
-		~EntityHierarchyWindow();
-
-		void draw(Scene* scene, MeshPool* mesh_pool, MaterialPool* material_pool);
+		EntityHierarchyWindow(ResourceManager* resource_manager);
+		void draw(Scene* scene);
 		Entity getSelected();
 
-	private:
+	protected:
 		void drawEntity(Scene* scene, Entity entity);
 
 		Entity selected_entity;
+
+		ResourceManager* resource_manager = nullptr;
 	};
 }

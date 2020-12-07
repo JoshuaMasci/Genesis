@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Genesis/Resource/Resource.hpp"
-#include "Genesis/Resource/TextureResource.hpp"
+#include "Genesis/Resource/Texture.hpp"
 
 namespace Genesis
 {
@@ -10,7 +10,7 @@ namespace Genesis
 	public:
 		struct MaterialTexture
 		{
-			shared_ptr<TextureResource> texture;
+			shared_ptr<Texture> texture;
 
 			//Texture UVs
 			// -1 means no texture

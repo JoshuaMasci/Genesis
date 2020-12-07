@@ -34,7 +34,7 @@ namespace Genesis
 	{
 		BindingType type;
 		Sampler sampler;
-		Texture texture;
+		Texture2D texture;
 		StaticBuffer buffer;
 	};
 

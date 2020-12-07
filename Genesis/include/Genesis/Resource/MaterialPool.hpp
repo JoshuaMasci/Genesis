@@ -6,7 +6,7 @@
 
 namespace Genesis
 {
-	class MaterialPool : public ResourcePoolNew<string, Material>
+	class MaterialPool : public ResourcePool<string, Material>
 	{
 	public:
 		MaterialPool(TexturePool* texture_pool);

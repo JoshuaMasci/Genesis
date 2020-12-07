@@ -4,8 +4,7 @@
 
 namespace Genesis
 {
-	class MeshPool;
-	class MaterialPool;
+	class ResourceManager;
 
 	//typedef void(*EntitySerializeFunction)(Entity, void*);
 	//typedef void(*EntityDeserializeFunction)(Entity, void*);
@@ -15,7 +14,7 @@ namespace Genesis
 	public:
 
 		void serialize(Scene* scene, const char* file_path);
-		Scene* deserialize(const char* file_path, MeshPool* mesh_pool, MaterialPool* material_pool);
+		Scene* deserialize(const char* file_path, ResourceManager* resource_manager);
 
 		//void addSerializeFuncions(EntitySerializeFunction serialize, EntityDeserializeFunction deserialize);
 	protected:

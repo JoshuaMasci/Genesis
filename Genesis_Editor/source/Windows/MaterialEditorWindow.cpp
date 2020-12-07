@@ -1,19 +1,15 @@
 #include "Genesis_Editor/Windows/MaterialEditorWindow.hpp"
 
 #include "imgui.h"
+#include "Genesis/Resource/ResourceManager.hpp"
 #include "Genesis/Platform/FileSystem.hpp"
 
 namespace Genesis
 {
-	MaterialEditorWindow::MaterialEditorWindow(MaterialPool* material_pool, TexturePool* texture_pool)
+	MaterialEditorWindow::MaterialEditorWindow(ResourceManager* resource_manager)
 	{
-		this->material_pool = material_pool;
-		this->texture_pool = texture_pool;
-		this->grid_texture = this->texture_pool->getResource("res/textures/grid16.png");
-	}
-
-	MaterialEditorWindow::~MaterialEditorWindow()
-	{
+		this->resource_manager = resource_manager;
+		this->grid_texture = this->resource_manager->texture_pool.getResource("res/textures/grid16.png");
 	}
 
 	void MaterialEditorWindow::setActiveMaterial(shared_ptr<Material> material)
@@ -47,7 +43,7 @@ namespace Genesis
 
 				if (extention == ".png")
 				{
-					texture_slot.texture = this->texture_pool->getResource(file_path);
+					texture_slot.texture = this->resource_manager->texture_pool.getResource(file_path);
 				}
 			}
 		}
@@ -107,7 +103,7 @@ namespace Genesis
 
 				if (extention == ".mat")
 				{
-					this->active_material = this->material_pool->getResource(file_path);
+					this->active_material = this->resource_manager->material_pool.getResource(file_path);
 				}
 			}
 		}

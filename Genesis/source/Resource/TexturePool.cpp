@@ -20,7 +20,7 @@ namespace Genesis
 		this->backend = backend;
 	}
 
-	shared_ptr<TextureResource> TexturePool::loadResource(const string& key)
+	shared_ptr<Texture> TexturePool::loadResource(const string& key)
 	{
 		Texture2D texture = nullptr;
 
@@ -51,6 +51,6 @@ namespace Genesis
 		texture = this->backend->createTexture(create_info, data);
 		unloadTexture(data);
 
-		return std::make_shared<TextureResource>(key, this->backend, texture, create_info.size, create_info.format);
+		return std::make_shared<Texture>(key, this->backend, texture, create_info.size, create_info.format);
 	}
 }

@@ -5,16 +5,16 @@
 
 namespace Genesis
 {
-	class TextureResource : public Resource
+	class Texture : public Resource
 	{
 	protected:
 		LegacyBackend* backend;
 
 	public:
-		TextureResource(const string& file_path, LegacyBackend* backend, Texture2D texture, vector2U size, ImageFormat format)
+		Texture(const string& file_path, LegacyBackend* backend, Texture2D texture, vector2U size, ImageFormat format)
 			:Resource(file_path), backend(backend), texture(texture), size(size), format(format){};
 
-		~TextureResource()
+		~Texture()
 		{
 			this->backend->destoryTexture(this->texture);
 		}

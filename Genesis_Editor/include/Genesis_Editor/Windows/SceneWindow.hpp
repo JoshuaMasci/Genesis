@@ -1,8 +1,10 @@
 #pragma once
 
-#include <Genesis/Input/InputManager.hpp>
-#include <Genesis/LegacyBackend/LegacyBackend.hpp>
-#include <Genesis/LegacyRendering/LegacySceneRenderer.hpp>
+#include "Genesis/Input/InputManager.hpp"
+#include "Genesis/LegacyBackend/LegacyBackend.hpp"
+#include "Genesis/LegacyRendering/LegacySceneRenderer.hpp"
+
+#include "Genesis/Scene/Scene.hpp"
 
 namespace Genesis
 {
@@ -14,7 +16,7 @@ namespace Genesis
 
 		void update(TimeStep time_step);
 
-		void draw(SceneInfo* scene);
+		void draw(Scene* scene);
 
 		bool is_scene_running() { return this->scene_running; };
 
@@ -40,7 +42,6 @@ namespace Genesis
 		double linear_speed = 2.0;
 		//rads per second
 		double angular_speed = PI_D / 8.0;
-
-		SceneInfo scene_info;
+		RenderSettings settings;
 	};
 }
