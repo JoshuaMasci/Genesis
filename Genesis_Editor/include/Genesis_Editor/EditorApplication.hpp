@@ -2,9 +2,9 @@
 
 #include "Genesis/Rendering/BaseImGui.hpp"
 
-#include <Genesis/LegacyBackend/LegacyBackend.hpp>
-#include <Genesis/LegacyRendering/LegacySceneRenderer.hpp>
-#include <Genesis/Editor/ConsoleWindow.hpp>
+#include "Genesis/LegacyBackend/LegacyBackend.hpp"
+#include "Genesis/LegacyRendering/LegacySceneRenderer.hpp"
+#include "Genesis/Editor/ConsoleWindow.hpp"
 
 #include "Genesis_Editor/Windows/EntityHierarchyWindow.hpp"
 #include "Genesis_Editor/Windows/EntityPropertiesWindow.hpp"

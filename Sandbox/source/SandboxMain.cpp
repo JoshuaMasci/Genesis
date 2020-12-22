@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 	Genesis::Logging::inti_client_logging("Sandbox");
 
 	//ALPHA
-	SandboxApplication* sandbox = new SandboxApplication();
+	Genesis::SandboxApplication* sandbox = new Genesis::SandboxApplication();
 	GENESIS_INFO("Sandbox Started");
 
 	GENESIS_PROFILE_BLOCK_START("Sandbox_Loop");
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 	GENESIS_PROFILE_WRITE_TO_FILE("Genesis_profile.prof");
 
 	//Wait till enter
-	//getchar();
+	getchar();
 
 	return 0;
 	//OMEGA

@@ -46,7 +46,7 @@ namespace Genesis
 		open_file_name.lpstrFilter = filter;
 		open_file_name.lpstrFile = file_path;
 		open_file_name.nMaxFile = MAX_PATH;
-		open_file_name.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
+		open_file_name.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
 		open_file_name.lpstrDefExt = "";
 		open_file_name.lpstrInitialDir = "";
 

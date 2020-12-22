@@ -17,14 +17,20 @@
 #include "Genesis/Physics/RigidBody.hpp"
 #include "Genesis/Physics/CollisionShape.hpp"
 #include "Genesis/Physics/ReactPhyscis.hpp"
+#include "Genesis/Component/TransformComponent.hpp"
 
+//World Components
+#include "Genesis/Physics/PhysicsWorld.hpp"
+
+//Systems
 #include "Genesis/System/EntitySystemSet.hpp"
 #include "Genesis/System/TransformResolveSystem.hpp"
 #include "Genesis/System/SceneSystem.hpp"
-
-#include "Genesis/Physics/PhysicsWorld.hpp"
-
 #include "Genesis/Scene/SceneSerializer.hpp"
+
+//Test Game
+#include "Genesis/TestGame/Chunk.hpp"
+#include "Genesis/TestGame/ChunkMeshGenerator.hpp"
 
 namespace Genesis
 {
@@ -50,6 +56,11 @@ namespace Genesis
 
 		this->editor_scene = new Scene();
 		this->editor_scene->scene_components.add<SceneInfo>();
+
+		Entity chunk = this->editor_scene->createEntity("Chunk");
+		chunk.add<Transform>();
+		chunk.add<WorldTransform>();
+		chunk.add<DefaultChunk>().setBlock(vector3U(0), 1);
 	}
 
 	EditorApplication::~EditorApplication()
