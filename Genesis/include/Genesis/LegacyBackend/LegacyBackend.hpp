@@ -140,6 +140,8 @@ namespace Genesis
 
 		virtual void dispatchCompute(uint32_t groups_x = 1, uint32_t groups_y = 1, uint32_t groups_z = 1) = 0;
 
+		virtual void blitFramebuffer(Framebuffer source, Framebuffer target) = 0;
+
 		//Stats
 		virtual FrameStats getLastFrameStats() = 0;
 	};

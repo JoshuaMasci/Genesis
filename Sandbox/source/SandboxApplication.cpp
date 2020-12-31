@@ -9,6 +9,9 @@
 
 #include "imgui.h"
 
+#include "Genesis/Scene/Scene.hpp"
+#include "Genesis/Scene/Entity.hpp"
+
 //Entity Components
 #include "Genesis/Component/ModelComponent.hpp"
 #include "Genesis/Component/NameComponent.hpp"
@@ -37,9 +40,18 @@ namespace Genesis
 		this->resource_manager = new ResourceManager(this->legacy_backend);
 
 		this->sandbox_scene = new Scene();
-		this->sandbox_scene->scene_components.add<SceneInfo>();
+		this->sandbox_scene->scene_components.add<SceneInfo>().ambient_light = vector3F(1.0f);
 
 		this->world_renderer = new LegacySceneRenderer(this->legacy_backend);
+
+		//ChunkMeshGenerator mesh_generator(this->legacy_backend);
+
+		Entity chunk = this->sandbox_scene->createEntity("Chunk");
+		chunk.add<Transform>(vector3D(0.0, 0.0, -10.0));
+		chunk.add<WorldTransform>();
+		//chunk.add<DefaultChunk>().setBlock(vector3I(0), 1);
+		//chunk.add<ModelComponent>().mesh = shared_ptr<Mesh>(mesh_generator.generateMesh(chunk.get<DefaultChunk>()));
+		chunk.get<ModelComponent>().material = std::make_shared<Material>("No Material");
 	}
 
 	SandboxApplication::~SandboxApplication()
@@ -118,7 +130,9 @@ namespace Genesis
 
 		this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, this->sandbox_scene->scene_components.get<SceneInfo>(), this->settings, active_camera);
 
-		this->ui_renderer->beginFrame();
+		this->legacy_backend->blitFramebuffer(this->framebuffer, nullptr);
+
+		/*this->ui_renderer->beginFrame();
 
 		ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
 		ImGui::SetNextWindowSize(image_size);
@@ -128,7 +142,7 @@ namespace Genesis
 
 		//ImGui::End();
 
-		this->ui_renderer->endFrame();
+		this->ui_renderer->endFrame();*/
 		this->legacy_backend->endFrame();
 	}
 }

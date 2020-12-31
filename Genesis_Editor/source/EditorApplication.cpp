@@ -28,9 +28,9 @@
 #include "Genesis/System/SceneSystem.hpp"
 #include "Genesis/Scene/SceneSerializer.hpp"
 
-//Test Game
-#include "Genesis/TestGame/Chunk.hpp"
-#include "Genesis/TestGame/ChunkMeshGenerator.hpp"
+//Game
+#include "Genesis/Game/Chunk.hpp"
+#include "Genesis/Game/ChunkMeshGenerator.hpp"
 
 namespace Genesis
 {
@@ -57,10 +57,20 @@ namespace Genesis
 		this->editor_scene = new Scene();
 		this->editor_scene->scene_components.add<SceneInfo>();
 
-		Entity chunk = this->editor_scene->createEntity("Chunk");
-		chunk.add<Transform>();
-		chunk.add<WorldTransform>();
-		chunk.add<DefaultChunk>().setBlock(vector3U(0), 1);
+		ChunkMeshGenerator mesh_generator(this->legacy_backend);
+
+		for (size_t x = 0; x < 16; x++)
+		{
+			for (size_t z = 0; z < 16; z++)
+			{
+				Entity chunk = this->editor_scene->createEntity("Chunk");
+				//chunk.add<Transform>(vector3D(32.0 * x, -32.0, 32.0 * z));
+				chunk.add<WorldTransform>().setTransform(vector3D(32.0 * x, -32.0, 32.0 * z));
+				chunk.add<DefaultChunk>();
+				chunk.add<ModelComponent>().mesh = shared_ptr<Mesh>(mesh_generator.generateMesh(chunk.get<DefaultChunk>()));
+				chunk.get<ModelComponent>().material = this->resource_manager->material_pool.getResource("res/materials/red.mat");
+			}
+		}
 	}
 
 	EditorApplication::~EditorApplication()

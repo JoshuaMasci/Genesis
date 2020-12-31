@@ -818,6 +818,29 @@ namespace Genesis
 			glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 		}
 
+		void OpenglBackend::blitFramebuffer(Framebuffer source, Framebuffer target)
+		{	
+			OpenglFramebuffer* source_framebuffer = (OpenglFramebuffer*)source;
+			GLuint source_size[2] = { source_framebuffer->size.x, source_framebuffer->size.y };
+
+			glBindFramebuffer(GL_READ_BUFFER, source_framebuffer->frame_buffer);
+			glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+			//0 is the screen framebuffer
+			GLuint target_index = 0;
+			GLuint target_size[2] = {this->viewport_size.x, this->viewport_size.y};
+			if (target)
+			{
+				OpenglFramebuffer* target_framebuffer = (OpenglFramebuffer*)target;
+				target_index = target_framebuffer->frame_buffer;
+				target_size[0] = target_framebuffer->size.x;
+				target_size[1] = target_framebuffer->size.y;
+			}
+			glBindFramebuffer(GL_DRAW_BUFFER, target_index);
+
+			glBlitFramebuffer(0, 0, source_size[0], target_size[1], 0, 0, source_size[0], target_size[1], GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		}
+
 		FrameStats OpenglBackend::getLastFrameStats()
 		{
 			return this->last_frame_stats;

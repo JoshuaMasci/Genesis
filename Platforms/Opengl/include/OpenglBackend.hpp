@@ -107,6 +107,8 @@ namespace Genesis
 
 			virtual void dispatchCompute(uint32_t groups_x = 1, uint32_t groups_y = 1, uint32_t groups_z = 1) override;
 
+			virtual void blitFramebuffer(Framebuffer source, Framebuffer target) override;
+
 			virtual FrameStats getLastFrameStats() override;
 
 		protected:
