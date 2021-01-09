@@ -44,8 +44,8 @@ namespace Genesis
 		{
 			ModelComponent& model = entity.get<ModelComponent>();
 			YAML::Node model_node;
-			model_node["Mesh"] = model.mesh->getName();
-			model_node["Material"] = model.material->getName();
+			model_node["Mesh"] = model.mesh->get_name();
+			model_node["Material"] = model.material->get_name();
 			entity_node["Model"] = model_node;
 		}
 

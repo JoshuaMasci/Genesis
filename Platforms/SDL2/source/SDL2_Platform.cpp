@@ -333,10 +333,10 @@ namespace Genesis
 				JoystickDevice* device = new JoystickDevice(SDL_JoystickName(joystick), this->application->input_manager, SDL_JoystickNumButtons(joystick), SDL_JoystickNumHats(joystick), SDL_JoystickNumAxes(joystick));
 				this->joystick_devices[id] = device;
 				
-				GENESIS_ENGINE_INFO("SDL Joystick Added: {}", device->getName());
+				GENESIS_ENGINE_INFO("SDL Joystick Added: {}", device->get_name());
 				
 				//Settings
-				if (device->getName() == "PS4 Controller")
+				if (device->get_name() == "PS4 Controller")
 				{
 					device->addAxisBinding(3, StringHash32("Debug_Pitch"), AxisSettings(0.1f, false));
 					device->addAxisBinding(2, StringHash32("Debug_Yaw"), AxisSettings(0.1f, true));
@@ -354,7 +354,7 @@ namespace Genesis
 				int32_t id = event.jdevice.which;
 				JoystickDevice* device = this->joystick_devices[id];
 				
-				GENESIS_ENGINE_INFO("SDL Joystick Removed: {}", device->getName());				\
+				GENESIS_ENGINE_INFO("SDL Joystick Removed: {}", device->get_name());				\
 
 				this->joystick_devices.erase(id);
 				

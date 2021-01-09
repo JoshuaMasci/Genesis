@@ -11,6 +11,6 @@ namespace Genesis
 		Resource(const string& name = "")
 			:name(name) {};
 
-		const string& getName() { return this->name; };
+		const string& get_name() { return this->name; };
 	};
 }

@@ -16,6 +16,8 @@
 
 #include "Genesis/Scene/Entity.hpp"
 
+#include "Genesis/World/GameObject.hpp"
+
 namespace Genesis
 {
 	EntityPropertiesWindow::EntityPropertiesWindow(ResourceManager* resource_manager)
@@ -111,7 +113,7 @@ namespace Genesis
 			const char* mesh_name = " ";
 			if (model_component.mesh)
 			{
-				mesh_name = model_component.mesh->getName().c_str();
+				mesh_name = model_component.mesh->get_name().c_str();
 			}
 
 			ImGui::LabelText("Mesh", mesh_name);
@@ -133,7 +135,7 @@ namespace Genesis
 			const char* material_name = " ";
 			if (model_component.material)
 			{
-				material_name = model_component.material->getName().c_str();
+				material_name = model_component.material->get_name().c_str();
 			}
 
 			ImGui::LabelText("Material", material_name);
@@ -287,6 +289,93 @@ namespace Genesis
 			ADD_COMPONENT(entity, CollisionShape, "Collision Shape");
 			ADD_COMPONENT(entity, WorldTransform, "WorldTransform");
 
+			ImGui::EndPopup();
+		}
+
+		ImGui::End();
+	}
+
+	void EntityPropertiesWindow::draw(GameObject* object)
+	{
+		ImGui::Begin("Entity Properties");
+		if (!object)
+		{
+			ImGui::End();
+			return;
+		}
+
+		if (ImGui::CollapsingHeader("GameObject", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			const size_t name_data_size = 64;
+			char name_data[name_data_size];
+			strcpy_s(name_data, object->get_name().c_str());
+			if (ImGui::InputText("Entity Name", name_data, name_data_size))
+			{
+				object->set_name(name_data);
+			}
+
+
+			TransformD transform = object->get_local_transform();
+			bool transform_changed = false;
+			vector3D position = transform.getPosition();
+			if (ImGui::InputScalarN("Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
+			{
+				transform.setPosition(position);
+				transform_changed = true;
+			};
+
+			vector3D rotation = glm::degrees(glm::eulerAngles(transform.getOrientation()));
+			if (ImGui::InputScalarN("Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
+			{
+				transform.setOrientation(quaternionD(glm::radians(rotation)));
+				transform_changed = true;
+			}
+
+			vector3D scale = transform.getScale();
+			if (ImGui::InputScalarN("Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
+			{
+				transform.setScale(scale);
+				transform_changed = true;
+			}
+
+			if (transform_changed)
+			{
+				object->set_local_transform(transform);
+			}
+		}
+
+		auto& behaviours = object->get_behaviours();
+		for (auto it : behaviours)
+		{
+			Behaviour* behaviour = it.second;
+			const char* behaviour_name = behaviour->get_name();
+			bool header_open = ImGui::CollapsingHeader(behaviour_name, ImGuiTreeNodeFlags_DefaultOpen);
+
+			if (ImGui::BeginPopupContextItem(behaviour_name, ImGuiMouseButton_Right))
+			{
+				if (ImGui::MenuItem("Delete Component"))
+				{
+					object->remove(it.first);
+					header_open = false;
+				}
+				ImGui::EndPopup();
+			}
+
+			if (header_open)
+			{
+				behaviour->editor_imgui_display();
+			}
+		}
+
+		ImGui::Separator();
+
+		if (ImGui::Button("Add Component"))
+		{
+			ImGui::OpenPopup("add_component");
+		}
+
+		if (ImGui::BeginPopup("add_component"))
+		{
 			ImGui::EndPopup();
 		}
 

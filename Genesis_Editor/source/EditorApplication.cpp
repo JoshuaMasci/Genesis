@@ -57,24 +57,13 @@ namespace Genesis
 		this->editor_scene = new Scene();
 		this->editor_scene->scene_components.add<SceneInfo>();
 
-		ChunkMeshGenerator mesh_generator(this->legacy_backend);
-
-		for (size_t x = 0; x < 16; x++)
-		{
-			for (size_t z = 0; z < 16; z++)
-			{
-				Entity chunk = this->editor_scene->createEntity("Chunk");
-				//chunk.add<Transform>(vector3D(32.0 * x, -32.0, 32.0 * z));
-				chunk.add<WorldTransform>().setTransform(vector3D(32.0 * x, -32.0, 32.0 * z));
-				chunk.add<DefaultChunk>();
-				chunk.add<ModelComponent>().mesh = shared_ptr<Mesh>(mesh_generator.generateMesh(chunk.get<DefaultChunk>()));
-				chunk.get<ModelComponent>().material = this->resource_manager->material_pool.getResource("res/materials/red.mat");
-			}
-		}
+		this->editor_world = new GameWorld();
 	}
 
 	EditorApplication::~EditorApplication()
 	{
+		delete this->editor_world;
+
 		delete this->editor_scene;
 
 		delete this->resource_manager;
@@ -100,6 +89,8 @@ namespace Genesis
 
 		if (this->scene_window->is_scene_running()) 
 		{
+			this->editor_world->update(time_step);
+
 			if (this->editor_scene->scene_components.has<PhysicsWorld>())
 			{
 				auto& pre_view = this->editor_scene->registry.view<RigidBody, Transform>();
@@ -198,8 +189,8 @@ namespace Genesis
 		}
 
 		this->console_window->draw();
-		this->entity_hierarchy_window->draw(this->editor_scene);
-		this->entity_properties_window->draw(this->entity_hierarchy_window->getSelected());
+		this->entity_hierarchy_window->draw(this->editor_world);
+		this->entity_properties_window->draw(this->entity_hierarchy_window->getSelectedObject());
 
 		SceneSystem::build_scene(this->editor_scene);
 

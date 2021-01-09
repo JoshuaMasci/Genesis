@@ -11,6 +11,6 @@ namespace Genesis
 	public:
 		InputDevice(const string& device_name, InputManager* manager):name(device_name), input_manager(manager) {};
 
-		const string& getName() { return this->name; };
+		const string& get_name() { return this->name; };
 	};
 }
