@@ -6,6 +6,8 @@
 namespace Genesis
 {
 	class ResourceManager;
+	class EntityPrototype;
+	class ScenePrototype;
 
 	class EntityHierarchyWindow
 	{
@@ -14,11 +16,22 @@ namespace Genesis
 		void draw(Scene* scene);
 		Entity getSelected();
 
-	protected:
-		void drawEntity(Scene* scene, Entity entity);
+		void draw(ScenePrototype* scene);
+		EntityPrototype* get_selected();
 
+	protected:
+		ResourceManager* resource_manager = nullptr;
+
+		void drawEntity(Scene* scene, Entity entity);
 		Entity selected_entity;
 
-		ResourceManager* resource_manager = nullptr;
+		void draw_entity(EntityPrototype* entity);
+		EntityPrototype* selected_entity1 = nullptr;
+
+		EntityPrototype* moved_entity = nullptr;
+		EntityPrototype* target_entity = nullptr;
+		ScenePrototype* target_scene = nullptr;
+
+		EntityPrototype* delete_entity = nullptr;
 	};
 }

@@ -16,6 +16,8 @@ namespace Genesis
 
 		void update(TimeStep time_step);
 
+		void draw(SceneInfo& scene_info);
+
 		void draw(Scene* scene);
 
 		bool is_scene_running() { return this->scene_running; };

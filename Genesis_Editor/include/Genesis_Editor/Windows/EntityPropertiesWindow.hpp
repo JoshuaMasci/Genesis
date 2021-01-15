@@ -6,6 +6,7 @@
 namespace Genesis
 {
 	class ResourceManager;
+	class EntityPrototype;
 
 	class EntityPropertiesWindow
 	{
@@ -16,5 +17,6 @@ namespace Genesis
 		EntityPropertiesWindow(ResourceManager* resource_manager);
 
 		void draw(Entity entity);
+		void draw(EntityPrototype* entity);
 	};
 }
