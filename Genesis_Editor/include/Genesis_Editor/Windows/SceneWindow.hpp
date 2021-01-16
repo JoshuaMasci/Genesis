@@ -18,10 +18,6 @@ namespace Genesis
 
 		void draw(SceneInfo& scene_info);
 
-		void draw(Scene* scene);
-
-		bool is_scene_running() { return this->scene_running; };
-
 		TransformD get_scene_camera_transform() { return this->scene_camera_transform; };
 
 	private:

@@ -13,9 +13,6 @@ namespace Genesis
 	class SceneSerializer
 	{
 	public:
-		void serialize(Scene* scene, const char* file_path);
-		Scene* deserialize(const char* file_path, ResourceManager* resource_manager);
-
 		void serialize_prototype(ScenePrototype* scene, const char* file_path);
 		ScenePrototype* deserialize_prototype(const char* file_path, ResourceManager* resource_manager);
 	};
