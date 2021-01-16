@@ -33,8 +33,9 @@ namespace Genesis
 
 		virtual void update(TimeStep time_step) override;
 		virtual void render(TimeStep interpolation_value) override;
-
 	protected:
+		Scene* runtime_scene = nullptr;
+
 		SceneInfo scene_info;
 		ScenePrototype* editor_scene = nullptr;
 
