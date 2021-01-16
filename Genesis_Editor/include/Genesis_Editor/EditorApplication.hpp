@@ -21,8 +21,6 @@
 #include "Genesis/Scene/Scene.hpp"
 #include "Genesis/Rendering/SceneInfo.hpp"
 
-#include "Genesis/Scene/ScenePrototype.hpp"
-
 namespace Genesis
 {
 	class EditorApplication : public Application
@@ -34,10 +32,7 @@ namespace Genesis
 		virtual void update(TimeStep time_step) override;
 		virtual void render(TimeStep interpolation_value) override;
 	protected:
-		Scene* runtime_scene = nullptr;
-
-		SceneInfo scene_info;
-		ScenePrototype* editor_scene = nullptr;
+		Scene* editor_scene = nullptr;
 
 		LegacyBackend* legacy_backend;
 		BaseImGui* ui_renderer;

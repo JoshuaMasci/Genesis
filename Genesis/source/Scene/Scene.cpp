@@ -43,26 +43,6 @@ namespace Genesis
 		HierarchyUtils::removeChild(this->registry, parent.handle(), child.handle());
 	}
 
-	void addChildShapes(RigidBody& rigid_body, EntityRegistry* registry, EntityHandle entity)
-	{
-		if (registry->has<CollisionShape, RootTransform>(entity))
-		{
-			CollisionShape& shape = registry->get<CollisionShape>(entity);
-			RootTransform& root_transform = registry->get<RootTransform>(entity);
-			shape.shape = CollisionShape::createCollisionShape(shape);
-
-			if (shape.shape != nullptr)
-			{
-				shape.proxy = rigid_body.addShape(shape.shape, root_transform.getTransform(), shape.shape_mass);
-			}
-		}
-
-		for (EntityHandle child : EntityHiearchy(registry, entity))
-		{
-			addChildShapes(rigid_body, registry, child);
-		}
-	}
-
 	void Scene::initialize_scene()
 	{
 		if (this->scene_components.has<PhysicsWorld>())
@@ -74,7 +54,17 @@ namespace Genesis
 			{
 				RigidBody& rigid_body = view.get<RigidBody>(entity);
 				rigid_body.attachRigidBody(physics_world.createRigidBody(view.get<Transform>(entity)));
-				addChildShapes(rigid_body, &this->registry, entity);
+
+				if (this->registry.has<CollisionShape>(entity))
+				{
+					CollisionShape& shape = this->registry.get<CollisionShape>(entity);
+					shape.shape = CollisionShape::createCollisionShape(shape);
+
+					if (shape.shape != nullptr)
+					{
+						shape.proxy = rigid_body.addShape(shape.shape, TransformD(), shape.shape_mass);
+					}
+				}
 			}
 		}
 	}
@@ -102,15 +92,6 @@ namespace Genesis
 
 					physics_world.deleteRigidBody(rigid_body);
 				}
-			}
-
-			auto& view1 = this->registry.view<CollisionShape>();
-			for (EntityHandle entity : view1)
-			{
-				CollisionShape& collision_shape = view1.get<CollisionShape>(entity);
-				delete collision_shape.shape;
-				collision_shape.shape = nullptr;
-				collision_shape.proxy = nullptr;
 			}
 		}
 	}

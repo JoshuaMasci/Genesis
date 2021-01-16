@@ -17,11 +17,6 @@ namespace Genesis
 
 	reactphysics3d::RigidBody* RigidBody::removeRigidBody()
 	{
-		if (this->rigidbody == nullptr)
-		{
-			return nullptr;
-		}
-
 		this->type = (RigidBodyType) this->rigidbody->getType();
 		this->body_mass = this->rigidbody->getMass();
 		this->linear_velocity = toVec3D(this->rigidbody->getLinearVelocity());

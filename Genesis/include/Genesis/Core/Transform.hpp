@@ -37,10 +37,10 @@ namespace Genesis
 	class TransformD
 	{
 	protected:
+		
 		vector3D position;
 		quaternionD orientation;
 		vector3D scale;
-
 	public:
 		TransformD(vector3D position = vector3D(0.0), quaternionD orientation = quaternionD(1.0, 0.0, 0.0, 0.0), vector3D scale = vector3D(1.0));
 

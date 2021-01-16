@@ -28,7 +28,9 @@
 #include "Genesis/System/SceneSystem.hpp"
 #include "Genesis/Scene/SceneSerializer.hpp"
 
-#include "Genesis/Scene/ScenePrototype.hpp"
+//Test Game
+#include "Genesis/TestGame/Chunk.hpp"
+#include "Genesis/TestGame/ChunkMeshGenerator.hpp"
 
 namespace Genesis
 {
@@ -52,15 +54,17 @@ namespace Genesis
 		this->material_editor_window = new MaterialEditorWindow(this->resource_manager);
 		this->material_editor_window->setActiveMaterial(this->resource_manager->material_pool.getResource("res/materials/grid.mat"));
 
-		this->runtime_scene = new Scene();
-		this->runtime_scene->scene_components.add<SceneInfo>();
+		this->editor_scene = new Scene();
+		this->editor_scene->scene_components.add<SceneInfo>();
 
-		this->editor_scene = new ScenePrototype();
+		Entity chunk = this->editor_scene->createEntity("Chunk");
+		chunk.add<Transform>();
+		chunk.add<WorldTransform>();
+		chunk.add<DefaultChunk>().setBlock(vector3U(0), 1);
 	}
 
 	EditorApplication::~EditorApplication()
 	{
-		delete this->runtime_scene;
 		delete this->editor_scene;
 
 		delete this->resource_manager;
@@ -82,22 +86,22 @@ namespace Genesis
 		GENESIS_PROFILE_FUNCTION("EditorApplication::update");
 		Application::update(time_step);
 
-		TransformResolveSystem().run(this->runtime_scene, time_step);
+		TransformResolveSystem().run(this->editor_scene, time_step);
 
 		if (this->scene_window->is_scene_running()) 
 		{
-			if (this->runtime_scene->scene_components.has<PhysicsWorld>())
+			if (this->editor_scene->scene_components.has<PhysicsWorld>())
 			{
-				auto& pre_view = this->runtime_scene->registry.view<RigidBody, Transform>();
+				auto& pre_view = this->editor_scene->registry.view<RigidBody, Transform>();
 				for (EntityHandle entity : pre_view)
 				{
 					pre_view.get<RigidBody>(entity).setTransform(pre_view.get<Transform>(entity));
 				}
 
-				PhysicsWorld& physics = this->runtime_scene->scene_components.get<PhysicsWorld>();
+				PhysicsWorld& physics = this->editor_scene->scene_components.get<PhysicsWorld>();
 				physics.simulate(time_step);
 
-				auto& post_view = this->runtime_scene->registry.view<RigidBody, Transform>();
+				auto& post_view = this->editor_scene->registry.view<RigidBody, Transform>();
 				for (EntityHandle entity : post_view)
 				{
 					post_view.get<RigidBody>(entity).getTransform(post_view.get<Transform>(entity));
@@ -110,46 +114,6 @@ namespace Genesis
 		}
 
 		this->scene_window->update(time_step);
-	}
-
-
-	void build_scene_info_entity(SceneInfo& scene_info, EntityPrototype* entity, const TransformD& parent_world_transform)
-	{
-		TransformD world_transform = TransformUtils::transformBy(parent_world_transform, entity->get_transform());
-
-		ModelComponent* model_component = entity->get_component<ModelComponent>();
-		if (model_component)
-		{
-			scene_info.models.push_back({ model_component->mesh , model_component->material, world_transform });
-		}
-
-		DirectionalLight* directional_light = entity->get_component<DirectionalLight>();
-		if (directional_light)
-		{
-			scene_info.directional_lights.push_back({ *directional_light, world_transform });
-		}
-
-		PointLight* point_light = entity->get_component<PointLight>();
-		if (point_light)
-		{
-			scene_info.point_lights.push_back({ *point_light, world_transform });
-		}
-
-		for (auto child : entity->get_children())
-		{
-			build_scene_info_entity(scene_info, child, world_transform);
-		}
-	}
-
-	void build_scene_info(SceneInfo& scene_info, ScenePrototype* prototype)
-	{
-		scene_info.clear_buffers();
-
-		TransformD transform;
-		for (auto entity : prototype->get_entities())
-		{
-			build_scene_info_entity(scene_info, entity, transform);
-		}
 	}
 
 	void EditorApplication::render(TimeStep time_step)
@@ -169,44 +133,23 @@ namespace Genesis
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("Open Scene Prototype", ""))
-				{
-					string save_file_path = FileSystem::openFileDialog("Supported Files(*.scene)\0*.scene;\0All files(*.*)\0*.*\0");
-
-					if (!save_file_path.empty())
-					{
-						delete this->editor_scene;
-						this->editor_scene = SceneSerializer().deserialize_prototype(save_file_path.c_str(), this->resource_manager);
-					}
-				}
-
-				if (ImGui::MenuItem("Save Scene Prototype", ""))
-				{
-					string save_file_path = FileSystem::saveFileDialog("Supported Files(*.scene)\0*.scene;\0All files(*.*)\0*.*\0");
-
-					if (!save_file_path.empty())
-					{
-						SceneSerializer().serialize_prototype(this->editor_scene, save_file_path.c_str());
-					}
-				}
-
 				if (ImGui::MenuItem("Open Scene", ""))
 				{
 					string save_file_path = FileSystem::openFileDialog("Supported Files(*.scene)\0*.scene;\0All files(*.*)\0*.*\0");
 
 					if (!save_file_path.empty())
 					{
-						delete this->runtime_scene;
-						this->runtime_scene = SceneSerializer().deserialize(save_file_path.c_str(), this->resource_manager);
+						delete this->editor_scene;
+						this->editor_scene = SceneSerializer().deserialize(save_file_path.c_str(), this->resource_manager);
 
-						if (!this->runtime_scene->scene_components.has<SceneInfo>())
+						if (!this->editor_scene->scene_components.has<SceneInfo>())
 						{
-							this->runtime_scene->scene_components.add<SceneInfo>();
+							this->editor_scene->scene_components.add<SceneInfo>();
 						}
 
-						if (!this->runtime_scene->scene_components.has<PhysicsWorld>())
+						if (!this->editor_scene->scene_components.has<PhysicsWorld>())
 						{
-							this->runtime_scene->scene_components.add<PhysicsWorld>(vector3D(0.0, -9.8, 0.0));
+							this->editor_scene->scene_components.add<PhysicsWorld>(vector3D(0.0, -9.8, 0.0));
 						}
 					}
 				}
@@ -217,7 +160,7 @@ namespace Genesis
 
 					if (!save_file_path.empty())
 					{
-						SceneSerializer().serialize(this->runtime_scene, save_file_path.c_str());
+						SceneSerializer().serialize(this->editor_scene, save_file_path.c_str());
 					}
 				}
 
@@ -246,13 +189,11 @@ namespace Genesis
 
 		this->console_window->draw();
 		this->entity_hierarchy_window->draw(this->editor_scene);
-		this->entity_properties_window->draw(this->entity_hierarchy_window->get_selected());
+		this->entity_properties_window->draw(this->entity_hierarchy_window->getSelected());
 
-		SceneSystem::build_scene(this->runtime_scene);
-		
-		build_scene_info(this->scene_info, this->editor_scene);
+		SceneSystem::build_scene(this->editor_scene);
 
-		this->scene_window->draw(this->scene_info);
+		this->scene_window->draw(this->editor_scene);
 		this->asset_browser_window->draw();
 		this->material_editor_window->draw();
 

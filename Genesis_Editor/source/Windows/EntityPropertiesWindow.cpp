@@ -15,7 +15,6 @@
 #include "Genesis/Physics/PhysicsWorld.hpp"
 
 #include "Genesis/Scene/Entity.hpp"
-#include "Genesis/Scene/ScenePrototype.hpp"
 
 namespace Genesis
 {
@@ -293,97 +292,4 @@ namespace Genesis
 
 		ImGui::End();
 	}
-
-	template<class Component>
-	void draw_component(EntityPrototype* entity, const char* component_name, function<void(Component&)> draw_function)
-	{
-		if (entity.has<Component>())
-		{
-			bool header_open = ImGui::CollapsingHeader(component_name, ImGuiTreeNodeFlags_DefaultOpen);
-
-			if (ImGui::BeginPopupContextItem(component_name, ImGuiMouseButton_Right))
-			{
-				if (ImGui::MenuItem("Delete Component"))
-				{
-					entity->remove_component<Component>();
-					header_open = false;
-				}
-				ImGui::EndPopup();
-			}
-
-			if (header_open)
-			{
-				ImGui::PushID(component_name);
-				draw_function(*entity->get_component<Component>());
-				ImGui::PopID();
-			}
-		}
-	};
-
-	void EntityPropertiesWindow::draw(EntityPrototype* entity)
-	{
-		ImGui::Begin("Entity Properties");
-
-		if (!entity)
-		{
-			ImGui::End();
-			return;
-		}
-
-		if (ImGui::CollapsingHeader("Entity", ImGuiTreeNodeFlags_DefaultOpen))
-		{
-			NameComponent name(entity->get_name().c_str());
-			ImGui::InputText("Entity Name", name.data, name.SIZE);
-
-			TransformD& transform = entity->get_transform();
-
-			vector3D position = transform.getPosition();
-			if (ImGui::InputScalarN("Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
-			{
-				transform.setPosition(position);
-			};
-
-			vector3D rotation = glm::degrees(glm::eulerAngles(transform.getOrientation()));
-			if (ImGui::InputScalarN("Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
-			{
-				transform.setOrientation(quaternionD(glm::radians(rotation)));
-			}
-
-			vector3D scale = transform.getScale();
-			if (ImGui::InputScalarN("Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
-			{
-				transform.setScale(scale);
-			}
-		}
-
-
-		/*drawComponent<NameComponent>(entity, "Name Component", [](NameComponent& name_component)
-		{
-			ImGui::InputText("Entity Name", name_component.data, name_component.SIZE);
-		});
-
-		drawComponent<Transform>(entity, "Transform", [](Transform& transform_component)
-		{
-			vector3D position = transform_component.getPosition();
-			if (ImGui::InputScalarN("Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
-			{
-				transform_component.setPosition(position);
-			};
-
-			vector3D rotation = glm::degrees(glm::eulerAngles(transform_component.getOrientation()));
-			if (ImGui::InputScalarN("Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
-			{
-				transform_component.setOrientation(quaternionD(glm::radians(rotation)));
-			}
-
-			vector3D scale = transform_component.getScale();
-			if (ImGui::InputScalarN("Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
-			{
-				transform_component.setScale(scale);
-			}
-		});*/
-
-		ImGui::End();
-	}
-
 }
