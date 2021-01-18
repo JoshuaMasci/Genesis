@@ -4,13 +4,14 @@
 
 #include "Genesis/LegacyBackend/LegacyBackend.hpp"
 #include "Genesis/LegacyRendering/LegacySceneRenderer.hpp"
-#include "Genesis/Editor/ConsoleWindow.hpp"
 
+#include <memory>
 #include "Genesis_Editor/Windows/EntityHierarchyWindow.hpp"
 #include "Genesis_Editor/Windows/EntityPropertiesWindow.hpp"
 #include "Genesis_Editor/Windows/SceneWindow.hpp"
 #include "Genesis_Editor/Windows/AssetBrowserWindow.hpp"
 #include "Genesis_Editor/Windows/MaterialEditorWindow.hpp"
+#include "Genesis_Editor/Windows/RenderStatisticsWindow.hpp"
 
 #include "Genesis/Resource/Material.hpp"
 #include "Genesis/Resource/ResourceManager.hpp"
@@ -19,7 +20,7 @@
 
 #include "Genesis/Scene/Ecs.hpp"
 #include "Genesis/Scene/Scene.hpp"
-#include "Genesis/Rendering/SceneInfo.hpp"
+#include "Genesis/Rendering/SceneRenderList.hpp"
 
 namespace Genesis
 {
@@ -36,16 +37,15 @@ namespace Genesis
 
 		LegacyBackend* legacy_backend;
 		BaseImGui* ui_renderer;
-
-		ConsoleWindow* console_window = nullptr;
-		EntityHierarchyWindow* entity_hierarchy_window = nullptr;
-		EntityPropertiesWindow* entity_properties_window = nullptr;
-		SceneWindow* scene_window = nullptr;
-		AssetBrowserWindow* asset_browser_window = nullptr;
-		MaterialEditorWindow* material_editor_window = nullptr;
-
 		ResourceManager* resource_manager = nullptr;
 
+		std::unique_ptr<ConsoleWindow> console_window;
+		std::unique_ptr<EntityHierarchyWindow> entity_hierarchy_window;
+		std::unique_ptr<EntityPropertiesWindow> entity_properties_window;
+		std::unique_ptr<SceneWindow> scene_window;
+		std::unique_ptr<AssetBrowserWindow> asset_browser_window;
+		std::unique_ptr<MaterialEditorWindow> material_editor_window;
+		std::unique_ptr<RenderStatisticsWindow> render_statistics_window;
 		bool show_demo_window = false;
 	};
 }

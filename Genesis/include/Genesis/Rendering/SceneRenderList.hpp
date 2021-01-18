@@ -31,19 +31,25 @@ namespace Genesis
 		TransformD transform;
 	};
 
-	struct SceneInfo
+	struct SpotLightStruct
 	{
-		vector3F ambient_light = vector3D(1.0);
+		SpotLight light;
+		TransformD transform;
+	};
 
+	struct SceneRenderList
+	{
 		vector<ModelStruct> models;
 		vector<DirectionalLightStruct> directional_lights;
 		vector<PointLightStruct> point_lights;
+		vector<SpotLightStruct> spot_lights;
 
-		void clear_buffers()
+		void clear()
 		{
 			models.clear();
 			directional_lights.clear();
 			point_lights.clear();
+			spot_lights.clear();
 		}
 	};
 }

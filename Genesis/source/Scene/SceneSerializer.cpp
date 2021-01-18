@@ -5,16 +5,12 @@
 
 #include "Genesis/Scene/Entity.hpp"
 
-#include "Genesis/Rendering/SceneInfo.hpp"
-#include "Genesis/Physics/PhysicsWorld.hpp"
-
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Component/TransformComponent.hpp"
 #include "Genesis/Component/ModelComponent.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lights.hpp"
-#include "Genesis/Physics/RigidBody.hpp"
-#include "Genesis/Physics/CollisionShape.hpp"
+#include "Genesis/Component/PhysicsComponents.hpp"
 
 #include "Genesis/Resource/ResourceManager.hpp"
 
@@ -72,33 +68,33 @@ namespace Genesis
 			entity_node["PointLight"] = light_node;
 		}
 
-		if (entity.has<RigidBody>())
+		if (entity.has<RigidBodyTemplate>())
 		{
-			RigidBody& rigid_body = entity.get<RigidBody>();
+			RigidBodyTemplate& rigid_body = entity.get<RigidBodyTemplate>();
 			YAML::Node body_node;
-			body_node["type"] = (int)rigid_body.getType();
-			body_node["mass"] = rigid_body.getMass();
-			body_node["gravity_enabled"] = rigid_body.getGravityEnabled();
-			body_node["is_allowed_to_sleep"] = rigid_body.getIsAllowedToSleep();
-			body_node["linear_velocity"] = rigid_body.getLinearVelocity();
-			body_node["angular_velocity"] = rigid_body.getAngularVelocity();
+			body_node["type"] = (int)rigid_body.type;
+			body_node["mass"] = rigid_body.mass;
+			body_node["gravity_enabled"] = rigid_body.gravity_enabled;
+			body_node["is_allowed_to_sleep"] = rigid_body.is_allowed_to_sleep;
+			body_node["linear_velocity"] = rigid_body.linear_velocity;
+			body_node["angular_velocity"] = rigid_body.angular_velocity;
 			entity_node["RigidBody"] = body_node;
 		}
 
-		if (entity.has<CollisionShape>())
+		if (entity.has<CollisionShapeTemplate>())
 		{
-			CollisionShape& collision_shape = entity.get<CollisionShape>();
+			CollisionShapeTemplate& collision_shape = entity.get<CollisionShapeTemplate>();
 			YAML::Node shape_node;
 			shape_node["type"] = (int)collision_shape.type;
 			switch (collision_shape.type)
 			{
-			case CollisionShapeType::Box:
+			case ShapeType::Box:
 				shape_node["data"] = collision_shape.type_data.box_size;
 				break;
-			case CollisionShapeType::Sphere:
+			case ShapeType::Sphere:
 				shape_node["data"] = collision_shape.type_data.sphere_radius;
 				break;
-			case CollisionShapeType::Capsule:
+			case ShapeType::Capsule:
 				shape_node["data"] = collision_shape.type_data.capsule_size;
 				break;
 			}
@@ -140,7 +136,6 @@ namespace Genesis
 			ModelComponent& model = entity.add<ModelComponent>();
 			model.mesh = resource_manager->mesh_pool.getResource(model_node["Mesh"].as<std::string>());
 			model.material = resource_manager->material_pool.getResource(model_node["Material"].as<std::string>());
-			entity.add_or_replace<WorldTransform>();
 		}
 
 		if (entity_node["DirectionalLight"])
@@ -150,7 +145,6 @@ namespace Genesis
 			light.enabled = light_node["enabled"].as<bool>();
 			light.color = light_node["color"].as<vector3F>();
 			light.intensity = light_node["intensity"].as<float>();
-			entity.add_or_replace<WorldTransform>();
 		}
 
 		if (entity_node["PointLight"])
@@ -162,36 +156,34 @@ namespace Genesis
 			light.intensity = light_node["intensity"].as<float>();
 			light.range = light_node["range"].as<float>();
 			light.attenuation = light_node["attenuation"].as<vector2F>();
-			entity.add_or_replace<WorldTransform>();
 		}
 
 		if (entity_node["RigidBody"])
 		{
 			YAML::Node body_node = entity_node["RigidBody"];
-			RigidBody& rigid_body = entity.add<RigidBody>();
-			rigid_body.setType((RigidBodyType) body_node["type"].as<int>());
-			rigid_body.setMass(body_node["mass"].as<float>());
-			rigid_body.setGravityEnabled(body_node["gravity_enabled"].as<bool>());
-			rigid_body.setIsAllowedToSleep(body_node["is_allowed_to_sleep"].as<bool>());
-			rigid_body.setLinearVelocity(body_node["linear_velocity"].as<vector3D>());
-			rigid_body.setAngularVelocity(body_node["angular_velocity"].as<vector3D>());
-			entity.add_or_replace<WorldTransform>();
+			RigidBodyTemplate& rigid_body = entity.add<RigidBodyTemplate>();
+			rigid_body.type = (RigidBodyType) body_node["type"].as<int>();
+			rigid_body.mass = body_node["mass"].as<float>();
+			rigid_body.gravity_enabled = body_node["gravity_enabled"].as<bool>();
+			rigid_body.is_allowed_to_sleep = body_node["is_allowed_to_sleep"].as<bool>();
+			rigid_body.linear_velocity = body_node["linear_velocity"].as<vector3D>();
+			rigid_body.angular_velocity = body_node["angular_velocity"].as<vector3D>();
 		}
 
 		if (entity_node["CollisionShape"])
 		{
 			YAML::Node shape_node = entity_node["CollisionShape"];
-			CollisionShape& collision_shape = entity.add<CollisionShape>();
-			collision_shape.type = (CollisionShapeType)shape_node["type"].as<int>();
+			CollisionShapeTemplate& collision_shape = entity.add<CollisionShapeTemplate>();
+			collision_shape.type = (ShapeType)shape_node["type"].as<int>();
 			switch (collision_shape.type)
 			{
-			case CollisionShapeType::Box:
+			case ShapeType::Box:
 				collision_shape.type_data.box_size = shape_node["data"].as<vector3D>();
 				break;
-			case CollisionShapeType::Sphere:
+			case ShapeType::Sphere:
 				collision_shape.type_data.sphere_radius = shape_node["data"].as<double>();
 				break;
-			case CollisionShapeType::Capsule:
+			case ShapeType::Capsule:
 				collision_shape.type_data.capsule_size = shape_node["data"].as<vector2D>();
 				break;
 			}
@@ -213,20 +205,18 @@ namespace Genesis
 	{
 		YAML::Node scene_node;
 
-		if (scene->scene_components.has<SceneInfo>())
 		{
-			SceneInfo& scene_info = scene->scene_components.get<SceneInfo>();
 			YAML::Node scene_info_node;
-			scene_info_node["ambient_light"] = scene_info.ambient_light;
-			scene_node["SceneInfo"] = scene_info_node;
+			scene_info_node["ambient_light"] = scene->lighting_settings.ambient_light;
+			scene_info_node["gamma_correction"] = scene->lighting_settings.gamma_correction;
+			scene_node["Lighting"] = scene_info_node;
 		}
 
-		if (scene->scene_components.has<PhysicsWorld>())
+		//Always write a gravity, not used right now
 		{
-			PhysicsWorld& physics = scene->scene_components.get<PhysicsWorld>();
 			YAML::Node physics_node;
-			physics_node["gravity"] = physics.getGravity();
-			scene_node["PhysicsWorld"] = physics_node;
+			physics_node["gravity"] = vector3F(0.0, 0.0, 0.0);
+			scene_node["Physics"] = physics_node;
 		}
 
 		scene->registry.each([&](auto entity)
@@ -250,17 +240,11 @@ namespace Genesis
 
 		Scene* scene = new Scene();
 
-		if (scene_node["SceneInfo"])
+		if (scene_node["Lighting"])
 		{
-			YAML::Node scene_info_node = scene_node["SceneInfo"];
-			SceneInfo& scene_info = scene->scene_components.add<SceneInfo>();
-			scene_info.ambient_light = scene_info_node["ambient_light"].as<vector3F>();
-		}
-
-		if (scene_node["PhysicsWorld"])
-		{
-			YAML::Node physics_node = scene_node["PhysicsWorld"];
-			PhysicsWorld& physics = scene->scene_components.add<PhysicsWorld>(physics_node["gravity"].as<vector3D>());
+			YAML::Node scene_info_node = scene_node["Lighting"];
+			scene->lighting_settings.ambient_light = scene_info_node["ambient_light"].as<vector3F>();
+			scene->lighting_settings.gamma_correction = scene_info_node["gamma_correction"].as<float>();
 		}
 
 		if (scene_node["Entities"])
@@ -274,17 +258,4 @@ namespace Genesis
 
 		return scene;
 	}
-
-	/*void SceneSerializer::addSerializeFuncions(EntitySerializeFunction serialize, EntityDeserializeFunction deserialize)
-{
-	if (serialize != nullptr)
-	{
-		this->serialize_functions.push_back(serialize);
-	}
-
-	if (deserialize != nullptr)
-	{
-		this->deserialize_functions.push_back(deserialize);
-	}
-}*/
 }

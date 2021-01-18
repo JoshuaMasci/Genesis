@@ -3,6 +3,9 @@
 #include "Genesis/Scene/Ecs.hpp"
 #include "Genesis/Scene/SceneComponents.hpp"
 
+#include "Genesis/Rendering/SceneLightingSettings.hpp"
+#include "Genesis/Rendering/SceneRenderList.hpp"
+
 namespace Genesis
 {
 	class Entity;
@@ -20,6 +23,9 @@ namespace Genesis
 
 		void addChild(Entity parent, Entity child);
 		void removeChild(Entity parent, Entity child);
+
+		SceneLightingSettings lighting_settings;
+		SceneRenderList render_list;
 
 		// TODO
 		//EntityWorld* clone();

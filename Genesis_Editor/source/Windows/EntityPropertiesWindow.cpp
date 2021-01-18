@@ -8,11 +8,9 @@
 #include "Genesis/Component/NameComponent.hpp"
 #include "Genesis/Component/TransformComponent.hpp"
 #include "Genesis/Component/ModelComponent.hpp"
+#include "Genesis/Component/PhysicsComponents.hpp"
 #include "Genesis/Rendering/Camera.hpp"
 #include "Genesis/Rendering/Lights.hpp"
-#include "Genesis/Physics/RigidBody.hpp"
-#include "Genesis/Physics/CollisionShape.hpp"
-#include "Genesis/Physics/PhysicsWorld.hpp"
 
 #include "Genesis/Scene/Entity.hpp"
 
@@ -24,7 +22,7 @@ namespace Genesis
 	}
 
 	template<class Component>
-	void drawComponent(Entity& entity, const char* component_name, function<void(Component&)> draw_function)
+	void draw_component(Entity& entity, const char* component_name, function<void(Component&)> draw_function)
 	{
 		if (entity.has<Component>())
 		{
@@ -45,30 +43,16 @@ namespace Genesis
 				draw_function(entity.get<Component>());
 			}
 		}
-	};
-
-	template<class Component>
-	bool drawComponent2(Entity& entity, const char* component_name)
-	{
-		bool header_open = false;
-
-		if (entity.has<Component>())
-		{
-			if (ImGui::BeginPopupContextItem(component_name, ImGuiMouseButton_Right))
-			{
-				if (ImGui::MenuItem("Delete Component"))
-				{
-					entity.remove<Component>();
-					header_open = false;
-				}
-				ImGui::EndPopup();
-			}
-		}
-
-		return header_open;
 	}
 
-#define ADD_COMPONENT(entity, component, component_name, ...) if (!entity.has<component>() && ImGui::MenuItem(component_name)) { entity.add<component>(__VA_ARGS__); }
+	template<typename T, typename... TArgs> 
+	void add_component(Entity& entity, const char* component_name, TArgs&&... mArgs)
+	{
+		if (!entity.has<T>() && ImGui::MenuItem(component_name))
+		{
+			entity.add<T>(std::forward<TArgs>(mArgs)...);
+		}
+	}
 
 	void EntityPropertiesWindow::draw(Entity entity)
 	{
@@ -80,12 +64,12 @@ namespace Genesis
 			return;
 		}
 
-		drawComponent<NameComponent>(entity, "Name Component", [](NameComponent& name_component)
+		draw_component<NameComponent>(entity, "Name Component", [](NameComponent& name_component)
 		{
 			ImGui::InputText("Entity Name", name_component.data, name_component.SIZE);
 		});
 
-		drawComponent<Transform>(entity, "Transform", [](Transform& transform_component)
+		draw_component<Transform>(entity, "Transform", [](Transform& transform_component)
 		{
 			vector3D position = transform_component.getPosition();
 			if (ImGui::InputScalarN("Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
@@ -106,7 +90,7 @@ namespace Genesis
 			}
 		});
 
-		drawComponent<ModelComponent>(entity, "Model Component", [=](ModelComponent& model_component)
+		draw_component<ModelComponent>(entity, "Model Component", [=](ModelComponent& model_component)
 		{
 			const char* mesh_name = " ";
 			if (model_component.mesh)
@@ -153,7 +137,7 @@ namespace Genesis
 			}
 		});
 
-		drawComponent<DirectionalLight>(entity, "Directional Light", [=](DirectionalLight& light_component)
+		draw_component<DirectionalLight>(entity, "Directional Light", [=](DirectionalLight& light_component)
 		{
 			ImGui::PushID("Directional Light");
 
@@ -167,7 +151,7 @@ namespace Genesis
 			ImGui::PopID();
 		});
 
-		drawComponent<PointLight>(entity, "Point Light", [=](PointLight& light_component)
+		draw_component<PointLight>(entity, "Point Light", [=](PointLight& light_component)
 		{
 			ImGui::PushID("Point Light");
 
@@ -194,74 +178,45 @@ namespace Genesis
 			ImGui::PopID();
 		});
 
-		drawComponent<RigidBody>(entity, "Rigidbody", [](RigidBody& rigidbody_component)
+		draw_component<RigidBodyTemplate>(entity, "Rigidbody", [](RigidBodyTemplate& rigidbody_component)
 		{
-			RigidBodyType type = rigidbody_component.getType();
 			const char* type_names[] = { "Static", "Kinematic", "Dynamic" };
-			if (ImGui::Combo("Type", (int*)&type, type_names, IM_ARRAYSIZE(type_names)))
-			{
-				rigidbody_component.setType(type);
-			}
-
-			double mass = rigidbody_component.getMass();
-			if (ImGui::InputDouble("Mass", &mass))
-			{
-				rigidbody_component.setMass(mass);
-			}
-
-			bool gravity = rigidbody_component.getGravityEnabled();
-			if (ImGui::Checkbox("Gravity Enabled", &gravity))
-			{
-				rigidbody_component.setGravityEnabled(gravity);
-			}
-
-			bool is_allowed_to_sleep = rigidbody_component.getIsAllowedToSleep();
-			if (ImGui::Checkbox("Is allowed to sleep", &is_allowed_to_sleep))
-			{
-				rigidbody_component.setIsAllowedToSleep(is_allowed_to_sleep);
-			}
-
-			vector3D linear_velocity = rigidbody_component.getLinearVelocity();
-			if (ImGui::InputScalarN("Linear Velocity", ImGuiDataType_::ImGuiDataType_Double, &linear_velocity, 3))
-			{
-				rigidbody_component.setLinearVelocity(linear_velocity);
-			}
-
-			vector3D angular_velocity = rigidbody_component.getAngularVelocity();
-			if (ImGui::InputScalarN("Angular Velocity", ImGuiDataType_::ImGuiDataType_Double, &angular_velocity, 3))
-			{
-				rigidbody_component.setAngularVelocity(angular_velocity);
-			}
+			ImGui::Combo("Type", (int*)&rigidbody_component.type, type_names, IM_ARRAYSIZE(type_names));
+			ImGui::InputDouble("Mass", &rigidbody_component.mass);
+			ImGui::Checkbox("Gravity Enabled", &rigidbody_component.gravity_enabled);
+			ImGui::Checkbox("Is allowed to sleep", &rigidbody_component.is_allowed_to_sleep);
+			ImGui::InputScalarN("Linear Velocity", ImGuiDataType_::ImGuiDataType_Double, &rigidbody_component.linear_velocity, 3);
+			ImGui::InputScalarN("Angular Velocity", ImGuiDataType_::ImGuiDataType_Double, &rigidbody_component.angular_velocity, 3);
 		});
 
-		drawComponent<CollisionShape>(entity, "Collision Shape", [](CollisionShape& collision_shape) 
+		draw_component<CollisionShapeTemplate>(entity, "Collision Shape", [](CollisionShapeTemplate& collision_shape)
 		{
 			const char* shape_names[] = { "None", "Box", "Sphere", "Capsule" };
 			if (ImGui::Combo("Shape", (int*)&collision_shape.type, shape_names, IM_ARRAYSIZE(shape_names)))
 			{
 				switch (collision_shape.type)
 				{
-				case CollisionShapeType::Box:
+				case ShapeType::Box:
 					collision_shape.type_data.box_size = vector3D(0.5);
 					break;
-				case CollisionShapeType::Sphere:
+				case ShapeType::Sphere:
 					collision_shape.type_data.sphere_radius = 0.5;
 					break;
-				case CollisionShapeType::Capsule:
+				case ShapeType::Capsule:
 					collision_shape.type_data.capsule_size = vector2D(0.5, 1.8);
 					break;
 				}
 			}
 
-			if (collision_shape.type == CollisionShapeType::Box)
+			if (collision_shape.type == ShapeType::Box)
 			{
 				ImGui::InputScalarN("Half Extents", ImGuiDataType_::ImGuiDataType_Double, &collision_shape.type_data.box_size, 3);
 			}
-			else if (collision_shape.type == CollisionShapeType::Sphere)
+			else if (collision_shape.type == ShapeType::Sphere)
 			{
 				ImGui::InputDouble("Radius", &collision_shape.type_data.sphere_radius);
 			}
-			else if (collision_shape.type == CollisionShapeType::Capsule)
+			else if (collision_shape.type == ShapeType::Capsule)
 			{
 				ImGui::InputDouble("Radius", &collision_shape.type_data.capsule_size.x);
 				ImGui::InputDouble("Height", &collision_shape.type_data.capsule_size.y);
@@ -278,15 +233,13 @@ namespace Genesis
 		if (ImGui::BeginPopup("add_component"))
 		{
 			Scene* scene = entity.get_scene();
-			ADD_COMPONENT(entity, NameComponent, "Name", "Unamed Entity");
-			ADD_COMPONENT(entity, Transform, "Transform");
-			ADD_COMPONENT(entity, ModelComponent, "Model");
-			ADD_COMPONENT(entity, DirectionalLight, "Directional Light");
-			ADD_COMPONENT(entity, PointLight, "Point Light");
-			ADD_COMPONENT(entity, RigidBody, "RigidBody");
-			ADD_COMPONENT(entity, CollisionShape, "Collision Shape");
-			ADD_COMPONENT(entity, WorldTransform, "WorldTransform");
-
+			add_component<NameComponent>(entity, "Name", "Unamed Entity");
+			add_component<Transform>(entity, "Transform");
+			add_component<ModelComponent>(entity, "Model");
+			add_component<DirectionalLight>(entity, "Directional Light");
+			add_component<PointLight>(entity, "Point Light");
+			add_component<RigidBodyTemplate>(entity, "RigidBody");
+			add_component<CollisionShapeTemplate>(entity, "Collision Shape");
 			ImGui::EndPopup();
 		}
 

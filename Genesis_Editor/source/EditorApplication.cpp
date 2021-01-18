@@ -9,36 +9,12 @@
 
 #include "imgui.h"
 
-//Components
-#include "Genesis/Component/ModelComponent.hpp"
-#include "Genesis/Component/NameComponent.hpp"
-#include "Genesis/Rendering/Camera.hpp"
-#include "Genesis/Rendering/Lights.hpp"
-#include "Genesis/Physics/RigidBody.hpp"
-#include "Genesis/Physics/CollisionShape.hpp"
-#include "Genesis/Physics/ReactPhyscis.hpp"
-#include "Genesis/Component/TransformComponent.hpp"
-
-//World Components
-#include "Genesis/Physics/PhysicsWorld.hpp"
-
-//Systems
-#include "Genesis/System/EntitySystemSet.hpp"
-#include "Genesis/System/TransformResolveSystem.hpp"
-#include "Genesis/System/SceneSystem.hpp"
 #include "Genesis/Scene/SceneSerializer.hpp"
-
-//Test Game
-#include "Genesis/TestGame/Chunk.hpp"
-#include "Genesis/TestGame/ChunkMeshGenerator.hpp"
 
 namespace Genesis
 {
 	EditorApplication::EditorApplication()
 	{
-		this->console_window = new ConsoleWindow();
-		Logging::console_sink->setConsoleWindow(this->console_window);
-
 		this->platform = new SDL2_Platform(this);
 		this->window = new SDL2_Window(vector2U(1600, 900), "Genesis Editor");
 
@@ -47,74 +23,39 @@ namespace Genesis
 
 		this->resource_manager = new ResourceManager(this->legacy_backend);
 
-		this->entity_hierarchy_window = new EntityHierarchyWindow(this->resource_manager);
-		this->entity_properties_window = new EntityPropertiesWindow(this->resource_manager);
-		this->scene_window = new SceneWindow(this->input_manager, this->legacy_backend);
-		this->asset_browser_window = new AssetBrowserWindow(this->legacy_backend, "res/");
-		this->material_editor_window = new MaterialEditorWindow(this->resource_manager);
-		this->material_editor_window->setActiveMaterial(this->resource_manager->material_pool.getResource("res/materials/grid.mat"));
+		this->entity_hierarchy_window = std::make_unique<EntityHierarchyWindow>(this->resource_manager);
+		this->entity_properties_window = std::make_unique<EntityPropertiesWindow>(this->resource_manager);
+		this->scene_window = std::make_unique<SceneWindow>(this->input_manager, this->legacy_backend);
+		this->asset_browser_window = std::make_unique<AssetBrowserWindow>(this->legacy_backend, "res/");
+		this->material_editor_window = std::make_unique<MaterialEditorWindow>(this->resource_manager);
+		this->render_statistics_window = std::make_unique<RenderStatisticsWindow>(this->legacy_backend);
 
 		this->editor_scene = new Scene();
-		this->editor_scene->scene_components.add<SceneInfo>();
-
-		Entity chunk = this->editor_scene->createEntity("Chunk");
-		chunk.add<Transform>();
-		chunk.add<WorldTransform>();
-		chunk.add<DefaultChunk>().setBlock(vector3U(0), 1);
 	}
 
 	EditorApplication::~EditorApplication()
 	{
+		this->console_window.release();
+		this->entity_hierarchy_window.release();
+		this->entity_properties_window.release();
+		this->scene_window.release();
+		this->asset_browser_window.release();
+		this->material_editor_window.release();
+		this->render_statistics_window.release();
+
 		delete this->editor_scene;
-
 		delete this->resource_manager;
-
-		delete this->console_window;
-		delete this->entity_hierarchy_window;
-		delete this->entity_properties_window;
-		delete this->scene_window;
-		delete this->asset_browser_window;
-		delete this->material_editor_window;
-
 		delete this->legacy_backend;
-
-		Logging::console_sink->setConsoleWindow(nullptr);
 	}
 
 	void EditorApplication::update(TimeStep time_step)
 	{
 		GENESIS_PROFILE_FUNCTION("EditorApplication::update");
 		Application::update(time_step);
-
-		TransformResolveSystem().run(this->editor_scene, time_step);
-
-		if (this->scene_window->is_scene_running()) 
-		{
-			if (this->editor_scene->scene_components.has<PhysicsWorld>())
-			{
-				auto& pre_view = this->editor_scene->registry.view<RigidBody, Transform>();
-				for (EntityHandle entity : pre_view)
-				{
-					pre_view.get<RigidBody>(entity).setTransform(pre_view.get<Transform>(entity));
-				}
-
-				PhysicsWorld& physics = this->editor_scene->scene_components.get<PhysicsWorld>();
-				physics.simulate(time_step);
-
-				auto& post_view = this->editor_scene->registry.view<RigidBody, Transform>();
-				for (EntityHandle entity : post_view)
-				{
-					post_view.get<RigidBody>(entity).getTransform(post_view.get<Transform>(entity));
-				}
-			}
-		}
-		else
-		{
-
-		}
-
 		this->scene_window->update(time_step);
 	}
+
+	void build_scene_render_list(Scene* scene);
 
 	void EditorApplication::render(TimeStep time_step)
 	{
@@ -141,16 +82,6 @@ namespace Genesis
 					{
 						delete this->editor_scene;
 						this->editor_scene = SceneSerializer().deserialize(save_file_path.c_str(), this->resource_manager);
-
-						if (!this->editor_scene->scene_components.has<SceneInfo>())
-						{
-							this->editor_scene->scene_components.add<SceneInfo>();
-						}
-
-						if (!this->editor_scene->scene_components.has<PhysicsWorld>())
-						{
-							this->editor_scene->scene_components.add<PhysicsWorld>(vector3D(0.0, -9.8, 0.0));
-						}
 					}
 				}
 
@@ -178,22 +109,12 @@ namespace Genesis
 		}
 		this->ui_renderer->endDocking();
 
-		{
-			FrameStats stats = this->legacy_backend->getLastFrameStats();
-			ImGui::Begin("Stats");
-			ImGui::Text("Frame Time (ms): %.2f", time_step * 1000.0);
-			ImGui::Text("Draw Calls     : %u", stats.draw_calls);
-			ImGui::Text("Tris count     : %u", stats.triangles_count);
-			ImGui::End();
-		}
+		build_scene_render_list(this->editor_scene);
+		this->scene_window->draw(this->editor_scene->render_list, this->editor_scene->lighting_settings);
 
-		this->console_window->draw();
+		this->render_statistics_window->draw(time_step);
 		this->entity_hierarchy_window->draw(this->editor_scene);
 		this->entity_properties_window->draw(this->entity_hierarchy_window->getSelected());
-
-		SceneSystem::build_scene(this->editor_scene);
-
-		this->scene_window->draw(this->editor_scene);
 		this->asset_browser_window->draw();
 		this->material_editor_window->draw();
 
@@ -205,5 +126,64 @@ namespace Genesis
 		this->ui_renderer->endFrame();
 
 		this->legacy_backend->endFrame();
+	}
+
+
+#include "Genesis/Component/ModelComponent.hpp"
+#include "Genesis/Rendering/Camera.hpp"
+#include "Genesis/Rendering/Lights.hpp"
+
+	void add_to_render_list(SceneRenderList& render_list, EntityRegistry& registry, EntityHandle entity, const TransformD& parent_transform)
+	{
+		TransformD world_transform = parent_transform;
+
+		if (registry.has<TransformD>(entity))
+		{
+			TransformUtils::transformByInplace(world_transform, parent_transform, registry.get<TransformD>(entity));
+		}
+
+		if (registry.has<ModelComponent>(entity))
+		{
+			ModelComponent& model = registry.get<ModelComponent>(entity);
+			render_list.models.push_back({ model.mesh, model.material, world_transform });
+		}
+
+		if (registry.has<DirectionalLight>(entity))
+		{
+			DirectionalLight& light = registry.get<DirectionalLight>(entity);
+			render_list.directional_lights.push_back({ light, world_transform });
+		}
+
+		if (registry.has<PointLight>(entity))
+		{
+			PointLight& light = registry.get<PointLight>(entity);
+			render_list.point_lights.push_back({ light, world_transform });
+		}
+
+		if (registry.has<SpotLight>(entity))
+		{
+			SpotLight& light = registry.get<SpotLight>(entity);
+			render_list.spot_lights.push_back({ light, world_transform });
+		}
+
+		for (EntityHandle child : EntityHiearchy(&registry, entity))
+		{
+			add_to_render_list(render_list, registry, child, world_transform);
+		}
+	}
+
+	void build_scene_render_list(Scene* scene)
+	{
+		scene->render_list.clear();
+		scene->registry.each([&](auto entity)
+		{
+			if (entity != scene->scene_components.handle())
+			{
+				if (!scene->registry.has<ChildNode>(entity))
+				{
+					add_to_render_list(scene->render_list, scene->registry, entity, TransformD());
+				}
+			}
+		});
 	}
 }

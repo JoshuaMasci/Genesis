@@ -54,7 +54,7 @@ namespace Genesis
 		reactphysics3d::RigidBody* rigidbody = nullptr;
 
 		RigidBodyType type = RigidBodyType::Dynamic;
-		double body_mass = 1.0f;
+		double mass = 1.0f;
 		bool gravity_enabled = true;
 		bool is_allowed_to_sleep = true;
 		vector3D linear_velocity = vector3D(0.0);

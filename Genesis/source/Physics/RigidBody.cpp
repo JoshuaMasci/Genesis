@@ -8,7 +8,7 @@ namespace Genesis
 	{
 		this->rigidbody = rigidbody;
 		this->rigidbody->setType((reactphysics3d::BodyType) this->type);
-		this->rigidbody->setMass(this->body_mass);
+		this->rigidbody->setMass(this->mass);
 		this->rigidbody->setLinearVelocity(toVec3R(this->linear_velocity));
 		this->rigidbody->setAngularVelocity(toVec3R(this->angular_velocity));
 		this->rigidbody->enableGravity(this->gravity_enabled);
@@ -18,7 +18,7 @@ namespace Genesis
 	reactphysics3d::RigidBody* RigidBody::removeRigidBody()
 	{
 		this->type = (RigidBodyType) this->rigidbody->getType();
-		this->body_mass = this->rigidbody->getMass();
+		this->mass = this->rigidbody->getMass();
 		this->linear_velocity = toVec3D(this->rigidbody->getLinearVelocity());
 		this->angular_velocity = toVec3D(this->rigidbody->getAngularVelocity());
 		this->gravity_enabled = this->rigidbody->isGravityEnabled();
@@ -77,11 +77,11 @@ namespace Genesis
 
 	void RigidBody::setMass(double mass)
 	{
-		this->body_mass = mass;
+		this->mass = mass;
 
 		if (this->rigidbody != nullptr)
 		{
-			this->rigidbody->setMass(this->body_mass);
+			this->rigidbody->setMass(this->mass);
 		}
 	}
 
@@ -89,10 +89,10 @@ namespace Genesis
 	{
 		if (this->rigidbody != nullptr)
 		{
-			this->body_mass = this->rigidbody->getMass();
+			this->mass = this->rigidbody->getMass();
 		}
 
-		return this->body_mass;
+		return this->mass;
 	}
 
 	void RigidBody::setGravityEnabled(bool enabled)

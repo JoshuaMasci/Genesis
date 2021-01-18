@@ -65,43 +65,20 @@ namespace Genesis
 		}
 	}
 
-	void SceneWindow::draw(Scene* scene)
+	void SceneWindow::draw(SceneRenderList& render_list, SceneLightingSettings& lighting)
 	{
 		ImGui::Begin("Scene View", nullptr, ImGuiWindowFlags_MenuBar);
 
-		SceneInfo& scene_info = scene->scene_components.get<SceneInfo>();
-
 		if (ImGui::BeginMenuBar())
 		{
-			if (!this->scene_running)
-			{
-				if (ImGui::MenuItem("Play"))
-				{
-					this->scene_running = true;
-					scene->initialize_scene();
-				}
-			}
-			else
-			{
-				if (ImGui::MenuItem("Pause"))
-				{
-					this->scene_running = false;
-					scene->deinitialize_scene();
-				}
-			}
-
 			if (ImGui::BeginMenu("Graphics"))
 			{
-
 				ImGui::MenuItem("Lighting Enabled", nullptr, &this->settings.lighting);
 				ImGui::MenuItem("Frustrum Culling", nullptr, &this->settings.frustrum_culling);
+				ImGui::Separator();
 				ImGui::Text("Gamma Correction:");
-				ImGui::SliderFloat("##Gamma Correction:", &this->settings.gamma_correction, 1.0f, 5.0f, "%.2f");
-
-				ImGui::ColorEdit3("Ambient Light", &scene_info.ambient_light.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB);
-
-
-
+				ImGui::SliderFloat("##Gamma Correction:", &lighting.gamma_correction, 1.0f, 5.0f, "%.2f");
+				ImGui::ColorEdit3("Ambient Light", &lighting.ambient_light.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputRGB);
 				ImGui::EndMenu();
 			}
 
@@ -200,7 +177,7 @@ namespace Genesis
 		active_camera.camera = this->scene_camera;
 		active_camera.transform = this->scene_camera_transform;
 
-		this->world_renderer->drawScene(this->framebuffer_size, this->framebuffer, scene_info, this->settings, active_camera);
+		this->world_renderer->draw_scene(this->framebuffer_size, this->framebuffer, render_list, lighting, this->settings, active_camera);
 
 		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->framebuffer, 0), im_remaining_space, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
