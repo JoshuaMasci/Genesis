@@ -110,7 +110,7 @@ namespace Genesis
 		this->backend->bindFramebuffer(target_framebuffer);
 		this->backend->clearFramebuffer(true, true);
 
-		matrix4F view_projection_matrix = active_camera.camera.getProjectionMatrix(target_size) * active_camera.transform.getViewMatirx();
+		matrix4F view_projection_matrix = active_camera.camera.get_projection_matrix(target_size) * active_camera.transform.getViewMatirx();
 
 		const PipelineSettings ambient_settings = { CullMode::Back, DepthTest::Test_And_Write, DepthOp::Less, BlendOp::None, BlendFactor::One, BlendFactor::Zero };
 		this->backend->setPipelineState(ambient_settings);

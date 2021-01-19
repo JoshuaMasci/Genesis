@@ -2,6 +2,15 @@
 
 #include "imgui.h"
 
+//Because Windows is stupid and stupid defines
+#ifdef far
+#undef far
+#endif // far
+
+#include "ImGuizmo.h"
+#include "ImGuizmo.cpp"
+#include <glm/gtx/matrix_decompose.hpp>
+
 namespace Genesis
 {
 	SceneWindow::SceneWindow(InputManager* input_manager, LegacyBackend* legacy_backend)
@@ -65,7 +74,7 @@ namespace Genesis
 		}
 	}
 
-	void SceneWindow::draw(SceneRenderList& render_list, SceneLightingSettings& lighting)
+	void SceneWindow::draw(SceneRenderList& render_list, SceneLightingSettings& lighting, Entity selected_entity)
 	{
 		ImGui::Begin("Scene View", nullptr, ImGuiWindowFlags_MenuBar);
 
@@ -150,10 +159,11 @@ namespace Genesis
 			ImGui::EndMenuBar();
 		}
 
-		ImVec2 im_remaining_space = ImGui::GetContentRegionAvail();
-		vector2U window_size = vector2U(im_remaining_space.x, im_remaining_space.y);
+		ImVec2 im_image_pos = ImGui::GetCursorScreenPos();
+		ImVec2 im_image_size = ImGui::GetContentRegionAvail();
+		vector2U image_size = vector2U(im_image_size.x, im_image_size.y);
 
-		if (window_size != this->framebuffer_size)
+		if (image_size != this->framebuffer_size)
 		{
 			//Rebuild Framebuffer
 			if (this->framebuffer != nullptr)
@@ -161,7 +171,7 @@ namespace Genesis
 				this->legacy_backend->destoryFramebuffer(this->framebuffer);
 			}
 
-			this->framebuffer_size = window_size;
+			this->framebuffer_size = image_size;
 			FramebufferAttachmentInfo color_attachment = { ImageFormat::RGBA_32_Float, MultisampleCount::Sample_1 };
 			FramebufferDepthInfo depth_attachment = { DepthFormat::depth_24,  MultisampleCount::Sample_1 };
 			FramebufferCreateInfo create_info = {};
@@ -179,9 +189,58 @@ namespace Genesis
 
 		this->world_renderer->draw_scene(this->framebuffer_size, this->framebuffer, render_list, lighting, this->settings, active_camera);
 
-		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->framebuffer, 0), im_remaining_space, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+		ImGui::Image((ImTextureID)this->legacy_backend->getFramebufferColorAttachment(this->framebuffer, 0), im_image_size, ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
 		this->window_active = ImGui::IsWindowFocused();
+
+		ImVec2 im_mouse_pos = ImGui::GetMousePos();
+		ImVec2 im_min_pos = im_image_pos;
+
+		if (im_mouse_pos.y >= im_min_pos.y && im_mouse_pos.y < (im_min_pos.y + im_image_size.y))
+		{
+			GENESIS_ENGINE_WARNING("Mouse X real:{} rel:{}", im_mouse_pos.y, im_mouse_pos.y - im_min_pos.y);
+		}
+
+
+		//ImGuizmo
+		if (selected_entity.valid() && selected_entity.has<TransformD>())
+		{
+			TransformD& transform = selected_entity.get<TransformD>();
+
+			ImGuizmo::SetOrthographic(false);
+			ImGuizmo::BeginFrame();
+			ImGuizmo::SetDrawlist();
+			ImGuizmo::SetRect(im_image_pos.x, im_image_pos.y, im_image_size.x, im_image_size.y);
+
+			matrix4F projection_matrix = this->scene_camera.get_infinite_projection_no_flip(image_size);
+			//projection_matrix[1][1] *= -1.0f;
+			matrix4F view_matrix = this->scene_camera_transform.getViewMatirx();
+
+			matrix4F model_matrix = transform.getModelMatrix();
+
+			ImGuizmo::Manipulate(glm::value_ptr(view_matrix), glm::value_ptr(projection_matrix), ImGuizmo::OPERATION::SCALE, ImGuizmo::MODE::LOCAL, glm::value_ptr(model_matrix));
+
+			//TODO use decompose that doesn't give skew and perspective
+			vector3F translation;
+			quaternionF rotation;
+			vector3F scale;
+			vector3F skew;
+			vector4F perspective;
+			glm::decompose(model_matrix, scale, rotation, translation, skew, perspective);
+
+			if (ImGuizmo::IsUsing())
+			{
+				transform.setPosition((vector3D)translation);
+				transform.setOrientation((quaternionD)rotation);
+
+				if (scale == vector3F(0.0))
+				{
+					scale = vector3F(0.01);
+				}
+
+				transform.setScale((vector3D)scale);
+			}
+		}
 
 		ImGui::End();
 	}

@@ -187,7 +187,7 @@ namespace Genesis
 		}
 	}
 
-	Entity EntityHierarchyWindow::getSelected()
+	Entity EntityHierarchyWindow::get_selected()
 	{
 		return this->selected_entity;
 	}

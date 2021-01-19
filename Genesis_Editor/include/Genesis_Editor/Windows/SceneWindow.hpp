@@ -5,6 +5,7 @@
 #include "Genesis/LegacyRendering/LegacySceneRenderer.hpp"
 
 #include "Genesis/Scene/Scene.hpp"
+#include "Genesis/Scene/Entity.hpp"
 
 namespace Genesis
 {
@@ -15,17 +16,12 @@ namespace Genesis
 		~SceneWindow();
 
 		void update(TimeStep time_step);
-
-		void draw(SceneRenderList& render_list, SceneLightingSettings& lighting);
-
-		bool is_scene_running() { return this->scene_running; };
+		void draw(SceneRenderList& render_list, SceneLightingSettings& lighting, Entity selected_entity = Entity());
 
 		TransformD get_scene_camera_transform() { return this->scene_camera_transform; };
 
 	private:
 		bool window_active = false;
-
-		bool scene_running = false;
 
 		InputManager* input_manager = nullptr;
 

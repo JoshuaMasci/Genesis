@@ -23,6 +23,7 @@ target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/paralle
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/entt-3.3.2/src/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/spdlog-1.5.0/include/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/imgui-docking/)
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/ImGuizmo/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/tinyobj/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/stb/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/tinygltf-master/)

@@ -12,7 +12,7 @@ namespace Genesis
 	public:
 		EntityHierarchyWindow(ResourceManager* resource_manager);
 		void draw(Scene* scene);
-		Entity getSelected();
+		Entity get_selected();
 
 	protected:
 		void drawEntity(Scene* scene, Entity entity);

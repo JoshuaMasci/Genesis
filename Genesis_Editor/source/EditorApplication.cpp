@@ -109,14 +109,14 @@ namespace Genesis
 		}
 		this->ui_renderer->endDocking();
 
-		build_scene_render_list(this->editor_scene);
-		this->scene_window->draw(this->editor_scene->render_list, this->editor_scene->lighting_settings);
-
 		this->render_statistics_window->draw(time_step);
 		this->entity_hierarchy_window->draw(this->editor_scene);
-		this->entity_properties_window->draw(this->entity_hierarchy_window->getSelected());
+		this->entity_properties_window->draw(this->entity_hierarchy_window->get_selected());
 		this->asset_browser_window->draw();
 		this->material_editor_window->draw();
+
+		build_scene_render_list(this->editor_scene);
+		this->scene_window->draw(this->editor_scene->render_list, this->editor_scene->lighting_settings, this->entity_hierarchy_window->get_selected());
 
 		if (this->show_demo_window)
 		{
