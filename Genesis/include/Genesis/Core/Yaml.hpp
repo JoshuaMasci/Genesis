@@ -1,6 +1,5 @@
 #pragma once
 
-#define YAML_CPP_DLL
 #include <yaml-cpp/yaml.h>
 
 namespace YAML

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 project(Genesis)
 
-option (INCLUDE_EASY_PROFILER "Includes Profiling tool" ON)
+option (INCLUDE_EASY_PROFILER "Includes Profiling tool" OFF)
 
 add_subdirectory(Genesis)
 

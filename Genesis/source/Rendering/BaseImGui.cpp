@@ -1,11 +1,6 @@
 #include "Genesis/Rendering/BaseImGui.hpp"
 
-#include "imgui.cpp"
 #include "imgui.h"
-#include "imgui_demo.cpp"
-#include "imgui_draw.cpp"
-#include "imgui_widgets.cpp"
-#include "imgui_internal.h"
 
 namespace Genesis
 {

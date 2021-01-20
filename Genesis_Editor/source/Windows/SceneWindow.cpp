@@ -9,7 +9,6 @@
 
 #include "ImGuizmo.h"
 #include "ImGuizmo.cpp"
-#include <glm/gtx/matrix_decompose.hpp>
 
 namespace Genesis
 {

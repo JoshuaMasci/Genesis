@@ -7,8 +7,8 @@ namespace Genesis
 		GENESIS_ENGINE_ASSERT(registry.valid(parent), "Parent not valid");
 		GENESIS_ENGINE_ASSERT(registry.valid(child), "Child not valid");
 
-		ParentNode& parent_node = registry.get_or_assign<ParentNode>(parent);
-		ChildNode& child_node = registry.get_or_assign<ChildNode>(child);
+		ParentNode& parent_node = registry.get_or_emplace<ParentNode>(parent);
+		ChildNode& child_node = registry.get_or_emplace<ChildNode>(child);
 
 		child_node.prev = null_entity;
 		child_node.next = null_entity;

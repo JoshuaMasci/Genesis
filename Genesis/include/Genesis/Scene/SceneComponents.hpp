@@ -22,7 +22,7 @@ namespace Genesis
 		T& add(Args&&... args)
 		{
 			GENESIS_ENGINE_ASSERT(!this->has<T>(), "Scene already has component!");
-			return this->entity_registry->assign<T>(entity_handle, std::forward<Args>(args)...);
+			return this->entity_registry->emplace<T>(entity_handle, std::forward<Args>(args)...);
 		}
 
 		template<typename T>
