@@ -1,0 +1,71 @@
+struct Material
+{
+	vec4 albedo;
+	vec2 metallic_roughness;
+	vec4 emissive;
+	
+	int albedo_uv;
+	int normal_uv;
+	int metallic_roughness_uv;
+	int occlusion_uv;
+	int emissive_uv;
+	
+	sampler2D albedo_texture;
+	sampler2D normal_texture;
+	sampler2D metallic_roughness_texture;
+	sampler2D occlusion_texture;
+	sampler2D emissive_texture;
+};
+
+vec4 getAlbedo(Material material)
+{
+	vec4 albedo = material.albedo;
+	if (material.albedo_uv > -1) 
+	{
+		albedo *= texture(material.albedo_texture, frag_uv);
+	}
+	return albedo;
+};
+
+vec3 getNormal(Material material)
+{
+	if (material.normal_uv > -1) 
+	{
+		vec3 tangentNormal = texture(material.normal_texture, frag_uv).xyz * 2.0 - 1.0;
+		return normalize(frag_tangent_space * tangentNormal);
+	}
+	else
+	{
+		return frag_tangent_space[2];
+	}
+};
+
+vec2 getMetallicRoughness(Material material)
+{
+	vec2 metallic_roughness = material.metallic_roughness;
+	if (material.metallic_roughness_uv > -1) 
+	{
+		metallic_roughness *= texture(material.metallic_roughness_texture, frag_uv).xy;
+	}
+	return metallic_roughness;
+};
+
+float getOcclusion(Material material)
+{
+	float occlusion_value = 1.0;
+	if (material.occlusion_uv > -1) 
+	{
+		occlusion_value = texture(material.occlusion_texture, frag_uv).x;
+	}
+	return occlusion_value;
+};
+
+vec4 getEmissive(Material material)
+{
+	vec4 emissive = material.emissive;
+	if (material.emissive_uv > -1) 
+	{
+		emissive *= texture(material.emissive_texture, frag_uv);
+	}
+	return emissive;
+};

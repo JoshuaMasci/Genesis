@@ -1,0 +1,6 @@
+struct Environment
+{
+	vec3 ambient_light;
+	vec3 camera_position;
+	mat4 view_projection_matrix;
+};

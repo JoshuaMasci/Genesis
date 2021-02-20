@@ -1,0 +1,5 @@
+
+vec3 correct_gamma(vec3 color, float gamma_factor)
+{
+  return pow(color, vec3(1.0/gamma_factor));
+}

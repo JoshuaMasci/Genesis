@@ -1,76 +1,49 @@
-cmake_minimum_required(VERSION 3.8.0)
-project(Genesis)
+cmake_minimum_required(VERSION 3.16.0)
+project(Genesis_Engine CXX)
 
-include_directories(src)
+file(GLOB_RECURSE GENESIS_SOURCES "source/*.*")
+file(GLOB_RECURSE GENESIS_HEADERS "include/*.*")
 
-file(GLOB GENESIS_MAIN "src/Genesis/*.*")
-source_group("Main" FILES ${GENESIS_MAIN})
+file (GLOB IMGUI_SOURCES ${CMAKE_SOURCE_DIR}/submodules/imgui/*.*cpp)
 
-file(GLOB_RECURSE GENESIS_CORE "src/Genesis/Core/*.*")
-source_group("Core" FILES ${GENESIS_CORE})
+add_library(Genesis_Engine STATIC ${GENESIS_SOURCES} ${GENESIS_HEADERS} ${IMGUI_SOURCES})
 
-#TODO Select Subdirectories
-file(GLOB GENESIS_RENDERING "src/Genesis/Rendering/*.*")
-source_group("Rendering Core" FILES ${GENESIS_RENDERING})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GENESIS_SOURCES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GENESIS_HEADERS})
 
-#file(GLOB_RECURSE GENESIS_RENDERING_OPENGL "src/Genesis/Rendering/OpenGL/*.*")
-#source_group("Rendering OpenGL" FILES ${GENESIS_RENDERING_OPENGL})
+target_include_directories(Genesis_Engine PUBLIC include/)
+target_precompile_headers(Genesis_Engine PUBLIC "include/Genesis/pch.hpp")
+target_compile_definitions(Genesis_Engine PUBLIC GENESIS_PLATFORM_WIN)
+target_compile_features(Genesis_Engine PUBLIC cxx_std_17)
 
-file(GLOB_RECURSE GENESIS_RENDERING_VULKAN "src/Genesis/Rendering/Vulkan/*.*")
-source_group("Rendering Vulkan" FILES ${GENESIS_RENDERING_VULKAN})
 
-file(GLOB_RECURSE GENESIS_INPUT "src/Genesis/Input/*.*")
-source_group("Input" FILES ${GENESIS_INPUT})
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/yaml-cpp/include/)
+target_link_libraries(Genesis_Engine PUBLIC debug ${CMAKE_SOURCE_DIR}/submodules/yaml-cpp/build/Debug/yaml-cppd.lib)
+target_link_libraries(Genesis_Engine PUBLIC optimized ${CMAKE_SOURCE_DIR}/submodules/yaml-cpp/build/Release/yaml-cpp.lib)
+ 
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/concurrentqueue/)
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/entt/src/)
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/glm/)
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/imgui/)
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/ImGuizmo/)
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/parallel-hashmap/)
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/spdlog/include/)
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/stb/)
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/tinyobjloader/)
 
-file(GLOB_RECURSE GENESIS_JOB "src/Genesis/Job/*.*")
-source_group("Job" FILES ${GENESIS_JOB})
-
-if(INCLUDE_VULKAN)
-	file(GLOB GENESIS_SPIRV "${CMAKE_SOURCE_DIR}/lib/spirv-reflect/spirv_reflect.c" "${CMAKE_SOURCE_DIR}/lib/spirv-reflect/spirv_reflect.h")
-	source_group("SPIRV UTILS" FILES ${GENESIS_SPIRV})
-endif()
-
-#TODO Select Subdirectories
-file(GLOB_RECURSE GENESIS_PLATFORM "src/Genesis/Platform/*.*")
-source_group("Platform" FILES ${GENESIS_PLATFORM})
-
-file(GLOB_RECURSE GENESIS_PHYSICS "src/Genesis/Physics/*.*")
-source_group("Physics" FILES ${GENESIS_PHYSICS})
-
-#Create Libary
-add_library(Genesis STATIC ${GENESIS_MAIN} ${GENESIS_CORE} ${GENESIS_RENDERING} ${GENESIS_RENDERING_VULKAN} ${GENESIS_INPUT} ${GENESIS_JOB} ${GENESIS_PHYSICS} ${GENESIS_PLATFORM} ${GENESIS_SPIRV} ${GENESIS_GLTF})
-
-include_directories(${CMAKE_SOURCE_DIR}/lib/glm/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/concurrent_queue/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/stb/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/tinyobj/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/imgui/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/spdlog-1.5.0/include)
-
-#SDL2
-include_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/include/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/SDL2-2.0.9/lib/x64/)
-target_link_libraries(Genesis PRIVATE SDL2)
-
-#TEMP ASSIMP
-link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/code/Debug/)
-link_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/build/contrib/zlib/Debug/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/assimp-3.3.1/include/)
-target_link_libraries (Genesis PRIVATE zlibstaticd)
-target_link_libraries (Genesis PRIVATE assimp-vc140-mt)
-
-if(INCLUDE_VULKAN)
-	find_package(Vulkan REQUIRED FATAL_ERROR)
-	include_directories(${Vulkan_INCLUDE_DIR})	
-	target_link_libraries(Genesis PRIVATE Vulkan::Vulkan)
-	
-	include_directories(${CMAKE_SOURCE_DIR}/lib/vulkan_memory_allocator/src/)
-	include_directories(${CMAKE_SOURCE_DIR}/lib/spirv-reflect/)
-endif()
+target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/src/)
+target_link_libraries(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/build/lib/debug/reactphysics3d.lib)
+target_compile_definitions(Genesis_Engine PUBLIC IS_DOUBLE_PRECISION_ENABLED)
 
 if(INCLUDE_EASY_PROFILER)
-	include_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/include/)
-	link_directories(${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/lib)
-	target_link_libraries(Genesis PRIVATE easy_profiler)
-	add_definitions(-DGENESIS_PROFILER_ENABLED)
+	target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/include/)
+	target_link_libraries(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/lib/easy_profiler.lib)
+	target_compile_definitions(Genesis_Engine PUBLIC GENESIS_PROFILER_ENABLED)
 endif()
+
+set_target_properties(Genesis_Engine
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
