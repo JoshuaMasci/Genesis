@@ -1,7 +1,4 @@
 lib/**/*
 build/**/*
-Log.txt
-Sandbox/imgui.ini
-Genesis_Editor/imgui.ini
+imgui.ini
 *spv
-Sandbox/Genesis_profile.prof

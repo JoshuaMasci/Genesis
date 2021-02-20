@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/LegacyBackend/LegacyBackend.hpp"
+#include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
 #include "OpenglShaderProgram.hpp"
 #include "SDL2_Window.hpp"
 

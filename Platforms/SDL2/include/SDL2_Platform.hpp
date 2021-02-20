@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Genesis/Platform/Platform.hpp"
+#include "genesis_engine/platform/Platform.hpp"
 
-#include "Genesis/Input/KeyboardDevice.hpp"
-#include "Genesis/Input/MouseDevice.hpp"
-#include "Genesis/Input/JoystickDevice.hpp"
+#include "genesis_engine/input/KeyboardDevice.hpp"
+#include "genesis_engine/input/MouseDevice.hpp"
+#include "genesis_engine/input/JoystickDevice.hpp"
 
 
 namespace Genesis

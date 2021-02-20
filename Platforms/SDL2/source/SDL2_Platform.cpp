@@ -2,9 +2,9 @@
 
 #include "SDL2_Include.hpp"
 
-#include "Genesis/Input/InputManager.hpp"
+#include "genesis_engine/input/InputManager.hpp"
 
-#include "Genesis/Core/Fnv1aHash.hpp"
+#include "genesis_engine/core/Fnv1aHash.hpp"
 
 namespace Genesis
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Genesis/Platform/Window.hpp"
+#include "genesis_engine/platform/Window.hpp"
 
 //Prototype struct
 struct SDL_Window;
@@ -10,7 +10,7 @@ namespace Genesis
 	class SDL2_Window: public Window
 	{
 	public:
-		SDL2_Window(vector2U size, string title);
+		SDL2_Window(vector2U size, string title, bool use_opengl = true);
 		virtual ~SDL2_Window();
 
 		virtual vector2U getWindowSize();

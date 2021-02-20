@@ -1,7 +1,7 @@
 #include "OpenglShaderProgram.hpp"
 
-#include "Genesis/Debug/Log.hpp"
-#include "Genesis/Debug/Assert.hpp"
+#include "genesis_engine/debug/Log.hpp"
+#include "genesis_engine/debug/Assert.hpp"
 
 namespace Genesis
 {

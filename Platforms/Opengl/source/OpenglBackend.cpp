@@ -1,7 +1,7 @@
 #include "OpenglBackend.hpp"
 
-#include <Genesis/Debug/Assert.hpp>
-#include <Genesis/Debug/Log.hpp>
+#include <genesis_engine/debug/Assert.hpp>
+#include <genesis_engine/debug/Log.hpp>
 
 #include "Opengl_Include.hpp"
 

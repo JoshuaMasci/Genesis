@@ -3,12 +3,12 @@ project(Genesis)
 
 option (INCLUDE_EASY_PROFILER "Includes Profiling tool" OFF)
 
-add_subdirectory(Genesis)
+add_subdirectory(types)
 
-add_subdirectory(Platforms/SDL2)
-add_subdirectory(Platforms/Opengl)
-#add_subdirectory(Platforms/Vulkan)
+add_subdirectory(platforms/SDL2)
+add_subdirectory(platforms/Opengl)
+add_subdirectory(platforms/vulkan)
 
-add_subdirectory(Genesis_Editor)
-
-add_subdirectory(Sandbox)
+add_subdirectory(engine)
+add_subdirectory(editor)
+add_subdirectory(sandbox)
