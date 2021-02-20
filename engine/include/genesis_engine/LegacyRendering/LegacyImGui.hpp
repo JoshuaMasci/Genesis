@@ -3,7 +3,7 @@
 #include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
 #include "genesis_engine/rendering/BaseImGui.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class LegacyImGui : public BaseImGui
 	{

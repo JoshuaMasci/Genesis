@@ -3,7 +3,7 @@
 #include <fstream>
 #include "genesis_engine/core/Yaml.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	MaterialPool::MaterialPool(TexturePool* texture_pool)
 	{
@@ -18,17 +18,17 @@ namespace Genesis
 
 		if (material_node["albedo_factor"])
 		{
-			material->albedo_factor = material_node["albedo_factor"].as<vector4F>();
+			material->albedo_factor = material_node["albedo_factor"].as<vec4f>();
 		}
 
 		if (material_node["metallic_roughness_factor"])
 		{
-			material->metallic_roughness_factor = material_node["metallic_roughness_factor"].as<vector2F>();
+			material->metallic_roughness_factor = material_node["metallic_roughness_factor"].as<vec2f>();
 		}
 
 		if (material_node["emissive_factor"])
 		{
-			material->emissive_factor = material_node["emissive_factor"].as<vector4F>();
+			material->emissive_factor = material_node["emissive_factor"].as<vec4f>();
 		}
 
 		if (material_node["albedo_texture"])

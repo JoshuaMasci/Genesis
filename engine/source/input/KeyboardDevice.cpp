@@ -2,7 +2,7 @@
 
 #include "genesis_engine/input/InputManager.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	/*KeyboardDevice::KeyboardDevice(string name)
 		:ArrayInputDevice(name, (uint16_t)KeyboardButton::SIZE, 0)

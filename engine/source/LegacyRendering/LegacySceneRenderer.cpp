@@ -2,11 +2,11 @@
 
 #include "genesis_engine/platform/FileSystem.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	struct LegacyShaderUniform
 	{
-		static void write_environment(LegacyBackend* backend, vector3F ambient_light, vector3F camera_position, matrix4F view_projection_matrix)
+		static void write_environment(LegacyBackend* backend, vec3f ambient_light, vec3f camera_position, mat4f view_projection_matrix)
 		{
 			backend->setUniform3f("environment.ambient_light", ambient_light);
 			backend->setUniform3f("environment.camera_position", camera_position);
@@ -56,14 +56,14 @@ namespace Genesis
 			backend->setUniformMat3f("matrices.normal", transform.getNormalMatrix());
 		}
 
-		static void write_directional_light(LegacyBackend* backend, const DirectionalLight& light, const vector3F& light_direction)
+		static void write_directional_light(LegacyBackend* backend, const DirectionalLight& light, const vec3f& light_direction)
 		{
 			backend->setUniform3f("directional_light.base.color", light.color);
 			backend->setUniform1f("directional_light.base.intensity", light.intensity);
 			backend->setUniform3f("directional_light.direction", light_direction);
 		}
 
-		static void write_point_light(LegacyBackend* backend, const PointLight& light, const vector3F& light_position)
+		static void write_point_light(LegacyBackend* backend, const PointLight& light, const vec3f& light_position)
 		{
 			backend->setUniform3f("point_light.base.color", light.color);
 			backend->setUniform1f("point_light.base.intensity", light.intensity);
@@ -105,12 +105,12 @@ namespace Genesis
 		this->backend->destoryShaderProgram(this->gamma_correction_program);
 	}
 
-	void LegacySceneRenderer::draw_scene(vector2U target_size, Framebuffer target_framebuffer, SceneRenderList& render_list, SceneLightingSettings& lighting, RenderSettings& settings, CameraStruct& active_camera)
+	void LegacySceneRenderer::draw_scene(vec2u target_size, Framebuffer target_framebuffer, SceneRenderList& render_list, SceneLightingSettings& lighting, RenderSettings& settings, CameraStruct& active_camera)
 	{
 		this->backend->bindFramebuffer(target_framebuffer);
 		this->backend->clearFramebuffer(true, true);
 
-		matrix4F view_projection_matrix = active_camera.camera.get_projection_matrix(target_size) * active_camera.transform.getViewMatirx();
+		mat4f view_projection_matrix = active_camera.camera.get_projection_matrix(target_size) * active_camera.transform.getViewMatirx();
 
 		const PipelineSettings ambient_settings = { CullMode::Back, DepthTest::Test_And_Write, DepthOp::Less, BlendOp::None, BlendFactor::One, BlendFactor::Zero };
 		this->backend->setPipelineState(ambient_settings);
@@ -119,7 +119,7 @@ namespace Genesis
 		{
 			this->backend->bindShaderProgram(this->ambient_program);
 
-			LegacyShaderUniform::write_environment(this->backend, lighting.ambient_light, (vector3F)active_camera.transform.getPosition(), view_projection_matrix);
+			LegacyShaderUniform::write_environment(this->backend, lighting.ambient_light, (vec3f)active_camera.transform.getPosition(), view_projection_matrix);
 
 			for (ModelStruct& mesh : render_list.models)
 			{
@@ -141,7 +141,7 @@ namespace Genesis
 			//Draw directional light pass
 			{
 				this->backend->bindShaderProgram(this->directional_program);
-				LegacyShaderUniform::write_environment(this->backend, lighting.ambient_light, (vector3F)active_camera.transform.getPosition(), view_projection_matrix);
+				LegacyShaderUniform::write_environment(this->backend, lighting.ambient_light, (vec3f)active_camera.transform.getPosition(), view_projection_matrix);
 
 				for (ModelStruct& mesh : render_list.models)
 				{
@@ -155,7 +155,7 @@ namespace Genesis
 					{
 						if (light.light.enabled)
 						{
-							LegacyShaderUniform::write_directional_light(this->backend, light.light, (vector3F)light.transform.getForward());
+							LegacyShaderUniform::write_directional_light(this->backend, light.light, (vec3f)light.transform.getForward());
 							this->backend->drawIndex(mesh.mesh->index_count, 0);
 						}
 					}
@@ -165,7 +165,7 @@ namespace Genesis
 			//Draw point light pass
 			{
 				this->backend->bindShaderProgram(this->point_program);
-				LegacyShaderUniform::write_environment(this->backend, lighting.ambient_light, (vector3F)active_camera.transform.getPosition(), view_projection_matrix);
+				LegacyShaderUniform::write_environment(this->backend, lighting.ambient_light, (vec3f)active_camera.transform.getPosition(), view_projection_matrix);
 
 				for (ModelStruct& mesh : render_list.models)
 				{
@@ -179,7 +179,7 @@ namespace Genesis
 					{
 						if (light.light.enabled)
 						{
-							LegacyShaderUniform::write_point_light(this->backend, light.light, (vector3F)light.transform.getPosition());
+							LegacyShaderUniform::write_point_light(this->backend, light.light, (vec3f)light.transform.getPosition());
 							this->backend->drawIndex(mesh.mesh->index_count, 0);
 						}
 					}

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Genesis
+namespace genesis_engine
 {
 	enum class GraphicsAPI
 	{
@@ -22,11 +22,11 @@ namespace Genesis
 	class Window
 	{
 	public:
-		Window(vector2U size, string title) {};
+		Window(vec2u size, string title) {};
 		virtual ~Window() {};
 
-		virtual vector2U getWindowSize() = 0;
-		virtual void setWindowSize(vector2U size) = 0;
+		virtual vec2u getWindowSize() = 0;
+		virtual void setWindowSize(vec2u size) = 0;
 
 		virtual void setWindowTitle(string title) = 0;
 

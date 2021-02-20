@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Genesis
+namespace genesis_engine
 {
 	enum class RigidBodyType
 	{
@@ -23,8 +23,8 @@ namespace Genesis
 		double mass = 1.0f;
 		bool gravity_enabled = true;
 		bool is_allowed_to_sleep = true;
-		vector3D linear_velocity = vector3D(0.0);
-		vector3D angular_velocity = vector3D(0.0);
+		vec3d linear_velocity = vec3d(0.0);
+		vec3d angular_velocity = vec3d(0.0);
 	};
 
 	struct CollisionShapeTemplate
@@ -32,9 +32,9 @@ namespace Genesis
 		ShapeType type = ShapeType::None;
 		union
 		{
-			vector3D box_size;
+			vec3d box_size;
 			double sphere_radius;
-			vector2D capsule_size;
+			vec2d capsule_size;
 		} type_data;
 	};
 
@@ -43,9 +43,9 @@ namespace Genesis
 		ShapeType type = ShapeType::None;
 		union
 		{
-			vector3D box_size;
+			vec3d box_size;
 			double sphere_radius;
-			vector2D capsule_size;
+			vec2d capsule_size;
 		} type_data;
 	};
 }

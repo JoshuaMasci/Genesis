@@ -2,7 +2,7 @@
 
 #include "genesis_engine/platform/Window.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	//Prototype
 	class Application;

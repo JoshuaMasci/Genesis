@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Genesis
+namespace genesis_engine
 {
 	typedef void* VertexBuffer;
 	typedef void* IndexBuffer;

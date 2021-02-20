@@ -1,25 +1,25 @@
 #pragma once
 
-namespace Genesis
+namespace genesis_engine
 {
 	struct MeshVertex
 	{
-		vector3F position;
-		vector3F normal;
-		vector3F tangent;
-		vector3F bitangent;
-		vector2F uv;
+		vec3f position;
+		vec3f normal;
+		vec3f tangent;
+		vec3f bitangent;
+		vec2f uv;
 	};
 
 	struct MeshVertexAnimated
 	{
-		vector3F position;
-		vector3F normal;
-		vector3F tangent;
-		vector3F bitangent;
-		vector2F uv;
+		vec3f position;
+		vec3f normal;
+		vec3f tangent;
+		vec3f bitangent;
+		vec2f uv;
 
-		vector4F joints;
-		vector4F weights;
+		vec4f joints;
+		vec4f weights;
 	};
 }

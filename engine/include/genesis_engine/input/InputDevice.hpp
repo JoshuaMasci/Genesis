@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Genesis
+namespace genesis_engine
 {
 	class InputDevice
 	{

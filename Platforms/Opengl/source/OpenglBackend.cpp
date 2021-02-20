@@ -5,7 +5,7 @@
 
 #include "Opengl_Include.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	namespace Opengl
 	{
@@ -62,7 +62,7 @@ namespace Genesis
 			this->window->GL_DeleteContext(this->opengl_context);
 		}
 
-		vector2U OpenglBackend::getScreenSize()
+		vec2u OpenglBackend::getScreenSize()
 		{
 			return this->viewport_size;
 		}
@@ -74,7 +74,7 @@ namespace Genesis
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-			vector2U window_size = this->window->getWindowSize();
+			vec2u window_size = this->window->getWindowSize();
 
 			if (window_size.y == 0) // Prevent A Divide By Zero By
 			{
@@ -202,36 +202,36 @@ namespace Genesis
 		{
 			switch (format)
 			{
-			case Genesis::ImageFormat::R_8:
+			case genesis_engine::ImageFormat::R_8:
 				return { GL_R8, GL_RED, GL_UNSIGNED_BYTE };
-			case Genesis::ImageFormat::RG_8:
+			case genesis_engine::ImageFormat::RG_8:
 				return { GL_RG8, GL_RG, GL_UNSIGNED_BYTE };
-			case Genesis::ImageFormat::RGB_8:
+			case genesis_engine::ImageFormat::RGB_8:
 				return { GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE };
-			case Genesis::ImageFormat::RGBA_8:
-			case Genesis::ImageFormat::RGBA_8_Unorm:
+			case genesis_engine::ImageFormat::RGBA_8:
+			case genesis_engine::ImageFormat::RGBA_8_Unorm:
 				return { GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE };
-			case Genesis::ImageFormat::R_16_Float:
+			case genesis_engine::ImageFormat::R_16_Float:
 				return { GL_R16F, GL_RED, GL_HALF_FLOAT };
-			case Genesis::ImageFormat::RG_16_Float:
+			case genesis_engine::ImageFormat::RG_16_Float:
 				return { GL_RG16F, GL_RG, GL_HALF_FLOAT };
-			case Genesis::ImageFormat::RGB_16_Float:
+			case genesis_engine::ImageFormat::RGB_16_Float:
 				return { GL_RGB16F, GL_RGB, GL_HALF_FLOAT };
-			case Genesis::ImageFormat::RGBA_16_Float:
+			case genesis_engine::ImageFormat::RGBA_16_Float:
 				return { GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT };
-			case Genesis::ImageFormat::R_32_Float:
+			case genesis_engine::ImageFormat::R_32_Float:
 				return { GL_R32F, GL_RED, GL_FLOAT };
-			case Genesis::ImageFormat::RG_32_Float:
+			case genesis_engine::ImageFormat::RG_32_Float:
 				return { GL_RG32F, GL_RG, GL_FLOAT };
-			case Genesis::ImageFormat::RGB_32_Float:
+			case genesis_engine::ImageFormat::RGB_32_Float:
 				return { GL_RGB32F, GL_RGB, GL_FLOAT };
-			case Genesis::ImageFormat::RGBA_32_Float:
+			case genesis_engine::ImageFormat::RGBA_32_Float:
 				return { GL_RGBA32F, GL_RGBA, GL_FLOAT };
-			case Genesis::ImageFormat::D_16_Unorm:
+			case genesis_engine::ImageFormat::D_16_Unorm:
 				return { GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT };
-			case Genesis::ImageFormat::D_32_Float:
+			case genesis_engine::ImageFormat::D_32_Float:
 				return { GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT };
-			case Genesis::ImageFormat::Invalid:
+			case genesis_engine::ImageFormat::Invalid:
 			default:
 				return GLImageFormat();
 			}
@@ -430,7 +430,7 @@ namespace Genesis
 
 		void OpenglBackend::bindFramebuffer(Framebuffer framebuffer)
 		{
-			vector2U size;
+			vec2u size;
 
 			if (framebuffer == nullptr)
 			{
@@ -453,7 +453,7 @@ namespace Genesis
 			this->viewport_size = size;
 		}
 
-		void OpenglBackend::clearFramebuffer(bool color, bool depth, vector4F* clear_color, float* clear_depth)
+		void OpenglBackend::clearFramebuffer(bool color, bool depth, vec4f* clear_color, float* clear_depth)
 		{
 			if (clear_color != nullptr)
 			{
@@ -672,19 +672,19 @@ namespace Genesis
 			glUniform1ui(current_program->getUniformLocation(name), value);
 		}
 
-		void OpenglBackend::setUniform2u(const string& name, const vector2U& value)
+		void OpenglBackend::setUniform2u(const string& name, const vec2u& value)
 		{
 			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform2ui(current_program->getUniformLocation(name), value.x, value.y);
 		}
 
-		void OpenglBackend::setUniform3u(const string& name, const vector3U& value)
+		void OpenglBackend::setUniform3u(const string& name, const vec3u& value)
 		{
 			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform3ui(current_program->getUniformLocation(name), value.x, value.y, value.z);
 		}
 
-		void OpenglBackend::setUniform4u(const string& name, const vector4U& value)
+		void OpenglBackend::setUniform4u(const string& name, const vec4u& value)
 		{
 			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform4ui(current_program->getUniformLocation(name), value.x, value.y, value.z, value.w);
@@ -696,31 +696,31 @@ namespace Genesis
 			glUniform1f(current_program->getUniformLocation(name), value);
 		}
 
-		void OpenglBackend::setUniform2f(const string& name, const vector2F& value)
+		void OpenglBackend::setUniform2f(const string& name, const vec2f& value)
 		{
 			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform2f(current_program->getUniformLocation(name), value.x, value.y);
 		}
 
-		void OpenglBackend::setUniform3f(const string& name, const vector3F& value)
+		void OpenglBackend::setUniform3f(const string& name, const vec3f& value)
 		{
 			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform3f(current_program->getUniformLocation(name), value.x, value.y, value.z);
 		}
 
-		void OpenglBackend::setUniform4f(const string& name, const vector4F& value)
+		void OpenglBackend::setUniform4f(const string& name, const vec4f& value)
 		{
 			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniform4f(current_program->getUniformLocation(name), value.x, value.y, value.z, value.w);
 		}
 
-		void OpenglBackend::setUniformMat3f(const string& name, const matrix3F& value)
+		void OpenglBackend::setUniformMat3f(const string& name, const mat3f& value)
 		{
 			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniformMatrix3fv(current_program->getUniformLocation(name), 1, GL_FALSE, &value[0][0]);
 		}
 
-		void OpenglBackend::setUniformMat4f(const string& name, const matrix4F& value)
+		void OpenglBackend::setUniformMat4f(const string& name, const mat4f& value)
 		{
 			GENESIS_ENGINE_ASSERT(this->current_program != nullptr, "Shader Not Bound");
 			glUniformMatrix4fv(current_program->getUniformLocation(name), 1, GL_FALSE, &value[0][0]);
@@ -741,7 +741,7 @@ namespace Genesis
 			glUniform1i(current_program->getUniformLocation(name), texture_slot);
 		}
 
-		void OpenglBackend::setScissor(vector2I offset, vector2U extent)
+		void OpenglBackend::setScissor(vec2i offset, vec2u extent)
 		{
 			glEnable(GL_SCISSOR_TEST);
 			glScissor(offset.x, offset.y, extent.x, extent.y);

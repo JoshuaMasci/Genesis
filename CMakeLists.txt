@@ -3,7 +3,7 @@ project(Genesis)
 
 option (INCLUDE_EASY_PROFILER "Includes Profiling tool" OFF)
 
-add_subdirectory(types)
+add_subdirectory(core)
 
 add_subdirectory(platforms/SDL2)
 add_subdirectory(platforms/Opengl)

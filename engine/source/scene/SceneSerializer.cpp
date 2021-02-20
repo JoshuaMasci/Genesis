@@ -14,7 +14,7 @@
 
 #include "genesis_engine/resource/ResourceManager.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	YAML::Node serializeEntity(Entity entity)
 	{
@@ -125,9 +125,9 @@ namespace Genesis
 		{
 			YAML::Node transform_node = entity_node["Transform"];
 			Transform& transform = entity.add<Transform>();
-			transform.setPosition(transform_node["Position"].as<vector3D>());
-			transform.setOrientation(transform_node["Orientation"].as<quaternionD>());
-			transform.setScale(transform_node["Scale"].as<vector3D>());
+			transform.setPosition(transform_node["Position"].as<vec3d>());
+			transform.setOrientation(transform_node["Orientation"].as<quatd>());
+			transform.setScale(transform_node["Scale"].as<vec3d>());
 		}
 
 		if (entity_node["Model"])
@@ -143,7 +143,7 @@ namespace Genesis
 			YAML::Node light_node = entity_node["DirectionalLight"];
 			DirectionalLight& light = entity.add<DirectionalLight>();
 			light.enabled = light_node["enabled"].as<bool>();
-			light.color = light_node["color"].as<vector3F>();
+			light.color = light_node["color"].as<vec3f>();
 			light.intensity = light_node["intensity"].as<float>();
 		}
 
@@ -152,10 +152,10 @@ namespace Genesis
 			YAML::Node light_node = entity_node["PointLight"];
 			PointLight& light = entity.add<PointLight>();
 			light.enabled = light_node["enabled"].as<bool>();
-			light.color = light_node["color"].as<vector3F>();
+			light.color = light_node["color"].as<vec3f>();
 			light.intensity = light_node["intensity"].as<float>();
 			light.range = light_node["range"].as<float>();
-			light.attenuation = light_node["attenuation"].as<vector2F>();
+			light.attenuation = light_node["attenuation"].as<vec2f>();
 		}
 
 		if (entity_node["RigidBody"])
@@ -166,8 +166,8 @@ namespace Genesis
 			rigid_body.mass = body_node["mass"].as<float>();
 			rigid_body.gravity_enabled = body_node["gravity_enabled"].as<bool>();
 			rigid_body.is_allowed_to_sleep = body_node["is_allowed_to_sleep"].as<bool>();
-			rigid_body.linear_velocity = body_node["linear_velocity"].as<vector3D>();
-			rigid_body.angular_velocity = body_node["angular_velocity"].as<vector3D>();
+			rigid_body.linear_velocity = body_node["linear_velocity"].as<vec3d>();
+			rigid_body.angular_velocity = body_node["angular_velocity"].as<vec3d>();
 		}
 
 		if (entity_node["CollisionShape"])
@@ -178,13 +178,13 @@ namespace Genesis
 			switch (collision_shape.type)
 			{
 			case ShapeType::Box:
-				collision_shape.type_data.box_size = shape_node["data"].as<vector3D>();
+				collision_shape.type_data.box_size = shape_node["data"].as<vec3d>();
 				break;
 			case ShapeType::Sphere:
 				collision_shape.type_data.sphere_radius = shape_node["data"].as<double>();
 				break;
 			case ShapeType::Capsule:
-				collision_shape.type_data.capsule_size = shape_node["data"].as<vector2D>();
+				collision_shape.type_data.capsule_size = shape_node["data"].as<vec2d>();
 				break;
 			}
 		}
@@ -215,7 +215,7 @@ namespace Genesis
 		//Always write a gravity, not used right now
 		{
 			YAML::Node physics_node;
-			physics_node["gravity"] = vector3F(0.0, 0.0, 0.0);
+			physics_node["gravity"] = vec3f(0.0, 0.0, 0.0);
 			scene_node["Physics"] = physics_node;
 		}
 
@@ -243,7 +243,7 @@ namespace Genesis
 		if (scene_node["Lighting"])
 		{
 			YAML::Node scene_info_node = scene_node["Lighting"];
-			scene->lighting_settings.ambient_light = scene_info_node["ambient_light"].as<vector3F>();
+			scene->lighting_settings.ambient_light = scene_info_node["ambient_light"].as<vec3f>();
 			scene->lighting_settings.gamma_correction = scene_info_node["gamma_correction"].as<float>();
 		}
 

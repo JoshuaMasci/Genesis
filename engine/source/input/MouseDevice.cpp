@@ -2,7 +2,7 @@
 
 #include "genesis_engine/input/InputManager.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {	
 	MouseDevice::MouseDevice(const string& device_name, InputManager* manager)
 		:ArrayInputDevice(device_name, manager, (uint16_t)MouseButton::SIZE, 2)
@@ -25,7 +25,7 @@ namespace Genesis
 		this->updateButtonValue((size_t)button, state);
 	}
 
-	void MouseDevice::updateMousePosition(const vector2F& position)
+	void MouseDevice::updateMousePosition(const vec2f& position)
 	{
 		this->input_manager->updateMousePosition(position);
 	}

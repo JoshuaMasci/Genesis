@@ -3,8 +3,14 @@
 #include <iostream>
 #include <stdint.h>
 
-#include "genesis_engine/core/Types.hpp"
-#include "genesis_engine/core/VectorTypes.hpp"
+#include "genesis_core/types/vector_math.hpp"
+#include "genesis_core/types/containers.hpp"
+namespace genesis_engine
+{
+	typedef double TimeStep;
+	using namespace genesis_core;
+}
+
 #include "genesis_engine/core/Transform.hpp"
 #include "genesis_engine/core/Application.hpp"
 

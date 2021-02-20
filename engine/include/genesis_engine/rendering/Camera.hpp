@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Genesis
+namespace genesis_engine
 {
 	struct Camera
 	{
@@ -13,20 +13,20 @@ namespace Genesis
 		float z_near = 0.1f;
 		float z_far = 1000.0f;
 
-		matrix4F get_projection_matrix(float aspect_ratio)
+		mat4f get_projection_matrix(float aspect_ratio)
 		{
 			float fovy = atan(tan(glm::radians(this->frame_of_view) / 2.0f) / aspect_ratio) * 2.0f;
-			matrix4F matrix = glm::perspective(fovy, aspect_ratio, this->z_near, this->z_far);
+			mat4f matrix = glm::perspective(fovy, aspect_ratio, this->z_near, this->z_far);
 			matrix[1][1] *= -1.0f;
 			return matrix;
 		};
 
-		matrix4F get_projection_matrix(vector2U image_size)
+		mat4f get_projection_matrix(vec2u image_size)
 		{
 			return this->get_projection_matrix(((float)image_size.x) / ((float)image_size.y));
 		};
 
-		matrix4F get_infinite_projection_no_flip(vector2U image_size)
+		mat4f get_infinite_projection_no_flip(vec2u image_size)
 		{
 			float aspect_ratio = (float)image_size.x / (float)image_size.y;
 			float fovy = atan(tan(glm::radians(this->frame_of_view) / 2.0f) / aspect_ratio) * 2.0f;

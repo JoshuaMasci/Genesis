@@ -1,20 +1,20 @@
 #pragma once
 
-namespace Genesis
+namespace genesis_engine
 {
 	struct BoundingBox
 	{
 		BoundingBox() {};
-		BoundingBox(vector3F min, vector3F max) : min(min), max(max) {};
-		vector3F min;
-		vector3F max;
+		BoundingBox(vec3f min, vec3f max) : min(min), max(max) {};
+		vec3f min;
+		vec3f max;
 	};
 
 	struct AxisAlignedBoundingBox
 	{
 		AxisAlignedBoundingBox() {};
-		AxisAlignedBoundingBox(vector3F min, vector3F max) : min(min), max(max) {};
-		vector3F min;
-		vector3F max;
+		AxisAlignedBoundingBox(vec3f min, vec3f max) : min(min), max(max) {};
+		vec3f min;
+		vec3f max;
 	};
 }

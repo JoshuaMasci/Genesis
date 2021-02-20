@@ -5,7 +5,7 @@
 
 struct ImGuiContext;
 
-namespace Genesis
+namespace genesis_engine
 {
 	class BaseImGui
 	{

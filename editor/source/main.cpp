@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 	if(true)
 	{
 		{
-			Genesis::SDL2_Window window = Genesis::SDL2_Window({ 1920, 1080 }, "Vulkan Window", false);
+			genesis_engine::SDL2_Window window = genesis_engine::SDL2_Window({ 1920, 1080 }, "Vulkan Window", false);
 
 			VulkanRenderer::VulkanApplication app = {};
 			app.app_name = "Genesis";
@@ -44,10 +44,10 @@ int main(int argc, char** argv)
 	}
 
 	GENESIS_PROFILE_START(); 
-	Genesis::Logging::inti_engine_logging();
-	Genesis::Logging::inti_client_logging("Genesis_Editor");
+	genesis_engine::Logging::inti_engine_logging();
+	genesis_engine::Logging::inti_client_logging("Genesis_Editor");
 
-	Genesis::EditorApplication* editor = new Genesis::EditorApplication();
+	genesis_engine::EditorApplication* editor = new genesis_engine::EditorApplication();
 	GENESIS_INFO("Genesis_Editor Started");
 
 	GENESIS_PROFILE_BLOCK_START("Genesis_Editor Loop");

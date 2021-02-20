@@ -1,10 +1,10 @@
 #pragma once 
 
-namespace Genesis
+namespace genesis_engine
 {
 	struct SceneLightingSettings
 	{
-		vector3F ambient_light = vector3D(1.0);
+		vec3f ambient_light = vec3d(1.0);
 		float gamma_correction = 2.2f;
 		//TODO Skybox/EnvironmentMap
 	};

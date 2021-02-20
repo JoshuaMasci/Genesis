@@ -4,7 +4,7 @@
 #include "genesis_engine/platform/FileSystem.hpp"
 #include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class RenderStatisticsWindow
 	{

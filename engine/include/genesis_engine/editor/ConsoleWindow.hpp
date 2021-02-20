@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Genesis
+namespace genesis_engine
 {
 	enum class ConsoleLevel
 	{
@@ -37,8 +37,8 @@ namespace Genesis
 		bool auto_scroll = false;
 		vector<ConsoleMessage> messages;
 
-		vector4F getColor(ConsoleLevel level);
-		vector4F colors[7] =
+		vec4f getColor(ConsoleLevel level);
+		vec4f colors[7] =
 		{
 			{1.0, 1.0f, 1.0f, 1.0f},//trace: White
 			{0.0, 1.0f, 1.0f, 1.0f},//debug: Cyan

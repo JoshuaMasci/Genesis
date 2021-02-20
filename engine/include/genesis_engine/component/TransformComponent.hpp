@@ -2,7 +2,7 @@
 
 #include "genesis_engine/core/Transform.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	typedef TransformD Transform;
 

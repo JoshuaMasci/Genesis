@@ -1,6 +1,6 @@
 #include "genesis_engine/input/InputManager.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	InputManager::InputManager(string config_folder_path)
 	{
@@ -139,12 +139,12 @@ namespace Genesis
 		this->keyboard_device = nullptr;
 	}
 
-	void InputManager::setMousePosition(vector2F position)
+	void InputManager::setMousePosition(vec2f position)
 	{
 		this->current_mouse_position = position;
 	}
 
-	vector2F InputManager::getMousePosition()
+	vec2f InputManager::getMousePosition()
 	{
 		return this->current_mouse_position;
 	}*/
@@ -195,12 +195,12 @@ namespace Genesis
 		this->mouse_buttons[(size_t)button].current_state = state;
 	}
 
-	vector2F InputManager::getMousePosition()
+	vec2f InputManager::getMousePosition()
 	{
 		return this->mouse_postion;
 	}
 
-	void InputManager::updateMousePosition(const vector2F& position)
+	void InputManager::updateMousePosition(const vec2f& position)
 	{
 		this->mouse_postion = position;
 	}

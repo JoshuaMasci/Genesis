@@ -6,7 +6,7 @@
 
 #include "genesis_engine/resource/Mesh.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class MeshPool : public ResourcePool<string, Mesh>
 	{

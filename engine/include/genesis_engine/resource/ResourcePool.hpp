@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Genesis
+namespace genesis_engine
 {
 	template <class key_type, class resource_type>
 	class ResourcePool

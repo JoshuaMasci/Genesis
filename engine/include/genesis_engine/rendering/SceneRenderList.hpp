@@ -4,7 +4,7 @@
 #include "genesis_engine/rendering/Camera.hpp"
 #include "genesis_engine/rendering/Lights.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	struct CameraStruct
 	{

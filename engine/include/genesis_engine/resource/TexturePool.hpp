@@ -4,7 +4,7 @@
 #include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
 #include "genesis_engine/resource/Texture.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class TexturePool : public ResourcePool<string, Texture>
 	{

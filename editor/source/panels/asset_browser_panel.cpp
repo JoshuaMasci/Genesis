@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 
-namespace Genesis
+namespace genesis_engine
 {
 	void AssetBrowserWindow::refresh()
 	{
@@ -159,7 +159,7 @@ namespace Genesis
 		//TODO replace with icons
 
 		TextureCreateInfo create_info = {};
-		create_info.size = vector2U(1, 1);
+		create_info.size = vec2u(1, 1);
 		create_info.format = ImageFormat::RGB_8;
 
 		{

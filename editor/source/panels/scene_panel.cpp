@@ -10,7 +10,7 @@
 #include "ImGuizmo.h"
 #include "ImGuizmo.cpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	SceneWindow::SceneWindow(InputManager* input_manager, LegacyBackend* legacy_backend)
 	{
@@ -19,7 +19,7 @@ namespace Genesis
 		this->legacy_backend = legacy_backend;
 		this->world_renderer = new LegacySceneRenderer(this->legacy_backend);
 
-		this->scene_camera_transform.setPosition(vector3D(0.0, 0.0, -5.0));
+		this->scene_camera_transform.setPosition(vec3d(0.0, 0.0, -5.0));
 	}
 
 	SceneWindow::~SceneWindow()
@@ -59,13 +59,13 @@ namespace Genesis
 	{		
 		if (this->window_active)
 		{
-			vector3D position = this->scene_camera_transform.getPosition();
+			vec3d position = this->scene_camera_transform.getPosition();
 			position += (this->scene_camera_transform.getForward() * (double)this->input_manager->getButtonAxis(debug_forward_axis, debug_forward, debug_backward)) * this->linear_speed * time_step;
 			position += (this->scene_camera_transform.getUp() * (double)this->input_manager->getButtonAxis(debug_up_axis, debug_up, debug_down)) * this->linear_speed * time_step;
 			position += (this->scene_camera_transform.getLeft() * (double)this->input_manager->getButtonAxis(debug_left_axis, debug_left, debug_right)) * this->linear_speed * time_step;
 			this->scene_camera_transform.setPosition(position);
 
-			quaternionD orientation = this->scene_camera_transform.getOrientation();
+			quatd orientation = this->scene_camera_transform.getOrientation();
 			orientation = glm::angleAxis((double)this->input_manager->getButtonAxis(debug_pitch_axis, debug_pitch_up, debug_pitch_down) * this->angular_speed * (PI_D * 2.0) * time_step, this->scene_camera_transform.getLeft()) * orientation;
 			orientation = glm::angleAxis((double)this->input_manager->getButtonAxis(debug_yaw_axis, debug_yaw_left, debug_yaw_right) * this->angular_speed * (PI_D * 2.0) * time_step, this->scene_camera_transform.getUp()) * orientation;
 			orientation = glm::angleAxis((double)this->input_manager->getButtonAxis(debug_roll_axis, debug_roll_left, debug_roll_right) * this->angular_speed * (PI_D) * time_step, -this->scene_camera_transform.getForward()) * orientation;
@@ -73,7 +73,7 @@ namespace Genesis
 		}
 	}
 
-	void decompose_model_matrix(const matrix4F& model_matrix, vector3F& translation, quaternionF& rotation, vector3F& scale);
+	void decompose_model_matrix(const mat4f& model_matrix, vec3f& translation, quatf& rotation, vec3f& scale);
 
 	void SceneWindow::draw(SceneRenderList& render_list, SceneLightingSettings& lighting, Entity selected_entity)
 	{
@@ -121,17 +121,17 @@ namespace Genesis
 					ImGui::Separator();
 
 					ImGui::Text("Position:");
-					vector3D position = this->scene_camera_transform.getPosition();
+					vec3d position = this->scene_camera_transform.getPosition();
 					if (ImGui::InputScalarN("##Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
 					{
 						this->scene_camera_transform.setPosition(position);
 					};
 
 					ImGui::Text("Rotation:");
-					vector3D rotation = glm::degrees(glm::eulerAngles(this->scene_camera_transform.getOrientation()));
+					vec3d rotation = glm::degrees(glm::eulerAngles(this->scene_camera_transform.getOrientation()));
 					if (ImGui::InputScalarN("##Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
 					{
-						this->scene_camera_transform.setOrientation(quaternionD(glm::radians(rotation)));
+						this->scene_camera_transform.setOrientation(quatd(glm::radians(rotation)));
 					}
 					
 					ImGui::Separator();
@@ -162,7 +162,7 @@ namespace Genesis
 
 		ImVec2 im_image_pos = ImGui::GetCursorScreenPos();
 		ImVec2 im_image_size = ImGui::GetContentRegionAvail();
-		vector2U image_size = vector2U(im_image_size.x, im_image_size.y);
+		vec2u image_size = vec2u(im_image_size.x, im_image_size.y);
 
 		if (image_size != this->framebuffer_size)
 		{
@@ -207,42 +207,42 @@ namespace Genesis
 			ImGuizmo::SetDrawlist();
 			ImGuizmo::SetRect(im_image_pos.x, im_image_pos.y, im_image_size.x, im_image_size.y);
 
-			matrix4F projection_matrix = this->scene_camera.get_infinite_projection_no_flip(image_size);
-			matrix4F view_matrix = this->scene_camera_transform.getViewMatirx();
+			mat4f projection_matrix = this->scene_camera.get_infinite_projection_no_flip(image_size);
+			mat4f view_matrix = this->scene_camera_transform.getViewMatirx();
 
-			matrix4F model_matrix = transform.getModelMatrix();
+			mat4f model_matrix = transform.getModelMatrix();
 
 			ImGuizmo::Manipulate(glm::value_ptr(view_matrix), glm::value_ptr(projection_matrix), ImGuizmo::OPERATION::TRANSLATE, ImGuizmo::MODE::LOCAL, glm::value_ptr(model_matrix));
 
 			//TODO use decompose that doesn't give skew and perspective
-			vector3F translation;
-			quaternionF rotation;
-			vector3F scale;
+			vec3f translation;
+			quatf rotation;
+			vec3f scale;
 
 			decompose_model_matrix(model_matrix, translation, rotation, scale);
 
-			//vector3F skew;
-			//vector4F perspective;
+			//vec3f skew;
+			//vec4f perspective;
 			//glm::decompose(model_matrix, scale, rotation, translation, skew, perspective);
 
 			if (ImGuizmo::IsUsing())
 			{
-				transform.setPosition((vector3D)translation);
-				transform.setOrientation((quaternionD)rotation);
-				transform.setScale((vector3D)scale);
+				transform.setPosition((vec3d)translation);
+				transform.setOrientation((quatd)rotation);
+				transform.setScale((vec3d)scale);
 			}
 		}
 
 		ImGui::End();
 	}
 
-	void decompose_model_matrix(const matrix4F& model_matrix, vector3F& translation, quaternionF& rotation, vector3F& scale)
+	void decompose_model_matrix(const mat4f& model_matrix, vec3f& translation, quatf& rotation, vec3f& scale)
 	{
 		//Get translation
-		translation = vector3F(model_matrix[3]);
+		translation = vec3f(model_matrix[3]);
 
 		//Get scale
-		vector3F rows[3];
+		vec3f rows[3];
 		for (size_t i = 0; i < 3; i++)
 		{
 			for (size_t j = 0; j < 3; j++)

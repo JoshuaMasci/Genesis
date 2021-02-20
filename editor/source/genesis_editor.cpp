@@ -15,7 +15,7 @@
 #include "genesis_engine/component/NameComponent.hpp"
 #include "genesis_engine/job_system/JobSystem.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	void sync_point(double*& rand, entt::registry& registry, entt::view<entt::exclude_t<>, const NameComponent> view)
 	{
@@ -128,7 +128,7 @@ namespace Genesis
 		}
 
 		this->platform = new SDL2_Platform(this);
-		this->window = new SDL2_Window(vector2U(1600, 900), "Genesis Editor");
+		this->window = new SDL2_Window(vec2u(1600, 900), "Genesis Editor");
 
 		this->legacy_backend = new Opengl::OpenglBackend((SDL2_Window*)window);
 		this->ui_renderer = new LegacyImGui(this->legacy_backend, this->input_manager, this->window);
@@ -176,7 +176,7 @@ namespace Genesis
 		Application::render(time_step);
 
 		this->legacy_backend->startFrame();
-		vector4F clear_color = vector4F(0.0f, 0.0f, 0.0f, 1.0f);
+		vec4f clear_color = vec4f(0.0f, 0.0f, 0.0f, 1.0f);
 		float clear_depth = 1.0f;
 		this->legacy_backend->clearFramebuffer(true, true, &clear_color, &clear_depth);
 

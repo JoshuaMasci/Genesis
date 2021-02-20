@@ -2,7 +2,7 @@
 
 #define sleep_time_milliseconds 2
 
-namespace Genesis
+namespace genesis_engine
 {
 	void worker_thread(uint32_t thread_id, JobSystem* job_system)
 	{
@@ -59,7 +59,7 @@ namespace Genesis
 		}
 	}
 
-	void Genesis::JobSystem::add_job(Job job)
+	void genesis_engine::JobSystem::add_job(Job job)
 	{
 		if (job.counter)
 		{

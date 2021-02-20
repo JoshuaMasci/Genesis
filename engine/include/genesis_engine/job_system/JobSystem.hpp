@@ -2,7 +2,7 @@
 
 #include <thread>
 
-namespace Genesis
+namespace genesis_engine
 {
 	typedef std::atomic<uint16_t> JobCounter;
 	typedef void(*JobType)(void*);

@@ -11,15 +11,15 @@
 #include "genesis_engine/renderingBackend/FramebufferLayout.hpp"
 #include "genesis_engine/renderingBackend/CommandBuffer.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class RenderingBackend
 	{
 	public:
 		virtual ~RenderingBackend() {};
 
-		virtual void setScreenSize(vector2U size) = 0;
-		virtual vector2U getScreenSize() = 0;
+		virtual void setScreenSize(vec2u size) = 0;
+		virtual vec2u getScreenSize() = 0;
 
 		virtual CommandBufferInterface* beginFrame() = 0;
 		virtual void endFrame() = 0;
@@ -46,7 +46,7 @@ namespace Genesis
 		virtual void destroyDynamicBuffer(DynamicBuffer buffer) = 0;
 		virtual void writeDynamicBuffer(DynamicBuffer buffer, void* data, uint64_t data_size) = 0;
 
-		virtual Texture2D createTexture(vector2U size, void* data, uint64_t data_size) = 0;
+		virtual Texture2D createTexture(vec2u size, void* data, uint64_t data_size) = 0;
 		virtual void destroyTexture(Texture2D texture) = 0;
 
 		//Wait until all GPU proccessing is done

@@ -6,7 +6,7 @@
 #include "genesis_engine/rendering/SceneLightingSettings.hpp"
 #include "genesis_engine/rendering/SceneRenderList.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class Entity;
 

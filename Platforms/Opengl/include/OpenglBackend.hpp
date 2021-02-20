@@ -4,7 +4,7 @@
 #include "OpenglShaderProgram.hpp"
 #include "SDL2_Window.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	namespace Opengl
 	{
@@ -35,7 +35,7 @@ namespace Genesis
 
 		struct OpenglFramebuffer
 		{
-			vector2U size;
+			vec2u size;
 			bool is_multisampled;
 
 			GLuint frame_buffer;
@@ -51,7 +51,7 @@ namespace Genesis
 			OpenglBackend(SDL2_Window* window);
 			virtual ~OpenglBackend();
 
-			virtual vector2U getScreenSize() override;
+			virtual vec2u getScreenSize() override;
 
 			virtual void startFrame() override;
 			virtual void endFrame() override;
@@ -75,7 +75,7 @@ namespace Genesis
 			virtual Texture2D getFramebufferDepthAttachment(Framebuffer framebuffer) override;
 
 			virtual void bindFramebuffer(Framebuffer framebuffer) override;
-			virtual void clearFramebuffer(bool color, bool depth, vector4F* clear_color = nullptr, float* clear_depth = nullptr) override;
+			virtual void clearFramebuffer(bool color, bool depth, vec4f* clear_color = nullptr, float* clear_depth = nullptr) override;
 
 			virtual void setPipelineState(const PipelineSettings& pipeline_state) override;
 
@@ -83,20 +83,20 @@ namespace Genesis
 			virtual void setUniform1i(const string& name, const int32_t& value) override;
 
 			virtual void setUniform1u(const string& name, const uint32_t& value) override;
-			virtual void setUniform2u(const string& name, const vector2U& value) override;
-			virtual void setUniform3u(const string& name, const vector3U& value) override;
-			virtual void setUniform4u(const string& name, const vector4U& value) override;
+			virtual void setUniform2u(const string& name, const vec2u& value) override;
+			virtual void setUniform3u(const string& name, const vec3u& value) override;
+			virtual void setUniform4u(const string& name, const vec4u& value) override;
 
 			virtual void setUniform1f(const string& name, const float& value) override;
-			virtual void setUniform2f(const string& name, const vector2F& value) override;
-			virtual void setUniform3f(const string& name, const vector3F& value) override;
-			virtual void setUniform4f(const string& name, const vector4F& value) override;
-			virtual void setUniformMat3f(const string& name, const matrix3F& value) override;
-			virtual void setUniformMat4f(const string& name, const matrix4F& value) override;
+			virtual void setUniform2f(const string& name, const vec2f& value) override;
+			virtual void setUniform3f(const string& name, const vec3f& value) override;
+			virtual void setUniform4f(const string& name, const vec4f& value) override;
+			virtual void setUniformMat3f(const string& name, const mat3f& value) override;
+			virtual void setUniformMat4f(const string& name, const mat4f& value) override;
 			virtual void setUniformTexture(const string& name, const uint32_t texture_slot, Texture2D value) override;
 			virtual void setUniformTextureImage(const string& name, const uint32_t texture_slot, Texture2D value) override;
 
-			virtual void setScissor(vector2I offset, vector2U extent) override;
+			virtual void setScissor(vec2i offset, vec2u extent) override;
 			virtual void clearScissor() override;
 
 			virtual void bindVertexBuffer(VertexBuffer buffer) override;
@@ -112,7 +112,7 @@ namespace Genesis
 		protected:
 			SDL2_Window* window;
 			void* opengl_context;
-			vector2U viewport_size;
+			vec2u viewport_size;
 
 			OpenglShaderProgram* current_program = nullptr;
 			OpenglVertexBuffer* vertex_buffer = nullptr;

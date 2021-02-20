@@ -16,7 +16,7 @@ target_precompile_headers(Genesis_Engine PUBLIC "include/genesis_engine/pch.hpp"
 target_compile_definitions(Genesis_Engine PUBLIC GENESIS_PLATFORM_WIN)
 target_compile_features(Genesis_Engine PUBLIC cxx_std_17)
 
-target_link_libraries(Genesis_Engine PUBLIC Types)
+target_link_libraries(Genesis_Engine PUBLIC Core)
 target_link_libraries(Genesis_Engine PUBLIC VulkanRenderer)
 
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/yaml-cpp/include/)
@@ -32,10 +32,6 @@ target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/spdlog/include/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/stb/)
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/tinyobjloader/)
-
-target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/src/)
-target_link_libraries(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/reactphysics3d-master/build/lib/debug/reactphysics3d.lib)
-target_compile_definitions(Genesis_Engine PUBLIC IS_DOUBLE_PRECISION_ENABLED)
 
 if(INCLUDE_EASY_PROFILER)
 	target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/include/)

@@ -3,7 +3,7 @@
 #include "genesis_engine/debug/Log.hpp"
 #include "genesis_engine/debug/Assert.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	namespace Opengl
 	{

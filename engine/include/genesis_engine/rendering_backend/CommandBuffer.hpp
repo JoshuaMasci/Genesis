@@ -6,14 +6,14 @@
 #include "genesis_engine/renderingBackend/PipelineSettings.hpp"
 #include "genesis_engine/renderingBackend/VertexInputDescription.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class CommandBufferInterface
 	{
 	public:
 		virtual void setShader(Shader shader) = 0;
 		virtual void setPipelineSettings(PipelineSettings& settings) = 0;
-		virtual void setScissor(vector2I offset, vector2U extent) = 0;
+		virtual void setScissor(vec2i offset, vec2u extent) = 0;
 
 		virtual void setUniformDynamicBuffer(uint32_t set, uint32_t binding, DynamicBuffer buffer) = 0;
 		virtual void setUniformStaticBuffer(uint32_t set, uint32_t binding, StaticBuffer buffer) = 0;

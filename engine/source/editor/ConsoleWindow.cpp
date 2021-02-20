@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 
-namespace Genesis
+namespace genesis_engine
 {
 	ConsoleWindow::ConsoleWindow()
 	{
@@ -50,7 +50,7 @@ namespace Genesis
 		{
 			for (int line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++)
 			{
-				vector4F color = this->getColor(this->messages[(size_t)line_no].level);
+				vec4f color = this->getColor(this->messages[(size_t)line_no].level);
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(color.x, color.y, color.z, color.w));
 				ImGui::TextUnformatted(this->messages[(size_t)line_no].message.c_str());
 				ImGui::PopStyleColor();
@@ -72,23 +72,23 @@ namespace Genesis
 		}
 	}
 
-	vector4F ConsoleWindow::getColor(ConsoleLevel level)
+	vec4f ConsoleWindow::getColor(ConsoleLevel level)
 	{
 		switch (level)
 		{
-		case Genesis::ConsoleLevel::trace:
+		case genesis_engine::ConsoleLevel::trace:
 			return this->colors[0];
-		case Genesis::ConsoleLevel::debug:
+		case genesis_engine::ConsoleLevel::debug:
 			return this->colors[1];
-		case Genesis::ConsoleLevel::info:
+		case genesis_engine::ConsoleLevel::info:
 			return this->colors[2];
-		case Genesis::ConsoleLevel::warning:
+		case genesis_engine::ConsoleLevel::warning:
 			return this->colors[3];
-		case Genesis::ConsoleLevel::error:
+		case genesis_engine::ConsoleLevel::error:
 			return this->colors[4];
-		case Genesis::ConsoleLevel::critical:
+		case genesis_engine::ConsoleLevel::critical:
 			return this->colors[5];
-		case Genesis::ConsoleLevel::off:
+		case genesis_engine::ConsoleLevel::off:
 			return this->colors[6];
 		}
 		return this->colors[6];

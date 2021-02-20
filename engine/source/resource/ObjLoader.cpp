@@ -5,7 +5,7 @@
 
 #include "genesis_engine/resource/VertexStructs.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	MeshStruct ObjLoader::loadMesh(LegacyBackend* backend, const string& filename)
 	{
@@ -25,8 +25,8 @@ namespace Genesis
 			size_t index_offset = 0;
 
 			//TODO
-			vector3F min_position = vector3F(10000.0f);
-			vector3F max_position = vector3F(-10000.0f);
+			vec3f min_position = vec3f(10000.0f);
+			vec3f max_position = vec3f(-10000.0f);
 
 			for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++)
 			{
@@ -37,9 +37,9 @@ namespace Genesis
 				{
 					// access to vertices[i]
 					tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
-					vector3F position = vector3F(attrib.vertices[3 * idx.vertex_index + 0], attrib.vertices[3 * idx.vertex_index + 1], attrib.vertices[3 * idx.vertex_index + 2]);
-					vector3F normal = vector3F(attrib.normals[3 * idx.normal_index + 0], attrib.normals[3 * idx.normal_index + 1], attrib.normals[3 * idx.normal_index + 2]);
-					vector2F uv = vector2F(attrib.texcoords[2 * idx.texcoord_index + 0], -attrib.texcoords[2 * idx.texcoord_index + 1]);
+					vec3f position = vec3f(attrib.vertices[3 * idx.vertex_index + 0], attrib.vertices[3 * idx.vertex_index + 1], attrib.vertices[3 * idx.vertex_index + 2]);
+					vec3f normal = vec3f(attrib.normals[3 * idx.normal_index + 0], attrib.normals[3 * idx.normal_index + 1], attrib.normals[3 * idx.normal_index + 2]);
+					vec2f uv = vec2f(attrib.texcoords[2 * idx.texcoord_index + 0], -attrib.texcoords[2 * idx.texcoord_index + 1]);
 
 					MeshVertex vertex;
 					vertex.position = position;
@@ -71,15 +71,15 @@ namespace Genesis
 			uint32_t index_2 = indices[i + 1];
 			uint32_t index_3 = indices[i + 2];
 
-			vector3F edge_1 = vertices[index_2].position - vertices[index_1].position;
-			vector3F edge_2 = vertices[index_3].position - vertices[index_1].position;
+			vec3f edge_1 = vertices[index_2].position - vertices[index_1].position;
+			vec3f edge_2 = vertices[index_3].position - vertices[index_1].position;
 
-			vector2F uv_1 = vertices[index_2].uv - vertices[index_1].uv;
-			vector2F uv_2 = vertices[index_3].uv - vertices[index_1].uv;
+			vec2f uv_1 = vertices[index_2].uv - vertices[index_1].uv;
+			vec2f uv_2 = vertices[index_3].uv - vertices[index_1].uv;
 
 			float factor = 1.0f / ((uv_1.x * uv_2.y) - (uv_2.x * uv_1.y));
 
-			vector3F tangent;
+			vec3f tangent;
 			tangent.x = factor * ((uv_2.y * edge_1.x) - (uv_1.y * edge_2.x));
 			tangent.y = factor * ((uv_2.y * edge_1.y) - (uv_1.y * edge_2.y));
 			tangent.z = factor * ((uv_2.y * edge_1.z) - (uv_1.y * edge_2.z));

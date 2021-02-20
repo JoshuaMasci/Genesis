@@ -8,7 +8,7 @@
 #   define GENERATOR_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #endif
 
-namespace Genesis
+namespace genesis_engine
 {
 	template<typename T>
 	struct TypeInfo

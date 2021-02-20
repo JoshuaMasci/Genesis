@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 
-namespace Genesis
+namespace genesis_engine
 {
 	RenderStatisticsWindow::RenderStatisticsWindow(LegacyBackend* backend)
 	{

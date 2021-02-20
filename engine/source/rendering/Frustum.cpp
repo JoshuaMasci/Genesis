@@ -1,8 +1,8 @@
 #include "genesis_engine/rendering/Frustum.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
-	Frustum::Frustum(const matrix4F& matrix)
+	Frustum::Frustum(const mat4f& matrix)
 	{
 		planes[Plane::Left].x = matrix[0].w + matrix[0].x;
 		planes[Plane::Left].y = matrix[1].w + matrix[1].x;
@@ -41,7 +41,7 @@ namespace Genesis
 		}
 	}
 
-	bool Frustum::sphereTest(vector3F& pos, float radius)
+	bool Frustum::sphereTest(vec3f& pos, float radius)
 	{
 		for (uint8_t i = 0; i < Plane::Count; i++)
 		{

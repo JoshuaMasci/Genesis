@@ -1,16 +1,16 @@
 #pragma once
 
-namespace Genesis
+namespace genesis_engine
 {
 	class Frustum
 	{
 	public:
-		Frustum(const matrix4F& view_projection);
+		Frustum(const mat4f& view_projection);
 
-		bool sphereTest(vector3F& pos, float radius);
+		bool sphereTest(vec3f& pos, float radius);
 
 	private:
 		enum Plane { Right, Left, Bottom, Top, Near, Far, Count };
-		vector4F planes[Plane::Count];
+		vec4f planes[Plane::Count];
 	};
 }

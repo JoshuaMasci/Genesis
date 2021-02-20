@@ -5,7 +5,7 @@
 
 #include "Genesis/Entity/Entity.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class PlayerCharacter : public Component
 	{
@@ -26,8 +26,8 @@ namespace Genesis
 					World* world = this->parent->getRootEntity()->getWorld();
 					Entity* root = this->parent->getRootEntity();
 
-					vector3D start_pos = world_transform.getPosition();
-					vector3D end_pos = start_pos + (world_transform.getForward() * 10.0);
+					vec3d start_pos = world_transform.getPosition();
+					vec3d end_pos = start_pos + (world_transform.getForward() * 10.0);
 
 					Node* hit_node = world->castRay(start_pos, end_pos);
 

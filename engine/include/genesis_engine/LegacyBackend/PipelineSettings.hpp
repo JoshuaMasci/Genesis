@@ -1,8 +1,8 @@
 #pragma once
 
-#include "genesis_types/murmur_hash.hpp"
+#include "genesis_core/hash/murmur_hash.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	enum class CullMode
 	{
@@ -68,7 +68,7 @@ namespace Genesis
 
 		uint32_t getHash()
 		{
-			genesis_types::MurmurHash2 hash;
+			genesis_core::MurmurHash2 hash;
 			hash.begin();
 			hash.add(*this);
 			return hash.end();

@@ -4,7 +4,7 @@
 #include "genesis_engine/LegacyBackend/RenderingTypes.hpp"
 #include "genesis_engine/LegacyBackend/PipelineSettings.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	enum class DepthFormat
 	{
@@ -30,7 +30,7 @@ namespace Genesis
 
 	struct TextureCreateInfo
 	{
-		vector2U size;
+		vec2u size;
 		ImageFormat format;
 		TextureWrapMode wrap_mode;
 		TextureFilterMode filter_mode;
@@ -61,7 +61,7 @@ namespace Genesis
 
 	struct FramebufferCreateInfo
 	{
-		vector2U size;
+		vec2u size;
 		FramebufferAttachmentInfo* attachments;
 		uint32_t attachment_count;
 		FramebufferDepthInfo* depth_attachment;
@@ -81,7 +81,7 @@ namespace Genesis
 	public:
 		virtual ~LegacyBackend() {};
 
-		virtual vector2U getScreenSize() = 0;
+		virtual vec2u getScreenSize() = 0;
 
 		virtual void startFrame() = 0;
 		virtual void endFrame() = 0;
@@ -106,7 +106,7 @@ namespace Genesis
 
 		//Commands
 		virtual void bindFramebuffer(Framebuffer framebuffer) = 0;
-		virtual void clearFramebuffer(bool color, bool depth, vector4F* clear_color = nullptr, float* clear_depth = nullptr) = 0;
+		virtual void clearFramebuffer(bool color, bool depth, vec4f* clear_color = nullptr, float* clear_depth = nullptr) = 0;
 
 		virtual void setPipelineState(const PipelineSettings& pipeline_state) = 0;
 
@@ -114,22 +114,22 @@ namespace Genesis
 		virtual void setUniform1i(const string& name, const int32_t& value) = 0;
 
 		virtual void setUniform1u(const string& name, const uint32_t& value) = 0;
-		virtual void setUniform2u(const string& name, const vector2U& value) = 0;
-		virtual void setUniform3u(const string& name, const vector3U& value) = 0;
-		virtual void setUniform4u(const string& name, const vector4U& value) = 0;
+		virtual void setUniform2u(const string& name, const vec2u& value) = 0;
+		virtual void setUniform3u(const string& name, const vec3u& value) = 0;
+		virtual void setUniform4u(const string& name, const vec4u& value) = 0;
 		
 		virtual void setUniform1f(const string& name, const float& value) = 0;
-		virtual void setUniform2f(const string& name, const vector2F& value) = 0;
-		virtual void setUniform3f(const string& name, const vector3F& value) = 0;
-		virtual void setUniform4f(const string& name, const vector4F& value) = 0;
+		virtual void setUniform2f(const string& name, const vec2f& value) = 0;
+		virtual void setUniform3f(const string& name, const vec3f& value) = 0;
+		virtual void setUniform4f(const string& name, const vec4f& value) = 0;
 		
-		virtual void setUniformMat3f(const string& name, const matrix3F& value) = 0;
-		virtual void setUniformMat4f(const string& name, const matrix4F& value) = 0;
+		virtual void setUniformMat3f(const string& name, const mat3f& value) = 0;
+		virtual void setUniformMat4f(const string& name, const mat4f& value) = 0;
 		
 		virtual void setUniformTexture(const string& name, const uint32_t texture_slot, Texture2D value) = 0;
 		virtual void setUniformTextureImage(const string& name, const uint32_t texture_slot, Texture2D value) = 0;
 
-		virtual void setScissor(vector2I offset, vector2U extent) = 0;
+		virtual void setScissor(vec2i offset, vec2u extent) = 0;
 		virtual void clearScissor() = 0;
 
 		virtual void bindVertexBuffer(VertexBuffer buffer) = 0;

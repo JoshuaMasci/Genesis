@@ -3,7 +3,7 @@
 #include "genesis_engine/resource/Resource.hpp"
 #include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class Texture : public Resource
 	{
@@ -11,7 +11,7 @@ namespace Genesis
 		LegacyBackend* backend;
 
 	public:
-		Texture(const string& file_path, LegacyBackend* backend, Texture2D texture, vector2U size, ImageFormat format)
+		Texture(const string& file_path, LegacyBackend* backend, Texture2D texture, vec2u size, ImageFormat format)
 			:Resource(file_path), backend(backend), texture(texture), size(size), format(format){};
 
 		~Texture()
@@ -20,7 +20,7 @@ namespace Genesis
 		}
 
 		const Texture2D texture;
-		const vector2U size;
+		const vec2u size;
 		const ImageFormat format;
 	};
 }

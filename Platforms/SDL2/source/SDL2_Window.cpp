@@ -3,9 +3,9 @@
 
 #include <SDL_syswm.h>
 
-namespace Genesis
+namespace genesis_engine
 {
-	SDL2_Window::SDL2_Window(vector2U size, string title, bool use_opengl)
+	SDL2_Window::SDL2_Window(vec2u size, string title, bool use_opengl)
 		:Window(size, title)
 	{
 		SDL_Init(SDL_INIT_VIDEO);
@@ -28,14 +28,14 @@ namespace Genesis
 		this->window = nullptr;
 	}
 
-	vector2U SDL2_Window::getWindowSize()
+	vec2u SDL2_Window::getWindowSize()
 	{
-		vector2U size;
+		vec2u size;
 		SDL_GetWindowSize(window, (int*)&size.x, (int*)&size.y);
 		return size;
 	}
 
-	void SDL2_Window::setWindowSize(vector2U size)
+	void SDL2_Window::setWindowSize(vec2u size)
 	{
 		SDL_SetWindowSize(window, size.x, size.y);
 	}

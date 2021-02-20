@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 
-namespace Genesis
+namespace genesis_engine
 {
 	BaseImGui::BaseImGui(InputManager* input_manager, Window* window)
 	{
@@ -100,7 +100,7 @@ namespace Genesis
 		}
 	}
 
-	void Genesis::BaseImGui::endDocking()
+	void genesis_engine::BaseImGui::endDocking()
 	{
 		ImGui::End();
 	}
@@ -113,12 +113,12 @@ namespace Genesis
 	{
 		ImGuiIO& io = ImGui::GetIO();
 
-		vector2F window_size = this->window->getWindowSize();
+		vec2f window_size = this->window->getWindowSize();
 		io.DisplaySize = { window_size.x, window_size.y };
 
 		//Mouse
 		{
-			vector2F mouse_pos = this->input_manager->getMousePosition();
+			vec2f mouse_pos = this->input_manager->getMousePosition();
 			io.MousePos = ImVec2(mouse_pos.x, mouse_pos.y);
 
 			for (size_t i = 0; i < _countof(mouse_buttons); i++)

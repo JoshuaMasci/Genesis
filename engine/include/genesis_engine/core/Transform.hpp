@@ -1,66 +1,66 @@
 #pragma once
 
-namespace Genesis
+namespace genesis_engine
 {
 	class TransformF
 	{
 	protected:
-		vector3F position;
-		quaternionF orientation;
-		vector3F scale;
+		vec3f position;
+		quatf orientation;
+		vec3f scale;
 
 	public:
-		TransformF(vector3F& position = vector3F(0.0f), quaternionF& orientation = quaternionF(1.0f, 0.0f, 0.0f, 0.0f), vector3F& scale = vector3F(1.0f));
+		TransformF(vec3f& position = vec3f(0.0f), quatf& orientation = quatf(1.0f, 0.0f, 0.0f, 0.0f), vec3f& scale = vec3f(1.0f));
 
 		//Getters
-		inline vector3F getPosition() const { return this->position; };
-		inline quaternionF getOrientation() const { return this->orientation; };
-		inline vector3F getScale() const { return this->scale; };
+		inline vec3f getPosition() const { return this->position; };
+		inline quatf getOrientation() const { return this->orientation; };
+		inline vec3f getScale() const { return this->scale; };
 
-		inline vector3F getLeft() const { return this->orientation * vector3F(1.0f, 0.0f, 0.0f); };
-		inline vector3F getUp() const { return this->orientation * vector3F(0.0f, 1.0f, 0.0f); };
-		inline vector3F getForward() const { return this->orientation * vector3F(0.0f, 0.0f, 1.0f); };
+		inline vec3f getLeft() const { return this->orientation * vec3f(1.0f, 0.0f, 0.0f); };
+		inline vec3f getUp() const { return this->orientation * vec3f(0.0f, 1.0f, 0.0f); };
+		inline vec3f getForward() const { return this->orientation * vec3f(0.0f, 0.0f, 1.0f); };
 
 		//Setters
-		inline void setPosition(const vector3F& vec) { this->position = vec; };
-		inline void setOrientation(const quaternionF& quat) { this->orientation = quat; };
-		inline void setScale(const vector3F& vec) { this->scale = vec; };
+		inline void setPosition(const vec3f& vec) { this->position = vec; };
+		inline void setOrientation(const quatf& quat) { this->orientation = quat; };
+		inline void setScale(const vec3f& vec) { this->scale = vec; };
 
 		//Utils
-		void setTransform(const matrix4F& matrix);
+		void setTransform(const mat4f& matrix);
 
-		matrix4F getModelMatrix() const;
-		matrix4F getViewMatirx() const;
-		matrix3F getNormalMatrix() const;
+		mat4f getModelMatrix() const;
+		mat4f getViewMatirx() const;
+		mat3f getNormalMatrix() const;
 	};
 
 	class TransformD
 	{
 	protected:
 		
-		vector3D position;
-		quaternionD orientation;
-		vector3D scale;
+		vec3d position;
+		quatd orientation;
+		vec3d scale;
 	public:
-		TransformD(vector3D position = vector3D(0.0), quaternionD orientation = quaternionD(1.0, 0.0, 0.0, 0.0), vector3D scale = vector3D(1.0));
+		TransformD(vec3d position = vec3d(0.0), quatd orientation = quatd(1.0, 0.0, 0.0, 0.0), vec3d scale = vec3d(1.0));
 
 		//Getters
-		inline vector3D getPosition() const { return this->position; };
-		inline quaternionD getOrientation() const { return this->orientation; };
-		inline vector3D getScale() const { return this->scale; };
+		inline vec3d getPosition() const { return this->position; };
+		inline quatd getOrientation() const { return this->orientation; };
+		inline vec3d getScale() const { return this->scale; };
 
-		inline vector3D getLeft() const { return this->orientation * vector3D(1.0, 0.0, 0.0); };
-		inline vector3D getUp() const { return this->orientation * vector3D(0.0, 1.0, 0.0); };
-		inline vector3D getForward() const { return this->orientation * vector3D(0.0, 0.0, 1.0); };
+		inline vec3d getLeft() const { return this->orientation * vec3d(1.0, 0.0, 0.0); };
+		inline vec3d getUp() const { return this->orientation * vec3d(0.0, 1.0, 0.0); };
+		inline vec3d getForward() const { return this->orientation * vec3d(0.0, 0.0, 1.0); };
 
 		//Setters
-		inline void setPosition(const vector3D& vec) { this->position = vec;};
-		inline void setOrientation(const quaternionD& quat) { this->orientation = quat;};
-		inline void setScale(const vector3D& vec) { this->scale = vec;};
+		inline void setPosition(const vec3d& vec) { this->position = vec;};
+		inline void setOrientation(const quatd& quat) { this->orientation = quat;};
+		inline void setScale(const vec3d& vec) { this->scale = vec;};
 
-		matrix4F getModelMatrix(const vector3D& position_offset = vector3D(0.0));
-		matrix3F getNormalMatrix();
-		matrix4F getViewMatirx(const vector3D& position_offset = vector3D(0.0));
+		mat4f getModelMatrix(const vec3d& position_offset = vec3d(0.0));
+		mat3f getNormalMatrix();
+		mat4f getViewMatirx(const vec3d& position_offset = vec3d(0.0));
 
 		void setTransform(const TransformD& new_transform);
 

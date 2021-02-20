@@ -7,7 +7,7 @@
 
 #include "genesis_engine/core/Fnv1aHash.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class InputManager
 	{
@@ -29,7 +29,7 @@ namespace Genesis
 
 		//Mouse
 		ButtonValue mouse_buttons[(size_t)MouseButton::SIZE] = { {false, false} };
-		vector2F mouse_postion = vector2F(0.0f);
+		vec2f mouse_postion = vec2f(0.0f);
 
 		//Generic Input
 		flat_hash_map<fnv_hash32, ButtonValue> button_values;
@@ -52,8 +52,8 @@ namespace Genesis
 		bool getMousePressed(MouseButton button);
 		void updateMouseState(MouseButton button, bool state);
 
-		vector2F getMousePosition();
-		void updateMousePosition(const vector2F& position);
+		vec2f getMousePosition();
+		void updateMousePosition(const vec2f& position);
 
 		//Generic Input
 		bool getButtonDown(fnv_hash32 string_hash);

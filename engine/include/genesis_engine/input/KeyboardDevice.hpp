@@ -2,7 +2,7 @@
 
 #include "genesis_engine/input/ArrayInputDevice.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	enum class KeyboardButton
 	{

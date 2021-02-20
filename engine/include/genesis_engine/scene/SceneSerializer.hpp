@@ -2,7 +2,7 @@
 
 #include "genesis_engine/scene/Scene.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class ResourceManager;
 

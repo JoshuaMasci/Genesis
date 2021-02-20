@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 
-namespace Genesis
+namespace genesis_engine
 {
 	const string vert_file = "#version 450\nlayout(location = 0) in vec2 in_position;\nlayout(location = 1) in vec2 in_uv;\nlayout(location = 2) in vec4 in_color;\nlayout(location = 0) out vec2 uv;\nlayout(location = 1) out vec4 color;\nstruct Offset\n{ \n	vec2 uScale; \n	vec2 uTranslate;\n};\nuniform Offset offset;\nvoid main()\n{\n	gl_Position = vec4(in_position  * offset.uScale + offset.uTranslate, 0.0, 1.0);\n	uv = in_uv;\n	color = in_color / 256.0;\n}";
 	const string frag_file = "#version 450\nuniform sampler2D texture_atlas;\nlayout(location = 0) in vec2 uv;\nlayout(location = 1) in vec4 color;\nlayout(location = 0) out vec4 out_color;\nvoid main()\n{\n out_color = color * texture2D(texture_atlas, uv);\n}";
@@ -19,7 +19,7 @@ namespace Genesis
 		io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height, &bytes_per_pixel);
 
 		TextureCreateInfo create_info = {};
-		create_info.size = vector2U(width, height);
+		create_info.size = vec2u(width, height);
 		create_info.format = ImageFormat::RGBA_8_Unorm;
 		create_info.filter_mode = TextureFilterMode::Nearest;
 		create_info.wrap_mode = TextureWrapMode::Clamp_Edge;
@@ -45,17 +45,17 @@ namespace Genesis
 
 		struct TempVertex
 		{
-			vector2F pos;
-			vector2F uv;
+			vec2f pos;
+			vec2f uv;
 			uint8_t color[4];
 		};
 
 		TempVertex vertex[] =
 		{
-			{vector2F(0.0f, 0.0f), vector2F(0.0f, 0.0f), {255, 0, 255, 255}},
-			{vector2F(0.0f, 100.0f), vector2F(0.0f, 1.0f), {255, 0, 255, 255}},
-			{vector2F(100.0f, 100.0f), vector2F(1.0f, 1.0f), {255, 0, 255, 255}},
-			{vector2F(100.0f, 0.0f), vector2F(1.0f, 0.0f), {255, 0, 255, 255}}
+			{vec2f(0.0f, 0.0f), vec2f(0.0f, 0.0f), {255, 0, 255, 255}},
+			{vec2f(0.0f, 100.0f), vec2f(0.0f, 1.0f), {255, 0, 255, 255}},
+			{vec2f(100.0f, 100.0f), vec2f(1.0f, 1.0f), {255, 0, 255, 255}},
+			{vec2f(100.0f, 0.0f), vec2f(1.0f, 0.0f), {255, 0, 255, 255}}
 		};
 
 		uint16_t index[] = { 0, 1, 2, 2, 3, 0 };
@@ -90,8 +90,8 @@ namespace Genesis
 		this->backend->bindShaderProgram(this->imgui_program);
 		this->backend->setPipelineState(this->settings);
 
-		vector2F scale;
-		vector2F translate;
+		vec2f scale;
+		vec2f translate;
 		scale.x = 2.0f / draw_data->DisplaySize.x;
 		scale.y = 2.0f / draw_data->DisplaySize.y;
 		translate.x = -1.0f - (draw_data->DisplayPos.x * scale.x);
@@ -131,8 +131,8 @@ namespace Genesis
 					if (clip_rect.x < fb_width && clip_rect.y < fb_height && clip_rect.z >= 0.0f && clip_rect.w >= 0.0f)
 					{
 						// Apply scissor/clipping rectangle
-						vector2I offset = { (int)clip_rect.x, (int)(fb_height - clip_rect.w) };
-						vector2U extend = { (int)(clip_rect.z - clip_rect.x), (int)(clip_rect.w - clip_rect.y) };
+						vec2i offset = { (int)clip_rect.x, (int)(fb_height - clip_rect.w) };
+						vec2u extend = { (int)(clip_rect.z - clip_rect.x), (int)(clip_rect.w - clip_rect.y) };
 						this->backend->setScissor(offset, extend);
 						this->backend->setUniformTexture("texture_atlas", 0, (Texture2D)pcmd->TextureId);
 						this->backend->drawIndex(pcmd->ElemCount, pcmd->IdxOffset);
@@ -155,8 +155,8 @@ namespace Genesis
 		this->backend->bindVertexBuffer(this->temp_vertex);
 		this->backend->bindIndexBuffer(this->temp_index);
 
-		vector2I offset = { draw_data->DisplaySize.x - 20, draw_data->DisplaySize.y - 20 };
-		vector2U extend = { 20, 20 };
+		vec2i offset = { draw_data->DisplaySize.x - 20, draw_data->DisplaySize.y - 20 };
+		vec2u extend = { 20, 20 };
 		this->backend->setScissor(offset, extend);
 
 		this->backend->drawIndex(6, 0);

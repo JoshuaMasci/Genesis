@@ -3,7 +3,7 @@
 #include "genesis_engine/resource/Resource.hpp"
 #include "genesis_engine/resource/Texture.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class Material : public Resource
 	{
@@ -26,9 +26,9 @@ namespace Genesis
 		//Might be needed if factors get stored in a buffer
 
 		//values
-		vector4F albedo_factor = vector4F(1.0f);
-		vector2F metallic_roughness_factor = vector2F(1.0f);
-		vector4F emissive_factor = vector4F(0.0f);
+		vec4f albedo_factor = vec4f(1.0f);
+		vec2f metallic_roughness_factor = vec2f(1.0f);
+		vec4f emissive_factor = vec4f(0.0f);
 
 		//textures
 		MaterialTexture albedo_texture;

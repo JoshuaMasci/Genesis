@@ -14,7 +14,7 @@
 
 #include "genesis_engine/scene/Entity.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	EntityPropertiesWindow::EntityPropertiesWindow(ResourceManager* resource_manager)
 	{
@@ -71,19 +71,19 @@ namespace Genesis
 
 		draw_component<Transform>(entity, "Transform", [](Transform& transform_component)
 		{
-			vector3D position = transform_component.getPosition();
+			vec3d position = transform_component.getPosition();
 			if (ImGui::InputScalarN("Position", ImGuiDataType_::ImGuiDataType_Double, &position, 3))
 			{
 				transform_component.setPosition(position);
 			};
 
-			vector3D rotation = glm::degrees(glm::eulerAngles(transform_component.getOrientation()));
+			vec3d rotation = glm::degrees(glm::eulerAngles(transform_component.getOrientation()));
 			if (ImGui::InputScalarN("Rotation", ImGuiDataType_::ImGuiDataType_Double, &rotation, 3))
 			{
-				transform_component.setOrientation(quaternionD(glm::radians(rotation)));
+				transform_component.setOrientation(quatd(glm::radians(rotation)));
 			}
 
-			vector3D scale = transform_component.getScale();
+			vec3d scale = transform_component.getScale();
 			if (ImGui::InputScalarN("Scale", ImGuiDataType_::ImGuiDataType_Double, &scale, 3))
 			{
 				transform_component.setScale(scale);
@@ -197,13 +197,13 @@ namespace Genesis
 				switch (collision_shape.type)
 				{
 				case ShapeType::Box:
-					collision_shape.type_data.box_size = vector3D(0.5);
+					collision_shape.type_data.box_size = vec3d(0.5);
 					break;
 				case ShapeType::Sphere:
 					collision_shape.type_data.sphere_radius = 0.5;
 					break;
 				case ShapeType::Capsule:
-					collision_shape.type_data.capsule_size = vector2D(0.5, 1.8);
+					collision_shape.type_data.capsule_size = vec2d(0.5, 1.8);
 					break;
 				}
 			}

@@ -1,17 +1,17 @@
 #pragma once
 
-namespace Genesis
+namespace genesis_engine
 {
 	struct BaseLight
 	{
 		bool enabled;
-		vector3F color;
+		vec3f color;
 		float intensity;
 	};
 
 	struct DirectionalLight : BaseLight
 	{
-		DirectionalLight(vector3F color = vector3F(0.0f), float intensity = 0.0f, bool enabled = true)
+		DirectionalLight(vec3f color = vec3f(0.0f), float intensity = 0.0f, bool enabled = true)
 		{
 			this->enabled = enabled;
 
@@ -22,7 +22,7 @@ namespace Genesis
 
 	struct PointLight : BaseLight
 	{
-		PointLight(float range = 0.0f, vector2F attenuation = vector2F(0.0f), vector3F color = vector3F(0.0f), float intensity = 0.0f, bool enabled = true)
+		PointLight(float range = 0.0f, vec2f attenuation = vec2f(0.0f), vec3f color = vec3f(0.0f), float intensity = 0.0f, bool enabled = true)
 		{
 			this->enabled = enabled;
 
@@ -34,12 +34,12 @@ namespace Genesis
 		}
 
 		float range;
-		vector2F attenuation;
+		vec2f attenuation;
 	};
 
 	struct SpotLight : PointLight
 	{
-		SpotLight(float cutoff = 0.0f, float range = 0.0f, vector2F attenuation = vector2F(0.0f), vector3F color = vector3F(0.0f), float intensity = 0.0f, bool enabled = true)
+		SpotLight(float cutoff = 0.0f, float range = 0.0f, vec2f attenuation = vec2f(0.0f), vec3f color = vec3f(0.0f), float intensity = 0.0f, bool enabled = true)
 		{
 			this->enabled = enabled;
 

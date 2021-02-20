@@ -2,7 +2,7 @@
 
 #include "genesis_engine/input/ArrayInputDevice.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	enum class MouseButton
 	{
@@ -31,6 +31,6 @@ namespace Genesis
 		void removeMouseBinding(MouseButton button, fnv_hash32 string_hash);
 
 		void updateMouseState(MouseButton button, bool state);
-		void updateMousePosition(const vector2F& position);
+		void updateMousePosition(const vec2f& position);
 	};
 }

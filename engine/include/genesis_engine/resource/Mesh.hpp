@@ -4,7 +4,7 @@
 #include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
 #include "genesis_engine/rendering/BoundingBox.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	struct MeshStruct
 	{

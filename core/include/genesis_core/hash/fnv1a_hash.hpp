@@ -4,7 +4,7 @@
 
 //Disable the warning for integral constat overflow
 #pragma warning( disable : 4307)
-namespace genesis_types
+namespace genesis_core
 {
 	typedef uint32_t fnv_hash32;
 	typedef uint64_t fnv_hash64;

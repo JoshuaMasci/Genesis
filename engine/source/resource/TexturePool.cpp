@@ -3,9 +3,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-namespace Genesis
+namespace genesis_engine
 {
-	uint8_t* loadTexture(const string& texture_file_path, vector2I& size, int32_t& channels)
+	uint8_t* loadTexture(const string& texture_file_path, vec2i& size, int32_t& channels)
 	{
 		return stbi_load(texture_file_path.c_str(), (int*)(&size.x), (int*)(&size.y), (int*)(&channels), STBI_default);
 	}
@@ -25,12 +25,12 @@ namespace Genesis
 		Texture2D texture = nullptr;
 
 		//Load image
-		vector2I size;
+		vec2i size;
 		int32_t channels;
 		uint8_t* data = loadTexture(key, size, channels);
 
 		TextureCreateInfo create_info = {};
-		create_info.size = (vector2U)size;
+		create_info.size = (vec2u)size;
 
 		switch (channels)
 		{

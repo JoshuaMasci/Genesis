@@ -5,16 +5,16 @@
 //Prototype struct
 struct SDL_Window;
 
-namespace Genesis
+namespace genesis_engine
 {
 	class SDL2_Window: public Window
 	{
 	public:
-		SDL2_Window(vector2U size, string title, bool use_opengl = true);
+		SDL2_Window(vec2u size, string title, bool use_opengl = true);
 		virtual ~SDL2_Window();
 
-		virtual vector2U getWindowSize();
-		virtual void setWindowSize(vector2U size);
+		virtual vec2u getWindowSize();
+		virtual void setWindowSize(vec2u size);
 
 		virtual void setWindowTitle(string title);
 

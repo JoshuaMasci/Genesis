@@ -1,6 +1,6 @@
 #include "genesis_engine/input/JoystickDevice.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	/*JoystickDevice::JoystickDevice(string name, uint16_t number_of_buttons, uint16_t number_of_hats, uint16_t number_of_axes)
 		:ArrayInputDevice(name, number_of_buttons + (number_of_hats * 4), number_of_axes)

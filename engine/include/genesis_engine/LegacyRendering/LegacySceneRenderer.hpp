@@ -12,7 +12,7 @@
 #include "genesis_engine/rendering/SceneRenderList.hpp"
 #include "genesis_engine/rendering/RenderSettings.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class LegacySceneRenderer
 	{
@@ -20,7 +20,7 @@ namespace Genesis
 		LegacySceneRenderer(LegacyBackend* backend);
 		~LegacySceneRenderer();
 
-		void draw_scene(vector2U target_size, Framebuffer target_framebuffer, SceneRenderList& scene, SceneLightingSettings& lighting, RenderSettings& settings, CameraStruct& active_camera);
+		void draw_scene(vec2u target_size, Framebuffer target_framebuffer, SceneRenderList& scene, SceneLightingSettings& lighting, RenderSettings& settings, CameraStruct& active_camera);
 
 	protected:
 		LegacyBackend* backend;

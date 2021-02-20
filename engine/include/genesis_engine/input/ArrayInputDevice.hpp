@@ -6,7 +6,7 @@
 
 #define INVALID_INDEX 65535
 
-namespace Genesis
+namespace genesis_engine
 {
 	typedef uint32_t Timestamp;
 

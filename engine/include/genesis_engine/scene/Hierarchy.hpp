@@ -2,7 +2,7 @@
 
 #include "genesis_engine/scene/Ecs.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	struct ParentNode
 	{

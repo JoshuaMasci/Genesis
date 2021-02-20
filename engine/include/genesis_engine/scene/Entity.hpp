@@ -3,7 +3,7 @@
 #include "genesis_engine/scene/Scene.hpp"
 #include "genesis_engine/scene/Hierarchy.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class Entity
 	{

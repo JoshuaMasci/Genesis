@@ -7,7 +7,7 @@
 #include "genesis_engine/scene/Scene.hpp"
 #include "genesis_engine/scene/Entity.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class SceneWindow
 	{
@@ -29,7 +29,7 @@ namespace Genesis
 		LegacySceneRenderer* world_renderer = nullptr;
 
 		Framebuffer framebuffer = nullptr;
-		vector2U framebuffer_size = vector2U(0);
+		vec2u framebuffer_size = vec2u(0);
 
 		Camera scene_camera;
 		TransformD scene_camera_transform;

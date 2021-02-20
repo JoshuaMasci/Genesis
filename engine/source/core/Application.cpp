@@ -5,7 +5,7 @@
 #include "genesis_engine/platform/Platform.hpp"
 #include "genesis_engine/platform/Window.hpp"
 
-namespace Genesis 
+namespace genesis_engine 
 {
 	Application::Application()
 	{

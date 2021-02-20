@@ -8,7 +8,7 @@
 
 #include "genesis_engine/editor/ConsoleWindowSink.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	class Logging
 	{
@@ -26,19 +26,19 @@ namespace Genesis
 #ifdef GENESIS_LOGGING_ENABLED
 
 
-#define GENESIS_ENGINE_TRACE(...) Genesis::Logging::Engine->trace(__VA_ARGS__)
-#define GENESIS_ENGINE_DEBUG(...) Genesis::Logging::Engine->debug(__VA_ARGS__)
-#define GENESIS_ENGINE_INFO(...) Genesis::Logging::Engine->info(__VA_ARGS__)
-#define GENESIS_ENGINE_WARNING(...) Genesis::Logging::Engine->warn(__VA_ARGS__)
-#define GENESIS_ENGINE_ERROR(...) Genesis::Logging::Engine->error(__VA_ARGS__)
-#define GENESIS_ENGINE_CRITICAL(...) Genesis::Logging::Engine->critical(__VA_ARGS__)
+#define GENESIS_ENGINE_TRACE(...) genesis_engine::Logging::Engine->trace(__VA_ARGS__)
+#define GENESIS_ENGINE_DEBUG(...) genesis_engine::Logging::Engine->debug(__VA_ARGS__)
+#define GENESIS_ENGINE_INFO(...) genesis_engine::Logging::Engine->info(__VA_ARGS__)
+#define GENESIS_ENGINE_WARNING(...) genesis_engine::Logging::Engine->warn(__VA_ARGS__)
+#define GENESIS_ENGINE_ERROR(...) genesis_engine::Logging::Engine->error(__VA_ARGS__)
+#define GENESIS_ENGINE_CRITICAL(...) genesis_engine::Logging::Engine->critical(__VA_ARGS__)
 
-#define GENESIS_TRACE(...) Genesis::Logging::Application->trace(__VA_ARGS__)
-#define GENESIS_DEBUG(...) Genesis::Logging::Application->debug(__VA_ARGS__)
-#define GENESIS_INFO(...) Genesis::Logging::Application->info(__VA_ARGS__)
-#define GENESIS_WARNING(...) Genesis::Logging::Application->warn(__VA_ARGS__)
-#define GENESIS_ERROR(...) Genesis::Logging::Application->error(__VA_ARGS__)
-#define GENESIS_CRITICAL(...) Genesis::Logging::Application->critical(__VA_ARGS__)
+#define GENESIS_TRACE(...) genesis_engine::Logging::Application->trace(__VA_ARGS__)
+#define GENESIS_DEBUG(...) genesis_engine::Logging::Application->debug(__VA_ARGS__)
+#define GENESIS_INFO(...) genesis_engine::Logging::Application->info(__VA_ARGS__)
+#define GENESIS_WARNING(...) genesis_engine::Logging::Application->warn(__VA_ARGS__)
+#define GENESIS_ERROR(...) genesis_engine::Logging::Application->error(__VA_ARGS__)
+#define GENESIS_CRITICAL(...) genesis_engine::Logging::Application->critical(__VA_ARGS__)
 
 #else
 

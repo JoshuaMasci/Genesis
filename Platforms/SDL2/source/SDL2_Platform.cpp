@@ -6,7 +6,7 @@
 
 #include "genesis_engine/core/Fnv1aHash.hpp"
 
-namespace Genesis
+namespace genesis_engine
 {
 	SDL2_Platform::SDL2_Platform(Application* app)
 		:Platform(app),
@@ -320,7 +320,7 @@ namespace Genesis
 			}
 			else if (event.type == SDL_MOUSEMOTION)
 			{
-				vector2F pos = { (float)event.motion.x , (float)event.motion.y };
+				vec2f pos = { (float)event.motion.x , (float)event.motion.y };
 				this->mouse_device.updateMousePosition(pos);
 			}
 

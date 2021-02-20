@@ -18,8 +18,11 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
-namespace genesis_types
+namespace genesis_core
 {
+	static const float PI_F = 3.14159265358979323846264338327950288f;
+	static const double PI_D = 3.14159265358979323846264338327950288;
+
 	typedef glm::u32vec2 vec2u;
 	typedef glm::u32vec3 vec3u;
 	typedef glm::u32vec4 vec4u;

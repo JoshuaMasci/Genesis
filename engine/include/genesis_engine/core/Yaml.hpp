@@ -5,9 +5,9 @@
 namespace YAML
 {
 	template<>
-	struct convert<Genesis::vector2F>
+	struct convert<genesis_engine::vec2f>
 	{
-		static Node encode(const Genesis::vector2F& rhs)
+		static Node encode(const genesis_engine::vec2f& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -15,7 +15,7 @@ namespace YAML
 			return node;
 		}
 
-		static bool decode(const Node& node, Genesis::vector2F& rhs)
+		static bool decode(const Node& node, genesis_engine::vec2f& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 2)
 			{
@@ -29,9 +29,9 @@ namespace YAML
 	};
 
 	template<>
-	struct convert<Genesis::vector3F>
+	struct convert<genesis_engine::vec3f>
 	{
-		static Node encode(const Genesis::vector3F& rhs)
+		static Node encode(const genesis_engine::vec3f& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -40,7 +40,7 @@ namespace YAML
 			return node;
 		}
 
-		static bool decode(const Node& node, Genesis::vector3F& rhs)
+		static bool decode(const Node& node, genesis_engine::vec3f& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 3)
 			{
@@ -55,9 +55,9 @@ namespace YAML
 	};
 
 	template<>
-	struct convert<Genesis::vector4F>
+	struct convert<genesis_engine::vec4f>
 	{
-		static Node encode(const Genesis::vector4F& rhs)
+		static Node encode(const genesis_engine::vec4f& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -67,7 +67,7 @@ namespace YAML
 			return node;
 		}
 
-		static bool decode(const Node& node, Genesis::vector4F& rhs)
+		static bool decode(const Node& node, genesis_engine::vec4f& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 4)
 			{
@@ -83,9 +83,9 @@ namespace YAML
 	};
 
 	template<>
-	struct convert<Genesis::quaternionF>
+	struct convert<genesis_engine::quatf>
 	{
-		static Node encode(const Genesis::quaternionF& rhs)
+		static Node encode(const genesis_engine::quatf& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -95,7 +95,7 @@ namespace YAML
 			return node;
 		}
 
-		static bool decode(const Node& node, Genesis::quaternionF& rhs)
+		static bool decode(const Node& node, genesis_engine::quatf& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 4)
 			{
@@ -111,9 +111,9 @@ namespace YAML
 	};
 
 	template<>
-	struct convert<Genesis::vector2D>
+	struct convert<genesis_engine::vec2d>
 	{
-		static Node encode(const Genesis::vector2D& rhs)
+		static Node encode(const genesis_engine::vec2d& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -121,7 +121,7 @@ namespace YAML
 			return node;
 		}
 
-		static bool decode(const Node& node, Genesis::vector2D& rhs)
+		static bool decode(const Node& node, genesis_engine::vec2d& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 2)
 			{
@@ -135,9 +135,9 @@ namespace YAML
 	};
 
 	template<>
-	struct convert<Genesis::vector3D>
+	struct convert<genesis_engine::vec3d>
 	{
-		static Node encode(const Genesis::vector3D& rhs)
+		static Node encode(const genesis_engine::vec3d& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -146,7 +146,7 @@ namespace YAML
 			return node;
 		}
 
-		static bool decode(const Node& node, Genesis::vector3D& rhs)
+		static bool decode(const Node& node, genesis_engine::vec3d& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 3)
 			{
@@ -161,9 +161,9 @@ namespace YAML
 	};
 
 	template<>
-	struct convert<Genesis::vector4D>
+	struct convert<genesis_engine::vec4d>
 	{
-		static Node encode(const Genesis::vector4D& rhs)
+		static Node encode(const genesis_engine::vec4d& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -173,7 +173,7 @@ namespace YAML
 			return node;
 		}
 
-		static bool decode(const Node& node, Genesis::vector4D& rhs)
+		static bool decode(const Node& node, genesis_engine::vec4d& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 4)
 			{
@@ -189,9 +189,9 @@ namespace YAML
 	};
 
 	template<>
-	struct convert<Genesis::quaternionD>
+	struct convert<genesis_engine::quatd>
 	{
-		static Node encode(const Genesis::quaternionD& rhs)
+		static Node encode(const genesis_engine::quatd& rhs)
 		{
 			Node node;
 			node.push_back(rhs.x);
@@ -201,7 +201,7 @@ namespace YAML
 			return node;
 		}
 
-		static bool decode(const Node& node, Genesis::quaternionD& rhs)
+		static bool decode(const Node& node, genesis_engine::quatd& rhs)
 		{
 			if (!node.IsSequence() || node.size() != 4)
 			{
