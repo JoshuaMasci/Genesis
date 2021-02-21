@@ -4,7 +4,6 @@
 #include "Device.hpp"
 #include "Swapchain.hpp"
 #include "CommandPool.hpp"
-#include "FrameGraph.hpp"
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -27,6 +26,8 @@ namespace VulkanRenderer
 		uint32_t width;
 		uint32_t height;
 	};
+
+	class FrameGraph;
 
 	class DebugLayer
 	{

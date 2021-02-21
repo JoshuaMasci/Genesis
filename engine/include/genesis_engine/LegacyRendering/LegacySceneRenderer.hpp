@@ -1,16 +1,16 @@
 #pragma once
 
 #include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
-#include "genesis_engine/rendering/Camera.hpp"
+#include "genesis_engine/rendering/camera.hpp"
 
-#include "genesis_engine/component/ModelComponent.hpp"
+#include "genesis_engine/component/model_component.hpp"
 
-#include "genesis_engine/rendering/Camera.hpp"
-#include "genesis_engine/rendering/Lights.hpp"
+#include "genesis_engine/rendering/camera.hpp"
+#include "genesis_engine/rendering/lights.hpp"
 
-#include "genesis_engine/rendering/SceneLightingSettings.hpp"
-#include "genesis_engine/rendering/SceneRenderList.hpp"
-#include "genesis_engine/rendering/RenderSettings.hpp"
+#include "genesis_engine/rendering/scene_lighting_settings.hpp"
+#include "genesis_engine/rendering/scene_render_list.hpp"
+#include "genesis_engine/rendering/render_settings.hpp"
 
 namespace genesis_engine
 {

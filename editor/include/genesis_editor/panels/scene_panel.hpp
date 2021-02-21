@@ -1,11 +1,11 @@
 #pragma once
 
-#include "genesis_engine/input/InputManager.hpp"
+#include "genesis_engine/input/input_manager.hpp"
 #include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
 #include "genesis_engine/LegacyRendering/LegacySceneRenderer.hpp"
 
-#include "genesis_engine/scene/Scene.hpp"
-#include "genesis_engine/scene/Entity.hpp"
+#include "genesis_engine/scene/scene.hpp"
+#include "genesis_engine/scene/entity.hpp"
 
 namespace genesis_engine
 {

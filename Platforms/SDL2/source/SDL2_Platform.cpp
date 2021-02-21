@@ -2,9 +2,9 @@
 
 #include "SDL2_Include.hpp"
 
-#include "genesis_engine/input/InputManager.hpp"
+#include "genesis_engine/input/input_manager.hpp"
 
-#include "genesis_engine/core/Fnv1aHash.hpp"
+#include "genesis_core/hash/fnv1a_hash.hpp"
 
 namespace genesis_engine
 {
@@ -17,19 +17,19 @@ namespace genesis_engine
 		SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
 		//Create Keyboard Device
-		this->keyboard_device.addKeyboardBinding(KeyboardButton::W, StringHash32("Debug_Forward"));
-		this->keyboard_device.addKeyboardBinding(KeyboardButton::S, StringHash32("Debug_Backward"));
-		this->keyboard_device.addKeyboardBinding(KeyboardButton::LShift, StringHash32("Debug_Up"));
-		this->keyboard_device.addKeyboardBinding(KeyboardButton::LCtrl, StringHash32("Debug_Down"));
-		this->keyboard_device.addKeyboardBinding(KeyboardButton::A, StringHash32("Debug_Left"));
-		this->keyboard_device.addKeyboardBinding(KeyboardButton::D, StringHash32("Debug_Right"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::W, string_hash_32("Debug_Forward"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::S, string_hash_32("Debug_Backward"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::LShift, string_hash_32("Debug_Up"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::LCtrl, string_hash_32("Debug_Down"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::A, string_hash_32("Debug_Left"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::D, string_hash_32("Debug_Right"));
 
-		this->keyboard_device.addKeyboardBinding(KeyboardButton::Up, StringHash32("Debug_PitchUp"));
-		this->keyboard_device.addKeyboardBinding(KeyboardButton::Down, StringHash32("Debug_PitchDown"));
-		this->keyboard_device.addKeyboardBinding(KeyboardButton::Left, StringHash32("Debug_YawLeft"));
-		this->keyboard_device.addKeyboardBinding(KeyboardButton::Right, StringHash32("Debug_YawRight"));
-		this->keyboard_device.addKeyboardBinding(KeyboardButton::Q, StringHash32("Debug_RollLeft"));
-		this->keyboard_device.addKeyboardBinding(KeyboardButton::E, StringHash32("Debug_RollRight"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::Up, string_hash_32("Debug_PitchUp"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::Down, string_hash_32("Debug_PitchDown"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::Left, string_hash_32("Debug_YawLeft"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::Right, string_hash_32("Debug_YawRight"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::Q, string_hash_32("Debug_RollLeft"));
+		this->keyboard_device.addKeyboardBinding(KeyboardButton::E, string_hash_32("Debug_RollRight"));
 
 		//Create Mouse Device
 	}
@@ -338,14 +338,14 @@ namespace genesis_engine
 				//Settings
 				if (device->getName() == "PS4 Controller")
 				{
-					device->addAxisBinding(3, StringHash32("Debug_Pitch"), AxisSettings(0.1f, false));
-					device->addAxisBinding(2, StringHash32("Debug_Yaw"), AxisSettings(0.1f, true));
+					device->addAxisBinding(3, string_hash_32("Debug_Pitch"), AxisSettings(0.1f, false));
+					device->addAxisBinding(2, string_hash_32("Debug_Yaw"), AxisSettings(0.1f, true));
 
-					device->addButtonBinding(9, StringHash32("Debug_RollLeft"));
-					device->addButtonBinding(10, StringHash32("Debug_RollRight"));
+					device->addButtonBinding(9, string_hash_32("Debug_RollLeft"));
+					device->addButtonBinding(10, string_hash_32("Debug_RollRight"));
 
-					device->addAxisBinding(1, StringHash32("Debug_ForwardBackward"), AxisSettings(0.1f, true));
-					device->addAxisBinding(0, StringHash32("Debug_LeftRight"), AxisSettings(0.1f, true));
+					device->addAxisBinding(1, string_hash_32("Debug_ForwardBackward"), AxisSettings(0.1f, true));
+					device->addAxisBinding(0, string_hash_32("Debug_LeftRight"), AxisSettings(0.1f, true));
 				}
 			}
 			else if (event.type == SDL_JOYDEVICEREMOVED)

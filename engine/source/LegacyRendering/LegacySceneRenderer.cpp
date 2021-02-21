@@ -1,6 +1,6 @@
 #include "genesis_engine/LegacyRendering/LegacySceneRenderer.hpp"
 
-#include "genesis_engine/platform/FileSystem.hpp"
+#include "genesis_engine/platform/file_system.hpp"
 
 namespace genesis_engine
 {

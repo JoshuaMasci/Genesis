@@ -6,7 +6,7 @@
 #define FMT_DEPRECATED
 #include <spdlog/spdlog.h>
 
-#include "genesis_engine/editor/ConsoleWindowSink.hpp"
+#include "genesis_engine/editor/console_window_sink.hpp"
 
 namespace genesis_engine
 {

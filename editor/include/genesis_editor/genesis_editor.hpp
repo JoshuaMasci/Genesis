@@ -1,6 +1,6 @@
 #pragma once
 
-#include "genesis_engine/rendering/BaseImGui.hpp"
+#include "genesis_engine/rendering/base_imgui.hpp"
 
 #include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
 #include "genesis_engine/LegacyRendering/LegacySceneRenderer.hpp"
@@ -13,12 +13,12 @@
 #include "genesis_editor/panels/material_editor_panel.hpp"
 #include "genesis_editor/panels/render_statistics_panel.hpp"
 
-#include "genesis_engine/resource/Material.hpp"
-#include "genesis_engine/resource/ResourceManager.hpp"
+#include "genesis_engine/resource/material.hpp"
+#include "genesis_engine/resource/resource_manager.hpp"
 
-#include "genesis_engine/scene/Ecs.hpp"
+#include "genesis_engine/scene/ecs.hpp"
 #include "genesis_engine/scene/Scene.hpp"
-#include "genesis_engine/rendering/SceneRenderList.hpp"
+#include "genesis_engine/rendering/scene_render_list.hpp"
 
 namespace genesis_engine
 {

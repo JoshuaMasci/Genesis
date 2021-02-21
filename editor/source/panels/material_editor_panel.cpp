@@ -1,8 +1,8 @@
 #include "genesis_editor/panels/material_editor_panel.hpp"
 
 #include "imgui.h"
-#include "genesis_engine/resource/ResourceManager.hpp"
-#include "genesis_engine/platform/FileSystem.hpp"
+#include "genesis_engine/resource/resource_manager.hpp"
+#include "genesis_engine/platform/file_system.hpp"
 
 namespace genesis_engine
 {

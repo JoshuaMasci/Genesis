@@ -145,7 +145,7 @@ namespace VulkanRenderer
 		vkDestroyInstance(this->instance, nullptr);
 	}
 
-	Image* create_image(Device* device, const AttachmentCreateInfo& attachment_create_info, VkExtent2D size)
+	/*Image* create_image(Device* device, const AttachmentCreateInfo& attachment_create_info, VkExtent2D size)
 	{
 		VkImageCreateInfo image_info = {};
 		image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -246,7 +246,7 @@ namespace VulkanRenderer
 		vk_render_pass_info.subpassCount = 1;
 		vk_render_pass_info.pSubpasses = &subpass;
 		vk_render_pass_info.dependencyCount = 2;
-		vk_render_pass_info.pDependencies = dependencies;*/
+		vk_render_pass_info.pDependencies = dependencies;
 
 		VkRenderPass render_pass = VK_NULL_HANDLE;
 		//VK_ASSERT(vkCreateRenderPass(device->get(), &vk_render_pass_info, nullptr, &render_pass));
@@ -261,7 +261,7 @@ namespace VulkanRenderer
 
 		VkRenderPass render_pass = VK_NULL_HANDLE;
 		VkFramebuffer framebuffer = VK_NULL_HANDLE;
-	};
+	};*/
 
 	void VulkanRenderer::render(FrameGraph* frame_graph)
 	{

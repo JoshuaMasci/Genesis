@@ -2,13 +2,13 @@
 
 #include "imgui.h"
 
-#include "genesis_engine/resource/ResourceManager.hpp"
+#include "genesis_engine/resource/resource_manager.hpp"
 
-#include "genesis_engine/component/NameComponent.hpp"
-#include "genesis_engine/component/TransformComponent.hpp"
-#include "genesis_engine/component/ModelComponent.hpp"
+#include "genesis_engine/component/name_component.hpp"
+#include "genesis_engine/component/transform_component.hpp"
+#include "genesis_engine/component/model_component.hpp"
 
-#include "genesis_engine/scene/Hierarchy.hpp"
+#include "genesis_engine/scene/hierarchy.hpp"
 
 namespace genesis_engine
 {

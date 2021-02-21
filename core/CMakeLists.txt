@@ -4,6 +4,8 @@ project(Core CXX)
 file(GLOB_RECURSE CORE_SOURCES "source/*.*")
 file(GLOB_RECURSE CORE_HEADERS "include/*.*")
 
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${CORE_SOURCES} ${CORE_HEADERS})
+
 add_library(Core STATIC ${CORE_SOURCES} ${CORE_HEADERS})
 target_compile_features(Core INTERFACE cxx_std_17)
 target_include_directories(Core PUBLIC include/)

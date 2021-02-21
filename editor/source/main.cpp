@@ -1,16 +1,22 @@
 #include "genesis_editor/genesis_editor.hpp"
 
 #include "VulkanRenderer.hpp"
-#include "FrameGraph.hpp"
 #include "SDL2_Window.hpp" 
- 
+#include "genesis_core/rendering/frame_graph.hpp"
+
 int main(int argc, char** argv)
 {
+	//Code *= GOOD!!!!!
+	//Code *= GOOD!!!!!
+	//Code *= GOOD!!!!!
+	//Code *= GOOD!!!!!
+	//Code *= GOOD!!!!!
+	//Code *= GOOD!!!!!
+
 	if(true)
 	{
 		{
-			genesis_engine::SDL2_Window window = genesis_engine::SDL2_Window({ 1920, 1080 }, "Vulkan Window", false);
-
+			/*genesis_engine::SDL2_Window window = genesis_engine::SDL2_Window({ 1920, 1080 }, "Vulkan Window", false);
 			VulkanRenderer::VulkanApplication app = {};
 			app.app_name = "Genesis";
 			app.app_version = 1;
@@ -23,24 +29,20 @@ int main(int argc, char** argv)
 
 			VulkanRenderer::VulkanRenderer renderer = VulkanRenderer::VulkanRenderer(app, settings, window_info);
 
-			VulkanRenderer::FrameGraph frame_graph;
-
-			VulkanRenderer::RenderPassCreateInfo pass_info = {};
-			VulkanRenderer::AttachmentCreateInfo color_info;
-			color_info.format = VK_FORMAT_R8G8B8A8_SRGB;
+			genesis_core::FrameGraph frame_graph;
+			genesis_core::RenderPassCreateInfo pass_info = {};
+			genesis_core::AttachmentCreateInfo color_info;
+			color_info.format = genesis_core::ImageFormat::RGBA_8_Srgb;
 			pass_info.color_attachments.push_back(color_info);
-			VulkanRenderer::RenderPassDescription* render_pass = frame_graph.create_render_pass(pass_info);
+			genesis_core::RenderPass* render_pass = frame_graph.create_render_pass(pass_info);
 
 			frame_graph.set_present_attachment(render_pass->color_attachments[0].id);
 
 			for (size_t i = 0; i < 12000; i++)
 			{
-				renderer.render(&frame_graph);
-			}
+				renderer.render(nullptr);
+			}*/
 		}
-
-		getchar();
-		//return 0;
 	}
 
 	GENESIS_PROFILE_START(); 

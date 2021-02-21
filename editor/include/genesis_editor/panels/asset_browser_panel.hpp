@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unordered_map>
-#include "genesis_engine/platform/FileSystem.hpp"
+#include "genesis_engine/platform/file_system.hpp"
 #include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
 
 namespace genesis_engine

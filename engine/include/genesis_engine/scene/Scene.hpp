@@ -1,10 +1,10 @@
 #pragma once
 
-#include "genesis_engine/scene/Ecs.hpp"
-#include "genesis_engine/scene/SceneComponents.hpp"
+#include "genesis_engine/scene/ecs.hpp"
+#include "genesis_engine/scene/scene_components.hpp"
 
-#include "genesis_engine/rendering/SceneLightingSettings.hpp"
-#include "genesis_engine/rendering/SceneRenderList.hpp"
+#include "genesis_engine/rendering/scene_lighting_settings.hpp"
+#include "genesis_engine/rendering/scene_render_list.hpp"
 
 namespace genesis_engine
 {

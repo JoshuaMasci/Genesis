@@ -31,29 +31,29 @@ namespace genesis_engine
 		}
 	}
 
-	constexpr fnv_hash32 debug_forward_axis = StringHash32("Debug_ForwardBackward");
-	constexpr fnv_hash32 debug_forward = StringHash32("Debug_Forward");
-	constexpr fnv_hash32 debug_backward = StringHash32("Debug_Backward");
+	constexpr fnv_hash32 debug_forward_axis = string_hash_32("Debug_ForwardBackward");
+	constexpr fnv_hash32 debug_forward = string_hash_32("Debug_Forward");
+	constexpr fnv_hash32 debug_backward = string_hash_32("Debug_Backward");
 
-	constexpr fnv_hash32 debug_up_axis = StringHash32("Debug_UpDown");
-	constexpr fnv_hash32 debug_up = StringHash32("Debug_Up");
-	constexpr fnv_hash32 debug_down = StringHash32("Debug_Down");
+	constexpr fnv_hash32 debug_up_axis = string_hash_32("Debug_UpDown");
+	constexpr fnv_hash32 debug_up = string_hash_32("Debug_Up");
+	constexpr fnv_hash32 debug_down = string_hash_32("Debug_Down");
 
-	constexpr fnv_hash32 debug_left_axis = StringHash32("Debug_LeftRight");
-	constexpr fnv_hash32 debug_left = StringHash32("Debug_Left");
-	constexpr fnv_hash32 debug_right = StringHash32("Debug_Right");
+	constexpr fnv_hash32 debug_left_axis = string_hash_32("Debug_LeftRight");
+	constexpr fnv_hash32 debug_left = string_hash_32("Debug_Left");
+	constexpr fnv_hash32 debug_right = string_hash_32("Debug_Right");
 
-	constexpr fnv_hash32 debug_pitch_axis = StringHash32("Debug_Pitch");
-	constexpr fnv_hash32 debug_pitch_up = StringHash32("Debug_PitchUp");
-	constexpr fnv_hash32 debug_pitch_down = StringHash32("Debug_PitchDown");
+	constexpr fnv_hash32 debug_pitch_axis = string_hash_32("Debug_Pitch");
+	constexpr fnv_hash32 debug_pitch_up = string_hash_32("Debug_PitchUp");
+	constexpr fnv_hash32 debug_pitch_down = string_hash_32("Debug_PitchDown");
 
-	constexpr fnv_hash32 debug_yaw_axis = StringHash32("Debug_Yaw");
-	constexpr fnv_hash32 debug_yaw_left = StringHash32("Debug_YawLeft");
-	constexpr fnv_hash32 debug_yaw_right = StringHash32("Debug_YawRight");
+	constexpr fnv_hash32 debug_yaw_axis = string_hash_32("Debug_Yaw");
+	constexpr fnv_hash32 debug_yaw_left = string_hash_32("Debug_YawLeft");
+	constexpr fnv_hash32 debug_yaw_right = string_hash_32("Debug_YawRight");
 
-	constexpr fnv_hash32 debug_roll_axis = StringHash32("Debug_Roll");
-	constexpr fnv_hash32 debug_roll_left = StringHash32("Debug_RollLeft");
-	constexpr fnv_hash32 debug_roll_right = StringHash32("Debug_RollRight");
+	constexpr fnv_hash32 debug_roll_axis = string_hash_32("Debug_Roll");
+	constexpr fnv_hash32 debug_roll_left = string_hash_32("Debug_RollLeft");
+	constexpr fnv_hash32 debug_roll_right = string_hash_32("Debug_RollRight");
 
 	void SceneWindow::update(TimeStep time_step)
 	{		

@@ -1,18 +1,18 @@
 #include "genesis_editor/panels/entity_properties_panel.hpp"
 
 #include "imgui.h"
-#include "genesis_engine/platform/FileSystem.hpp"
+#include "genesis_engine/platform/file_system.hpp"
 
-#include "genesis_engine/resource/ResourceManager.hpp"
+#include "genesis_engine/resource/resource_manager.hpp"
 
-#include "genesis_engine/component/NameComponent.hpp"
-#include "genesis_engine/component/TransformComponent.hpp"
-#include "genesis_engine/component/ModelComponent.hpp"
-#include "genesis_engine/component/PhysicsComponents.hpp"
-#include "genesis_engine/rendering/Camera.hpp"
-#include "genesis_engine/rendering/Lights.hpp"
+#include "genesis_engine/component/name_component.hpp"
+#include "genesis_engine/component/transform_component.hpp"
+#include "genesis_engine/component/model_component.hpp"
+#include "genesis_engine/component/physics_components.hpp"
+#include "genesis_engine/rendering/camera.hpp"
+#include "genesis_engine/rendering/lights.hpp"
 
-#include "genesis_engine/scene/Entity.hpp"
+#include "genesis_engine/scene/entity.hpp"
 
 namespace genesis_engine
 {

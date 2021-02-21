@@ -1,11 +1,11 @@
 #pragma once
 
 #include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
-#include "genesis_engine/rendering/BaseImGui.hpp"
+#include "genesis_engine/rendering/base_imgui.hpp"
 
 namespace genesis_engine
 {
-	class LegacyImGui : public BaseImGui
+	class LegacyImGui: public BaseImGui
 	{
 	public:
 		LegacyImGui(LegacyBackend* backend, InputManager* input_manager, Window* window);

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "genesis_engine/resource/Resource.hpp"
-#include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
-#include "genesis_engine/rendering/BoundingBox.hpp"
+#include "genesis_engine/resource/resource.hpp"
+#include "genesis_engine/LegacyBackend/legacyBackend.hpp"
+#include "genesis_engine/rendering/bounding_box.hpp"
 
 namespace genesis_engine
 {

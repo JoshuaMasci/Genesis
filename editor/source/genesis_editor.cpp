@@ -5,15 +5,15 @@
 #include "SDL2_Window.hpp" 
 #include "OpenglBackend.hpp"
 #include "genesis_engine/LegacyRendering/LegacyImGui.hpp"
-#include "genesis_engine/platform/FileSystem.hpp"
+#include "genesis_engine/platform/file_system.hpp"
 
 #include "imgui.h"
 
-#include "genesis_engine/scene/SceneSerializer.hpp"
+#include "genesis_engine/scene/scene_serializer.hpp"
 
 #include "entt/entity/organizer.hpp"
-#include "genesis_engine/component/NameComponent.hpp"
-#include "genesis_engine/job_system/JobSystem.hpp"
+#include "genesis_engine/component/name_component.hpp"
+#include "genesis_engine/job_system/job_system.hpp"
 
 namespace genesis_engine
 {
@@ -45,7 +45,6 @@ namespace genesis_engine
 	{
 		int value;
 	};
-
 
 	void system_1(entt::view<entt::exclude_t<>, A, B> view) { GENESIS_ENGINE_INFO("System 1"); };
 	void system_2(entt::view<entt::exclude_t<>, A> view) { GENESIS_ENGINE_INFO("System 2"); };
@@ -241,9 +240,9 @@ namespace genesis_engine
 	}
 
 
-#include "genesis_engine/component/ModelComponent.hpp"
-#include "genesis_engine/rendering/Camera.hpp"
-#include "genesis_engine/rendering/Lights.hpp"
+#include "genesis_engine/component/model_component.hpp"
+#include "genesis_engine/rendering/camera.hpp"
+#include "genesis_engine/rendering/lights.hpp"
 
 	void add_to_render_list(SceneRenderList& render_list, EntityRegistry& registry, EntityHandle entity, const TransformD& parent_transform)
 	{

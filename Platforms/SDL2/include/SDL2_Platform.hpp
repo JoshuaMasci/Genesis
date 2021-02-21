@@ -2,9 +2,9 @@
 
 #include "genesis_engine/platform/Platform.hpp"
 
-#include "genesis_engine/input/KeyboardDevice.hpp"
-#include "genesis_engine/input/MouseDevice.hpp"
-#include "genesis_engine/input/JoystickDevice.hpp"
+#include "genesis_engine/input/keyboard_device.hpp"
+#include "genesis_engine/input/mouse_device.hpp"
+#include "genesis_engine/input/joystick_device.hpp"
 
 
 namespace genesis_engine

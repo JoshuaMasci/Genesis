@@ -1,7 +1,7 @@
 #include "genesis_engine/scene/Scene.hpp"
 
-#include "genesis_engine/component/NameComponent.hpp"
-#include "genesis_engine/scene/Entity.hpp"
+#include "genesis_engine/component/name_component.hpp"
+#include "genesis_engine/scene/entity.hpp"
 
 namespace genesis_engine
 {

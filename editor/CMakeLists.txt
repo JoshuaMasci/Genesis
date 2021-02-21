@@ -16,6 +16,7 @@ target_compile_features(Genesis_Editor INTERFACE cxx_std_17)
 #Working Directory
 set_target_properties(Genesis_Editor PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${Genesis_Editor_SOURCE_DIR}")
 
+target_link_libraries(Genesis_Engine PUBLIC Core)
 target_link_libraries(Genesis_Editor PUBLIC Genesis_Engine)
 
 if(INCLUDE_EASY_PROFILER)

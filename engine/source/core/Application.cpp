@@ -1,9 +1,9 @@
-#include "genesis_engine/core/Application.hpp"
+#include "genesis_engine/core/application.hpp"
 
-#include "genesis_engine/job_system/JobSystem.hpp"
-#include "genesis_engine/input/InputManager.hpp"
-#include "genesis_engine/platform/Platform.hpp"
-#include "genesis_engine/platform/Window.hpp"
+#include "genesis_engine/job_system/job_system.hpp"
+#include "genesis_engine/input/input_manager.hpp"
+#include "genesis_engine/platform/platform.hpp"
+#include "genesis_engine/platform/window.hpp"
 
 namespace genesis_engine 
 {

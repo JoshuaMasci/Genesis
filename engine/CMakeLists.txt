@@ -6,10 +6,9 @@ file(GLOB_RECURSE GENESIS_HEADERS "include/*.*")
 
 file (GLOB IMGUI_SOURCES ${CMAKE_SOURCE_DIR}/submodules/imgui/*.*cpp)
 
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GENESIS_SOURCES} ${GENESIS_HEADERS})
+source_group(TREE ${CMAKE_SOURCE_DIR} FILES ${IMGUI_SOURCES})
 add_library(Genesis_Engine STATIC ${GENESIS_SOURCES} ${GENESIS_HEADERS} ${IMGUI_SOURCES})
-
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GENESIS_SOURCES})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GENESIS_HEADERS})
 
 target_include_directories(Genesis_Engine PUBLIC include/)
 target_precompile_headers(Genesis_Engine PUBLIC "include/genesis_engine/pch.hpp")
