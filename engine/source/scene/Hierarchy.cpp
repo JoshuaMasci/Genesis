@@ -1,6 +1,6 @@
 #include "genesis_engine/scene/Hierarchy.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	void HierarchyUtils::addChild(EntityRegistry& registry, EntityHandle parent, EntityHandle child)
 	{

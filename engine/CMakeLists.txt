@@ -16,7 +16,6 @@ target_compile_definitions(Genesis_Engine PUBLIC GENESIS_PLATFORM_WIN)
 target_compile_features(Genesis_Engine PUBLIC cxx_std_17)
 
 target_link_libraries(Genesis_Engine PUBLIC Core)
-target_link_libraries(Genesis_Engine PUBLIC VulkanRenderer)
 
 target_include_directories(Genesis_Engine PUBLIC ${CMAKE_SOURCE_DIR}/submodules/yaml-cpp/include/)
 target_link_libraries(Genesis_Engine PUBLIC debug ${CMAKE_SOURCE_DIR}/submodules/yaml-cpp/build/Debug/yaml-cppd.lib)

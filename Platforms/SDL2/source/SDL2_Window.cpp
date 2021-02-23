@@ -3,7 +3,7 @@
 
 #include <SDL_syswm.h>
 
-namespace genesis_engine
+namespace genesis
 {
 	SDL2_Window::SDL2_Window(vec2u size, string title, bool use_opengl)
 		:Window(size, title)

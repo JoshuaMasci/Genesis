@@ -14,7 +14,7 @@
 
 #include "genesis_engine/scene/entity.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	EntityPropertiesWindow::EntityPropertiesWindow(ResourceManager* resource_manager)
 	{

@@ -2,9 +2,9 @@
 
 #include "Device.hpp"
 
-namespace VulkanRenderer
+namespace genesis
 {
-	Device::Device(VkInstance instance, VkPhysicalDevice physical_device, std::vector<const char*>& extensions, std::vector<const char*>& layers)
+	Device::Device(VkInstance instance, VkPhysicalDevice physical_device, genesis::vector<const char*>& extensions, genesis::vector<const char*>& layers)
 	{
 		VkPhysicalDeviceFeatures device_features = {};
 		//No device features needed as of now

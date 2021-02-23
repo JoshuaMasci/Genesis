@@ -2,7 +2,7 @@
 
 #include "genesis_engine/input/input_manager.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	float applyAxisSettings(float value, const AxisSettings& settings)
 	{
@@ -80,7 +80,7 @@ namespace genesis_engine
 		}
 	}
 
-	AxisSettings* genesis_engine::ArrayInputDevice::getAxisSettings(size_t index, fnv_hash32 binding)
+	AxisSettings* genesis::ArrayInputDevice::getAxisSettings(size_t index, fnv_hash32 binding)
 	{
 		auto& settings = this->axis_settings[index];
 		for (size_t i = 0; i < settings.size(); i++)

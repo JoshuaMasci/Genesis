@@ -3,7 +3,7 @@
 #include "genesis_engine/resource/Mesh.hpp"
 #include "genesis_engine/resource/Material.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	struct ModelComponent
 	{

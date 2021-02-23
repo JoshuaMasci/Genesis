@@ -4,7 +4,7 @@
 #include "genesis_engine/resource/mesh.hpp"
 #include "genesis_engine/LegacyBackend/LegacyBackend.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	class MeshPool : public ResourcePool<string, Mesh>
 	{

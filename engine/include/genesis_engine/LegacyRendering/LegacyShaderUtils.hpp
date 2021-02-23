@@ -5,6 +5,6 @@
 #include "genesis_engine/rendering/Lights.hpp"
 #include "genesis_engine/LegacyRendering/LegacyMaterial.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 }

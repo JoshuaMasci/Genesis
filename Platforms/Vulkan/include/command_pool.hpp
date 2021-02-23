@@ -1,11 +1,9 @@
 #pragma once
 
-#include "VulkanInclude.hpp"
-#include "Device.hpp"
+#include "vulkan_include.hpp"
+#include "device.hpp"
 
-#include <vector>
-
-namespace VulkanRenderer
+namespace genesis
 {
 	class CommandPool
 	{
@@ -14,7 +12,7 @@ namespace VulkanRenderer
 		VkCommandPool command_pool;
 		VkCommandBufferLevel command_buffer_level;
 
-		std::vector<VkCommandBuffer> freed_command_buffers;
+		vector<VkCommandBuffer> freed_command_buffers;
 
 	public:
 		CommandPool(VkDevice device, uint32_t queue_family_index, VkCommandBufferLevel level, VkCommandPoolCreateFlagBits flags);

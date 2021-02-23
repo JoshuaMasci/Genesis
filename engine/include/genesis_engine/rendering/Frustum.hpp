@@ -1,6 +1,6 @@
 #pragma once
 
-namespace genesis_engine
+namespace genesis
 {
 	class Frustum
 	{

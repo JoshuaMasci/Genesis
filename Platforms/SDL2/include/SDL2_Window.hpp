@@ -5,7 +5,7 @@
 //Prototype struct
 struct SDL_Window;
 
-namespace genesis_engine
+namespace genesis
 {
 	class SDL2_Window: public Window
 	{

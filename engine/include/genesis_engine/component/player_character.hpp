@@ -5,7 +5,7 @@
 
 #include "Genesis/Entity/Entity.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	class PlayerCharacter : public Component
 	{

@@ -2,8 +2,5 @@
 
 namespace genesis
 {
-	class Framebuffer
-	{
-
-	};
+	//TODO
 }

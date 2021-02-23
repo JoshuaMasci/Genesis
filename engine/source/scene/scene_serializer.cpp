@@ -13,7 +13,7 @@
 
 #include "genesis_engine/resource/resource_manager.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	YAML::Node serializeEntity(Entity entity)
 	{

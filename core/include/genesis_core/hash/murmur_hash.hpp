@@ -5,7 +5,7 @@
 
 #define mmix(h,k) { k *= m; k ^= k >> r; k *= m; h *= m; h ^= k; }
 
-namespace genesis_core
+namespace genesis
 {
 	class MurmurHash2
 	{

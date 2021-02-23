@@ -12,7 +12,7 @@
 #include "genesis_engine/rendering/scene_render_list.hpp"
 #include "genesis_engine/rendering/render_settings.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	class LegacySceneRenderer
 	{

@@ -3,7 +3,7 @@
 #include "genesis_engine/resource/Resource.hpp"
 #include "genesis_engine/resource/Texture.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	class Material : public Resource
 	{

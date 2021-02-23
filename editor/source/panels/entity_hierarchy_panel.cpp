@@ -10,7 +10,7 @@
 
 #include "genesis_engine/scene/hierarchy.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	EntityHierarchyWindow::EntityHierarchyWindow(ResourceManager* resource_manager)
 	{

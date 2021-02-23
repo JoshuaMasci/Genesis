@@ -4,7 +4,7 @@
 #include "genesis_engine/LegacyBackend/RenderingTypes.hpp"
 #include "genesis_engine/LegacyBackend/PipelineSettings.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	enum class DepthFormat
 	{
@@ -31,7 +31,7 @@ namespace genesis_engine
 	struct TextureCreateInfo
 	{
 		vec2u size;
-		ImageFormat format;
+		LegacyImageFormat format;
 		TextureWrapMode wrap_mode;
 		TextureFilterMode filter_mode;
 	};
@@ -49,7 +49,7 @@ namespace genesis_engine
 
 	struct FramebufferAttachmentInfo
 	{
-		ImageFormat format;
+		LegacyImageFormat format;
 		MultisampleCount samples;
 	};
 

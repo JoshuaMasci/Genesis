@@ -3,7 +3,7 @@
 #include "spdlog/sinks/base_sink.h"
 #include "genesis_engine/editor/console_window.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	template<typename Mutex>
 	class ConsoleWindowSink : public spdlog::sinks::base_sink<Mutex>

@@ -3,7 +3,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-namespace genesis_engine
+namespace genesis
 {
 	uint8_t* loadTexture(const string& texture_file_path, vec2i& size, int32_t& channels)
 	{
@@ -35,16 +35,16 @@ namespace genesis_engine
 		switch (channels)
 		{
 		case 1:
-			create_info.format = ImageFormat::R_8;
+			create_info.format = LegacyImageFormat::R_8;
 			break;
 		case 2:
-			create_info.format = ImageFormat::RG_8;
+			create_info.format = LegacyImageFormat::RG_8;
 			break;
 		case 3:
-			create_info.format = ImageFormat::RGB_8;
+			create_info.format = LegacyImageFormat::RGB_8;
 			break;
 		case 4:
-			create_info.format = ImageFormat::RGBA_8;
+			create_info.format = LegacyImageFormat::RGBA_8;
 			break;
 		}
 

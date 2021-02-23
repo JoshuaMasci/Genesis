@@ -5,7 +5,7 @@
 
 #include "genesis_engine/resource/vertex_structs.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	MeshStruct ObjLoader::loadMesh(LegacyBackend* backend, const string& filename)
 	{

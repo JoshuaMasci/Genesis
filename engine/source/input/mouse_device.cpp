@@ -2,7 +2,7 @@
 
 #include "genesis_engine/input/input_manager.hpp"
 
-namespace genesis_engine
+namespace genesis
 {	
 	MouseDevice::MouseDevice(const string& device_name, InputManager* manager)
 		:ArrayInputDevice(device_name, manager, (uint16_t)MouseButton::SIZE, 2)

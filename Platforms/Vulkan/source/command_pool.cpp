@@ -1,6 +1,6 @@
-#include "CommandPool.hpp"
+#include "command_pool.hpp"
 
-namespace VulkanRenderer
+namespace genesis
 {
 	CommandPool::CommandPool(VkDevice device, uint32_t queue_family_index, VkCommandBufferLevel level, VkCommandPoolCreateFlagBits flags)
 	{

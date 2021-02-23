@@ -1,6 +1,6 @@
 #include "genesis_core/rendering/frame_graph.hpp"
 
-namespace genesis_core
+namespace genesis
 {
 	FrameGraph::~FrameGraph()
 	{

@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 
-namespace genesis_engine
+namespace genesis
 {
 	const string vert_file = "#version 450\nlayout(location = 0) in vec2 in_position;\nlayout(location = 1) in vec2 in_uv;\nlayout(location = 2) in vec4 in_color;\nlayout(location = 0) out vec2 uv;\nlayout(location = 1) out vec4 color;\nstruct Offset\n{ \n	vec2 uScale; \n	vec2 uTranslate;\n};\nuniform Offset offset;\nvoid main()\n{\n	gl_Position = vec4(in_position  * offset.uScale + offset.uTranslate, 0.0, 1.0);\n	uv = in_uv;\n	color = in_color / 256.0;\n}";
 	const string frag_file = "#version 450\nuniform sampler2D texture_atlas;\nlayout(location = 0) in vec2 uv;\nlayout(location = 1) in vec4 color;\nlayout(location = 0) out vec4 out_color;\nvoid main()\n{\n out_color = color * texture2D(texture_atlas, uv);\n}";
@@ -20,7 +20,7 @@ namespace genesis_engine
 
 		TextureCreateInfo create_info = {};
 		create_info.size = vec2u(width, height);
-		create_info.format = ImageFormat::RGBA_8_Unorm;
+		create_info.format = LegacyImageFormat::RGBA_8_Unorm;
 		create_info.filter_mode = TextureFilterMode::Nearest;
 		create_info.wrap_mode = TextureWrapMode::Clamp_Edge;
 		this->texture_atlas = this->backend->createTexture(create_info, pixels);

@@ -1,6 +1,6 @@
 #include "genesis_engine/input/input_manager.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	InputManager::InputManager(string config_folder_path)
 	{

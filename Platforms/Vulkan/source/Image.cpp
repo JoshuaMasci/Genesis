@@ -2,7 +2,7 @@
 
 #include <inttypes.h>
 
-namespace VulkanRenderer
+namespace genesis
 {
 	//TODO allow 1d, 3d, cube images 
 	Image::Image(Device* device, const VkImageCreateInfo& create_info, VmaMemoryUsage memory_usage)

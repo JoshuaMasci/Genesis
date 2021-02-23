@@ -3,12 +3,12 @@
 #include "render_pass.hpp"
 #include "genesis_core/types/containers.hpp"
 
-namespace genesis_core
+namespace genesis
 {
 	class FrameGraph
 	{
 	protected:
-		friend class VulkanRenderer;
+		friend class Renderer;
 		vector<RenderPass*> render_passes;
 		AttachmentId next_attachment_id = 1;
 		AttachmentId present_attachment = 0;

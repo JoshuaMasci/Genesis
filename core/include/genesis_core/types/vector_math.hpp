@@ -18,7 +18,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
-namespace genesis_core
+namespace genesis
 {
 	static const float PI_F = 3.14159265358979323846264338327950288f;
 	static const double PI_D = 3.14159265358979323846264338327950288;

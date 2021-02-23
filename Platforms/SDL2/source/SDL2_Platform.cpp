@@ -6,7 +6,7 @@
 
 #include "genesis_core/hash/fnv1a_hash.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	SDL2_Platform::SDL2_Platform(Application* app)
 		:Platform(app),

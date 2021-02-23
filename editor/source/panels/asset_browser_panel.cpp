@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 
-namespace genesis_engine
+namespace genesis
 {
 	void AssetBrowserWindow::refresh()
 	{
@@ -160,7 +160,7 @@ namespace genesis_engine
 
 		TextureCreateInfo create_info = {};
 		create_info.size = vec2u(1, 1);
-		create_info.format = ImageFormat::RGB_8;
+		create_info.format = LegacyImageFormat::RGB_8;
 
 		{
 			uint8_t data[] = { 255, 5, 10 };

@@ -4,7 +4,7 @@
 #include "genesis_engine/resource/texture_pool.hpp"
 #include "genesis_engine/resource/material.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	class MaterialPool : public ResourcePool<string, Material>
 	{

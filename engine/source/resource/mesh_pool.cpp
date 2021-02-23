@@ -2,7 +2,7 @@
 
 #include "genesis_engine/resource/obj_loader.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	MeshPool::MeshPool(LegacyBackend* backend)
 	{

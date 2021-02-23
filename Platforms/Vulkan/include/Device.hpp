@@ -1,10 +1,9 @@
 #pragma once
 
-#include "VulkanInclude.hpp"
+#include "vulkan_include.hpp"
+#include "genesis_core/types/containers.hpp"
 
-#include <vector>
-
-namespace VulkanRenderer
+namespace genesis
 {
 	class Device
 	{
@@ -17,7 +16,7 @@ namespace VulkanRenderer
 		VmaAllocator allocator;
 
 	public:
-		Device(VkInstance instance, VkPhysicalDevice physical_device, std::vector<const char*>& extensions, std::vector<const char*>& layers);
+		Device(VkInstance instance, VkPhysicalDevice physical_device, vector<const char*>& extensions, vector<const char*>& layers);
 		~Device();
 
 		inline VkDevice get() { return this->logical_device; };

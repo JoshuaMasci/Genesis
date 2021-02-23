@@ -1,9 +1,9 @@
 #pragma once
 
-#include "VulkanInclude.hpp"
-#include "Device.hpp"
+#include "vulkan_include.hpp"
+#include "device.hpp"
 
-namespace VulkanRenderer
+namespace genesis
 {
 	class Image
 	{

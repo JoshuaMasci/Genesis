@@ -2,7 +2,7 @@
 
 #include <Opengl_Include.hpp>
 
-namespace genesis_engine
+namespace genesis
 {
 	namespace Opengl
 	{

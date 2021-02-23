@@ -1,6 +1,6 @@
 #pragma once
 
-namespace genesis_engine
+namespace genesis
 {
 	typedef void* VertexBuffer;
 	typedef void* IndexBuffer;
@@ -21,7 +21,7 @@ namespace genesis_engine
 		uint32
 	};
 
-	enum class ImageFormat
+	enum class LegacyImageFormat
 	{
 		Invalid,
 

@@ -8,6 +8,8 @@ add_library(VulkanRenderer STATIC ${VULKAN_SOURCES} ${VULKAN_HEADERS})
 target_include_directories(VulkanRenderer PUBLIC include/)
 target_compile_features(VulkanRenderer INTERFACE cxx_std_17)
 
+target_link_libraries(VulkanRenderer PUBLIC Core)
+
 find_package(Vulkan REQUIRED FATAL_ERROR)
 target_include_directories(VulkanRenderer PUBLIC ${Vulkan_INCLUDE_DIR})
 target_include_directories(VulkanRenderer PUBLIC ${CMAKE_SOURCE_DIR}/submodules/VulkanMemoryAllocator/src/)

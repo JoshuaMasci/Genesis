@@ -1,10 +1,10 @@
-#include "VulkanRenderer.hpp"
+#include "renderer.hpp"
 
 #include <stdio.h>
 
-#include "Image.hpp"
+#include "image.hpp"
 
-namespace VulkanRenderer
+namespace genesis
 {
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data)
 	{
@@ -37,12 +37,12 @@ namespace VulkanRenderer
 		}
 	}
 
-	VkInstance create_instance(VulkanApplication& app, VulkanSettings& settings, std::vector<const char*>& extensions, std::vector<const char*>& layers)
+	VkInstance create_instance(ApplicationInfo& app_info, Settings& settings, genesis::vector<const char*>& extensions, std::vector<const char*>& layers)
 	{
 		VkApplicationInfo appInfo = {};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = app.app_name;
-		appInfo.applicationVersion = app.app_version;
+		appInfo.pApplicationName = app_info.app_name;
+		appInfo.applicationVersion = app_info.app_version;
 		appInfo.pEngineName = "VulkanRenderer";
 		appInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
 		appInfo.apiVersion = 0;
@@ -97,7 +97,7 @@ namespace VulkanRenderer
 		return VK_NULL_HANDLE;//Just choose the first device for now
 	}
 
-	VulkanRenderer::VulkanRenderer(VulkanApplication& app, VulkanSettings& settings, VulkanWindow& window)
+	Renderer::Renderer(ApplicationInfo& app_info, Settings& settings, WindowInfo& window)
 	{
 		std::vector<const char*> extensions;
 		extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
@@ -113,7 +113,7 @@ namespace VulkanRenderer
 		std::vector<const char*> layers;
 		layers.push_back("VK_LAYER_KHRONOS_validation");
 
-		this->instance = create_instance(app, settings, extensions, layers);
+		this->instance = create_instance(app_info, settings, extensions, layers);
 		this->debug_layer.create(this->instance);		
 		this->surface = create_surface(this->instance, window.handle);
 
@@ -124,14 +124,24 @@ namespace VulkanRenderer
 		this->image_wait_semaphore = this->device->create_semaphore();
 		this->present_wait_semaphore = this->device->create_semaphore();
 
-		this->primary_command_pool = new CommandPool(this->device->get(), this->device->get_queue_index(), VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+		this->primary_command_pool = std::make_unique<CommandPool>(this->device->get(), this->device->get_queue_index(), VK_COMMAND_BUFFER_LEVEL_PRIMARY, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+
+		vector<VkDescriptorSetLayoutBinding> bindings = 
+		{
+			{0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, settings.max_uniform_buffer_bindings, VK_SHADER_STAGE_ALL, nullptr},
+			{1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, settings.max_storage_buffer_bindings, VK_SHADER_STAGE_ALL, nullptr},
+			{2, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, settings.max_sampled_image_bindings, VK_SHADER_STAGE_ALL, nullptr},
+			{3, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, settings.max_storage_image_bindings, VK_SHADER_STAGE_ALL, nullptr},
+		};
+		this->bindless_descriptor = std::make_unique<BindlessDescriptor>(this->device->get(), bindings);
 	}
 
-	VulkanRenderer::~VulkanRenderer()
+	Renderer::~Renderer()
 	{
 		this->device->wait_idle();
 
-		delete this->primary_command_pool;
+		this->bindless_descriptor.reset();
+		this->primary_command_pool.reset();
 
 		this->device->destroy_semaphore(this->image_wait_semaphore);
 		this->device->destroy_semaphore(this->present_wait_semaphore);
@@ -263,7 +273,7 @@ namespace VulkanRenderer
 		VkFramebuffer framebuffer = VK_NULL_HANDLE;
 	};*/
 
-	void VulkanRenderer::render(FrameGraph* frame_graph)
+	void Renderer::render(FrameGraph* frame_graph)
 	{
 		/*vkWaitForFences(this->device->get(), 1, &this->wait_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
 		vkResetFences(this->device->get(), 1, &this->wait_fence);

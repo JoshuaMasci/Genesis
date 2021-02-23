@@ -1,6 +1,6 @@
 #include "genesis_engine/core/Transform.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	TransformF::TransformF(vec3f& position, quatf& orientation, vec3f& scale)
 	{

@@ -3,7 +3,7 @@
 #include "genesis_engine/component/name_component.hpp"
 #include "genesis_engine/scene/entity.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	Scene::Scene()
 	{

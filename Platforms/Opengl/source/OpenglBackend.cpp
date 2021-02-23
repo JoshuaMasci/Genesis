@@ -5,7 +5,7 @@
 
 #include "Opengl_Include.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	namespace Opengl
 	{
@@ -198,40 +198,40 @@ namespace genesis_engine
 			delete index_buffer;
 		}
 
-		GLImageFormat getFormat(ImageFormat format)
+		GLImageFormat getFormat(LegacyImageFormat format)
 		{
 			switch (format)
 			{
-			case genesis_engine::ImageFormat::R_8:
+			case genesis::LegacyImageFormat::R_8:
 				return { GL_R8, GL_RED, GL_UNSIGNED_BYTE };
-			case genesis_engine::ImageFormat::RG_8:
+			case genesis::LegacyImageFormat::RG_8:
 				return { GL_RG8, GL_RG, GL_UNSIGNED_BYTE };
-			case genesis_engine::ImageFormat::RGB_8:
+			case genesis::LegacyImageFormat::RGB_8:
 				return { GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE };
-			case genesis_engine::ImageFormat::RGBA_8:
-			case genesis_engine::ImageFormat::RGBA_8_Unorm:
+			case genesis::LegacyImageFormat::RGBA_8:
+			case genesis::LegacyImageFormat::RGBA_8_Unorm:
 				return { GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE };
-			case genesis_engine::ImageFormat::R_16_Float:
+			case genesis::LegacyImageFormat::R_16_Float:
 				return { GL_R16F, GL_RED, GL_HALF_FLOAT };
-			case genesis_engine::ImageFormat::RG_16_Float:
+			case genesis::LegacyImageFormat::RG_16_Float:
 				return { GL_RG16F, GL_RG, GL_HALF_FLOAT };
-			case genesis_engine::ImageFormat::RGB_16_Float:
+			case genesis::LegacyImageFormat::RGB_16_Float:
 				return { GL_RGB16F, GL_RGB, GL_HALF_FLOAT };
-			case genesis_engine::ImageFormat::RGBA_16_Float:
+			case genesis::LegacyImageFormat::RGBA_16_Float:
 				return { GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT };
-			case genesis_engine::ImageFormat::R_32_Float:
+			case genesis::LegacyImageFormat::R_32_Float:
 				return { GL_R32F, GL_RED, GL_FLOAT };
-			case genesis_engine::ImageFormat::RG_32_Float:
+			case genesis::LegacyImageFormat::RG_32_Float:
 				return { GL_RG32F, GL_RG, GL_FLOAT };
-			case genesis_engine::ImageFormat::RGB_32_Float:
+			case genesis::LegacyImageFormat::RGB_32_Float:
 				return { GL_RGB32F, GL_RGB, GL_FLOAT };
-			case genesis_engine::ImageFormat::RGBA_32_Float:
+			case genesis::LegacyImageFormat::RGBA_32_Float:
 				return { GL_RGBA32F, GL_RGBA, GL_FLOAT };
-			case genesis_engine::ImageFormat::D_16_Unorm:
+			case genesis::LegacyImageFormat::D_16_Unorm:
 				return { GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT };
-			case genesis_engine::ImageFormat::D_32_Float:
+			case genesis::LegacyImageFormat::D_32_Float:
 				return { GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT };
-			case genesis_engine::ImageFormat::Invalid:
+			case genesis::LegacyImageFormat::Invalid:
 			default:
 				return GLImageFormat();
 			}

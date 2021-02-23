@@ -4,7 +4,7 @@
 
 //#define GENESIS_CONSOLE_LOG 1
 
-namespace genesis_engine
+namespace genesis
 {
 	std::shared_ptr<spdlog::logger> Logging::Engine;
 	std::shared_ptr<spdlog::logger> Logging::Application;

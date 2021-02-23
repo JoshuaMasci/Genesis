@@ -2,7 +2,7 @@
 
 #include "genesis_engine/platform/file_system.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	struct LegacyShaderUniform
 	{

@@ -18,6 +18,7 @@ set_target_properties(Genesis_Editor PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$
 
 target_link_libraries(Genesis_Engine PUBLIC Core)
 target_link_libraries(Genesis_Editor PUBLIC Genesis_Engine)
+target_link_libraries(Genesis_Engine PUBLIC VulkanRenderer)
 
 if(INCLUDE_EASY_PROFILER)
 	add_custom_command(TARGET Genesis_Editor POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_SOURCE_DIR}/lib/easy_profiler-v2.1.0-msvc15-win64/bin/easy_profiler.dll" $<TARGET_FILE_DIR:Genesis_Editor>)

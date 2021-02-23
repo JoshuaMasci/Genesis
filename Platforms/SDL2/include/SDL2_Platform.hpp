@@ -7,7 +7,7 @@
 #include "genesis_engine/input/joystick_device.hpp"
 
 
-namespace genesis_engine
+namespace genesis
 {
 	class  SDL2_Platform : public Platform
 	{

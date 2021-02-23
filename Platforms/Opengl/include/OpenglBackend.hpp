@@ -4,7 +4,7 @@
 #include "OpenglShaderProgram.hpp"
 #include "SDL2_Window.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	namespace Opengl
 	{

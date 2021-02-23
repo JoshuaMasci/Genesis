@@ -1,6 +1,6 @@
 #include "genesis_engine/rendering/Frustum.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	Frustum::Frustum(const mat4f& matrix)
 	{

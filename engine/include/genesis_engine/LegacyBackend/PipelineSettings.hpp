@@ -2,7 +2,7 @@
 
 #include "genesis_core/hash/murmur_hash.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	enum class CullMode
 	{
@@ -68,7 +68,7 @@ namespace genesis_engine
 
 		uint32_t getHash()
 		{
-			genesis_core::MurmurHash2 hash;
+			genesis::MurmurHash2 hash;
 			hash.begin();
 			hash.add(*this);
 			return hash.end();

@@ -4,7 +4,7 @@
 #include "genesis_engine/resource/resource_manager.hpp"
 #include "genesis_engine/platform/file_system.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	MaterialEditorWindow::MaterialEditorWindow(ResourceManager* resource_manager)
 	{

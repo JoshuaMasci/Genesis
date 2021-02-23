@@ -4,7 +4,7 @@
 #include <string>
 #include <filesystem>
 
-namespace genesis_engine 
+namespace genesis 
 {
 #ifdef GENESIS_PLATFORM_WIN
 #include <windows.h>

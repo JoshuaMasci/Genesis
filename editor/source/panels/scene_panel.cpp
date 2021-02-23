@@ -10,7 +10,7 @@
 #include "ImGuizmo.h"
 #include "ImGuizmo.cpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	SceneWindow::SceneWindow(InputManager* input_manager, LegacyBackend* legacy_backend)
 	{
@@ -173,7 +173,7 @@ namespace genesis_engine
 			}
 
 			this->framebuffer_size = image_size;
-			FramebufferAttachmentInfo color_attachment = { ImageFormat::RGBA_32_Float, MultisampleCount::Sample_1 };
+			FramebufferAttachmentInfo color_attachment = { LegacyImageFormat::RGBA_32_Float, MultisampleCount::Sample_1 };
 			FramebufferDepthInfo depth_attachment = { DepthFormat::depth_24,  MultisampleCount::Sample_1 };
 			FramebufferCreateInfo create_info = {};
 			create_info.attachments = &color_attachment;

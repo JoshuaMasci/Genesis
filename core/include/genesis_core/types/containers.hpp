@@ -10,7 +10,7 @@
 
 #include "vector_set.hpp"
 
-namespace genesis_core
+namespace genesis
 {
 	using phmap::flat_hash_map;
 	using phmap::flat_hash_set;

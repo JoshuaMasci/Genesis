@@ -7,7 +7,7 @@
 #include "genesis_engine/scene/scene.hpp"
 #include "genesis_engine/scene/entity.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	class SceneWindow
 	{

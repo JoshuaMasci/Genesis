@@ -3,7 +3,7 @@
 #include "genesis_engine/scene/Ecs.hpp"
 #include "genesis_engine/scene/Entity.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	class ResourceManager;
 

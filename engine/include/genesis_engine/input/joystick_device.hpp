@@ -2,7 +2,7 @@
 
 #include "genesis_engine/input/array_input_device.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	enum class HatButtons
 	{

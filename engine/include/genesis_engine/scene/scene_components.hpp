@@ -2,7 +2,7 @@
 
 #include "genesis_engine/scene/Ecs.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	class SceneComponents
 	{

@@ -20,7 +20,7 @@
 #include "genesis_engine/scene/Scene.hpp"
 #include "genesis_engine/rendering/scene_render_list.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	class EditorApplication : public Application
 	{

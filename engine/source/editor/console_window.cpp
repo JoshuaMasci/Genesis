@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 
-namespace genesis_engine
+namespace genesis
 {
 	ConsoleWindow::ConsoleWindow()
 	{
@@ -76,19 +76,19 @@ namespace genesis_engine
 	{
 		switch (level)
 		{
-		case genesis_engine::ConsoleLevel::trace:
+		case genesis::ConsoleLevel::trace:
 			return this->colors[0];
-		case genesis_engine::ConsoleLevel::debug:
+		case genesis::ConsoleLevel::debug:
 			return this->colors[1];
-		case genesis_engine::ConsoleLevel::info:
+		case genesis::ConsoleLevel::info:
 			return this->colors[2];
-		case genesis_engine::ConsoleLevel::warning:
+		case genesis::ConsoleLevel::warning:
 			return this->colors[3];
-		case genesis_engine::ConsoleLevel::error:
+		case genesis::ConsoleLevel::error:
 			return this->colors[4];
-		case genesis_engine::ConsoleLevel::critical:
+		case genesis::ConsoleLevel::critical:
 			return this->colors[5];
-		case genesis_engine::ConsoleLevel::off:
+		case genesis::ConsoleLevel::off:
 			return this->colors[6];
 		}
 		return this->colors[6];

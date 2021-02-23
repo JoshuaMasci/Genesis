@@ -1,6 +1,6 @@
 #pragma once
 
-namespace genesis_core
+namespace genesis
 {
 	enum class ImageFormat
 	{

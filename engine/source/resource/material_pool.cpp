@@ -3,7 +3,7 @@
 #include <fstream>
 #include "genesis_engine/core/yaml.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	MaterialPool::MaterialPool(TexturePool* texture_pool)
 	{

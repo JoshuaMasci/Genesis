@@ -7,7 +7,7 @@
 
 #include "genesis_core/hash/fnv1a_hash.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	class InputManager
 	{

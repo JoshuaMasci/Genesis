@@ -15,7 +15,7 @@
 #include "genesis_engine/component/name_component.hpp"
 #include "genesis_engine/job_system/job_system.hpp"
 
-namespace genesis_engine
+namespace genesis
 {
 	void sync_point(double*& rand, entt::registry& registry, entt::view<entt::exclude_t<>, const NameComponent> view)
 	{

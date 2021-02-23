@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 
-namespace genesis_engine
+namespace genesis
 {
 	BaseImGui::BaseImGui(InputManager* input_manager, Window* window)
 	{
@@ -100,7 +100,7 @@ namespace genesis_engine
 		}
 	}
 
-	void genesis_engine::BaseImGui::endDocking()
+	void genesis::BaseImGui::endDocking()
 	{
 		ImGui::End();
 	}

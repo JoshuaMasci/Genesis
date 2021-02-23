@@ -2,7 +2,7 @@
 
 #include <vector>
 
-namespace genesis_core
+namespace genesis
 {
 	template<typename T>
 	class VectorSet
