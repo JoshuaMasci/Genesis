@@ -12,16 +12,17 @@ namespace genesis
 
 	RenderPass* FrameGraph::create_render_pass(const RenderPassCreateInfo& render_pass_info)
 	{
-		std::vector<RenderPassAttachment> color_attachments(render_pass_info.color_attachments.size());
-		RenderPassAttachment depth_attachment = { render_pass_info.depth_attachment, 0 };
+		vector<ColorRenderPassAttachment> color_attachments(render_pass_info.color_attachments.size());
+		DepthRenderPassAttachment depth_attachment = { {}, 0 };
 
 		for (size_t i = 0; i < color_attachments.size(); i++)
 		{
 			color_attachments[i] = { render_pass_info.color_attachments[i], this->next_attachment_id++ };
 		}
 
-		if (render_pass_info.depth_attachment.format != ImageFormat::Invalid)
+		if (render_pass_info.depth_attachment)
 		{
+			depth_attachment.create_info = render_pass_info.depth_attachment.value();
 			depth_attachment.id = this->next_attachment_id++;
 		}
 

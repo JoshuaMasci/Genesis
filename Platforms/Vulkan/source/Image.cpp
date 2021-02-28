@@ -1,6 +1,4 @@
-#include "Image.hpp"
-
-#include <inttypes.h>
+#include "vulkan_renderer/image.hpp"
 
 namespace genesis
 {

@@ -1,8 +1,9 @@
-#include "renderer.hpp"
+#include "vulkan_renderer/renderer.hpp"
 
 #include <stdio.h>
 
-#include "image.hpp"
+#include "vulkan_renderer/image.hpp"
+#include "vulkan_renderer/render_pass_builder.hpp"
 
 namespace genesis
 {
@@ -101,14 +102,16 @@ namespace genesis
 	{
 		std::vector<const char*> extensions;
 		extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-		//extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+		extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 		extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #endif
 
 		std::vector<const char*> device_extensions;
 		device_extensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+		device_extensions.push_back(VK_KHR_MAINTENANCE3_EXTENSION_NAME);
+		device_extensions.push_back(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
 
 		std::vector<const char*> layers;
 		layers.push_back("VK_LAYER_KHRONOS_validation");
@@ -155,7 +158,16 @@ namespace genesis
 		vkDestroyInstance(this->instance, nullptr);
 	}
 
-	/*Image* create_image(Device* device, const AttachmentCreateInfo& attachment_create_info, VkExtent2D size)
+	BufferHandle Renderer::create_buffer(size_t buffer_size, Temp_BufferUsage usage, Temp_MemoryType type)
+	{
+		return BufferHandle();
+	}
+
+	void Renderer::destoy_buffer(BufferHandle buffer)
+	{
+	}
+
+	/*Image* create_image(Device* device, const ColorAttachmentInfo& attachment_create_info, VkExtent2D size)
 	{
 		VkImageCreateInfo image_info = {};
 		image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -207,7 +219,7 @@ namespace genesis
 
 		if (render_pass_info.depth_attachment != nullptr)
 		{
-			AttachmentCreateInfo* depth_info = render_pass_info.depth_attachment;
+			ColorAttachmentInfo* depth_info = render_pass_info.depth_attachment;
 			uint32_t depth_position = (uint32_t)attachment_descriptions.size();
 
 			VkAttachmentReference depth_reference = {};
@@ -275,40 +287,25 @@ namespace genesis
 
 	void Renderer::render(FrameGraph* frame_graph)
 	{
-		/*vkWaitForFences(this->device->get(), 1, &this->wait_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+		vkWaitForFences(this->device->get(), 1, &this->wait_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
 		vkResetFences(this->device->get(), 1, &this->wait_fence);
 		uint32_t image_index = this->swapchain->get_next_image(this->image_wait_semaphore);
 
-		std::unordered_map<AttachmentId, Image*> attachments;
-
-		for (auto& render_pass_info: frame_graph->render_passes)
 		{
-			RenderPassHandle render_pass_handle = {};
+			RenderPassBuilder render_pass_builder(this->device);
 
-			VkExtent2D render_pass_size = { 1, 1 };
-			if (render_pass_info->size_class == AttachmentSizeClass::SwapchainRelative)
+			VkExtent2D swapchain_extent = this->swapchain->get_image_extent();
+			vec2u swapchain_size = vec2u(swapchain_extent.width, swapchain_extent.height);
+
+			for (auto render_pass : frame_graph->render_passes)
 			{
-				VkExtent2D swapchain_size = this->swapchain->get_image_extent();
-				render_pass_size.width = (uint32_t)(render_pass_info->size[0] * swapchain_size.width);
-				render_pass_size.height = (uint32_t)(render_pass_info->size[1] * swapchain_size.height);
-			}
-			else if (render_pass_info->size_class == AttachmentSizeClass::Absolute)
-			{
-				render_pass_size.width = (uint32_t)render_pass_info->size[0];
-				render_pass_size.height = (uint32_t)render_pass_info->size[1];
+				render_pass_builder.create_render_pass(swapchain_size, render_pass);
 			}
 
-			render_pass_handle.color_attachments.reserve(render_pass_info->output_color_attachments.size());
-			for (size_t i = 0; i < render_pass_handle.color_attachments.size(); i++)
-			{
-				Image* attachment = create_image(this->device, render_pass_info->output_color_attachments[i].create_info, render_pass_size);
-				render_pass_handle.color_attachments.push_back(attachment);
-				attachments[render_pass_info->output_color_attachments[i].id] = attachment;
-			}
-
-			render_pass_handle.render_pass = create_render_pass(this->device, render_pass_info);
+			render_pass_builder.flush_frame();
 		}
-		
+
+
 		VkCommandBuffer command_buffer = this->primary_command_pool->get_command_buffer();
 		VkCommandBufferBeginInfo begin_info = {};
 		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -360,6 +357,6 @@ namespace genesis
 			VK_ASSERT(vkQueueSubmit(this->device->get_queue(), 1, &graphics_submit_info, this->wait_fence));
 		}
 
-		this->swapchain->present_image(image_index, this->present_wait_semaphore);*/
+		this->swapchain->present_image(image_index, this->present_wait_semaphore);
 	}
 }

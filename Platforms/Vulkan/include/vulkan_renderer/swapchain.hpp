@@ -3,8 +3,6 @@
 #include "vulkan_include.hpp"
 #include "device.hpp"
 
-#include <vector>
-
 namespace genesis
 {
 	class Swapchain
@@ -14,7 +12,7 @@ namespace genesis
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
 
 		VkSwapchainKHR swapchain = VK_NULL_HANDLE;
-		std::vector<VkImage> images;
+		vector<VkImage> images;
 		VkExtent2D image_extent;
 
 		VkSwapchainKHR create_swapchain(VkExtent2D surface_size);

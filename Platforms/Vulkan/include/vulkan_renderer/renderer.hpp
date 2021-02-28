@@ -63,6 +63,9 @@ namespace genesis
 		Renderer(ApplicationInfo& app_info, Settings& settings, WindowInfo& window);
 		~Renderer();
 
+		BufferHandle create_buffer(size_t buffer_size, Temp_BufferUsage usage, Temp_MemoryType type);
+		void destoy_buffer(BufferHandle buffer);
+
 		void render(genesis::FrameGraph* frame_graph);
 	};
 }

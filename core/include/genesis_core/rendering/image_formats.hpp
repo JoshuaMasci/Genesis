@@ -2,7 +2,7 @@
 
 namespace genesis
 {
-	enum class ImageFormat
+	enum class ColorFormat
 	{
 		Invalid,
 		RGBA_8_Srgb,
@@ -18,7 +18,7 @@ namespace genesis
 		RGBA_32_Float,
 	};
 
-	enum class DepthStencilFormat
+	enum class DepthFormat
 	{
 		Invalid,
 		S_8_Uint,

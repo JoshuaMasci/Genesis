@@ -174,7 +174,7 @@ namespace genesis
 
 			this->framebuffer_size = image_size;
 			FramebufferAttachmentInfo color_attachment = { LegacyImageFormat::RGBA_32_Float, MultisampleCount::Sample_1 };
-			FramebufferDepthInfo depth_attachment = { DepthFormat::depth_24,  MultisampleCount::Sample_1 };
+			FramebufferDepthInfo depth_attachment = { LegacyDepthFormat::depth_24,  MultisampleCount::Sample_1 };
 			FramebufferCreateInfo create_info = {};
 			create_info.attachments = &color_attachment;
 			create_info.attachment_count = 1;

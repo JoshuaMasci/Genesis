@@ -1,41 +1,28 @@
 #define VMA_IMPLEMENTATION
 
-#include "Device.hpp"
+#include "vulkan_renderer/device.hpp"
 
 namespace genesis
 {
 	Device::Device(VkInstance instance, VkPhysicalDevice physical_device, genesis::vector<const char*>& extensions, genesis::vector<const char*>& layers)
 	{
-		VkPhysicalDeviceFeatures device_features = {};
-		//No device features needed as of now
+		this->physical_device = physical_device;
 
 		VkDeviceCreateInfo create_info = {};
 		create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		create_info.pQueueCreateInfos = nullptr;
-		create_info.queueCreateInfoCount = 0;
-
-		create_info.pEnabledFeatures = &device_features;
 
 		create_info.enabledExtensionCount = 0;
-
 		if (extensions.size() > 0)
 		{
 			create_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
 			create_info.ppEnabledExtensionNames = extensions.data();
 		}
-		else
-		{
-			create_info.enabledExtensionCount = 0;
-		}
 
+		create_info.enabledLayerCount = 0;
 		if (layers.size() > 0)
 		{
 			create_info.enabledLayerCount = static_cast<uint32_t>(layers.size());
 			create_info.ppEnabledLayerNames = layers.data();
-		}
-		else
-		{
-			create_info.enabledLayerCount = 0;
 		}
 
 		this->primary_queue_index = 0;
@@ -50,7 +37,17 @@ namespace genesis
 		create_info.pQueueCreateInfos = &primary_queue;
 		create_info.queueCreateInfoCount = 1;
 
-		this->physical_device = physical_device;
+		VkPhysicalDeviceFeatures device_features;
+		vkGetPhysicalDeviceFeatures(this->physical_device, &device_features);
+		create_info.pEnabledFeatures = &device_features;
+
+		VkPhysicalDeviceDescriptorIndexingFeaturesEXT physical_device_descriptor_indexing_features = {};
+		physical_device_descriptor_indexing_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT;
+		physical_device_descriptor_indexing_features.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+		physical_device_descriptor_indexing_features.runtimeDescriptorArray = VK_TRUE;
+		physical_device_descriptor_indexing_features.descriptorBindingVariableDescriptorCount = VK_TRUE;
+		create_info.pNext = &physical_device_descriptor_indexing_features;
+
 		VK_ASSERT(vkCreateDevice(this->physical_device, &create_info, nullptr, &this->logical_device));
 
 		vkGetDeviceQueue(this->logical_device, this->primary_queue_index, 0, &this->primary_queue);

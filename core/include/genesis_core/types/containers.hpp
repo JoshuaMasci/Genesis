@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 #include <functional>
 #include <memory>
 
@@ -18,6 +19,7 @@ namespace genesis
 
 	using std::string;
 	using std::vector;
+	using std::optional;
 	using std::function;
 
 	using std::unique_ptr;

@@ -237,17 +237,17 @@ namespace genesis
 			}
 		}
 
-		GLenum getDepthFormat(DepthFormat format)
+		GLenum getDepthFormat(LegacyDepthFormat format)
 		{
 			switch (format)
 			{
-			case DepthFormat::depth_16:
+			case LegacyDepthFormat::depth_16:
 				return GL_DEPTH_COMPONENT16;
-			case DepthFormat::depth_24:
+			case LegacyDepthFormat::depth_24:
 				return GL_DEPTH_COMPONENT24;
-			case DepthFormat::depth_32:
+			case LegacyDepthFormat::depth_32:
 				return GL_DEPTH_COMPONENT32;
-			case DepthFormat::depth_32f:
+			case LegacyDepthFormat::depth_32f:
 				return GL_DEPTH_COMPONENT32F;
 			}
 			return 0;

@@ -6,7 +6,7 @@
 
 namespace genesis
 {
-	enum class DepthFormat
+	enum class LegacyDepthFormat
 	{
 		depth_16,
 		depth_24,
@@ -55,7 +55,7 @@ namespace genesis
 
 	struct FramebufferDepthInfo
 	{
-		DepthFormat format;
+		LegacyDepthFormat format;
 		MultisampleCount samples;
 	};
 

@@ -5,10 +5,9 @@ file(GLOB_RECURSE SANDBOX_SOURCES "source/*.*")
 file(GLOB_RECURSE SANDBOX_HEADERS "include/*.*")
 
 add_executable(Sandbox ${SANDBOX_SOURCES} ${SANDBOX_HEADERS})
-
+target_compile_features(Sandbox PRIVATE cxx_std_17)
 target_include_directories(Sandbox PUBLIC include/)
 
-target_compile_features(Sandbox INTERFACE cxx_std_17)
 
 #Working Directory
 set_target_properties(Sandbox PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${Sandbox_SOURCE_DIR}")

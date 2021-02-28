@@ -15,24 +15,35 @@ namespace genesis
 		SwapchainRelative,
 	};
 
-	struct AttachmentCreateInfo
+	struct ColorAttachmentInfo
 	{
-		ImageFormat format = ImageFormat::Invalid;
+		ColorFormat format = ColorFormat::Invalid;
 		uint32_t samples = 1;
-		bool persistent = true;
+	};
+
+	struct DepthAttachmentInfo
+	{
+		DepthFormat format = DepthFormat::Invalid;
+		uint32_t samples = 1;
 	};
 
 	struct RenderPassCreateInfo
 	{
 		RenderPassSizeClass size_class = RenderPassSizeClass::SwapchainRelative;
 		const genesis::vec2f size = vec2f(1.0f);
-		std::vector<AttachmentCreateInfo> color_attachments;
-		AttachmentCreateInfo depth_attachment;
+		vector<ColorAttachmentInfo> color_attachments;
+		optional<DepthAttachmentInfo> depth_attachment;
 	};
 
-	struct RenderPassAttachment
+	struct ColorRenderPassAttachment
 	{
-		AttachmentCreateInfo create_info = {};
+		ColorAttachmentInfo create_info = {};
+		AttachmentId id = 0;
+	};
+
+	struct DepthRenderPassAttachment
+	{
+		DepthAttachmentInfo create_info = {};
 		AttachmentId id = 0;
 	};
 
@@ -40,9 +51,9 @@ namespace genesis
 	{
 		const RenderPassId id;
 		const RenderPassSizeClass size_class;
-		const genesis::vec2f size;
-		const genesis::vector<RenderPassAttachment> color_attachments;
-		const RenderPassAttachment depth_attachment;
+		const vec2f size;
+		const vector<ColorRenderPassAttachment> color_attachments;
+		const DepthRenderPassAttachment depth_attachment;
 
 		//TODO eveluate function pointer???
 	};

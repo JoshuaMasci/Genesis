@@ -5,8 +5,8 @@ file(GLOB_RECURSE VULKAN_SOURCES "source/*.*")
 file(GLOB_RECURSE VULKAN_HEADERS "include/*.*")
 
 add_library(VulkanRenderer STATIC ${VULKAN_SOURCES} ${VULKAN_HEADERS})
+target_compile_features(VulkanRenderer PRIVATE  cxx_std_17)
 target_include_directories(VulkanRenderer PUBLIC include/)
-target_compile_features(VulkanRenderer INTERFACE cxx_std_17)
 
 target_link_libraries(VulkanRenderer PUBLIC Core)
 

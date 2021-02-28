@@ -11,6 +11,7 @@
 #include "vk_mem_alloc.h"
 
 #define VK_ASSERT(x) if(x != VK_SUCCESS) { printf("VulkanRendering Error: %s:%d\n", __FILE__, __LINE__); abort(); };
+//#define VK_ASSERT(x) x;
 
 #include "genesis_core/types/containers.hpp"
 #include "genesis_core/types/vector_math.hpp"

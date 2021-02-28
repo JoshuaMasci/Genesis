@@ -6,7 +6,6 @@ namespace genesis
 	typedef void* IndexBuffer;
 	typedef void* Texture2D;
 	
-	
 	//Old Types to be deprecated
 	//Waiting on the Modern Rendering Backend refactor
 	enum class MemoryType
