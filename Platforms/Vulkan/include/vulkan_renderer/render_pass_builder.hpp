@@ -22,6 +22,7 @@ namespace genesis
 	protected:
 		Device* device = nullptr;
 
+		VkPipelineLayout bindless_pipeline_layout = VK_NULL_HANDLE;
 		flat_hash_map<AttachmentId, Image*> attachments;
 		vector<VkRenderPass> render_passes;
 		vector<VkFramebuffer> frame_buffers;
@@ -31,9 +32,10 @@ namespace genesis
 		Image* get_depth_attachment(const vec2u& size, const DepthRenderPassAttachment& depth_attachment);
 		VkRenderPass get_vulkan_render_pass(RenderPass* node);
 		VkFramebuffer get_vulkan_framebuffer(const vec2u& size, VkRenderPass render_pass, const vector<Image*>& color_attachments, const Image* depth_attachment);
+		VkPipeline create_pipeline(const vec2u& size, VkRenderPass render_pass, const PipelineCreateInfo& create_info);
 
 	public:
-		RenderPassBuilder(Device* device);
+		RenderPassBuilder(Device* device, VkDescriptorSetLayout layout);
 		~RenderPassBuilder();
 
 		RenderPassInfo create_render_pass(const vec2u& swapchain_size, RenderPass* render_pass);

@@ -1,60 +1,10 @@
 #pragma once
 
 #include "genesis_core/hash/murmur_hash.hpp"
+#include "genesis_core/rendering/pipeline.hpp"
 
 namespace genesis
 {
-	enum class CullMode
-	{
-		None,
-		Front,
-		Back,
-		All 
-	};
-
-	enum class DepthTest
-	{
-		None,
-		Test_Only,
-		Test_And_Write
-	};
-
-	enum class DepthOp
-	{
-		Never,
-		Less,
-		Equal,
-		Less_Equal,
-		Greater,
-		Not_Equal,
-		Greater_Equal,
-		Always
-	};
-
-	enum class BlendFactor
-	{
-		Zero,
-		One,
-		Color_Src,
-		One_Minus_Color_Src,
-		Color_Dst,
-		One_Minus_Color_Dst,
-		Alpha_Src,
-		One_Minus_Alpha_Src,
-		Alpha_Dst,
-		One_Minus_Alpha_Dst
-	};
-
-	enum class BlendOp
-	{
-		None,
-		Add,
-		Subtract,
-		Reverse_Subtract,
-		Min,
-		Max
-	};
-
 	struct PipelineSettings
 	{
 		CullMode cull_mode = CullMode::Back;

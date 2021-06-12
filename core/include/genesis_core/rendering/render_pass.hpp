@@ -1,6 +1,7 @@
 #pragma once
 
-#include "image_formats.hpp"
+#include "genesis_core/rendering/image_formats.hpp"
+#include "genesis_core/rendering/pipeline.hpp"
 #include "genesis_core/types/vector_math.hpp"
 #include "genesis_core/types/containers.hpp"
 
@@ -55,6 +56,6 @@ namespace genesis
 		const vector<ColorRenderPassAttachment> color_attachments;
 		const DepthRenderPassAttachment depth_attachment;
 
-		//TODO eveluate function pointer???
+		vector<PipelineCreateInfo> create_pipelines;
 	};
 }

@@ -144,7 +144,7 @@ namespace genesis
 			for (uint32_t i = 0; i < vertex_description.input_elements_count; i++)
 			{
 				offsets[i] = total_size;
-				total_size += VertexElementTypeInfo::getInputElementSizeByte(vertex_description.input_elements[i]);
+				total_size += VertexElementTypeInfo::get_element_size_bytes(vertex_description.input_elements[i]);
 			}
 
 			for (uint32_t i = 0; i < vertex_description.input_elements_count; i++)

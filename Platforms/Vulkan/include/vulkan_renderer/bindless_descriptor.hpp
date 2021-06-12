@@ -4,8 +4,6 @@
 
 namespace genesis
 {
-
-
 	class BindlessDescriptor
 	{
 	protected:

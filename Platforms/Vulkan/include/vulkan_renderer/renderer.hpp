@@ -1,12 +1,17 @@
 #pragma once
 
 #include "genesis_core/rendering/rendering_backend.hpp"
+#include "genesis_core/rendering/frame_graph.hpp"
 
 #include "vulkan_include.hpp"
 #include "device.hpp"
 #include "swapchain.hpp"
 #include "command_pool.hpp"
 #include "bindless_descriptor.hpp"
+
+#include "vulkan_renderer/buffer.hpp"
+#include "vulkan_renderer/image.hpp"
+#include "vulkan_renderer/mesh_buffer_vector.hpp"
 
 namespace genesis
 {
@@ -18,7 +23,6 @@ namespace genesis
 
 	struct Settings
 	{
-		uint32_t max_uniform_buffer_bindings;
 		uint32_t max_storage_buffer_bindings;
 		uint32_t max_sampled_image_bindings;
 		uint32_t max_storage_image_bindings;
@@ -42,6 +46,11 @@ namespace genesis
 		VkDebugUtilsMessengerEXT debug_messenger = VK_NULL_HANDLE;
 	};
 
+	typedef size_t VertexHandle;
+	typedef size_t IndexHandle;
+	typedef size_t UniformHandle;
+	typedef size_t StorageHandle;
+
 	class Renderer
 	{
 	protected:
@@ -59,12 +68,25 @@ namespace genesis
 		unique_ptr<CommandPool> primary_command_pool;
 		unique_ptr<BindlessDescriptor> bindless_descriptor;
 
+		MeshBufferVector vertex_buffers;
+		MeshBufferVector index_buffers;
+		vector<Buffer*> uniform_buffers;
+
 	public:
 		Renderer(ApplicationInfo& app_info, Settings& settings, WindowInfo& window);
 		~Renderer();
 
-		BufferHandle create_buffer(size_t buffer_size, Temp_BufferUsage usage, Temp_MemoryType type);
-		void destoy_buffer(BufferHandle buffer);
+		VertexHandle create_vertex_buffer(size_t buffer_size, MemoryType type);
+		void destroy_vertex_buffer(VertexHandle handle);
+
+		IndexHandle create_index_buffer(size_t buffer_size, MemoryType type);
+		void destroy_index_buffer(IndexHandle handle);
+
+		UniformHandle create_uniform_buffer(size_t buffer_size, MemoryType type);
+		void destroy_uniform_buffer(UniformHandle handle); 
+
+		ShaderModule create_shader_module(void* code_data, size_t code_size);
+		void destroy_shader_module(ShaderModule shader);
 
 		void render(genesis::FrameGraph* frame_graph);
 	};
