@@ -76,10 +76,6 @@ namespace genesis
 						best_mode = availablePresentMode; //The mode we want
 						break;
 					}
-					else if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR)
-					{
-						best_mode = availablePresentMode; //Second best, better than VK_PRESENT_MODE_FIFO_KHR
-					}
 				}
 			}
 			create_info.presentMode = best_mode;

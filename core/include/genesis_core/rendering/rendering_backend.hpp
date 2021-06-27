@@ -4,12 +4,5 @@
 
 namespace genesis
 {
-	enum class MemoryType
-	{
-		GpuOnly,
-		CpuRead,
-		CpuWrite,
-	};
-
 	typedef void* ShaderModule;
 }

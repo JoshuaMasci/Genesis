@@ -1,20 +1,50 @@
 #pragma once
 
-#include "genesis_core/rendering/rendering_backend.hpp"
-#include "genesis_core/rendering/frame_graph.hpp"
-
 #include "vulkan_include.hpp"
 #include "device.hpp"
 #include "swapchain.hpp"
 #include "command_pool.hpp"
 #include "bindless_descriptor.hpp"
 
-#include "vulkan_renderer/buffer.hpp"
-#include "vulkan_renderer/image.hpp"
-#include "vulkan_renderer/mesh_buffer_vector.hpp"
-
 namespace genesis
 {
+	enum class MemoryType
+	{
+		GpuOnly,
+		CpuRead,
+		CpuWrite,
+	};
+
+	enum class ImageFormat
+	{
+		Invalid,
+
+		RGBA_8_Unorm,
+
+		R_16_Float,
+		RG_16_Float,
+		RGB_16_Float,
+		RGBA_16_Float,
+
+		R_32_Float,
+		RG_32_Float,
+		RGB_32_Float,
+		RGBA_32_Float,
+
+		//Depth Images
+		D_16_Unorm,
+		D_32_Float,
+	};
+
+	struct ImageCreateInfo
+	{
+		vec2u size;
+		ImageFormat format;
+		uint16_t sampele_count = 1;
+		bool optimal_tiling = true;
+		MemoryType memory_type = MemoryType::GpuOnly;
+	};
+
 	struct ApplicationInfo
 	{
 		char* app_name;
@@ -46,11 +76,6 @@ namespace genesis
 		VkDebugUtilsMessengerEXT debug_messenger = VK_NULL_HANDLE;
 	};
 
-	typedef size_t VertexHandle;
-	typedef size_t IndexHandle;
-	typedef size_t UniformHandle;
-	typedef size_t StorageHandle;
-
 	class Renderer
 	{
 	protected:
@@ -68,26 +93,13 @@ namespace genesis
 		unique_ptr<CommandPool> primary_command_pool;
 		unique_ptr<BindlessDescriptor> bindless_descriptor;
 
-		MeshBufferVector vertex_buffers;
-		MeshBufferVector index_buffers;
-		vector<Buffer*> uniform_buffers;
-
 	public:
 		Renderer(ApplicationInfo& app_info, Settings& settings, WindowInfo& window);
 		~Renderer();
 
-		VertexHandle create_vertex_buffer(size_t buffer_size, MemoryType type);
-		void destroy_vertex_buffer(VertexHandle handle);
+		size_t create_image(const ImageCreateInfo& create_info);
+		void destroy_image(size_t id);
 
-		IndexHandle create_index_buffer(size_t buffer_size, MemoryType type);
-		void destroy_index_buffer(IndexHandle handle);
-
-		UniformHandle create_uniform_buffer(size_t buffer_size, MemoryType type);
-		void destroy_uniform_buffer(UniformHandle handle); 
-
-		ShaderModule create_shader_module(void* code_data, size_t code_size);
-		void destroy_shader_module(ShaderModule shader);
-
-		void render(genesis::FrameGraph* frame_graph);
+		void draw_frame();
 	};
 }

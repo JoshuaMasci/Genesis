@@ -2,8 +2,6 @@
 
 #include <stdio.h>
 
-#include "vulkan_renderer/render_pass_builder.hpp"
-
 namespace genesis
 {
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity, VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data)
@@ -141,14 +139,6 @@ namespace genesis
 	{
 		this->device->wait_idle();
 
-		this->vertex_buffers.flush();
-		this->index_buffers.flush();
-
-		for (auto buffer : this->uniform_buffers)
-		{
-			delete buffer;
-		}
-
 		this->bindless_descriptor.reset();
 		this->primary_command_pool.reset();
 
@@ -178,115 +168,72 @@ namespace genesis
 		return VmaMemoryUsage::VMA_MEMORY_USAGE_UNKNOWN;
 	}
 
-	VertexHandle Renderer::create_vertex_buffer(size_t buffer_size, MemoryType type)
+	VkFormat get_image_format(ImageFormat format)
 	{
-		VkBufferCreateInfo create_info = {};
-		create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		create_info.size = (VkDeviceSize)buffer_size;
-		create_info.usage = VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-
-		if (type == MemoryType::GpuOnly)
+		switch (format)
 		{
-			//Assume that gpu will be a transfer destination
-			//This isn't greate and will need to be changed in the future
-			create_info.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		case ImageFormat::RGBA_8_Unorm:
+			return VK_FORMAT_R8G8B8A8_UNORM;
+		case ImageFormat::R_16_Float:
+			return VK_FORMAT_R16_SFLOAT;
+		case ImageFormat::RG_16_Float:
+			return VK_FORMAT_R16G16_SFLOAT;
+		case ImageFormat::RGB_16_Float:
+			return VK_FORMAT_R16G16B16_SFLOAT;
+		case ImageFormat::RGBA_16_Float:
+			return VK_FORMAT_R16G16B16A16_SFLOAT;
+		case ImageFormat::R_32_Float:
+			return VK_FORMAT_R32_SFLOAT;
+		case ImageFormat::RG_32_Float:
+			return VK_FORMAT_R32G32_SFLOAT;
+		case ImageFormat::RGB_32_Float:
+			return VK_FORMAT_R32G32B32_SFLOAT;
+		case ImageFormat::RGBA_32_Float:
+			return VK_FORMAT_R32G32B32A32_SFLOAT;
+		case ImageFormat::D_16_Unorm:
+			return VK_FORMAT_D16_UNORM;
+		case ImageFormat::D_32_Float:
+			return VK_FORMAT_D32_SFLOAT;
 		}
-
-		return (VertexHandle)this->vertex_buffers.insert(new Buffer(this->device, create_info, get_memory_usage(type)));
+		return VK_FORMAT_UNDEFINED;
 	}
 
-	void Renderer::destroy_vertex_buffer(VertexHandle handle)
+	size_t Renderer::create_image(const ImageCreateInfo& create_info)
 	{
-		this->vertex_buffers.erase((size_t)handle);
+		VkImageCreateInfo image_info = {};
+		image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		image_info.imageType = VK_IMAGE_TYPE_2D;
+		image_info.extent.width = create_info.size.x;
+		image_info.extent.height = create_info.size.y;
+		image_info.extent.depth = 1;
+		image_info.mipLevels = 1;
+		image_info.arrayLayers = 1;
+		image_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+		image_info.format = get_image_format(create_info.format);
+		image_info.tiling = create_info.optimal_tiling ? VK_IMAGE_TILING_OPTIMAL : VK_IMAGE_TILING_LINEAR;
+		image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		image_info.samples = (VkSampleCountFlagBits)create_info.sampele_count;
+		image_info.flags = 0;
+
+		VkImage image;
+		VmaAllocation allocation;
+		VmaAllocationInfo allocation_info;
+
+		this->device->create_image(&image_info, get_memory_usage(create_info.memory_type), &image, &allocation, &allocation_info);
+
+		return size_t();
 	}
 
-	IndexHandle Renderer::create_index_buffer(size_t buffer_size, MemoryType type)
+	void Renderer::destroy_image(size_t id)
 	{
-		VkBufferCreateInfo create_info = {};
-		create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		create_info.size = (VkDeviceSize)buffer_size;
-		create_info.usage = VkBufferUsageFlagBits::VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 
-		if (type == MemoryType::GpuOnly)
-		{
-			//Assume that gpu will be a transfer destination
-			//This isn't greate and will need to be changed in the future
-			create_info.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		}
-
-		return (IndexHandle)this->index_buffers.insert(new Buffer(this->device, create_info, get_memory_usage(type)));
 	}
 
-	void Renderer::destroy_index_buffer(IndexHandle handle)
-	{
-		this->index_buffers.erase((size_t)handle);
-	}
-
-	UniformHandle Renderer::create_uniform_buffer(size_t buffer_size, MemoryType type)
-	{
-		VkBufferCreateInfo create_info = {};
-		create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		create_info.size = (VkDeviceSize)buffer_size;
-		create_info.usage = VkBufferUsageFlagBits::VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-
-		if (type == MemoryType::GpuOnly)
-		{
-			//Assume that gpu will be a transfer destination
-			//This isn't greate and will need to be changed in the future
-			create_info.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-		}
-
-		Buffer* buffer = new Buffer(this->device, create_info, get_memory_usage(type));
-		this->uniform_buffers.push_back(buffer);
-		return (UniformHandle)this->uniform_buffers.size() - 1;
-	}
-
-	void Renderer::destroy_uniform_buffer(UniformHandle handle)
-	{
-		//TODO
-	}
-
-	ShaderModule Renderer::create_shader_module(void* data, size_t data_size)
-	{
-		VkShaderModuleCreateInfo create_info = {};
-		create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		create_info.pCode = (uint32_t*)data;
-		create_info.codeSize = data_size;
-
-		VkShaderModule* shader_module = new VkShaderModule();
-		VK_ASSERT(vkCreateShaderModule(this->device->get(), &create_info, nullptr, shader_module));
-		return (ShaderModule)shader_module;
-	}
-
-	void Renderer::destroy_shader_module(ShaderModule shader)
-	{
-		vkDestroyShaderModule(this->device->get(), *(VkShaderModule*)shader, nullptr);
-		delete (VkShaderModule)shader;
-	}
-
-	void Renderer::render(FrameGraph* frame_graph)
+	void Renderer::draw_frame()
 	{
 		vkWaitForFences(this->device->get(), 1, &this->wait_fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
 		vkResetFences(this->device->get(), 1, &this->wait_fence);
 		uint32_t image_index = this->swapchain->get_next_image(this->image_wait_semaphore);
-
-		this->vertex_buffers.flush();
-		this->index_buffers.flush();
-
-		{
-			RenderPassBuilder render_pass_builder(this->device, this->bindless_descriptor->get_descriptor_layout());
-
-			VkExtent2D swapchain_extent = this->swapchain->get_image_extent();
-			vec2u swapchain_size = vec2u(swapchain_extent.width, swapchain_extent.height);
-
-			for (auto render_pass : frame_graph->render_passes)
-			{
-				render_pass_builder.create_render_pass(swapchain_size, render_pass);
-			}
-
-			render_pass_builder.flush_frame();
-		}
-
 
 		VkCommandBuffer command_buffer = this->primary_command_pool->get_command_buffer();
 		VkCommandBufferBeginInfo begin_info = {};
